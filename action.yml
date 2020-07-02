@@ -1,0 +1,16 @@
+name: "Github action chain"
+author: "Enrique Mingorance Cano"
+description: "GitHub action to define action chains"
+inputs:
+  parent-dependencies:
+    description: 'the list of parent project dependencies'
+    required: false
+  child-dependencies:
+    description: 'the list of child project dependencies'
+    required: false
+runs:
+  using: "docker"
+  image: "Dockerfile"
+branding:
+  icon: "link"
+  color: "purple"

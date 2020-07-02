@@ -12,10 +12,12 @@
   "scripts": {
     "test": "jest",
     "it": "node it/it.js",
-    "lint": "prettier -l lib/** test/** && eslint .",
+    "lint": "eslint .",
+    "lint-final": "prettier -l lib/** test/** && eslint .",
     "prepublish": "yarn lint && yarn test"
   },
   "dependencies": {
+    "@actions/core": "^1.1.3",
     "@octokit/rest": "^17.6.0",
     "argparse": "^1.0.7",
     "fs-extra": "^9.0.0",

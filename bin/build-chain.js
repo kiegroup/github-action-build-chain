@@ -44,7 +44,7 @@ async function main() {
 
   const octokit = new Octokit({
     auth: `token ${token}`,
-    userAgent: "ginxo/build-chain-action"
+    userAgent: "ginxo/github-build-chain-action"
   });
 
   const config = createConfig(process.env);

@@ -1,0 +1,35 @@
+{
+  "name": "build-chain-action",
+  "version": "0.0.1",
+  "description": "GitHub action to define action chains",
+  "main": "lib/api.js",
+  "author": "Enrique Mingorance Cano",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "bin": {
+    "buid-chain": "./bin/buid-chain.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "it": "node it/it.js",
+    "lint": "prettier -l lib/** test/** && eslint .",
+    "prepublish": "yarn lint && yarn test"
+  },
+  "dependencies": {
+    "@octokit/rest": "^17.6.0",
+    "argparse": "^1.0.7",
+    "fs-extra": "^9.0.0",
+    "tmp": "^0.2.1"
+  },
+  "devDependencies": {
+    "dotenv": "^8.2.0",
+    "eslint": "^6.8.0",
+    "eslint-plugin-jest": "^23.8.2",
+    "jest": "^25.5.1",
+    "prettier": "^2.0.5"
+  },
+  "prettier": {
+    "trailingComma": "none",
+    "arrowParens": "avoid"
+  }
+}

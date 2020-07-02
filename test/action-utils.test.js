@@ -1,4 +1,4 @@
-const { getChildDependencies, getParentDependencies } = require("../lib/action-utils");
+const { getChildDependencies, getParentDependencies } = require("../src/lib/action-utils");
 jest.mock('@actions/core', () => ({
   getInput: (param) => { return param === 'parent-dependencies' ? 'lienzo-core, lienzo-test,drools' : param === 'child-dependencies' ? 'appformer' : undefined; }
 }));

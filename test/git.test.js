@@ -1,7 +1,7 @@
 const fse = require("fs-extra");
 
-const git = require("../lib/git");
-const { tmpdir } = require("../lib/fs-helper");
+const git = require("../src/lib/git");
+const { tmpdir } = require("../src/lib/fs-helper");
 
 async function init(dir) {
   await fse.mkdirs(dir);

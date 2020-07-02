@@ -2,7 +2,7 @@
   "name": "build-chain-action",
   "version": "0.0.1",
   "description": "GitHub action to define action chains",
-  "main": "lib/api.js",
+  "main": "src/lib/api.js",
   "author": "Enrique Mingorance Cano",
   "license": "SEE LICENSE IN LICENSE",
   "private": true,
@@ -13,7 +13,7 @@
     "test": "jest",
     "it": "node it/it.js",
     "lint": "eslint .",
-    "lint-final": "prettier -l lib/** test/** && eslint .",
+    "lint-final": "prettier -l src/** test/** && eslint .",
     "prepublish": "yarn lint && yarn test"
   },
   "dependencies": {

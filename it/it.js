@@ -1,7 +1,7 @@
 const { Octokit } = require("@octokit/rest");
 
-const { executeLocally } = require("../lib/api");
-const { createConfig, logger } = require("../lib/common");
+const { executeLocally } = require("../src/lib/api");
+const { createConfig, logger } = require("../src/lib/common");
 
 async function main() {
   require("dotenv").config();

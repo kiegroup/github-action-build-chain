@@ -48,7 +48,7 @@ async function main() {
   });
 
   const config = createConfig(process.env);
-  logger.debug("Configuration:", config);
+  logger.info("Configuration:", config);
 
   const context = { token, octokit, config };
 

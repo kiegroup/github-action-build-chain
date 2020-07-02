@@ -6,7 +6,7 @@ LABEL "com.github.actions.author"="ginxo"
 LABEL "com.github.actions.icon"="link"
 LABEL "com.github.actions.color"="purple"
 
-#RUN apk add --no-cache git openssl
+RUN apk add --no-cache git openssl
 
 COPY . /tmp/src/
 

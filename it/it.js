@@ -1,7 +1,7 @@
 const { Octokit } = require("@octokit/rest");
 
-const { executeLocally } = require("../src/lib/api");
-const { createConfig, logger } = require("../src/lib/common");
+const { executeGitHubAction } = require("../src/lib/api");
+const { createConfigLocally } = require("../src/lib/common");
 
 async function main() {
   require("dotenv").config();
@@ -15,13 +15,10 @@ async function main() {
 
   addInputVariableToEnv('parent-dependencies');
   addInputVariableToEnv('child-dependencies');
-  const config = createConfig({
-  });
-  logger.info("Configuration:", config);
-
+  const config = await createConfigLocally(octokit, process.env.URL, process.env);
   const context = { token, octokit, config };
 
-  await executeLocally(context, process.env.URL);
+  await executeGitHubAction(context);
 }
 
 function addInputVariableToEnv(inputVariable) {

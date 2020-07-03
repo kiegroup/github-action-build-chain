@@ -25,9 +25,7 @@ function git(cwd, ...args) {
     logger.level === "trace" || logger.level === "debug" ? "inherit" : "ignore"
   ];
   // the URL passed to the clone command could contain a password!
-  const command = args.includes("clone")
-    ? "git clone"
-    : `git ${args.join(" ")}`;
+  const command = `git ${args.join(" ")}`;
   logger.debug("Executing", command);
   return new Promise((resolve, reject) => {
     const proc = spawn(
@@ -46,7 +44,7 @@ function git(cwd, ...args) {
         resolve(data.toString("utf8").trim());
       } else {
         reject(
-          new ExitError(`command failed with code ${code}: ${command}`, code)
+          new ExitError(`command failed with code ${code}: ${command}.`, code)
         );
       }
     });

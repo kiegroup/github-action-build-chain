@@ -6,8 +6,8 @@ const fse = require("fs-extra");
 const { ArgumentParser } = require("argparse");
 const { Octokit } = require("@octokit/rest");
 
-const { ClientError, logger, createConfig } = require("../src/lib/common");
-const { executeLocally, executeGitHubAction } = require("../src/lib/api");
+const { ClientError, logger, createConfig, createConfigLocally } = require("../src/lib/common");
+const { executeGitHubAction } = require("../src/lib/api");
 
 const pkg = require("../package.json");
 
@@ -41,28 +41,22 @@ async function main() {
   }
 
   const token = env("GITHUB_TOKEN");
-
   const octokit = new Octokit({
     auth: `token ${token}`,
     userAgent: "ginxo/github-build-chain-action"
   });
 
-  const config = createConfig(process.env);
-  logger.info("Configuration:", config);
-
-  const context = { token, octokit, config };
-
-  if (args.url) {
-    await executeLocally(context, args.url);
+  let config = undefined;
+  if(args.url) {
+    config = createConfigLocally(octokit, args.url, process.env);
   } else {
     const eventPath = env("GITHUB_EVENT_PATH");
-    const eventName = env("GITHUB_EVENT_NAME");
-
     const eventDataStr = await fse.readFile(eventPath, "utf8");
     const eventData = JSON.parse(eventDataStr);
-
-    await executeGitHubAction(context, eventName, eventData);
+    config = createConfig(eventData, process.env);
   }
+  const context = { token, octokit, config };
+  await executeGitHubAction(context);
 }
 
 function env(name) {

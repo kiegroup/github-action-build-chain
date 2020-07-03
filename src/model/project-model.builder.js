@@ -1,8 +1,8 @@
-const { GitInfo } = require('./git-info.model')
-const { GitPullRequestInfo } = require('./git-pullrequest-info.model')
-const { GitPullRequest } = require('./git-pullrequest.model')
-const { ProjectBuild } = require('./project-build.model')
-const { Project } = require('./project.model')
+const { GitInfo } = require('./git-info.model');
+const { GitPullRequestInfo } = require('./git-pullrequest-info.model');
+const { GitPullRequest } = require('./git-pullrequest.model');
+const { ProjectBuild } = require('./project-build.model');
+const { Project } = require('./project.model');
 
 export class ProjectBuilder {
     constructor(name, command) {
@@ -25,11 +25,11 @@ export class ProjectBuilder {
     }
 
     addParentDependecies(...dependencies) {
-        this.parentDependencies = (this.parentDependencies ? this.parentDependencies : []).addAll(dependencies)
+        this.parentDependencies = (this.parentDependencies ? this.parentDependencies : []).addAll(dependencies);
     }
 
     addChildDependecies(...dependencies) {
-        this.childDependencies = (this.childDependencies ? this.childDependencies : []).addAll(dependencies)
+        this.childDependencies = (this.childDependencies ? this.childDependencies : []).addAll(dependencies);
     }
 
     setUrl(url) {
@@ -48,16 +48,16 @@ export class ProjectBuilder {
         this.pullRequestDate = date;
     }
 
-    setPullRequestDate(author) {
+    setPullRequestAuthor(author) {
         this.pullRequestAuthor = author;
-    }
-
-    setSourceBranch(branch) {
-        this.sourceBranch = branch;
     }
 
     setTargetBranch(branch) {
         this.targetBranch = branch;
+    }
+
+    setSourceBranch(branch) {
+        this.sourceBranch = branch;
     }
 
     build() {

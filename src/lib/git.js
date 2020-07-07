@@ -1,6 +1,7 @@
 const { spawn } = require("child_process");
 
 const { TimeoutError, logger } = require("./common");
+const fs = require("fs");
 
 class ExitError extends Error {
   constructor(message, code) {
@@ -52,19 +53,23 @@ function git(cwd, ...args) {
 }
 
 async function clone(from, to, branch) {
-  await git(
-    ".",
-    "clone",
-    "--quiet",
-    "--shallow-submodules",
-    "--no-tags",
-    "--branch",
-    branch,
-    "--depth",
-    FETCH_DEPTH,
-    from,
-    to
-  );
+  if (!fs.existsSync(to)) {
+    await git(
+      ".",
+      "clone",
+      "--quiet",
+      "--shallow-submodules",
+      "--no-tags",
+      "--branch",
+      branch,
+      "--depth",
+      FETCH_DEPTH,
+      from,
+      to
+    );
+  } else {
+    logger.warn(`Folder ${to} already exist. Won't clone`);
+  }
 }
 
 async function fetch(dir, branch) {

@@ -25,7 +25,7 @@ const logger = {
 
   trace: (...str) => {
     if (logger.level === "trace") {
-      log("TRACE", str);
+      log("[TRACE]", str);
     }
   },
 
@@ -35,7 +35,8 @@ const logger = {
     }
   },
 
-  info: (...str) => log("INFO ", str),
+  info: (...str) => log("[INFO] ", str),
+  warn: (...str) => log("[WARN] ", str),
 
   error: (...str) => {
     if (str.length === 1) {
@@ -43,11 +44,11 @@ const logger = {
         if (logger.level === "trace" || logger.level === "debug") {
           log(null, [str[0].stack || str[0]]);
         } else {
-          log("ERROR", [str[0].message || str[0]]);
+          log("[ERROR] ", [str[0].message || str[0]]);
         }
       }
     } else {
-      log("ERROR", str);
+      log("[ERROR] ", str);
     }
   }
 };
@@ -57,7 +58,7 @@ function inspect(obj) {
 }
 
 function createConfig(eventData, env = {}) {
-  function parseEnv(env) {
+  function parseGitHub(env) {
     return {
       'serverUrl': env['GITHUB_SERVER_URL'], // https://github.com
       'action': env['GITHUB_ACTION'], // Ginxogithub-action-build-chain
@@ -75,14 +76,13 @@ function createConfig(eventData, env = {}) {
   return {
     'parentDependencies': actionUtils.getParentDependencies(),
     'childDependencies': actionUtils.getChildDependencies(),
-    'github': parseEnv(env)
+    'github': parseGitHub(env)
   };
 }
 
 async function createConfigLocally(octokit, eventUrl, env = {}) {
   const event = await getEvent(octokit, eventUrl);
   const m = eventUrl.match(GIT_URL_REGEXP);
-  console.log('m1', m[1]);
   env['GITHUB_SERVER_URL'] = m[1];
   env['GITHUB_ACTION'] = undefined;
   env['GITHUB_ACTOR'] = event.pull_request.head.user.login;

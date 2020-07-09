@@ -6,7 +6,8 @@ const fse = require("fs-extra");
 const { ArgumentParser } = require("argparse");
 const { Octokit } = require("@octokit/rest");
 
-const { ClientError, logger, createConfig, createConfigLocally } = require("../src/lib/common");
+const { ClientError, logger } = require("../src/lib/common");
+const { createConfig, createConfigLocally } = require("../src/lib/config");
 const { executeGitHubAction } = require("../src/lib/api");
 
 const pkg = require("../package.json");

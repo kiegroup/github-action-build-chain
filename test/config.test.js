@@ -1,7 +1,10 @@
-const { createConfig } = require("../src/lib/common");
+const { createConfig } = require("../src/lib/config");
 jest.mock('../src/lib/action-utils', () => ({
   getParentDependencies: () => { return ['lienzo-core', 'lienzo-test', 'drools']; },
-  getChildDependencies: () => { return ['lienzo-core', 'lienzo-test', 'drools-jbpm']; }
+  getChildDependencies: () => { return ['lienzo-core', 'lienzo-test', 'drools-jbpm']; },
+  getBuildCommand: () => { return 'build command'; },
+  getBuildCommandUpstream: () => { return 'build command upstream'; },
+  getBuildCommandDownstream: () => { return 'build command downstream'; }
 }));
 
 test("createConfig", () => {
@@ -12,7 +15,7 @@ test("createConfig", () => {
   'GITHUB_HEAD_REF': 'githubHeadRef',
   'GITHUB_BASE_REF': 'githubBaseRef',
   'GITHUB_JOB': 'githubJob',
-  'GITHUB_REPOSITORY': 'githubRepository',
+  'GITHUB_REPOSITORY': 'ginxo/github-action-build-chain',
   'GITHUB_WORKFLOW': 'githubWorkflow',
   };
   const envData = {
@@ -28,18 +31,23 @@ test("createConfig", () => {
   const expected = {
     'parentDependencies': ['lienzo-core', 'lienzo-test', 'drools'],
     'childDependencies': ['lienzo-core', 'lienzo-test', 'drools-jbpm'],
+    'buildCommand': 'build command',
+    'buildCommandUpstream': 'build command upstream',
+    'buildCommandDownstream': 'build command downstream',
     'github': {
       'action': undefined,
       'serverUrl': 'githubServerUrl',
       'author': 'author',
+      'group': 'ginxo',
+      'project': 'github-action-build-chain',
       'sourceBranch': 'githubHeadRef',
       'targetBranch': 'githubBaseRef',
       'jobName': 'githubJob',
       'ref': undefined,
       'sourceRepository': 'fullName',
-      'repository': 'githubRepository',
+      'repository': 'ginxo/github-action-build-chain',
       'workflow': 'githubWorkflow'
     }
   };
-  expect(config).toEqual(expected);
+  expect(expected).toEqual(config);
 });

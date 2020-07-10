@@ -1,7 +1,8 @@
 const { Octokit } = require("@octokit/rest");
 
 const { executeGitHubAction } = require("../src/lib/api");
-const { createConfigLocally } = require("../src/lib/common");
+const { createConfigLocally } = require("../src/lib/config");
+
 
 async function main() {
   require("dotenv").config();
@@ -12,12 +13,10 @@ async function main() {
     auth: `token ${token}`,
     userAgent: "ginxo/github-build-chain-action-it"
   });
-
   addInputVariableToEnv('parent-dependencies');
   addInputVariableToEnv('child-dependencies');
   const config = await createConfigLocally(octokit, process.env.URL, process.env);
   const context = { token, octokit, config };
-
   await executeGitHubAction(context);
 }
 

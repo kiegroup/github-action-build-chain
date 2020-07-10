@@ -25,9 +25,9 @@ function createConfig(eventData, env = {}) {
   return {
     'parentDependencies': getParentDependencies(),
     'childDependencies': getChildDependencies(),
-    'buildCommand': getBuildCommand(),
-    'buildCommandUpstream': getBuildCommandUpstream(),
-    'buildCommandDownstream': getBuildCommandDownstream(),
+    'buildCommands': getBuildCommand(),
+    'buildCommandsUpstream': getBuildCommandUpstream(),
+    'buildCommandsDownstream': getBuildCommandDownstream(),
     'github': parseGitHub(env)
   };
 }

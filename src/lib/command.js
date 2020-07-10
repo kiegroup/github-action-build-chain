@@ -10,7 +10,7 @@ class ExitError extends Error {
 }
 
 async function execute(cwd, command) {
-  logger.info(`Execute command [${command}] in dir [${cwd}]`);
+  logger.info(`Execute command '${command}' in dir '${cwd}'`);
   const options = {};
   options.cwd = cwd;
   await exec.exec(command, [], options);

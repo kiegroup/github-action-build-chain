@@ -28,7 +28,7 @@ async function treatParents(context, project, workflowInformation, shouldExecute
             }
         }
         if (shouldExecute) {
-            await execute(getDir(project), workflowInformation[`buildCommandUpstream`]);
+            await execute(getDir(project), workflowInformation['buildCommandUpstream'] || workflowInformation['buildCommand']);
         }
     }
 }

@@ -25,11 +25,11 @@ export class ProjectBuilder {
     }
 
     addParentDependecies(...dependencies) {
-        this.parentDependencies = (this.parentDependencies ? this.parentDependencies : []).addAll(dependencies);
+        this.parentDependencies = (this.parentDependencies || []).addAll(dependencies);
     }
 
     addChildDependecies(...dependencies) {
-        this.childDependencies = (this.childDependencies ? this.childDependencies : []).addAll(dependencies);
+        this.childDependencies = (this.childDependencies || []).addAll(dependencies);
     }
 
     setUrl(url) {

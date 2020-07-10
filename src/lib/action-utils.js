@@ -11,15 +11,19 @@ function getChildDependencies() {
 }
 
 function getBuildCommand() {
-  return core.getInput('build-command');
+  return treatCommands(core.getInput('build-command'));
 }
 
 function getBuildCommandUpstream() {
-  return core.getInput('build-command-upstream');
+  return treatCommands(core.getInput('build-command-upstream'));
 }
 
 function getBuildCommandDownstream() {
-  return core.getInput('build-command-downstream');
+  return treatCommands(core.getInput('build-command-downstream'));
+}
+
+function treatCommands(command) {
+  return command ? command.split('|').map(item => item.trim()) : undefined;
 }
 
 module.exports = {

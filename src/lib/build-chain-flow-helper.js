@@ -62,12 +62,16 @@ function parseWorkflowInformation(workflowData) {
   return {
     'id': buildChainStep.id,
     'name': buildChainStep.name,
-    'buildCommand': buildChainStep.with['build-command'],
-    'buildCommandUpstream': buildChainStep.with['build-command-upstream'],
-    'buildCommandDownstream': buildChainStep.with['build-command-downstream'],
+    'buildCommands': treatCommand(buildChainStep.with['build-command']),
+    'buildCommandsUpstream': treatCommand(buildChainStep.with['build-command-upstream']),
+    'buildCommandsDownstream': treatCommand(buildChainStep.with['build-command-downstream']),
     'childDependencies': dependenciesToArray(buildChainStep.with['child-dependencies']),
     'parentDependencies': dependenciesToArray(buildChainStep.with['parent-dependencies'])
   };
+}
+
+function treatCommand(command) {
+  return command ? command.split('|').map(item => item.trim()) : undefined;
 }
 
 module.exports = {

@@ -9,8 +9,7 @@ async function start(context) {
     // TODO: merge with master before reading info
     const workflowInformation = readWorkflowInformation(context.config.github.workflow);
     await treatParents(context, context.config.github.project, workflowInformation);
-    await execute('.', workflowInformation['buildCommand']);
-
+    await executeBuildCommands('.', workflowInformation['buildCommands']);
 }
 
 async function treatParents(context, project, workflowInformation, shouldExecute = false) {
@@ -29,9 +28,14 @@ async function treatParents(context, project, workflowInformation, shouldExecute
             }
         }
         if (shouldExecute) {
-            console.log('executing in parent', project, workflowInformation['buildCommandUpstream'] || workflowInformation['buildCommand']);
-            await execute(getDir(project), workflowInformation['buildCommandUpstream'] || workflowInformation['buildCommand']);
+            await executeBuildCommands(getDir(project), workflowInformation['buildCommandsUpstream'] || workflowInformation['buildCommands']);
         }
+    }
+}
+
+async function executeBuildCommands(cwd, buildCommands) {
+    for (const command of buildCommands) {
+        await execute(cwd, command);
     }
 }
 

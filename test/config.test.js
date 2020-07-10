@@ -31,9 +31,9 @@ test("createConfig", () => {
   const expected = {
     'parentDependencies': ['lienzo-core', 'lienzo-test', 'drools'],
     'childDependencies': ['lienzo-core', 'lienzo-test', 'drools-jbpm'],
-    'buildCommand': 'build command',
-    'buildCommandUpstream': 'build command upstream',
-    'buildCommandDownstream': 'build command downstream',
+    'buildCommands': 'build command',
+    'buildCommandsUpstream': 'build command upstream',
+    'buildCommandsDownstream': 'build command downstream',
     'github': {
       'action': undefined,
       'serverUrl': 'githubServerUrl',

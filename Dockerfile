@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM openjdk:11
 
 LABEL "com.github.actions.name"="Build Chain"
 LABEL "com.github.actions.description"="It chains actions"

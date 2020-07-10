@@ -2,6 +2,8 @@
 
 ## Testing
 
+### Unitary testing
+* **TEST_GITHUB_TOKEN** env variable is needed
 ### Integration testing
 In order to execute integration testing you just run `env GITHUB_TOKEN=%TOKEN% URL=%GITHUB_EVENT_URL% ['parent-dependencies=%PARENT_DEPENDENCIES%'] ['child-dependencies=%CHILD_DEPENDENCIES%'] yarn it` where:
 * %TOKEN%: is your personal token, like `1e2ca1ac1252121d83fbe69ab3c4dd92bcb1ae32` 

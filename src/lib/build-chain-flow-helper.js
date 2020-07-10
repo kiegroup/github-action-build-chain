@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require('path');
-const { clone } = require("./git");
-const { execute } = require('./command');
+const { clone, doesBranchExist } = require("./git");
 const { logger, dependenciesToArray } = require("./common");
 const { getYamlFileContent } = require('./fs-helper');
 
@@ -14,28 +13,34 @@ async function checkoutDependencies(context, dependencies) {
 
 async function checkouProject(context, project) {
   const dir = getDir(project);
-  const serverUrl = context['config']['github']['serverUrl'];
-  const groupAndBranchToCheckout = await getGroupAndBranchToCheckout(context);
+  const serverUrl = context.config.github.serverUrl;
+  const groupAndBranchToCheckout = await getGroupAndBranchToCheckout(context, project);
+  if (groupAndBranchToCheckout == undefined) {
+    const msg = `Trying to checking out ${project} into '${dir}'. It does not exist.`;
+    logger.error(msg);
+    throw new Error(msg);
+  }
   const group = groupAndBranchToCheckout[0];
   const branch = groupAndBranchToCheckout[1];
-
-  logger.info(`Checking out ${serverUrl}/${group}/${project}:${branch} into ${dir}`);
+  const shouldMerge = groupAndBranchToCheckout[2];
+  logger.info(`Checking out '${serverUrl}/${group}/${project}:${branch}'  into '${dir}'. Should merge? ${shouldMerge}.`);
   try {
     await clone(`${serverUrl}/${group}/${project}`, dir, branch);
+    // TODO: merge is case shouldMerge
   } catch (err) {
     console.error(`Error checking out ${serverUrl}/${group}/${project}`, err);
   }
 }
 
-async function executeSteps(dependencies) {
-  for (const project of dependencies.filter(a => a !== null && a !== '')) {
-    execute(getDir(project), 'mvn clean install -DskipTests');
-  }
-}
-
-async function getGroupAndBranchToCheckout(context) {
-  const group = context['config']['github']['author']; // TODO: properly get the group
-  return [group, 'master']; // TODO: to return the proper branches
+async function getGroupAndBranchToCheckout(context, project) {
+  const sourceGroup = context.config.github.author;
+  const sourceBranch = context.config.github.sourceBranch;
+  const targetGroup = context.config.github.group;
+  const targetBranch = context.config.github.targetBranch;
+  logger.debug(`getGroupAndBranchToCheckout ${project}. sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}.`);
+  return await doesBranchExist(context.octokit, sourceGroup, project, sourceBranch) ? [sourceGroup, sourceBranch, true] :
+    await doesBranchExist(context.octokit, targetGroup, project, sourceBranch) ? [targetGroup, sourceBranch, true] :
+      await doesBranchExist(context.octokit, targetGroup, project, targetBranch) ? [targetGroup, targetBranch, false] : undefined;
 }
 
 function getDir(project) {
@@ -68,7 +73,6 @@ function parseWorkflowInformation(workflowData) {
 module.exports = {
   checkoutDependencies,
   checkouProject,
-  executeSteps,
   getGroupAndBranchToCheckout,
   getDir,
   readWorkflowInformation

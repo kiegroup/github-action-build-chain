@@ -1,4 +1,5 @@
 const { spawn } = require("child_process");
+var assert = require('assert');
 
 const { TimeoutError, logger } = require("./common");
 const fs = require("fs");
@@ -175,6 +176,23 @@ async function push(dir, force, branch) {
   );
 }
 
+async function doesBranchExist(octokit, owner, repo, branch) {
+  assert(owner, 'owner is not defined');
+  assert(repo, 'repo is not defined');
+  assert(branch, 'branch is not defined');
+  try {
+    const { status } = await octokit.repos.getBranch({
+      owner,
+      repo,
+      branch,
+    });
+    return status == 200;
+  } catch (e) {
+    logger.warn(`project github.com/${owner}/${repo}:${branch} does not exist. It's not necessarily an error.`);
+    return false;
+  }
+}
+
 module.exports = {
   ExitError,
   git,
@@ -187,5 +205,6 @@ module.exports = {
   head,
   sha,
   rebase,
-  push
+  push,
+  doesBranchExist
 };

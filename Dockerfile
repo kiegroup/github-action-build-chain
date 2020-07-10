@@ -14,7 +14,7 @@ RUN apt-get install git openssl curl tar bash procps gnupg
 
 # Install Node & yarn
 USER root
-RUN curl -sL https://deb.nodesource.com/setup_11.x  | bash -
+RUN curl -sL https://deb.nodesource.com/setup_12.x  | bash -
 RUN apt-get -y install nodejs
 RUN npm install -g yarn
 

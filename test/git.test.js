@@ -1,5 +1,4 @@
 const fse = require("fs-extra");
-
 const git = require("../src/lib/git");
 const { tmpdir } = require("../src/lib/fs-helper");
 

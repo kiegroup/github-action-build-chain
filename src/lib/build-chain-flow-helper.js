@@ -1,20 +1,19 @@
 const fs = require("fs");
 const path = require('path');
 const { clone, doesBranchExist } = require("./git");
-const { logger, dependenciesToArray } = require("./common");
+const { logger, dependenciesToObject } = require("./common");
 const { getYamlFileContent } = require('./fs-helper');
 
 async function checkoutDependencies(context, dependencies) {
-  logger.info("Checking out dependencies", dependencies);
-  for (const project of dependencies.filter(a => a !== null && a !== '')) {
-    await checkouProject(context, project);
+  for (const dependencyKey of Object.keys(dependencies)) {
+    await checkouProject(context, dependencyKey, dependencies[dependencyKey]);
   }
 }
 
-async function checkouProject(context, project) {
+async function checkouProject(context, project, dependencyInformation) {
   const dir = getDir(project);
   const serverUrl = context.config.github.serverUrl;
-  const groupAndBranchToCheckout = await getGroupAndBranchToCheckout(context, project);
+  const groupAndBranchToCheckout = await getGroupAndBranchToCheckout(context, project, dependencyInformation.mapping);
   if (groupAndBranchToCheckout == undefined) {
     const msg = `Trying to checking out ${project} into '${dir}'. It does not exist.`;
     logger.error(msg);
@@ -26,18 +25,18 @@ async function checkouProject(context, project) {
   logger.info(`Checking out '${serverUrl}/${group}/${project}:${branch}'  into '${dir}'. Should merge? ${shouldMerge}.`);
   try {
     await clone(`${serverUrl}/${group}/${project}`, dir, branch);
-    // TODO: merge is case shouldMerge
+    // TODO: merge in case shouldMerge
   } catch (err) {
     console.error(`Error checking out ${serverUrl}/${group}/${project}`, err);
   }
 }
 
-async function getGroupAndBranchToCheckout(context, project) {
+async function getGroupAndBranchToCheckout(context, project, mapping) {
   const sourceGroup = context.config.github.author;
   const sourceBranch = context.config.github.sourceBranch;
   const targetGroup = context.config.github.group;
-  const targetBranch = context.config.github.targetBranch;
-  logger.debug(`getGroupAndBranchToCheckout ${project}. sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}.`);
+  const targetBranch = mapping && mapping.source === context.config.github.targetBranch ? mapping.target : context.config.github.targetBranch;
+  logger.info(`getGroupAndBranchToCheckout ${project}. sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${mapping}`);
   return await doesBranchExist(context.octokit, sourceGroup, project, sourceBranch) ? [sourceGroup, sourceBranch, true] :
     await doesBranchExist(context.octokit, targetGroup, project, sourceBranch) ? [targetGroup, sourceBranch, true] :
       await doesBranchExist(context.octokit, targetGroup, project, targetBranch) ? [targetGroup, targetBranch, false] : undefined;
@@ -65,8 +64,8 @@ function parseWorkflowInformation(workflowData) {
     'buildCommands': treatCommand(buildChainStep.with['build-command']),
     'buildCommandsUpstream': treatCommand(buildChainStep.with['build-command-upstream']),
     'buildCommandsDownstream': treatCommand(buildChainStep.with['build-command-downstream']),
-    'childDependencies': dependenciesToArray(buildChainStep.with['child-dependencies']),
-    'parentDependencies': dependenciesToArray(buildChainStep.with['parent-dependencies'])
+    'childDependencies': dependenciesToObject(buildChainStep.with['child-dependencies']),
+    'parentDependencies': dependenciesToObject(buildChainStep.with['parent-dependencies'])
   };
 }
 

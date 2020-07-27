@@ -53,13 +53,23 @@ function inspect(obj) {
   return util.inspect(obj, false, null, true);
 }
 
-function dependenciesToArray(dependencies) {
-  return dependencies ? dependencies.split(",").map(item => item.trim()) : [];
+function dependenciesToObject(dependencies) {
+  const dependenciesObject = {};
+  dependencies ? dependencies.split(",").forEach(item => {
+    const key = item.trim().includes('@') ? item.trim().split('@')[0] : item.trim();
+    dependenciesObject[key] = item.trim().includes('@') ? {
+      'mapping': {
+        'source': item.split("@")[1].split(':')[0],
+        'target': item.split("@")[1].split(':')[1]
+      }
+    } : {};
+  }) : {};
+  return dependenciesObject;
 }
 
 module.exports = {
   ClientError,
   TimeoutError,
   logger,
-  dependenciesToArray
+  dependenciesToObject
 };

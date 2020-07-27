@@ -8,7 +8,7 @@ test("getParentDependencies", () => {
   const result = getParentDependencies();
 
   // Assert
-  expect(result).toEqual(['lienzo-core', 'lienzo-test', 'drools']);
+  expect(result).toEqual({ 'lienzo-core': {}, 'lienzo-test': {}, 'drools': {} });
 });
 
 test("getChildDependencies", () => {
@@ -16,7 +16,7 @@ test("getChildDependencies", () => {
   const result = getChildDependencies();
 
   // Assert
-  expect(result).toEqual(['appformer']);
+  expect(result).toEqual({ 'appformer': {} });
 });
 
 test("getBuildCommand", () => {

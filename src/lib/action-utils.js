@@ -1,13 +1,13 @@
 const core = require('@actions/core');
-const { dependenciesToArray } = require("./common");
+const { dependenciesToObject } = require("./common");
 
 function getParentDependencies() {
-  return dependenciesToArray(core.getInput('parent-dependencies'));
+  return dependenciesToObject(core.getInput('parent-dependencies'));
 }
 
 function getChildDependencies() {
   // return ['pep', 'juan']
-  return dependenciesToArray(core.getInput('child-dependencies'));
+  return dependenciesToObject(core.getInput('child-dependencies'));
 }
 
 function getBuildCommand() {

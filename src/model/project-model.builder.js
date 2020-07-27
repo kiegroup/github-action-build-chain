@@ -67,9 +67,4 @@ export class ProjectBuilder {
         let project = new Project(this.name, this.group, this.parentDependencies, this.childDependencies, gitInfo);
         return new ProjectBuild(project, this.command);
     }
-
-
-
-
-
 }

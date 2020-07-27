@@ -21,7 +21,6 @@ function createConfig(eventData, env = {}) {
       'ref': env['GITHUB_REF'] // refs/pull/1/merge'
     };
   }
-
   return {
     'parentDependencies': getParentDependencies(),
     'childDependencies': getChildDependencies(),

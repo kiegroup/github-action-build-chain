@@ -41,10 +41,10 @@ async function main() {
     logger.level = "debug";
   }
 
-  const token = env("GITHUB_TOKEN");
+  const token = env("GITHUBAPI_TOKEN");
   const octokit = new Octokit({
     auth: `token ${token}`,
-    userAgent: "ginxo/github-build-chain-action"
+    userAgent: "kiegroup/github-build-chain-action"
   });
 
   let config = undefined;

@@ -15,6 +15,6 @@ test("dependenciesToObject with branch", () => {
   // Act
   const dependencies = dependenciesToObject('projectA,projectB@7.x:master, projectC,projectD');
   // Assert
-  expect(dependencies).toEqual(dependencies);
+  expect(dependencies).toEqual(expected);
 });
 

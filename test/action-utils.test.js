@@ -1,4 +1,4 @@
-const { getChildDependencies, getParentDependencies, getBuildCommand, getBuildCommandUpstream, getBuildCommandDownstream } = require("../src/lib/action-utils");
+const { getChildDependencies, getParentDependencies, getBuildCommand } = require("../src/lib/action-utils");
 jest.mock('@actions/core', () => ({
   getInput: (param) => { return param === 'parent-dependencies' ? 'lienzo-core, lienzo-test,drools' : param === 'child-dependencies' ? 'appformer' : param.includes('build-command') ? 'command 1 x | command 2' : undefined; }
 }));

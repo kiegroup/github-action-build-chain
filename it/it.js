@@ -7,7 +7,7 @@ const { createConfigLocally } = require("../src/lib/config");
 async function main() {
   require("dotenv").config();
 
-  const token = process.env.GITHUBAPI_TOKEN;
+  const token = process.env.GITHUB_TOKEN;
 
   const octokit = new Octokit({
     auth: `token ${token}`,

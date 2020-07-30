@@ -18,7 +18,7 @@ test("readYamlFile", () => {
           },
           {
             "env": {
-              "GITHUBAPI_TOKEN": "${{ secrets.KIE_TOKEN }}",
+              "GITHUB_TOKEN": "${{ secrets.GITHUB_TOKEN }}",
             },
             "id": "build-chain",
             "name": "Build Chain",

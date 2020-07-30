@@ -41,7 +41,7 @@ async function main() {
     logger.level = "debug";
   }
 
-  const token = env("GITHUBAPI_TOKEN");
+  const token = env("GITHUB_TOKEN");
   const octokit = new Octokit({
     auth: `token ${token}`,
     userAgent: "kiegroup/github-build-chain-action"

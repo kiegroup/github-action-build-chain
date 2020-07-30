@@ -1,6 +1,6 @@
 FROM openjdk:8
 
-RUN echo "Building build chain docker image"
+RUN echo "Building build-chain docker image"
 
 LABEL "com.github.actions.name"="Build Chain"
 LABEL "com.github.actions.description"="It chains actions"

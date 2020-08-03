@@ -1,6 +1,5 @@
-
 const { logger } = require("./common");
-const exec = require('@actions/exec');
+const exec = require("@actions/exec");
 
 class ExitError extends Error {
   constructor(message, code) {

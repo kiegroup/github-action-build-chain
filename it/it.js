@@ -3,7 +3,6 @@ const { Octokit } = require("@octokit/rest");
 const { executeGitHubAction } = require("../src/lib/api");
 const { createConfigLocally } = require("../src/lib/config");
 
-
 async function main() {
   require("dotenv").config();
 
@@ -11,18 +10,23 @@ async function main() {
 
   const octokit = new Octokit({
     auth: `token ${token}`,
-    userAgent: "ginxo/github-build-chain-action-it"
+    userAgent: "kiegroup/github-build-chain-action-it"
   });
-  addInputVariableToEnv('parent-dependencies');
-  addInputVariableToEnv('child-dependencies');
-  const config = await createConfigLocally(octokit, process.env.URL, process.env);
+  addInputVariableToEnv("parent-dependencies");
+  addInputVariableToEnv("child-dependencies");
+  const config = await createConfigLocally(
+    octokit,
+    process.env.URL,
+    process.env
+  );
   const context = { token, octokit, config };
   await executeGitHubAction(context);
 }
 
 function addInputVariableToEnv(inputVariable) {
   if (process.env[inputVariable]) {
-    process.env[`INPUT_${inputVariable.replace(/ /g, '_').toUpperCase()}`] = process.env[inputVariable];
+    process.env[`INPUT_${inputVariable.replace(/ /g, "_").toUpperCase()}`] =
+      process.env[inputVariable];
   }
 }
 

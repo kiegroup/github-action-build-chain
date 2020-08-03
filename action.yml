@@ -3,10 +3,10 @@ author: "Enrique Mingorance Cano"
 description: "GitHub action to define action chains"
 inputs:
   parent-dependencies:
-    description: 'the list of parent project dependencies separated by comma. Something like lienzo-core,lienzo-tests'
+    description: "the list of parent project dependencies separated by comma. Something like lienzo-core,lienzo-tests"
     required: false
   child-dependencies:
-    description: 'the list of child project dependencies separated by comma. Something like appformer,kiegroup/droolsjbpm-build-bootstrap,drools'
+    description: "the list of child project dependencies separated by comma. Something like appformer,kiegroup/droolsjbpm-build-bootstrap,drools"
     required: false
 runs:
   using: "docker"

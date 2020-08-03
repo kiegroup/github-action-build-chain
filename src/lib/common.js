@@ -1,9 +1,9 @@
 const util = require("util");
 const process = require("process");
 
-class ClientError extends Error { }
+class ClientError extends Error {}
 
-class TimeoutError extends Error { }
+class TimeoutError extends Error {}
 
 function log(prefix, obj) {
   if (process.env.NODE_ENV !== "test") {
@@ -55,15 +55,21 @@ function inspect(obj) {
 
 function dependenciesToObject(dependencies) {
   const dependenciesObject = {};
-  dependencies ? dependencies.split(",").forEach(item => {
-    const key = item.trim().includes('@') ? item.trim().split('@')[0] : item.trim();
-    dependenciesObject[key] = item.trim().includes('@') ? {
-      'mapping': {
-        'source': item.split("@")[1].split(':')[0],
-        'target': item.split("@")[1].split(':')[1]
-      }
-    } : {};
-  }) : {};
+  dependencies
+    ? dependencies.split(",").forEach(item => {
+        const key = item.trim().includes("@")
+          ? item.trim().split("@")[0]
+          : item.trim();
+        dependenciesObject[key] = item.trim().includes("@")
+          ? {
+              mapping: {
+                source: item.split("@")[1].split(":")[0],
+                target: item.split("@")[1].split(":")[1]
+              }
+            }
+          : {};
+      })
+    : {};
   return dependenciesObject;
 }
 

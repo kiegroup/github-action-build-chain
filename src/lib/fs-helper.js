@@ -1,10 +1,9 @@
 const fse = require("fs-extra");
-const fs = require('fs');
+const fs = require("fs");
 
 const tmp = require("tmp");
-const yaml = require('js-yaml');
+const yaml = require("js-yaml");
 const { logger } = require("./common");
-
 
 function tmpdir(callback) {
   async function handle(path) {
@@ -27,15 +26,13 @@ function tmpdir(callback) {
 
 function getYamlFileContent(filePath) {
   try {
-    let fileContents = fs.readFileSync(filePath, 'utf8');
+    let fileContents = fs.readFileSync(filePath, "utf8");
     return yaml.safeLoad(fileContents);
   } catch (e) {
     logger.error(`error reading yaml file ${filePath}`, e);
     throw e;
   }
 }
-
-
 
 module.exports = {
   tmpdir,

@@ -1,29 +1,29 @@
-const core = require('@actions/core');
+const core = require("@actions/core");
 const { dependenciesToObject } = require("./common");
 
 function getParentDependencies() {
-  return dependenciesToObject(core.getInput('parent-dependencies'));
+  return dependenciesToObject(core.getInput("parent-dependencies"));
 }
 
 function getChildDependencies() {
   // return ['pep', 'juan']
-  return dependenciesToObject(core.getInput('child-dependencies'));
+  return dependenciesToObject(core.getInput("child-dependencies"));
 }
 
 function getBuildCommand() {
-  return treatCommands(core.getInput('build-command'));
+  return treatCommands(core.getInput("build-command"));
 }
 
 function getBuildCommandUpstream() {
-  return treatCommands(core.getInput('build-command-upstream'));
+  return treatCommands(core.getInput("build-command-upstream"));
 }
 
 function getBuildCommandDownstream() {
-  return treatCommands(core.getInput('build-command-downstream'));
+  return treatCommands(core.getInput("build-command-downstream"));
 }
 
 function treatCommands(command) {
-  return command ? command.split('|').map(item => item.trim()) : undefined;
+  return command ? command.split("|").map(item => item.trim()) : undefined;
 }
 
 module.exports = {

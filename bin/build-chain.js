@@ -48,7 +48,7 @@ async function main() {
   });
 
   let config = undefined;
-  if(args.url) {
+  if (args.url) {
     config = createConfigLocally(octokit, args.url, process.env);
   } else {
     const eventPath = env("GITHUB_EVENT_PATH");

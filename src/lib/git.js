@@ -204,6 +204,27 @@ async function doesBranchExist(octokit, owner, repo, branch) {
   }
 }
 
+async function hasPullRequest(octokit, owner, repo, branch, fromAuthor) {
+  assert(owner, "owner is not defined");
+  assert(repo, "repo is not defined");
+  assert(branch, "branch is not defined");
+  assert(fromAuthor, "fromAuthor is not defined");
+  try {
+    const { status, data } = await octokit.pulls.list({
+      owner,
+      repo,
+      state: "open",
+      head: `${fromAuthor}:${branch}`
+    });
+    return status == 200 && data.length > 0;
+  } catch (e) {
+    logger.error(
+      `Error getting pull request list from https://api.github.com/repos/${owner}/${repo}/pulls?head=${fromAuthor}:${branch}&state=open'".`
+    );
+    throw e;
+  }
+}
+
 module.exports = {
   ExitError,
   git,
@@ -218,5 +239,6 @@ module.exports = {
   sha,
   rebase,
   push,
-  doesBranchExist
+  doesBranchExist,
+  hasPullRequest
 };

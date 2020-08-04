@@ -1,6 +1,8 @@
 const fse = require("fs-extra");
 const git = require("../src/lib/git");
 const { tmpdir } = require("../src/lib/fs-helper");
+const prInfo = require("./resources/pr_info.json");
+const prInfoEmpty = require("./resources/pr_info_empty.json");
 
 async function init(dir) {
   await fse.mkdirs(dir);
@@ -109,4 +111,70 @@ test("mergeCommits returns the correct commits", async () => {
     expect(commits[0][0]).toBe(head2);
     expect(commits[0][1]).toBe(head1);
   });
+});
+
+test("mergeCommits returns the correct commits", async () => {
+  await tmpdir(async path => {
+    await init(path);
+    await commit(path, "master %d", 2);
+    const head1 = await git.head(path);
+    await git.git(path, "checkout", "-b", "branch", "HEAD^");
+    const head2 = await git.head(path);
+    await git.git(path, "merge", "--no-ff", "master");
+
+    const commits = await git.mergeCommits(path, "HEAD^");
+    expect(commits).toHaveLength(1);
+    expect(commits[0][0]).toBe(head2);
+    expect(commits[0][1]).toBe(head1);
+  });
+});
+
+test("hasPullRequest true", async () => {
+  const octokit = {
+    pulls: {
+      list: jest.fn(({ owner, repo, state, head }) => {
+        return owner === "ownerx" &&
+          repo === "repox" &&
+          state === "open" &&
+          head === "authorx:branchx"
+          ? { status: 200, data: prInfo }
+          : undefined;
+      })
+    }
+  };
+
+  const result = await git.hasPullRequest(
+    octokit,
+    "ownerx",
+    "repox",
+    "branchx",
+    "authorx"
+  );
+
+  expect(result).toBe(true);
+});
+
+test("hasPullRequest false", async () => {
+  const octokit = {
+    pulls: {
+      list: jest.fn(({ owner, repo, state, head }) => {
+        return owner === "ownerx" &&
+          repo === "repox" &&
+          state === "open" &&
+          head === "authorx:branchx"
+          ? { status: 200, data: prInfoEmpty }
+          : undefined;
+      })
+    }
+  };
+
+  const result = await git.hasPullRequest(
+    octokit,
+    "ownerx",
+    "repox",
+    "branchx",
+    "authorx"
+  );
+
+  expect(result).toBe(false);
 });

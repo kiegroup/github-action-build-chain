@@ -7,7 +7,6 @@ const { logger } = require("./common");
 const { execute } = require("./command");
 
 async function start(context) {
-  // TODO: merge with master before reading info
   const workflowInformation = readWorkflowInformation(
     context.config.github.workflow
   );

@@ -1,6 +1,11 @@
 const fs = require("fs");
 const path = require("path");
-const { clone, doesBranchExist } = require("./git");
+const {
+  clone,
+  doesBranchExist,
+  merge: gitMerge,
+  hasPullRequest
+} = require("./git");
 const { logger, dependenciesToObject } = require("./common");
 const { getYamlFileContent } = require("./fs-helper");
 
@@ -12,32 +17,61 @@ async function checkoutDependencies(context, dependencies) {
 
 async function checkouProject(context, project, dependencyInformation) {
   const dir = getDir(project);
-  const serverUrl = context.config.github.serverUrl;
-  const groupAndBranchToCheckout = await getGroupAndBranchToCheckout(
+  const checkoutInfo = await getCheckoutInfo(
     context,
     project,
     dependencyInformation.mapping
   );
-  if (groupAndBranchToCheckout == undefined) {
+  if (checkoutInfo == undefined) {
     const msg = `Trying to checking out ${project} into '${dir}'. It does not exist.`;
     logger.error(msg);
     throw new Error(msg);
   }
-  const group = groupAndBranchToCheckout[0];
-  const branch = groupAndBranchToCheckout[1];
-  const shouldMerge = groupAndBranchToCheckout[2];
-  logger.info(
-    `Checking out '${serverUrl}/${group}/${project}:${branch}'  into '${dir}'. Should merge? ${shouldMerge}.`
-  );
-  try {
-    await clone(`${serverUrl}/${group}/${project}`, dir, branch);
-    // TODO: merge in case shouldMerge
-  } catch (err) {
-    console.error(`Error checking out ${serverUrl}/${group}/${project}`, err);
+
+  if (checkoutInfo.merge) {
+    logger.info(
+      `Merging ${context.config.github.serverUrl}/${context.config.github.group}/${project}:${context.config.github.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${project}:${checkoutInfo.branch}`
+    );
+    try {
+      await clone(
+        `${context.config.github.serverUrl}/${context.config.github.group}/${project}`,
+        dir,
+        context.config.github.targetBranch
+      );
+    } catch (err) {
+      logger.error(
+        `Error checking out (before merging)  ${context.config.github.serverUrl}/${context.config.github.group}/${project}:${context.config.github.targetBranch}`
+      );
+      throw err;
+    }
+    try {
+      await gitMerge(dir, checkoutInfo.group, project, checkoutInfo.branch);
+    } catch (err) {
+      logger.error(
+        `Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
+      );
+      throw err;
+    }
+  } else {
+    try {
+      logger.info(
+        `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${project}:${checkoutInfo.branch}'  into '${dir}'`
+      );
+      await clone(
+        `${context.config.github.serverUrl}/${checkoutInfo.group}/${project}`,
+        dir,
+        checkoutInfo.branch
+      );
+    } catch (err) {
+      logger.error(
+        `Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${project}.`
+      );
+      throw err;
+    }
   }
 }
 
-async function getGroupAndBranchToCheckout(context, project, mapping) {
+async function getCheckoutInfo(context, project, mapping) {
   const sourceGroup = context.config.github.author;
   const sourceBranch = context.config.github.sourceBranch;
   const targetGroup = context.config.github.group;
@@ -46,7 +80,11 @@ async function getGroupAndBranchToCheckout(context, project, mapping) {
       ? mapping.target
       : context.config.github.targetBranch;
   logger.info(
-    `getGroupAndBranchToCheckout ${project}. sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${mapping}`
+    `Getting checkout Info for ${project}. sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
+      mapping
+        ? "source:" + mapping.source + " target:" + mapping.target
+        : "not defined"
+    }`
   );
   return (await doesBranchExist(
     context.octokit,
@@ -54,21 +92,41 @@ async function getGroupAndBranchToCheckout(context, project, mapping) {
     project,
     sourceBranch
   ))
-    ? [sourceGroup, sourceBranch, true]
+    ? {
+        group: sourceGroup,
+        branch: sourceBranch,
+        merge: await hasPullRequest(
+          context.octokit,
+          targetGroup,
+          project,
+          sourceBranch,
+          context.config.github.author
+        )
+      }
     : (await doesBranchExist(
         context.octokit,
         targetGroup,
         project,
         sourceBranch
       ))
-    ? [targetGroup, sourceBranch, true]
+    ? {
+        group: targetGroup,
+        branch: sourceBranch,
+        merge: await hasPullRequest(
+          context.octokit,
+          targetGroup,
+          project,
+          sourceBranch,
+          context.config.github.author
+        )
+      }
     : (await doesBranchExist(
         context.octokit,
         targetGroup,
         project,
         targetBranch
       ))
-    ? [targetGroup, targetBranch, false]
+    ? { group: targetGroup, branch: targetBranch, merge: false }
     : undefined;
 }
 
@@ -120,7 +178,7 @@ function treatCommand(command) {
 module.exports = {
   checkoutDependencies,
   checkouProject,
-  getGroupAndBranchToCheckout,
+  getCheckoutInfo,
   getDir,
   readWorkflowInformation
 };

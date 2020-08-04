@@ -1,12 +1,13 @@
 const {
   readWorkflowInformation,
-  getGroupAndBranchToCheckout,
+  getCheckoutInfo,
   checkoutDependencies
 } = require("../src/lib/build-chain-flow-helper");
 jest.mock("../src/lib/git");
 const {
   doesBranchExist: doesBranchExistMock,
-  clone: cloneMock
+  clone: cloneMock,
+  merge: mergeMock
 } = require("../src/lib/git");
 
 test("parseWorkflowInformation", () => {
@@ -40,7 +41,7 @@ test("parseWorkflowInformation", () => {
   expect(expected).toEqual(buildChainInformation);
 });
 
-test("getGroupAndBranchToCheckout. sourceBranch and sourceTarget exist", async () => {
+test("getCheckoutInfo. sourceBranch and sourceTarget exist", async () => {
   // Arrange
   doesBranchExistMock.mockResolvedValueOnce(true);
   const context = {
@@ -54,12 +55,14 @@ test("getGroupAndBranchToCheckout. sourceBranch and sourceTarget exist", async (
     }
   };
   // Act
-  const result = await getGroupAndBranchToCheckout(context, "projectX");
+  const result = await getCheckoutInfo(context, "projectX");
   // Assert
-  expect(result).toEqual(["author", "sourceBranch", true]);
+  expect(result.group).toEqual("author");
+  expect(result.branch).toEqual("sourceBranch");
+  expect(result.merge).toEqual(true);
 });
 
-test("getGroupAndBranchToCheckout. group and sourceTarget exist", async () => {
+test("getCheckoutInfo. group and sourceTarget exist", async () => {
   // Arrange
   doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
   const context = {
@@ -73,12 +76,14 @@ test("getGroupAndBranchToCheckout. group and sourceTarget exist", async () => {
     }
   };
   // Act
-  const result = await getGroupAndBranchToCheckout(context, "projectX");
+  const result = await getCheckoutInfo(context, "projectX");
   // Assert
-  expect(result).toEqual(["group", "sourceBranch", true]);
+  expect(result.group).toEqual("group");
+  expect(result.branch).toEqual("sourceBranch");
+  expect(result.merge).toEqual(true);
 });
 
-test("getGroupAndBranchToCheckout. group and targetBranch exist", async () => {
+test("getCheckoutInfo. group and targetBranch exist", async () => {
   // Arrange
   doesBranchExistMock
     .mockResolvedValueOnce(false)
@@ -95,12 +100,14 @@ test("getGroupAndBranchToCheckout. group and targetBranch exist", async () => {
     }
   };
   // Act
-  const result = await getGroupAndBranchToCheckout(context, "projectX");
+  const result = await getCheckoutInfo(context, "projectX");
   // Assert
-  expect(result).toEqual(["group", "targetBranch", false]);
+  expect(result.group).toEqual("group");
+  expect(result.branch).toEqual("targetBranch");
+  expect(result.merge).toEqual(false);
 });
 
-test("getGroupAndBranchToCheckout. none exist", async () => {
+test("getCheckoutInfo. none exist", async () => {
   // Arrange
   doesBranchExistMock
     .mockResolvedValueOnce(false)
@@ -117,7 +124,7 @@ test("getGroupAndBranchToCheckout. none exist", async () => {
     }
   };
   // Act
-  const result = await getGroupAndBranchToCheckout(context, "projectX");
+  const result = await getCheckoutInfo(context, "projectX");
   // Assert
   expect(result).toEqual(undefined);
 });
@@ -137,7 +144,7 @@ test("checkoutDependencies", async () => {
     }
   };
   const dependencies = {
-    projectA: {},
+    "project-A": {},
     projectB: { mapping: { source: "tBranch", target: "tBranchMapped" } },
     projectC: {},
     projectD: { mapping: { source: "branchX", target: "branchY" } }
@@ -157,8 +164,14 @@ test("checkoutDependencies", async () => {
   await checkoutDependencies(context, dependencies);
   // Assert
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/author/projectA",
-    "projectA",
+    "URL/group/project-A",
+    "project_A",
+    "tBranch"
+  );
+  expect(mergeMock).toHaveBeenCalledWith(
+    "project_A",
+    "author",
+    "project-A",
     "sBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(

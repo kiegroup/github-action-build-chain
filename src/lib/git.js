@@ -153,6 +153,15 @@ async function mergeCommits(dir, ref) {
     .filter(commit => commit.length > 1);
 }
 
+async function merge(dir, group, repositoryName, branch) {
+  return await git(
+    dir,
+    "pull",
+    `https://github.com/${group}/${repositoryName}`,
+    branch
+  );
+}
+
 async function head(dir) {
   return await git(dir, "show-ref", "--head", "-s", "/HEAD");
 }
@@ -204,6 +213,7 @@ module.exports = {
   fetchDeepen,
   mergeBase,
   mergeCommits,
+  merge,
   head,
   sha,
   rebase,

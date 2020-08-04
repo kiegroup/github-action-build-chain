@@ -26,7 +26,7 @@ test("createConfig", () => {
     GITHUB_BASE_REF: "githubBaseRef",
     GITHUB_JOB: "githubJob",
     GITHUB_REPOSITORY: "kiegroup/github-action-build-chain",
-    GITHUB_WORKFLOW: "githubWorkflow"
+    GITHUB_WORKFLOW: ".github/workflows/githubWorkflow.yml"
   };
   const envData = {
     pull_request: {
@@ -60,7 +60,7 @@ test("createConfig", () => {
       ref: undefined,
       sourceRepository: "fullName",
       repository: "kiegroup/github-action-build-chain",
-      workflow: "githubWorkflow"
+      workflow: ".github/workflows/githubWorkflow.yml"
     }
   };
   expect(config).toEqual(expected);

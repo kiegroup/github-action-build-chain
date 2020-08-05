@@ -1,5 +1,5 @@
 name: "Github action chain"
-author: "Enrique Mingorance Cano"
+author: "Enrique Mingorance Cano <emingora@redhat.com>"
 description: "GitHub action to define action chains"
 inputs:
   parent-dependencies:
@@ -7,6 +7,12 @@ inputs:
     required: false
   child-dependencies:
     description: "the list of child project dependencies separated by comma. Something like appformer,kiegroup/droolsjbpm-build-bootstrap,drools"
+    required: false
+  build-command:
+    description: "the list of commands as string split by | to run"
+    required: true
+  build-command-upstream:
+    description: "the list of commands as string split by | to run in case the project is upstream built"
     required: false
 runs:
   using: "docker"

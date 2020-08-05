@@ -8,6 +8,7 @@ const {
 } = require("./git");
 const { logger, dependenciesToObject } = require("./common");
 const { getYamlFileContent } = require("./fs-helper");
+var assert = require("assert");
 
 async function checkoutDependencies(context, dependencies) {
   for (const dependencyKey of Object.keys(dependencies)) {
@@ -134,22 +135,18 @@ function getDir(project) {
   return project.replace(/ |-/g, "_");
 }
 
-function readWorkflowInformation(workflowFilePath, dir = ".") {
+function readWorkflowInformation(triggeringJobName, workflowFilePath, dir = ".") {
   const filePath = path.join(dir, workflowFilePath);
   if (!fs.existsSync(filePath)) {
     logger.warn(`file ${filePath} does not exist`);
     return undefined;
   }
-  return parseWorkflowInformation(getYamlFileContent(filePath));
+  return parseWorkflowInformation(triggeringJobName, getYamlFileContent(filePath));
 }
 
-function parseWorkflowInformation(workflowData) {
-  const buildChainKey = Object.keys(workflowData.jobs).find(key =>
-    workflowData.jobs[key].steps.find(
-      step => step.uses && step.uses.includes("github-action-build-chain")
-    )
-  );
-  const buildChainStep = workflowData.jobs[buildChainKey].steps.find(
+function parseWorkflowInformation(jobName, workflowData) {
+  assert(workflowData.jobs[jobName], `The job id '${jobName}' does not exist`);  
+  const buildChainStep = workflowData.jobs[jobName].steps.find(
     step => step.uses && step.uses.includes("github-action-build-chain")
   );
   return {

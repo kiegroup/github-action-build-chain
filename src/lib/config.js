@@ -11,6 +11,7 @@ const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 
 function createConfig(eventData, env = {}) {
+  console.log("createConfig", env);
   function parseGitHub(env) {
     return {
       serverUrl: env["GITHUB_SERVER_URL"], // https://github.com

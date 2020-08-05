@@ -53,7 +53,6 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
   env["GITHUB_ACTOR"] = event.pull_request.head.user.login;
   env["GITHUB_HEAD_REF"] = event.pull_request.head.ref;
   env["GITHUB_BASE_REF"] = event.pull_request.base.ref;
-  env["GITHUB_JOB"] = undefined;
   env["GITHUB_REPOSITORY"] = event.pull_request.base.repo.full_name;
   env["GITHUB_REF"] = event.ref;
   return createConfig(event, env);

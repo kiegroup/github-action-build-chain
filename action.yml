@@ -5,7 +5,6 @@ inputs:
   build-chain-version:
     description: "the open JDK version"
     required: true
-    default: 'openjdk8'
   parent-dependencies:
     description: "the list of parent project dependencies separated by comma. Something like lienzo-core,lienzo-tests"
     required: false

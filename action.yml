@@ -2,9 +2,6 @@ name: "Github action chain"
 author: "Enrique Mingorance Cano <emingora@redhat.com>"
 description: "GitHub action to define action chains"
 inputs:
-  buildchain-version:
-    description: "the open JDK version"
-    required: true
   parent-dependencies:
     description: "the list of parent project dependencies separated by comma. Something like lienzo-core,lienzo-tests"
     required: false
@@ -19,7 +16,7 @@ inputs:
     required: false
 runs:
   using: "docker"
-  image: ${{ format('docker://ginxo/github-action-build-chain:{0}', inputs.buildchain-version) }}"
+  image: "Dockerfile"
 branding:
   icon: "link"
   color: "purple"

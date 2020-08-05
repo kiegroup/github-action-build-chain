@@ -16,7 +16,7 @@ runs:
   using: "docker"
   image: "Dockerfile"
   args:
-    - --build-arg OPENJDK_VERSION=${{ inputs.openjdk-version }}
+    - "--build-arg OPENJDK_VERSION=${{ inputs.openjdk-version }}"
 branding:
   icon: "link"
   color: "purple"

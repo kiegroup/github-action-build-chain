@@ -1,4 +1,5 @@
-FROM openjdk:8
+ARG OPENJDK_VERSION=8
+FROM openjdk:$OPENJDK_VERSION
 
 RUN echo "Building build-chain docker image"
 

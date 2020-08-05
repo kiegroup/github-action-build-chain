@@ -1,7 +1,11 @@
 name: "Github action chain"
-author: "Enrique Mingorance Cano"
+author: "Enrique Mingorance Cano <emingora@redhat.com>"
 description: "GitHub action to define action chains"
 inputs:
+  openjdk-version:
+    description: "the open JDK version"
+    required: true
+    default: '8'
   parent-dependencies:
     description: "the list of parent project dependencies separated by comma. Something like lienzo-core,lienzo-tests"
     required: false
@@ -11,6 +15,8 @@ inputs:
 runs:
   using: "docker"
   image: "Dockerfile"
+  args:
+    - ${{ inputs.openjdk-version }}
 branding:
   icon: "link"
   color: "purple"

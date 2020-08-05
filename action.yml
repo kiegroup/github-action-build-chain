@@ -16,7 +16,7 @@ runs:
   using: "docker"
   image: "Dockerfile"
   args:
-    - ${{ inputs.openjdk-version }}
+    - ${{ inputs.openjdkversion }}
 branding:
   icon: "link"
   color: "purple"

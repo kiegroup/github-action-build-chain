@@ -3,6 +3,7 @@ const path = require("path");
 const { clone, doesBranchExist } = require("./git");
 const { logger, dependenciesToObject } = require("./common");
 const { getYamlFileContent } = require("./fs-helper");
+var assert = require("assert");
 
 async function checkoutDependencies(context, dependencies) {
   for (const dependencyKey of Object.keys(dependencies)) {
@@ -56,42 +57,39 @@ async function getGroupAndBranchToCheckout(context, project, mapping) {
   ))
     ? [sourceGroup, sourceBranch, true]
     : (await doesBranchExist(
-        context.octokit,
-        targetGroup,
-        project,
-        sourceBranch
-      ))
-    ? [targetGroup, sourceBranch, true]
-    : (await doesBranchExist(
+      context.octokit,
+      targetGroup,
+      project,
+      sourceBranch
+    ))
+      ? [targetGroup, sourceBranch, true]
+      : (await doesBranchExist(
         context.octokit,
         targetGroup,
         project,
         targetBranch
       ))
-    ? [targetGroup, targetBranch, false]
-    : undefined;
+        ? [targetGroup, targetBranch, false]
+        : undefined;
 }
 
 function getDir(project) {
   return project.replace(/ |-/g, "_");
 }
 
-function readWorkflowInformation(workflowFilePath, dir = ".") {
+function readWorkflowInformation(triggeringJobName, workflowFilePath, dir = ".") {
   const filePath = path.join(dir, workflowFilePath);
   if (!fs.existsSync(filePath)) {
     logger.warn(`file ${filePath} does not exist`);
     return undefined;
   }
-  return parseWorkflowInformation(getYamlFileContent(filePath));
+  return parseWorkflowInformation(triggeringJobName, getYamlFileContent(filePath));
 }
 
-function parseWorkflowInformation(workflowData) {
-  const buildChainKey = Object.keys(workflowData.jobs).find(key =>
-    workflowData.jobs[key].steps.find(
-      step => step.uses && step.uses.includes("github-action-build-chain")
-    )
-  );
-  const buildChainStep = workflowData.jobs[buildChainKey].steps.find(
+function parseWorkflowInformation(jobName, workflowData) {
+  console.log('Object.keys(workflowData.jobs)[jobName]', Object.keys(workflowData.jobs)[jobName]);
+  assert(workflowData.jobs[jobName], `The job id '${jobName}' does not exist`);  
+  const buildChainStep = workflowData.jobs[jobName].steps.find(
     step => step.uses && step.uses.includes("github-action-build-chain")
   );
   return {

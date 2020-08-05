@@ -9,6 +9,7 @@ const { execute } = require("./command");
 async function start(context) {
   // TODO: merge with master before reading info
   const workflowInformation = readWorkflowInformation(
+    context.config.github.jobName,
     context.config.github.workflow
   );
   await treatParents(
@@ -39,6 +40,7 @@ async function treatParents(
       ).filter(a => a !== null && a !== "")) {
         const dir = getDir(parentProject);
         const parentWorkflowInformation = readWorkflowInformation(
+          context.config.github.jobName,
           context.config.github.workflow,
           dir
         );
@@ -61,7 +63,7 @@ async function treatParents(
       await executeBuildCommands(
         getDir(project),
         workflowInformation["buildCommandsUpstream"] ||
-          workflowInformation["buildCommands"]
+        workflowInformation["buildCommands"]
       );
     }
   }

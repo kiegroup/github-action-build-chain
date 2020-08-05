@@ -5,7 +5,7 @@ inputs:
   openjdkversion:
     description: "the open JDK version"
     required: true
-    default: '8'
+    default: '11'
   parent-dependencies:
     description: "the list of parent project dependencies separated by comma. Something like lienzo-core,lienzo-tests"
     required: false

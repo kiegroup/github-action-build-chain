@@ -14,12 +14,9 @@ jest.mock("../src/lib/action-utils", () => ({
   },
   getBuildCommandDownstream: () => {
     return "build command downstream";
-  }
-}));
-
-jest.mock("../src/lib/git", () => ({
-  getWorkflowFileName: () => {
-    return ".github/workflows/main.yml";
+  },
+  getWorkflowfileName: () => {
+    return "pull_request.yml";
   }
 }));
 
@@ -66,7 +63,7 @@ test("createConfig", async () => {
       ref: undefined,
       sourceRepository: "fullName",
       repository: "kiegroup/github-action-build-chain",
-      workflow: ".github/workflows/main.yml",
+      workflow: ".github/workflows/pull_request.yml",
       workflowName: "build chain name"
     }
   };

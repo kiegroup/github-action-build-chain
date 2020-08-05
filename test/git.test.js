@@ -3,8 +3,6 @@ const git = require("../src/lib/git");
 const { tmpdir } = require("../src/lib/fs-helper");
 const prInfo = require("./resources/pr_info.json");
 const prInfoEmpty = require("./resources/pr_info_empty.json");
-const workflowInfo = require("./resources/workflow.json");
-const workflowInfoEmpty = require("./resources/workflow_empty.json");
 
 async function init(dir) {
   await fse.mkdirs(dir);
@@ -179,67 +177,4 @@ test("hasPullRequest false", async () => {
   );
 
   expect(result).toBe(false);
-});
-
-test("getWorkflowFileName with content", async () => {
-  const octokit = {
-    actions: {
-      listRepoWorkflows: jest.fn(({ owner, repo }) => {
-        return owner === "ownerx" && repo === "repox"
-          ? { status: 200, data: workflowInfo }
-          : undefined;
-      })
-    }
-  };
-
-  const result = await git.getWorkflowFileName(
-    octokit,
-    "ownerx",
-    "repox",
-    "Linter"
-  );
-
-  expect(result).toBe(".github/workflows/linter.yml");
-});
-
-test("getWorkflowFileName with content not existing", async () => {
-  const octokit = {
-    actions: {
-      listRepoWorkflows: jest.fn(({ owner, repo }) => {
-        return owner === "ownerx" && repo === "repox"
-          ? { status: 200, data: workflowInfo }
-          : undefined;
-      })
-    }
-  };
-
-  const result = await git.getWorkflowFileName(
-    octokit,
-    "ownerx",
-    "repox",
-    "notexisting"
-  );
-
-  expect(result).toBe(undefined);
-});
-
-test("getWorkflowFileName empty", async () => {
-  const octokit = {
-    actions: {
-      listRepoWorkflows: jest.fn(({ owner, repo }) => {
-        return owner === "ownerx" && repo === "repox"
-          ? { status: 200, data: workflowInfoEmpty }
-          : undefined;
-      })
-    }
-  };
-
-  const result = await git.getWorkflowFileName(
-    octokit,
-    "ownerx",
-    "repox",
-    "Linter"
-  );
-
-  expect(result).toBe(undefined);
 });

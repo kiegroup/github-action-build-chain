@@ -225,28 +225,6 @@ async function hasPullRequest(octokit, owner, repo, branch, fromAuthor) {
   }
 }
 
-async function getWorkflowFileName(octokit, owner, repo, workflowName) {
-  assert(owner, "owner is not defined");
-  assert(repo, "repo is not defined");
-  assert(workflowName, "workflowName is not defined");
-  try {
-    const { status, data } = await octokit.actions.listRepoWorkflows({
-      owner,
-      repo
-    });
-    const workflow =
-      status === 200
-        ? data.workflows.find(workflow => workflow.name === workflowName)
-        : undefined;
-    return workflow ? workflow.path : undefined;
-  } catch (e) {
-    logger.error(
-      `Error getting workflows from  list from https://api.github.com/repos/${owner}/${repo}/actions/workflows'".`
-    );
-    throw e;
-  }
-}
-
 module.exports = {
   ExitError,
   git,
@@ -262,6 +240,5 @@ module.exports = {
   rebase,
   push,
   doesBranchExist,
-  hasPullRequest,
-  getWorkflowFileName
+  hasPullRequest
 };

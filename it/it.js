@@ -14,6 +14,7 @@ async function main() {
   });
   addInputVariableToEnv("parent-dependencies");
   addInputVariableToEnv("child-dependencies");
+  addInputVariableToEnv("workflow-file-name");
   const config = await createConfigLocally(
     octokit,
     process.env.URL,

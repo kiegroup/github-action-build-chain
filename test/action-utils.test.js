@@ -1,7 +1,8 @@
 const {
   getChildDependencies,
   getParentDependencies,
-  getBuildCommand
+  getBuildCommand,
+  getWorkflowfileName
 } = require("../src/lib/action-utils");
 jest.mock("@actions/core", () => ({
   getInput: param => {
@@ -11,6 +12,8 @@ jest.mock("@actions/core", () => ({
       ? "appformer"
       : param.includes("build-command")
       ? "command 1 x | command 2"
+      : param.includes("workflow-file-name")
+      ? "pull_request.yml"
       : undefined;
   }
 }));
@@ -37,4 +40,12 @@ test("getBuildCommand", () => {
 
   // Assert
   expect(result).toEqual(["command 1 x", "command 2"]);
+});
+
+test("getWorkflowfileName", () => {
+  // Act
+  const result = getWorkflowfileName();
+
+  // Assert
+  expect(result).toEqual("pull_request.yml");
 });

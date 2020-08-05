@@ -1,7 +1,7 @@
-ARG INPUT_OPENJDKVERSION=8
-FROM openjdk:$INPUT_OPENJDKVERSION
+ARG OPENJDK_VERSION=8
+FROM openjdk:$OPENJDK_VERSION
 
-RUN echo "Building build-chain docker image"
+RUN echo "Building build-chain docker image $OPENJDK_VERSION"
 
 LABEL "com.github.actions.name"="Build Chain"
 LABEL "com.github.actions.description"="It chains actions"

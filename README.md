@@ -9,10 +9,10 @@ You can build the `github-action-build-chain` image on your just executing
 docker build .
 ```
 
-In case you want to build it for a different openjdk version you just specify a `--build-arg INPUT_OPENJDKVERSION` argument
+In case you want to build it for a different openjdk version you just specify a `--build-arg OPENJDK_VERSION` argument
 
 ```
-docker build --build-arg INPUT_OPENJDKVERSION=11 .
+docker build --build-arg OPENJDK_VERSION=11 .
 ```
 
 ## Testing

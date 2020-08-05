@@ -5,6 +5,7 @@ const {
 } = require("./build-chain-flow-helper");
 const { logger } = require("./common");
 const { execute } = require("./command");
+const { treatCommand } = require("./command/command-treatment-factory");
 
 async function start(context) {
   const workflowInformation = readWorkflowInformation(
@@ -70,7 +71,7 @@ async function treatParents(
 
 async function executeBuildCommands(cwd, buildCommands) {
   for (const command of buildCommands) {
-    await execute(cwd, command);
+    await execute(cwd, treatCommand(command));
   }
 }
 

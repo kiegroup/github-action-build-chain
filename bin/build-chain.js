@@ -49,12 +49,12 @@ async function main() {
 
   let config = undefined;
   if (args.url) {
-    config = createConfigLocally(octokit, args.url, process.env);
+    config = await createConfigLocally(octokit, args.url, process.env);
   } else {
     const eventPath = env("GITHUB_EVENT_PATH");
     const eventDataStr = await fse.readFile(eventPath, "utf8");
     const eventData = JSON.parse(eventDataStr);
-    config = createConfig(eventData, process.env);
+    config = await createConfig(octokit, eventData, process.env);
   }
   const context = { token, octokit, config };
   await executeGitHubAction(context);

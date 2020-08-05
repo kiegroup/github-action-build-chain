@@ -7,11 +7,13 @@ const {
   getChildDependencies
 } = require("./action-utils");
 
+const { getWorkflowFileName } = require("./git");
+
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 
-function createConfig(eventData, env = {}) {
-  function parseGitHub(env) {
+async function createConfig(octokit, eventData, env = {}) {
+  async function parseGitHub(env) {
     return {
       serverUrl: env["GITHUB_SERVER_URL"], // https://github.com
       action: env["GITHUB_ACTION"], // Ginxogithub-action-build-chain
@@ -25,13 +27,15 @@ function createConfig(eventData, env = {}) {
         ? eventData.pull_request.repo.full_name
         : env["GITHUB_REPOSITORY"], // forkedGroup/lienzo-tests
       repository: env["GITHUB_REPOSITORY"], // Ginxo/lienzo-tests
-      group: env["GITHUB_REPOSITORY"]
-        ? env["GITHUB_REPOSITORY"].split("/")[0]
-        : undefined, // Ginxo/lienzo-tests
-      project: env["GITHUB_REPOSITORY"]
-        ? env["GITHUB_REPOSITORY"].split("/")[1]
-        : undefined, // Ginxo/lienzo-tests
-      workflow: env["GITHUB_WORKFLOW"], // .github/workflows/main.yml
+      group: env["GITHUB_REPOSITORY"].split("/")[0], // Ginxo
+      project: env["GITHUB_REPOSITORY"].split("/")[1], // lienzo-tests
+      workflow: await getWorkflowFileName(
+        octokit,
+        env["GITHUB_ACTOR"],
+        env["GITHUB_REPOSITORY"].split("/")[1],
+        env["GITHUB_WORKFLOW"]
+      ), // .github/workflows/main.yml
+      workflowName: env["GITHUB_WORKFLOW"], // Build Chain
       ref: env["GITHUB_REF"] // refs/pull/1/merge'
     };
   }
@@ -41,7 +45,7 @@ function createConfig(eventData, env = {}) {
     buildCommands: getBuildCommand(),
     buildCommandsUpstream: getBuildCommandUpstream(),
     buildCommandsDownstream: getBuildCommandDownstream(),
-    github: parseGitHub(env)
+    github: await parseGitHub(env)
   };
 }
 
@@ -55,7 +59,7 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
   env["GITHUB_BASE_REF"] = event.pull_request.base.ref;
   env["GITHUB_REPOSITORY"] = event.pull_request.base.repo.full_name;
   env["GITHUB_REF"] = event.ref;
-  return createConfig(event, env);
+  return await createConfig(octokit, event, env);
 }
 
 async function getEvent(octokit, eventUrl) {

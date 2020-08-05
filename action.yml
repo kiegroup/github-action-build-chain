@@ -2,7 +2,7 @@ name: "Github action chain"
 author: "Enrique Mingorance Cano <emingora@redhat.com>"
 description: "GitHub action to define action chains"
 inputs:
-  openjdk-version:
+  openjdkversion:
     description: "the open JDK version"
     required: true
     default: '8'

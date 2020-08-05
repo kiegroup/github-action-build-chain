@@ -8,6 +8,7 @@ const { execute } = require("./command");
 
 async function start(context) {
   const workflowInformation = readWorkflowInformation(
+    context.config.github.jobName,
     context.config.github.workflow
   );
   await treatParents(
@@ -38,6 +39,7 @@ async function treatParents(
       ).filter(a => a !== null && a !== "")) {
         const dir = getDir(parentProject);
         const parentWorkflowInformation = readWorkflowInformation(
+          context.config.github.jobName,
           context.config.github.workflow,
           dir
         );

@@ -14,6 +14,7 @@ const {
 test("parseWorkflowInformation", () => {
   // Act
   const buildChainInformation = readWorkflowInformation(
+    "build-chain",
     "flow.yaml",
     "test/resources"
   );

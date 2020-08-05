@@ -140,6 +140,12 @@ function readWorkflowInformation(
   workflowFilePath,
   dir = "."
 ) {
+  console.log(
+    "readWorkflowInformation",
+    triggeringJobName,
+    workflowFilePath,
+    dir
+  );
   const filePath = path.join(dir, workflowFilePath);
   if (!fs.existsSync(filePath)) {
     logger.warn(`file ${filePath} does not exist`);

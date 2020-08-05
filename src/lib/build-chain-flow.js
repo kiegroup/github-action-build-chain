@@ -7,7 +7,12 @@ const { logger } = require("./common");
 const { execute } = require("./command");
 
 async function start(context) {
-  console.log("context.config.github", context.config.github);
+  console.log(
+    "context.config.github",
+    context.config.github,
+    context.config.github.jobName,
+    context.config.github.workflow
+  );
   const workflowInformation = readWorkflowInformation(
     context.config.github.jobName,
     context.config.github.workflow

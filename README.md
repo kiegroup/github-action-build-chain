@@ -1,8 +1,26 @@
 # Github Action Build Chain
 
+## How to add it to your project(s)
+
+// TODO by https://issues.redhat.com/browse/BXMSPROD-913
+
+## Docker build
+
+You can build the `github-action-build-chain` image on your just executing
+
+```
+docker build .
+```
+
+In case you want to build it for a different openjdk version you just specify a `--build-arg OPENJDK_VERSION` argument
+
+```
+docker build --build-arg OPENJDK_VERSION=11 .
+```
+
 ## Testing
 
-### Unitary testing
+### Unit testing
 
 - **TEST_GITHUB_TOKEN** env variable is needed
 

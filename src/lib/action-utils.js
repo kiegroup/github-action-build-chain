@@ -6,7 +6,6 @@ function getParentDependencies() {
 }
 
 function getChildDependencies() {
-  // return ['pep', 'juan']
   return dependenciesToObject(core.getInput("child-dependencies"));
 }
 
@@ -22,6 +21,10 @@ function getBuildCommandDownstream() {
   return treatCommands(core.getInput("build-command-downstream"));
 }
 
+function getWorkflowfileName() {
+  return core.getInput("workflow-file-name");
+}
+
 function treatCommands(command) {
   return command ? command.split("|").map(item => item.trim()) : undefined;
 }
@@ -31,5 +34,6 @@ module.exports = {
   getChildDependencies,
   getBuildCommandUpstream,
   getBuildCommandDownstream,
-  getBuildCommand
+  getBuildCommand,
+  getWorkflowfileName
 };

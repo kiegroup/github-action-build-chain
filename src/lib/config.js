@@ -4,10 +4,9 @@ const {
   getBuildCommandDownstream,
   getBuildCommandUpstream,
   getParentDependencies,
-  getChildDependencies
+  getChildDependencies,
+  getWorkflowfileName
 } = require("./action-utils");
-
-const { getWorkflowFileName } = require("./git");
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
@@ -29,12 +28,7 @@ async function createConfig(octokit, eventData, env = {}) {
       repository: env["GITHUB_REPOSITORY"], // Ginxo/lienzo-tests
       group: env["GITHUB_REPOSITORY"].split("/")[0], // Ginxo
       project: env["GITHUB_REPOSITORY"].split("/")[1], // lienzo-tests
-      workflow: await getWorkflowFileName(
-        octokit,
-        env["GITHUB_ACTOR"],
-        env["GITHUB_REPOSITORY"].split("/")[1],
-        env["GITHUB_WORKFLOW"]
-      ), // .github/workflows/main.yml
+      workflow: `.github/workflows/${getWorkflowfileName()}`, // .github/workflows/main.yml
       workflowName: env["GITHUB_WORKFLOW"], // Build Chain
       ref: env["GITHUB_REF"] // refs/pull/1/merge'
     };

@@ -12,8 +12,8 @@ const { getWorkflowFileName } = require("./git");
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 
-function createConfig(octokit, eventData, env = {}) {
-  function parseGitHub(env) {
+async function createConfig(octokit, eventData, env = {}) {
+  async function parseGitHub(env) {
     return {
       serverUrl: env["GITHUB_SERVER_URL"], // https://github.com
       action: env["GITHUB_ACTION"], // Ginxogithub-action-build-chain
@@ -29,7 +29,7 @@ function createConfig(octokit, eventData, env = {}) {
       repository: env["GITHUB_REPOSITORY"], // Ginxo/lienzo-tests
       group: env["GITHUB_REPOSITORY"].split("/")[0], // Ginxo
       project: env["GITHUB_REPOSITORY"].split("/")[1], // lienzo-tests
-      workflow: getWorkflowFileName(
+      workflow: await getWorkflowFileName(
         octokit,
         env["GITHUB_ACTOR"],
         env["GITHUB_REPOSITORY"].split("/")[1],
@@ -45,7 +45,7 @@ function createConfig(octokit, eventData, env = {}) {
     buildCommands: getBuildCommand(),
     buildCommandsUpstream: getBuildCommandUpstream(),
     buildCommandsDownstream: getBuildCommandDownstream(),
-    github: parseGitHub(env)
+    github: await parseGitHub(env)
   };
 }
 
@@ -59,7 +59,7 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
   env["GITHUB_BASE_REF"] = event.pull_request.base.ref;
   env["GITHUB_REPOSITORY"] = event.pull_request.base.repo.full_name;
   env["GITHUB_REF"] = event.ref;
-  return createConfig(octokit, event, env);
+  return await createConfig(octokit, event, env);
 }
 
 async function getEvent(octokit, eventUrl) {

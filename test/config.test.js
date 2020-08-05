@@ -23,7 +23,7 @@ jest.mock("../src/lib/git", () => ({
   }
 }));
 
-test("createConfig", () => {
+test("createConfig", async () => {
   // Arrange
   const env = {
     GITHUB_SERVER_URL: "githubServerUrl",
@@ -42,7 +42,7 @@ test("createConfig", () => {
     }
   };
   // Act
-  const config = createConfig(undefined, envData, env);
+  const config = await createConfig(undefined, envData, env);
   // Assert
   const expected = {
     parentDependencies: { "lienzo-core": {}, "lienzo-test": {}, drools: {} },

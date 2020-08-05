@@ -2,7 +2,7 @@ name: "Github action chain"
 author: "Enrique Mingorance Cano <emingora@redhat.com>"
 description: "GitHub action to define action chains"
 inputs:
-  buildchainversion:
+  buildchain-version:
     description: "the open JDK version"
     required: true
   parent-dependencies:
@@ -19,7 +19,7 @@ inputs:
     required: false
 runs:
   using: "docker"
-  image: "docker://ginxo/github-action-build-chain:${{ inputs.buildchainversion }}"
+  image: "docker://ginxo/github-action-build-chain:${{ inputs.buildchain-version }}"
 branding:
   icon: "link"
   color: "purple"

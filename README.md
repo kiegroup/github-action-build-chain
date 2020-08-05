@@ -1,8 +1,11 @@
 # Github Action Build Chain
 
 ## How to add it to your project(s)
+
 // TODO by https://issues.redhat.com/browse/BXMSPROD-913
+
 ## Docker build
+
 You can build the `github-action-build-chain` image on your just executing
 
 ```

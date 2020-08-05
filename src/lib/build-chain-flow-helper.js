@@ -135,17 +135,24 @@ function getDir(project) {
   return project.replace(/ |-/g, "_");
 }
 
-function readWorkflowInformation(triggeringJobName, workflowFilePath, dir = ".") {
+function readWorkflowInformation(
+  triggeringJobName,
+  workflowFilePath,
+  dir = "."
+) {
   const filePath = path.join(dir, workflowFilePath);
   if (!fs.existsSync(filePath)) {
     logger.warn(`file ${filePath} does not exist`);
     return undefined;
   }
-  return parseWorkflowInformation(triggeringJobName, getYamlFileContent(filePath));
+  return parseWorkflowInformation(
+    triggeringJobName,
+    getYamlFileContent(filePath)
+  );
 }
 
 function parseWorkflowInformation(jobName, workflowData) {
-  assert(workflowData.jobs[jobName], `The job id '${jobName}' does not exist`);  
+  assert(workflowData.jobs[jobName], `The job id '${jobName}' does not exist`);
   const buildChainStep = workflowData.jobs[jobName].steps.find(
     step => step.uses && step.uses.includes("github-action-build-chain")
   );

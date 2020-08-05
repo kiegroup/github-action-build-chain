@@ -8,7 +8,9 @@ jest.mock("../src/lib/build-chain-flow-helper");
 
 test("treatParents", async () => {
   // Arrange
-  const context = { config: { github: { jobName: "job-id", workflow: "main.yaml" } } };
+  const context = {
+    config: { github: { jobName: "job-id", workflow: "main.yaml" } }
+  };
   const workflowInformation = {
     id: "build-chain",
     name: "Build Chain",
@@ -31,5 +33,9 @@ test("treatParents", async () => {
   // Assert
   expect(checkoutDependencies).toHaveBeenCalledWith(context, { projectD: {} });
   expect(getDir).toHaveBeenCalledWith("projectD");
-  expect(readWorkflowInformation).toHaveBeenCalledWith("job-id", "main.yaml", undefined);
+  expect(readWorkflowInformation).toHaveBeenCalledWith(
+    "job-id",
+    "main.yaml",
+    undefined
+  );
 });

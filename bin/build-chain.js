@@ -54,7 +54,7 @@ async function main() {
     const eventPath = env("GITHUB_EVENT_PATH");
     const eventDataStr = await fse.readFile(eventPath, "utf8");
     const eventData = JSON.parse(eventDataStr);
-    config = createConfig(eventData, process.env);
+    config = createConfig(octokit, eventData, process.env);
   }
   const context = { token, octokit, config };
   await executeGitHubAction(context);

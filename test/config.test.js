@@ -17,6 +17,12 @@ jest.mock("../src/lib/action-utils", () => ({
   }
 }));
 
+jest.mock("../src/lib/git", () => ({
+  getWorkflowFileName: () => {
+    return ".github/workflows/main.yml";
+  }
+}));
+
 test("createConfig", () => {
   // Arrange
   const env = {
@@ -26,7 +32,7 @@ test("createConfig", () => {
     GITHUB_BASE_REF: "githubBaseRef",
     GITHUB_JOB: "githubJob",
     GITHUB_REPOSITORY: "kiegroup/github-action-build-chain",
-    GITHUB_WORKFLOW: ".github/workflows/githubWorkflow.yml"
+    GITHUB_WORKFLOW: "build chain name"
   };
   const envData = {
     pull_request: {
@@ -36,7 +42,7 @@ test("createConfig", () => {
     }
   };
   // Act
-  const config = createConfig(envData, env);
+  const config = createConfig(undefined, envData, env);
   // Assert
   const expected = {
     parentDependencies: { "lienzo-core": {}, "lienzo-test": {}, drools: {} },
@@ -60,7 +66,8 @@ test("createConfig", () => {
       ref: undefined,
       sourceRepository: "fullName",
       repository: "kiegroup/github-action-build-chain",
-      workflow: ".github/workflows/githubWorkflow.yml"
+      workflow: ".github/workflows/main.yml",
+      workflowName: "build chain name"
     }
   };
   expect(config).toEqual(expected);

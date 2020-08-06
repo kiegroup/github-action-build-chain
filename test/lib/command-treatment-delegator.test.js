@@ -1,6 +1,6 @@
 const {
   treatCommand
-} = require("../../src/lib/command/command-treatment-factory");
+} = require("../../src/lib/command/command-treatment-delegator");
 jest.mock("../../src/lib/command/maven-treatment", () => ({
   treat: () => {
     return "maven command";

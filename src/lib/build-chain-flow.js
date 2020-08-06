@@ -5,7 +5,7 @@ const {
 } = require("./build-chain-flow-helper");
 const { logger } = require("./common");
 const { execute } = require("./command");
-const { treatCommand } = require("./command/command-treatment-factory");
+const { treatCommand } = require("./command/command-treatment-delegator");
 
 async function start(context) {
   const workflowInformation = readWorkflowInformation(

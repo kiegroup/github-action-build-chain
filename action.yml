@@ -11,9 +11,9 @@ inputs:
   build-command:
     description: "the list of commands as string split by | to run"
     required: true
-    build-command-upstream:
-      description: "the list of commands as string split by | to run in case the project is upstream built"
-      required: false
+  build-command-upstream:
+    description: "the list of commands as string split by | to run in case the project is upstream built"
+    required: false
   workflow-file-name:
     description: "the file flow file name, normally the same one where the flow is stored. Like `pull_request.yml`"
     required: true

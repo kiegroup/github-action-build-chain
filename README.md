@@ -1,6 +1,6 @@
 # Github Action Build Chain
 
-Github action build chain is a tool for github actions to build multiple projects from different repositories in a single action. Let's consider you have a project hierarchy like
+Github action build chain is a tool for github actions to build multiple projects from different repositories in a single action. Let's consider you have a project hierarchy like:
 
 ![Project hierarchy](/docs/project-hierarchy.png)
 
@@ -11,7 +11,7 @@ Just defining the **build chain** flow in every project from the chain, the tool
 
 ## How to add it to your project(s)
 
-It is just to add the step (replacing dependencies and commands)
+It is just to add the step (replacing dependencies and commands):
 
 ```
 - name: Build Chain
@@ -72,7 +72,7 @@ to your existing yaml flow definition or to create a new one. Do the same for th
 
 ## Usage example
 
-Considering the projects hierarchy 
+Considering the projects hierarchy:
 
 ![Project hierarchy](/docs/project-hierarchy.png)
 

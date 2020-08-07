@@ -9,7 +9,13 @@ jest.mock("../src/lib/build-chain-flow-helper");
 test("treatParents", async () => {
   // Arrange
   const context = {
-    config: { github: { jobName: "job-id", workflow: "main.yaml" } }
+    config: {
+      github: {
+        jobName: "job-id",
+        workflow: "main.yaml",
+        group: "defaultGroup"
+      }
+    }
   };
   const workflowInformation = {
     id: "build-chain",
@@ -36,6 +42,7 @@ test("treatParents", async () => {
   expect(readWorkflowInformation).toHaveBeenCalledWith(
     "job-id",
     "main.yaml",
+    "defaultGroup",
     undefined
   );
 });

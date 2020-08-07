@@ -12,6 +12,9 @@ const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 
 async function createConfig(octokit, eventData, env = {}) {
+  console.log("eventData", eventData);
+  console.log("eventData.pull_request", eventData.pull_request);
+  console.log("eventData.pull_request.repo", eventData.pull_request.repo);
   async function parseGitHub(env) {
     return {
       serverUrl: env["GITHUB_SERVER_URL"], // https://github.com

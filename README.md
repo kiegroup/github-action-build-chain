@@ -239,7 +239,7 @@ jobs:
           ...
 ```
 
-instead you have to duplicate jobs for different environments, like:
+instead you have to duplicate job definition for different environments, like:
 ```
 jobs:
   build-chain-openjdk8:

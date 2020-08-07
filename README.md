@@ -11,7 +11,7 @@ Just defining the **build chain** flow in every project from the chain, the tool
 
 ## How to add it to your project(s)
 
-It is just to add the step
+It is just to add the step (replacing dependencies and commands)
 
 ```
 - name: Build Chain
@@ -24,7 +24,7 @@ It is just to add the step
         build-command-upstream: 'mvn whatever goals'
         workflow-file-name: "whatever_flow.yml"
 ```
-to your existing yaml flow definition or to create a new one. Do the same for the rest of the projects in case you want to 
+to your existing yaml flow definition or to create a new one. Do the same for the rest of the projects you need. 
 
 ## With Fields
 - **parent-dependencies** (optional): `[group/]projectName[@branchSource:branchTarget]` The parent projects dependencies separated by commas. They are basically the projects to depend on.
@@ -34,11 +34,12 @@ to your existing yaml flow definition or to create a new one. Do the same for th
 
 > Example:
 > ```
+> parent-dependencies: 'projectA'
 > parent-dependencies: 'projectA,groupX/projectB,projectC@master:7.x,groupy/projectD@8.0.0:9.0.1'
 > ```
 
 - **child-dependencies** (optional): `[group/]projectName[@branchSource:branchTarget]` The child projects dependencies separated by commas. Those projects depend on the current project.
-  - `group/`: (optional) The github group where the project is, otherwise it will be taken from same group.
+  - `group/`: (optional) The github group where the project is, otherwise it will be taken from the same group.
   - `projectName`: (mandatory) The project name.
   - `@branchSource:branchTarget`: (optional) It is possible to map branches for projects. `projectx@master:7.x` would map whatever pull request is performed for `master` branch to `projectX:7.x`
 
@@ -62,7 +63,7 @@ to your existing yaml flow definition or to create a new one. Do the same for th
 > build-command: 'mvn clean install|mvn -e -nsu -Dfull -Pwildfly clean install -Prun-code-coverage  -Dcontainer.profile=wildfly -Dcontainer=wildfly -Dintegration-tests=true -Dmaven.test.failure.ignore=true -DjvmArgs="-Xms1g -Xmx4g"'
 > ```
 
-- **workflow-file-name** (required): `file_name.yml` You to define which workflow file name will be taken from the rest of the projects to get metainfo. This is the most embarrassing field we have here :pensive:. It's due to github does not provide filename in case the `name` is defined for the flow. The information is stored in
+- **workflow-file-name** (required): `file_name.yml` You to define which workflow file name will be taken from the rest of the projects to get metainfo. *This is the most embarrassing field we have here :pensive:. It's due to github does not provide filename in case the `name` is defined for the flow. The information is stored in `GITHUB_WORKFLOW` environment variable but it's overridden in case you define a name for it (which is the most common thing)*.
 > Example:
 > ```
 > build-command: 'mvn clean install'
@@ -264,12 +265,12 @@ jobs:
 
 ### workflow-file-name
 
-You are probably wondering why the input field `workflow-file-name` even exists. Why don't we take the filename directly from the job and keep same name for all the flow files in the chain?. Well... we can in case the `name` is not defined in the flow, then the file name information can be taken from `GITHUB_WORKFLOW` environment variable but in case the name is set, `GITHUB_WORKFLOW` becomes the name and there's no other way to get filename from the tool.
+You are probably wondering why the input field `workflow-file-name` even exists. Why don't we take the filename directly from the job and keep the same name for all the flow files in the chain?. Well... we can in case the `name` is not defined in the flow, then the file name information can be taken from `GITHUB_WORKFLOW` environment variable but in case the name is set, `GITHUB_WORKFLOW` becomes the name and there's no other way to get filename from the tool.
 This is a github action limitation already reported as a suggestion to provide file name from the flow triggering the job.
 
 ### inputs usage in runs.image from action.yml
 
-> Just in case you are interested on adapting this code or in case you want create your own tool.
+> Just in case you are interested in adapting this code or in case you want to create your own tool.
 
-It's not possible to use expression like `image: "docker://kie-group:github-action-build-chain:{{ inputs.build-chain-build-system }}"`. This way it would be easy to dinamically select image to run with a simple `with` input from flow yml file and we could skip errors like [matrix in uses](#matrix-in-uses).
+It's not possible to use expressions like `image: "docker://kie-group:github-action-build-chain:{{ inputs.build-chain-build-system }}"`. This way it would be easy to dynamically select image to run with a simple `with` input from flow yml file and we could skip errors like [matrix in uses](#matrix-in-uses).
 Just because of this we have to maintain different Dockerfile definitions in different branches and to tag every branch for every version we release like `openjdk8-v1`

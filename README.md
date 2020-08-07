@@ -209,7 +209,7 @@ In order to execute integration testing you just run `env GITHUB_TOKEN=%TOKEN% U
 
 - %TOKEN%: is your personal token, like `1e2ca1ac1252121d83fbe69ab3c4dd92bcb1ae32`.
 - %GITHUB_EVENT_URL%: the url to your event to test, like `https://github.com/kiegroup/lienzo-core/pull/3`.
-- %PARENT_DEPENDENCIES%: the OPTIONAL comma separated parent project list.
+- %PARENT_DEPENDENCIES%: the **optional** comma separated parent project list.
 - `%CHILD_DEPENDENCIES%`: the **optional** comma separated child project list.
 
 So the final command would look like 

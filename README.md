@@ -185,7 +185,7 @@ jobs:
 
 ## Docker build
 
-You can build the `github-action-build-chain` image on your just executing:
+You can build the `github-action-build-chain` image locally with just executing docker command:
 
 ```
 docker build .

@@ -5,7 +5,7 @@ Github action build chain is a tool for github actions to build multiple project
 ![Project hierarchy](/docs/project-hierarchy.png)
 
 and you want to upstream/downstream build whatever project from this hierarchy, **Github Action Build Chain** provides you the mechanism to easily do it.
-You can check [Usage example](#usage-example)
+You can check [Usage example](#usage-example).
 
 Just defining the **build chain** flow in every project from the chain, the tool will get meta-info from them and will compose but a chain build means for you and will execute in a single github action.
 
@@ -30,7 +30,7 @@ to your existing yaml flow definition or to create a new one. Do the same for th
 - **parent-dependencies** (optional): `[group/]projectName[@branchSource:branchTarget]` The parent projects dependencies separated by commas. They are basically the projects to depend on.
   - `group/`: (optional) The github group where the project is, otherwise it will be taken from same group.
   - `projectName`: (mandatory) The project name.
-  - `@branchSource:branchTarget`: (optional) It is possible to map branches for projects. `projectx@master:7.x` would map whatever pull request is performed for `master` branch to `projectX:7.x`
+  - `@branchSource:branchTarget`: (optional) It is possible to map branches for projects. `projectx@master:7.x` would map whatever pull request is performed for `master` branch to `projectX:7.x`.
 
 > Example:
 > ```
@@ -41,7 +41,7 @@ to your existing yaml flow definition or to create a new one. Do the same for th
 - **child-dependencies** (optional): `[group/]projectName[@branchSource:branchTarget]` The child projects dependencies separated by commas. Those projects depend on the current project.
   - `group/`: (optional) The github group where the project is, otherwise it will be taken from the same group.
   - `projectName`: (mandatory) The project name.
-  - `@branchSource:branchTarget`: (optional) It is possible to map branches for projects. `projectx@master:7.x` would map whatever pull request is performed for `master` branch to `projectX:7.x`
+  - `@branchSource:branchTarget`: (optional) It is possible to map branches for projects. `projectx@master:7.x` would map whatever pull request is performed for `master` branch to `projectX:7.x`.
 
 > Examples:
 > ```
@@ -72,7 +72,9 @@ to your existing yaml flow definition or to create a new one. Do the same for th
 
 ## Usage example
 
-Considering the projects hierarchy ![Project hierarchy](/docs/project-hierarchy.png)
+Considering the projects hierarchy 
+
+![Project hierarchy](/docs/project-hierarchy.png)
 
 **Project A**
 ```
@@ -183,13 +185,13 @@ jobs:
 
 ## Docker build
 
-You can build the `github-action-build-chain` image on your just executing
+You can build the `github-action-build-chain` image on your just executing:
 
 ```
 docker build .
 ```
 
-In case you want to build it for a different openjdk version you just specify a `--build-arg OPENJDK_VERSION` argument
+In case you want to build it for a different openjdk version you just specify a `--build-arg OPENJDK_VERSION` argument:
 
 ```
 docker build --build-arg OPENJDK_VERSION=11 .
@@ -199,24 +201,24 @@ docker build --build-arg OPENJDK_VERSION=11 .
 
 ### Unit testing
 
-- **TEST_GITHUB_TOKEN** env variable is needed
+- **TEST_GITHUB_TOKEN** env variable is needed.
 
 ### Integration testing
 
 In order to execute integration testing you just run `env GITHUB_TOKEN=%TOKEN% URL=%GITHUB_EVENT_URL% ['parent-dependencies=%PARENT_DEPENDENCIES%'] ['child-dependencies=%CHILD_DEPENDENCIES%'] yarn it` where:
 
-- %TOKEN%: is your personal token, like `1e2ca1ac1252121d83fbe69ab3c4dd92bcb1ae32`
-- %GITHUB_EVENT_URL%: the url to your event to test, like `https://github.com/kiegroup/lienzo-core/pull/3`
-- %PARENT_DEPENDENCIES%: the OPTIONAL comma separated parent project list
-- %CHILD_DEPENDENCIES%: the OPTIONAL comma separated child project list
+- %TOKEN%: is your personal token, like `1e2ca1ac1252121d83fbe69ab3c4dd92bcb1ae32`.
+- %GITHUB_EVENT_URL%: the url to your event to test, like `https://github.com/kiegroup/lienzo-core/pull/3`.
+- %PARENT_DEPENDENCIES%: the OPTIONAL comma separated parent project list.
+- %CHILD_DEPENDENCIES%: the OPTIONAL comma separated child project list.
 
-So the final command would look like `env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40 URL=https://github.com/kiegroup/lienzo-core/pull/3 'parent-dependencies=lienzo-core,lienzo-tests' 'child-dependencies=appformer' yarn it`
+So the final command would look like `env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40 URL=https://github.com/kiegroup/lienzo-core/pull/3 'parent-dependencies=lienzo-core,lienzo-tests' 'child-dependencies=appformer' yarn it`.
 
 ## Github limitations
 
 ### matrix in uses
 
-It's not possible to use matrix variables in `uses` like this
+It's not possible to use matrix variables in `uses` like this:
 
 ```
 jobs:
@@ -236,7 +238,7 @@ jobs:
           ...
 ```
 
-instead you have to duplicate jobs for different envs
+instead you have to duplicate jobs for different environments, like:
 ```
 jobs:
   build-chain-openjdk8:
@@ -273,4 +275,4 @@ This is a github action limitation already reported as a suggestion to provide f
 > Just in case you are interested in adapting this code or in case you want to create your own tool.
 
 It's not possible to use expressions like `image: "docker://kie-group:github-action-build-chain:{{ inputs.build-chain-build-system }}"`. This way it would be easy to dynamically select image to run with a simple `with` input from flow yml file and we could skip errors like [matrix in uses](#matrix-in-uses).
-Just because of this we have to maintain different Dockerfile definitions in different branches and to tag every branch for every version we release like `openjdk8-v1`
+Just because of this we have to maintain different Dockerfile definitions in different branches and to tag every branch for every version we release like `openjdk8-v1`.

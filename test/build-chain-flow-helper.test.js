@@ -50,6 +50,7 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge", async ()
   const context = {
     config: {
       github: {
+        sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
         group: "group",
@@ -60,7 +61,7 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge", async ()
   // Act
   const result = await getCheckoutInfo(context, "projectX");
   // Assert
-  expect(result.group).toEqual("author");
+  expect(result.group).toEqual("sourceGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(true);
 });
@@ -72,6 +73,7 @@ test("getCheckoutInfo. group and sourceTarget exist with merge", async () => {
   const context = {
     config: {
       github: {
+        sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
         group: "group",
@@ -94,6 +96,7 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist without merge", async
   const context = {
     config: {
       github: {
+        sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
         group: "group",
@@ -104,7 +107,7 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist without merge", async
   // Act
   const result = await getCheckoutInfo(context, "projectX");
   // Assert
-  expect(result.group).toEqual("author");
+  expect(result.group).toEqual("sourceGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(false);
 });
@@ -116,6 +119,7 @@ test("getCheckoutInfo. group and sourceTarget exist without merge", async () => 
   const context = {
     config: {
       github: {
+        sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
         group: "group",
@@ -140,6 +144,7 @@ test("getCheckoutInfo. group and targetBranch exist", async () => {
   const context = {
     config: {
       github: {
+        sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
         group: "group",
@@ -164,6 +169,7 @@ test("getCheckoutInfo. none exist", async () => {
   const context = {
     config: {
       github: {
+        sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
         group: "group",
@@ -184,6 +190,7 @@ test("checkoutDependencies", async () => {
       github: {
         workflow: "main.yml",
         serverUrl: "URL",
+        sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
         group: "group",
@@ -223,7 +230,7 @@ test("checkoutDependencies", async () => {
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "project_A",
-    "author",
+    "sourceGroup",
     "project-A",
     "sBranch"
   );
@@ -249,13 +256,13 @@ test("checkoutDependencies", async () => {
     "tBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/author/projectE",
+    "URL/sourceGroup/projectE",
     "projectE",
     "sBranch"
   );
   expect(mergeMock).not.toHaveBeenCalledWith(
     "projectE",
-    "author",
+    "sourceGroup",
     "projectE",
     "sBranch"
   );

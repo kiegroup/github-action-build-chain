@@ -204,7 +204,30 @@ async function doesBranchExist(octokit, owner, repo, branch) {
   }
 }
 
+/**
+ * Checks if there is a pull request either from a forked project or the same project
+ * @param {Object} octokit instance
+ * @param {String} owner the repo owner or group
+ * @param {String} repo the repository name
+ * @param {String} branch the branch of the pull request to look for
+ * @param {String} fromAuthor the pull request author
+ */
 async function hasPullRequest(octokit, owner, repo, branch, fromAuthor) {
+  return (
+    (await hasForkPullRequest(octokit, owner, repo, branch, fromAuthor)) ||
+    (await hasOriginPullRequest(octokit, owner, repo, branch))
+  );
+}
+
+/**
+ * Checks if there is a pull request from a forked project
+ * @param {Object} octokit instance
+ * @param {String} owner the repo owner or group
+ * @param {String} repo the repository name
+ * @param {String} branch the branch of the pull request to look for
+ * @param {String} fromAuthor the pull request author
+ */
+async function hasForkPullRequest(octokit, owner, repo, branch, fromAuthor) {
   assert(owner, "owner is not defined");
   assert(repo, "repo is not defined");
   assert(branch, "branch is not defined");
@@ -220,6 +243,33 @@ async function hasPullRequest(octokit, owner, repo, branch, fromAuthor) {
   } catch (e) {
     logger.error(
       `Error getting pull request list from https://api.github.com/repos/${owner}/${repo}/pulls?head=${fromAuthor}:${branch}&state=open'".`
+    );
+    throw e;
+  }
+}
+
+/**
+ * Checks if there is a pull request from the same project
+ * @param {Object} octokit instance
+ * @param {String} owner the repo owner or group
+ * @param {String} repo the repository name
+ * @param {String} branch the branch of the pull request to look for
+ */
+async function hasOriginPullRequest(octokit, owner, repo, branch) {
+  assert(owner, "owner is not defined");
+  assert(repo, "repo is not defined");
+  assert(branch, "branch is not defined");
+  try {
+    const { status, data } = await octokit.pulls.list({
+      owner,
+      repo,
+      state: "open",
+      head: `${owner}:${branch}`
+    });
+    return status == 200 && data.length > 0;
+  } catch (e) {
+    logger.error(
+      `Error getting pull request list from https://api.github.com/repos/${owner}/${repo}/pulls?head=${owner}:${branch}&state=open'".`
     );
     throw e;
   }

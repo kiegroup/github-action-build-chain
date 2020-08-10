@@ -129,7 +129,7 @@ test("mergeCommits returns the correct commits", async () => {
   });
 });
 
-test("hasPullRequest true", async () => {
+test("hasPullRequest origin true", async () => {
   const octokit = {
     pulls: {
       list: jest.fn(({ owner, repo, state, head }) => {
@@ -152,6 +152,38 @@ test("hasPullRequest true", async () => {
   );
 
   expect(result).toBe(true);
+  expect(octokit.pulls.list).toHaveBeenCalledTimes(1);
+});
+
+test("hasPullRequest forked true", async () => {
+  const octokit = {
+    pulls: {
+      list: jest.fn(({ owner, repo, state, head }) => {
+        return owner === "ownerx" &&
+          repo === "repox" &&
+          state === "open" &&
+          head === "authorx:branchx"
+          ? { status: 200, data: prInfoEmpty }
+          : owner === "ownerx" &&
+            repo === "repox" &&
+            state === "open" &&
+            head === "ownerx:branchx"
+          ? { status: 200, data: prInfo }
+          : undefined;
+      })
+    }
+  };
+
+  const result = await git.hasPullRequest(
+    octokit,
+    "ownerx",
+    "repox",
+    "branchx",
+    "authorx"
+  );
+
+  expect(result).toBe(true);
+  expect(octokit.pulls.list).toHaveBeenCalledTimes(2);
 });
 
 test("hasPullRequest false", async () => {
@@ -162,6 +194,11 @@ test("hasPullRequest false", async () => {
           repo === "repox" &&
           state === "open" &&
           head === "authorx:branchx"
+          ? { status: 200, data: prInfoEmpty }
+          : owner === "ownerx" &&
+            repo === "repox" &&
+            state === "open" &&
+            head === "ownerx:branchx"
           ? { status: 200, data: prInfoEmpty }
           : undefined;
       })
@@ -177,4 +214,5 @@ test("hasPullRequest false", async () => {
   );
 
   expect(result).toBe(false);
+  expect(octokit.pulls.list).toHaveBeenCalledTimes(2);
 });

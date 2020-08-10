@@ -20,6 +20,7 @@ async function checkouProject(context, project, dependencyInformation) {
   const dir = getDir(project);
   const checkoutInfo = await getCheckoutInfo(
     context,
+    dependencyInformation.group,
     project,
     dependencyInformation.mapping
   );
@@ -31,17 +32,17 @@ async function checkouProject(context, project, dependencyInformation) {
 
   if (checkoutInfo.merge) {
     logger.info(
-      `Merging ${context.config.github.serverUrl}/${context.config.github.group}/${project}:${context.config.github.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${project}:${checkoutInfo.branch}`
+      `Merging ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${context.config.github.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${project}:${checkoutInfo.branch}`
     );
     try {
       await clone(
-        `${context.config.github.serverUrl}/${context.config.github.group}/${project}`,
+        `${context.config.github.serverUrl}/${dependencyInformation.group}/${project}`,
         dir,
         context.config.github.targetBranch
       );
     } catch (err) {
       logger.error(
-        `Error checking out (before merging)  ${context.config.github.serverUrl}/${context.config.github.group}/${project}:${context.config.github.targetBranch}`
+        `Error checking out (before merging)  ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${context.config.github.targetBranch}`
       );
       throw err;
     }
@@ -72,10 +73,9 @@ async function checkouProject(context, project, dependencyInformation) {
   }
 }
 
-async function getCheckoutInfo(context, project, mapping) {
+async function getCheckoutInfo(context, targetGroup, project, mapping) {
   const sourceGroup = context.config.github.sourceGroup;
   const sourceBranch = context.config.github.sourceBranch;
-  const targetGroup = context.config.github.group;
   const targetBranch =
     mapping && mapping.source === context.config.github.targetBranch
       ? mapping.target
@@ -138,6 +138,7 @@ function getDir(project) {
 function readWorkflowInformation(
   triggeringJobName,
   workflowFilePath,
+  defaultGroup,
   dir = "."
 ) {
   const filePath = path.join(dir, workflowFilePath);
@@ -147,11 +148,12 @@ function readWorkflowInformation(
   }
   return parseWorkflowInformation(
     triggeringJobName,
-    getYamlFileContent(filePath)
+    getYamlFileContent(filePath),
+    defaultGroup
   );
 }
 
-function parseWorkflowInformation(jobName, workflowData) {
+function parseWorkflowInformation(jobName, workflowData, defaultGroup) {
   assert(workflowData.jobs[jobName], `The job id '${jobName}' does not exist`);
   const buildChainStep = workflowData.jobs[jobName].steps.find(
     step => step.uses && step.uses.includes("github-action-build-chain")
@@ -167,10 +169,12 @@ function parseWorkflowInformation(jobName, workflowData) {
       buildChainStep.with["build-command-downstream"]
     ),
     childDependencies: dependenciesToObject(
-      buildChainStep.with["child-dependencies"]
+      buildChainStep.with["child-dependencies"],
+      defaultGroup
     ),
     parentDependencies: dependenciesToObject(
-      buildChainStep.with["parent-dependencies"]
+      buildChainStep.with["parent-dependencies"],
+      defaultGroup
     )
   };
 }

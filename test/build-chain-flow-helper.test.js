@@ -1,7 +1,8 @@
 const {
   readWorkflowInformation,
   getCheckoutInfo,
-  checkoutDependencies
+  checkoutDependencies,
+  checkouProject
 } = require("../src/lib/build-chain-flow-helper");
 jest.mock("../src/lib/git");
 const {
@@ -11,11 +12,16 @@ const {
   hasPullRequest: hasPullRequestMock
 } = require("../src/lib/git");
 
+afterEach(() => {
+  jest.clearAllMocks();
+});
+
 test("parseWorkflowInformation", () => {
   // Act
   const buildChainInformation = readWorkflowInformation(
     "build-chain",
     "flow.yaml",
+    "defaultGroup",
     "test/resources"
   );
   // Assert
@@ -35,10 +41,16 @@ test("parseWorkflowInformation", () => {
       "mvn -e -nsu -fae -T1C clean install -Dfull -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -DjvmArgs=-Xmx4g"
     ],
     childDependencies: {
-      appformer: { mapping: { source: "7.x", target: "master" } },
-      "lienzo-tests": {}
+      appformer: {
+        group: "defaultGroup",
+        mapping: { source: "7.x", target: "master" }
+      },
+      "lienzo-tests": { group: "defaultGroup" }
     },
-    parentDependencies: { "lienzo-core": {} }
+    parentDependencies: {
+      "lienzo-core": { group: "defaultGroup" },
+      errai: { group: "groupx" }
+    }
   };
   expect(expected).toEqual(buildChainInformation);
 });
@@ -53,13 +65,12 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge", async ()
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
-        group: "group",
         targetBranch: "targetBranch"
       }
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "projectX");
+  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
   expect(result.group).toEqual("sourceGroup");
   expect(result.branch).toEqual("sourceBranch");
@@ -82,9 +93,9 @@ test("getCheckoutInfo. group and sourceTarget exist with merge", async () => {
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "projectX");
+  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
-  expect(result.group).toEqual("group");
+  expect(result.group).toEqual("targetGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(true);
 });
@@ -99,13 +110,12 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist without merge", async
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
-        group: "group",
         targetBranch: "targetBranch"
       }
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "projectX");
+  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
   expect(result.group).toEqual("sourceGroup");
   expect(result.branch).toEqual("sourceBranch");
@@ -122,15 +132,14 @@ test("getCheckoutInfo. group and sourceTarget exist without merge", async () => 
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
-        group: "group",
         targetBranch: "targetBranch"
       }
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "projectX");
+  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
-  expect(result.group).toEqual("group");
+  expect(result.group).toEqual("targetGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(false);
 });
@@ -147,15 +156,14 @@ test("getCheckoutInfo. group and targetBranch exist", async () => {
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
-        group: "group",
         targetBranch: "targetBranch"
       }
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "projectX");
+  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
-  expect(result.group).toEqual("group");
+  expect(result.group).toEqual("targetGroup");
   expect(result.branch).toEqual("targetBranch");
   expect(result.merge).toEqual(false);
 });
@@ -172,13 +180,12 @@ test("getCheckoutInfo. none exist", async () => {
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sourceBranch",
-        group: "group",
         targetBranch: "targetBranch"
       }
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "projectX");
+  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
   expect(result).toEqual(undefined);
 });
@@ -193,17 +200,25 @@ test("checkoutDependencies", async () => {
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
-        group: "group",
         targetBranch: "tBranch"
       }
     }
   };
   const dependencies = {
-    "project-A": {},
-    projectB: { mapping: { source: "tBranch", target: "tBranchMapped" } },
-    projectC: {},
-    projectD: { mapping: { source: "branchX", target: "branchY" } },
-    projectE: { mapping: { source: "branchX", target: "tBranchMapped" } }
+    "project-A": { group: "groupA" },
+    projectB: {
+      group: "groupB",
+      mapping: { source: "tBranch", target: "tBranchMapped" }
+    },
+    projectC: { group: "groupC" },
+    projectD: {
+      group: "groupD",
+      mapping: { source: "branchX", target: "branchY" }
+    },
+    projectE: {
+      group: "groupE",
+      mapping: { source: "branchX", target: "tBranchMapped" }
+    }
   };
   doesBranchExistMock
     .mockResolvedValueOnce(true)
@@ -224,7 +239,7 @@ test("checkoutDependencies", async () => {
   await checkoutDependencies(context, dependencies);
   // Assert
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/group/project-A",
+    "URL/groupA/project-A",
     "project_A",
     "tBranch"
   );
@@ -235,23 +250,23 @@ test("checkoutDependencies", async () => {
     "sBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/group/projectB",
+    "URL/groupB/projectB",
     "projectB",
     "tBranchMapped"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/group/projectC",
+    "URL/groupC/projectC",
     "projectC",
     "tBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "projectC",
-    "group",
+    "groupC",
     "projectC",
     "sBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/group/projectD",
+    "URL/groupD/projectD",
     "projectD",
     "tBranch"
   );
@@ -268,8 +283,161 @@ test("checkoutDependencies", async () => {
   );
   expect(mergeMock).not.toHaveBeenCalledWith(
     "projectE",
-    "group",
+    "groupE",
     "projectE",
     "sBranch"
+  );
+});
+
+test("checkouProject author/projectX:sBranch exists has PR", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        workflow: "main.yml",
+        serverUrl: "URL",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  doesBranchExistMock.mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true);
+  // Act
+  await checkouProject(context, "projectx", { group: "groupx" });
+  // Assert
+  expect(cloneMock).toHaveBeenCalledTimes(1);
+  expect(mergeMock).toHaveBeenCalledTimes(1);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/groupx/projectx",
+    "projectx",
+    "tBranch"
+  );
+  expect(mergeMock).toHaveBeenCalledWith(
+    "projectx",
+    "author",
+    "projectx",
+    "sBranch"
+  );
+});
+
+test("checkouProject author/projectX:sBranch exists has no PR", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        workflow: "main.yml",
+        serverUrl: "URL",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  doesBranchExistMock.mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(false);
+  // Act
+  await checkouProject(context, "projectx", { group: "groupx" });
+  // Assert
+  expect(cloneMock).toHaveBeenCalledTimes(1);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/author/projectx",
+    "projectx",
+    "sBranch"
+  );
+  expect(mergeMock).not.toHaveBeenCalled();
+});
+
+test("checkouProject author/projectX:sBranch does not exists but groupx/projectX:sBranch has PR", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        workflow: "main.yml",
+        serverUrl: "URL",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true);
+
+  // Act
+  await checkouProject(context, "projectx", { group: "groupx" });
+  // Assert
+  expect(cloneMock).toHaveBeenCalledTimes(1);
+  expect(mergeMock).toHaveBeenCalledTimes(1);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/groupx/projectx",
+    "projectx",
+    "tBranch"
+  );
+  expect(mergeMock).toHaveBeenCalledWith(
+    "projectx",
+    "groupx",
+    "projectx",
+    "sBranch"
+  );
+});
+
+test("checkouProject author/projectX:sBranch does not exists but groupx/projectX:sBranch has no PR", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        workflow: "main.yml",
+        serverUrl: "URL",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(false);
+
+  // Act
+  await checkouProject(context, "projectx", { group: "groupx" });
+  // Assert
+  expect(cloneMock).toHaveBeenCalledTimes(1);
+  expect(mergeMock).toHaveBeenCalledTimes(0);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/groupx/projectx",
+    "projectx",
+    "sBranch"
+  );
+});
+
+test("checkouProject author/projectX:sBranch and groupx/projectX:sBranch but groupx/projectX:tBranch", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        workflow: "main.yml",
+        serverUrl: "URL",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  doesBranchExistMock
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(true);
+
+  // Act
+  await checkouProject(context, "projectx", { group: "groupx" });
+  // Assert
+  expect(cloneMock).toHaveBeenCalledTimes(1);
+  expect(hasPullRequestMock).toHaveBeenCalledTimes(0);
+  expect(mergeMock).toHaveBeenCalledTimes(0);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/groupx/projectx",
+    "projectx",
+    "tBranch"
   );
 });

@@ -317,7 +317,7 @@ test("checkouProject author/projectX:sBranch exists has PR", async () => {
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "projectx",
-    "author",
+    "sGroup",
     "projectx",
     "sBranch"
   );
@@ -344,7 +344,7 @@ test("checkouProject author/projectX:sBranch exists has no PR", async () => {
   // Assert
   expect(cloneMock).toHaveBeenCalledTimes(1);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/author/projectx",
+    "URL/sGroup/projectx",
     "projectx",
     "sBranch"
   );

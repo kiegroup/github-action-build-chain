@@ -16,7 +16,9 @@ async function createConfig(octokit, eventData, env = {}) {
     return {
       serverUrl: env["GITHUB_SERVER_URL"], // https://github.com
       action: env["GITHUB_ACTION"], // Ginxogithub-action-build-chain
-      author: env["GITHUB_ACTOR"], // Ginxo
+      sourceGroup: eventData.pull_request.head.repo.full_name.split("/")[0], // forkedGroup
+      author: eventData.pull_request.head.user.login, // Ginxo
+      actor: env["GITHUB_ACTOR"], // Ginxo
       sourceBranch: env["GITHUB_HEAD_REF"], // Ginxo-patch-1
       targetBranch: env["GITHUB_BASE_REF"], // master
       jobName: env["GITHUB_JOB"], // build-chain

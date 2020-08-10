@@ -74,7 +74,7 @@ async function checkouProject(context, project, dependencyInformation) {
 }
 
 async function getCheckoutInfo(context, targetGroup, project, mapping) {
-  const sourceGroup = context.config.github.author;
+  const sourceGroup = context.config.github.sourceGroup;
   const sourceBranch = context.config.github.sourceBranch;
   const targetBranch =
     mapping && mapping.source === context.config.github.targetBranch

@@ -298,7 +298,8 @@ test("checkouProject author/projectX:sBranch exists has PR", async () => {
         serverUrl: "URL",
         author: "author",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        sourceGroup: "sGroup"
       }
     }
   };
@@ -331,7 +332,8 @@ test("checkouProject author/projectX:sBranch exists has no PR", async () => {
         serverUrl: "URL",
         author: "author",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        sourceGroup: "sGroup"
       }
     }
   };

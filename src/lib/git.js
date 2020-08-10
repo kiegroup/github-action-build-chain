@@ -37,6 +37,7 @@ function git(cwd, ...args) {
     );
     const buffers = [];
     proc.stdout.on("data", data => buffers.push(data));
+
     proc.on("error", () => {
       reject(new Error(`command failed: ${command}`));
     });
@@ -63,8 +64,6 @@ async function clone(from, to, branch) {
       "--no-tags",
       "--branch",
       branch,
-      "--depth",
-      FETCH_DEPTH,
       from,
       to
     );

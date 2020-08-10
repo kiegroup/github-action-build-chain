@@ -10,7 +10,8 @@ const { treatCommand } = require("./command/command-treatment-delegator");
 async function start(context) {
   const workflowInformation = readWorkflowInformation(
     context.config.github.jobName,
-    context.config.github.workflow
+    context.config.github.workflow,
+    context.config.github.group
   );
   await treatParents(
     context,
@@ -42,6 +43,7 @@ async function treatParents(
         const parentWorkflowInformation = readWorkflowInformation(
           context.config.github.jobName,
           context.config.github.workflow,
+          context.config.github.group,
           dir
         );
         if (parentWorkflowInformation) {

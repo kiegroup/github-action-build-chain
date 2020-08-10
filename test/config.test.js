@@ -24,7 +24,7 @@ test("createConfig", async () => {
   // Arrange
   const env = {
     GITHUB_SERVER_URL: "githubServerUrl",
-    GITHUB_ACTOR: "author",
+    GITHUB_ACTOR: "actor",
     GITHUB_HEAD_REF: "githubHeadRef",
     GITHUB_BASE_REF: "githubBaseRef",
     GITHUB_JOB: "githubJob",
@@ -34,7 +34,15 @@ test("createConfig", async () => {
   const envData = {
     pull_request: {
       repo: {
-        full_name: "fullName"
+        full_name: "group/projectx"
+      },
+      head: {
+        repo: {
+          full_name: "group/projectx"
+        },
+        user: {
+          login: "user"
+        }
       }
     }
   };
@@ -54,14 +62,16 @@ test("createConfig", async () => {
     github: {
       action: undefined,
       serverUrl: "githubServerUrl",
-      author: "author",
+      author: "user",
+      actor: "actor",
+      sourceGroup: "group",
       group: "kiegroup",
       project: "github-action-build-chain",
       sourceBranch: "githubHeadRef",
       targetBranch: "githubBaseRef",
       jobName: "githubJob",
       ref: undefined,
-      sourceRepository: "fullName",
+      sourceRepository: "group/projectx",
       repository: "kiegroup/github-action-build-chain",
       workflow: ".github/workflows/pull_request.yml",
       workflowName: "build chain name"

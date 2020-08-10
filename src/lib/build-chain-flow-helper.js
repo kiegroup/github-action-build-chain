@@ -32,7 +32,7 @@ async function checkouProject(context, project, dependencyInformation) {
 
   if (checkoutInfo.merge) {
     logger.info(
-      `Merging ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${context.config.github.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${project}:${checkoutInfo.branch}`
+      `Merging ${context.config.github.serverUrl}${dependencyInformation.group}/${project}:${context.config.github.targetBranch} into ${context.config.github.serverUrl}${checkoutInfo.group}/${project}:${checkoutInfo.branch}`
     );
     try {
       await clone(

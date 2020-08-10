@@ -33,7 +33,7 @@ test("readYamlFile", () => {
               "build-command-upstream":
                 "mvn clean | mvn -e -T1C clean install -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true -Drevapi.skip=true",
               "child-dependencies": "appformer@7.x:master,lienzo-tests",
-              "parent-dependencies": "lienzo-core"
+              "parent-dependencies": "lienzo-core,groupx/errai"
             }
           }
         ]

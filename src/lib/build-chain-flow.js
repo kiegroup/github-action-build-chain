@@ -39,7 +39,7 @@ async function treatParents(
       for (const parentProject of Object.keys(
         workflowInformation.parentDependencies
       ).filter(a => a !== null && a !== "")) {
-        const dir = getDir(parentProject);
+        const dir = getDir(context.config.rootFolder, parentProject);
         const parentWorkflowInformation = readWorkflowInformation(
           context.config.github.jobName,
           context.config.github.workflow,
@@ -63,7 +63,7 @@ async function treatParents(
     }
     if (shouldExecute) {
       await executeBuildCommands(
-        getDir(project),
+        getDir(context.config.rootFolder, project),
         workflowInformation["buildCommandsUpstream"] ||
           workflowInformation["buildCommands"]
       );

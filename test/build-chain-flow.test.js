@@ -14,7 +14,8 @@ test("treatParents", async () => {
         jobName: "job-id",
         workflow: "main.yaml",
         group: "defaultGroup"
-      }
+      },
+      rootFolder: "folder"
     }
   };
   const workflowInformation = {
@@ -38,7 +39,7 @@ test("treatParents", async () => {
   await treatParents(context, [], "projectA", workflowInformation);
   // Assert
   expect(checkoutDependencies).toHaveBeenCalledWith(context, { projectD: {} });
-  expect(getDir).toHaveBeenCalledWith("projectD");
+  expect(getDir).toHaveBeenCalledWith("folder", "projectD");
   expect(readWorkflowInformation).toHaveBeenCalledWith(
     "job-id",
     "main.yaml",

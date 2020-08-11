@@ -17,7 +17,7 @@ async function checkoutDependencies(context, dependencies) {
 }
 
 async function checkouProject(context, project, dependencyInformation) {
-  const dir = getDir(project);
+  const dir = getDir(context.config.rootFolder, project);
   const checkoutInfo = await getCheckoutInfo(
     context,
     dependencyInformation.group,
@@ -131,8 +131,10 @@ async function getCheckoutInfo(context, targetGroup, project, mapping) {
     : undefined;
 }
 
-function getDir(project) {
-  return project.replace(/ |-/g, "_");
+function getDir(rootFolder, project) {
+  const folder =
+    rootFolder !== undefined || rootFolder !== "" ? rootFolder : ".";
+  return `${folder}/${project.replace(/ |-/g, "_")}`;
 }
 
 function readWorkflowInformation(

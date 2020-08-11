@@ -133,7 +133,7 @@ async function getCheckoutInfo(context, targetGroup, project, mapping) {
 
 function getDir(rootFolder, project) {
   const folder =
-    rootFolder !== undefined || rootFolder !== "" ? rootFolder : ".";
+    rootFolder !== undefined && rootFolder !== "" ? rootFolder : ".";
   return `${folder}/${project.replace(/ |-/g, "_")}`;
 }
 

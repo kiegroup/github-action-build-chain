@@ -389,6 +389,41 @@ test("checkouProject author/projectX:sBranch does not exists but groupx/projectX
   );
 });
 
+test("checkouProject author/projectX:sBranch does not exists but groupx/projectX:sBranch has PR no rootFolder", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        workflow: "main.yml",
+        serverUrl: "URL",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: undefined
+    }
+  };
+  doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true);
+
+  // Act
+  await checkouProject(context, "projectx", { group: "groupx" });
+  // Assert
+  expect(cloneMock).toHaveBeenCalledTimes(1);
+  expect(mergeMock).toHaveBeenCalledTimes(1);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/groupx/projectx",
+    "./projectx",
+    "tBranch"
+  );
+  expect(mergeMock).toHaveBeenCalledWith(
+    "./projectx",
+    "groupx",
+    "projectx",
+    "sBranch"
+  );
+});
+
 test("checkouProject author/projectX:sBranch does not exists but groupx/projectX:sBranch has no PR", async () => {
   // Arrange
   const context = {

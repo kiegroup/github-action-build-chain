@@ -1,3 +1,4 @@
 .env
 node_modules/
 *.code-workspace
+locally_execution_*

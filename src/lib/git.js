@@ -24,7 +24,7 @@ function git(cwd, ...args) {
   const stdio = [
     "ignore",
     "pipe",
-    logger.level === "trace" || logger.level === "debug" ? "inherit" : "ignore"
+    logger.level === "trace" || logger.level === "debug" ? "inherit" : "pipe"
   ];
   // the URL passed to the clone command could contain a password!
   const command = `git ${args.join(" ")}`;
@@ -37,17 +37,21 @@ function git(cwd, ...args) {
     );
     const buffers = [];
     proc.stdout.on("data", data => buffers.push(data));
+    proc.stderr.on("data", data => buffers.push(data));
 
     proc.on("error", () => {
       reject(new Error(`command failed: ${command}`));
     });
     proc.on("exit", code => {
+      const stdoutData = Buffer.concat(buffers);
       if (code === 0) {
-        const data = Buffer.concat(buffers);
-        resolve(data.toString("utf8").trim());
+        resolve(stdoutData.toString("utf8").trim());
       } else {
         reject(
-          new ExitError(`command failed with code ${code}: ${command}.`, code)
+          new ExitError(
+            `command ${command} failed with code ${code}. Error Message: ${stdoutData}`,
+            code
+          )
         );
       }
     });

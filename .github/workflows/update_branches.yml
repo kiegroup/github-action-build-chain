@@ -5,25 +5,19 @@ on:
       - master
 jobs:
   release_pull_request:
+    strategy:
+      matrix:
+        branches: [openjdk8, openjdk11]
     runs-on: ubuntu-latest
     name: release_pull_request
     steps:
     - name: checkout
       uses: actions/checkout@v1
-    - name: Create PR to openjdk8
+    - name: Create PR
       uses: gorillio/github-action-cherry-pick@master
       with:
-        pr_branch: 'openjdk8'
-        pr_labels: 'openjdk8'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITBOT_EMAIL: ${{ secrets.GH_MAIL }}
-        DRY_RUN: false
-    - name: Create PR to openjdk11
-      uses: gorillio/github-action-cherry-pick@master
-      with:
-        pr_branch: 'openjdk11'
-        pr_labels: 'openjdk11'
+        pr_branch: ${{ matrix.branches }}
+        pr_labels: ${{ matrix.branches }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GITBOT_EMAIL: ${{ secrets.GH_MAIL }}

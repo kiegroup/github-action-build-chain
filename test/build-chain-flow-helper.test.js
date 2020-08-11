@@ -201,7 +201,8 @@ test("checkoutDependencies", async () => {
         author: "author",
         sourceBranch: "sBranch",
         targetBranch: "tBranch"
-      }
+      },
+      rootFolder: "folder"
     }
   };
   const dependencies = {
@@ -240,49 +241,49 @@ test("checkoutDependencies", async () => {
   // Assert
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/groupA/project-A",
-    "project_A",
+    "folder/project_A",
     "tBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
-    "project_A",
+    "folder/project_A",
     "sourceGroup",
     "project-A",
     "sBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/groupB/projectB",
-    "projectB",
+    "folder/projectB",
     "tBranchMapped"
   );
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/groupC/projectC",
-    "projectC",
+    "folder/projectC",
     "tBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
-    "projectC",
+    "folder/projectC",
     "groupC",
     "projectC",
     "sBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/groupD/projectD",
-    "projectD",
+    "folder/projectD",
     "tBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/sourceGroup/projectE",
-    "projectE",
+    "folder/projectE",
     "sBranch"
   );
   expect(mergeMock).not.toHaveBeenCalledWith(
-    "projectE",
+    "folder/projectE",
     "sourceGroup",
     "projectE",
     "sBranch"
   );
   expect(mergeMock).not.toHaveBeenCalledWith(
-    "projectE",
+    "folder/projectE",
     "groupE",
     "projectE",
     "sBranch"
@@ -300,7 +301,8 @@ test("checkouProject author/projectX:sBranch exists has PR", async () => {
         sourceBranch: "sBranch",
         targetBranch: "tBranch",
         sourceGroup: "sGroup"
-      }
+      },
+      rootFolder: "folder"
     }
   };
   doesBranchExistMock.mockResolvedValueOnce(true);
@@ -312,11 +314,11 @@ test("checkouProject author/projectX:sBranch exists has PR", async () => {
   expect(mergeMock).toHaveBeenCalledTimes(1);
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/groupx/projectx",
-    "projectx",
+    "folder/projectx",
     "tBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
-    "projectx",
+    "folder/projectx",
     "sGroup",
     "projectx",
     "sBranch"
@@ -334,7 +336,8 @@ test("checkouProject author/projectX:sBranch exists has no PR", async () => {
         sourceBranch: "sBranch",
         targetBranch: "tBranch",
         sourceGroup: "sGroup"
-      }
+      },
+      rootFolder: "folder"
     }
   };
   doesBranchExistMock.mockResolvedValueOnce(true);
@@ -345,7 +348,7 @@ test("checkouProject author/projectX:sBranch exists has no PR", async () => {
   expect(cloneMock).toHaveBeenCalledTimes(1);
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/sGroup/projectx",
-    "projectx",
+    "folder/projectx",
     "sBranch"
   );
   expect(mergeMock).not.toHaveBeenCalled();
@@ -361,7 +364,8 @@ test("checkouProject author/projectX:sBranch does not exists but groupx/projectX
         author: "author",
         sourceBranch: "sBranch",
         targetBranch: "tBranch"
-      }
+      },
+      rootFolder: "folder"
     }
   };
   doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
@@ -374,11 +378,46 @@ test("checkouProject author/projectX:sBranch does not exists but groupx/projectX
   expect(mergeMock).toHaveBeenCalledTimes(1);
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/groupx/projectx",
-    "projectx",
+    "folder/projectx",
     "tBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
+    "folder/projectx",
+    "groupx",
     "projectx",
+    "sBranch"
+  );
+});
+
+test("checkouProject author/projectX:sBranch does not exists but groupx/projectX:sBranch has PR no rootFolder", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        workflow: "main.yml",
+        serverUrl: "URL",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: undefined
+    }
+  };
+  doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true);
+
+  // Act
+  await checkouProject(context, "projectx", { group: "groupx" });
+  // Assert
+  expect(cloneMock).toHaveBeenCalledTimes(1);
+  expect(mergeMock).toHaveBeenCalledTimes(1);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/groupx/projectx",
+    "./projectx",
+    "tBranch"
+  );
+  expect(mergeMock).toHaveBeenCalledWith(
+    "./projectx",
     "groupx",
     "projectx",
     "sBranch"
@@ -395,7 +434,8 @@ test("checkouProject author/projectX:sBranch does not exists but groupx/projectX
         author: "author",
         sourceBranch: "sBranch",
         targetBranch: "tBranch"
-      }
+      },
+      rootFolder: "folder"
     }
   };
   doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
@@ -408,7 +448,7 @@ test("checkouProject author/projectX:sBranch does not exists but groupx/projectX
   expect(mergeMock).toHaveBeenCalledTimes(0);
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/groupx/projectx",
-    "projectx",
+    "folder/projectx",
     "sBranch"
   );
 });
@@ -423,7 +463,8 @@ test("checkouProject author/projectX:sBranch and groupx/projectX:sBranch but gro
         author: "author",
         sourceBranch: "sBranch",
         targetBranch: "tBranch"
-      }
+      },
+      rootFolder: "folder"
     }
   };
   doesBranchExistMock
@@ -439,7 +480,7 @@ test("checkouProject author/projectX:sBranch and groupx/projectX:sBranch but gro
   expect(mergeMock).toHaveBeenCalledTimes(0);
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/groupx/projectx",
-    "projectx",
+    "folder/projectx",
     "tBranch"
   );
 });

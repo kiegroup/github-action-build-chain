@@ -11,7 +11,7 @@ const {
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 
-async function createConfig(octokit, eventData, env = {}) {
+async function createConfig(octokit, eventData, rootFolder, env = {}) {
   async function parseGitHub(env) {
     return {
       serverUrl: env["GITHUB_SERVER_URL"], // https://github.com
@@ -41,7 +41,8 @@ async function createConfig(octokit, eventData, env = {}) {
     buildCommands: getBuildCommand(),
     buildCommandsUpstream: getBuildCommandUpstream(),
     buildCommandsDownstream: getBuildCommandDownstream(),
-    github: await parseGitHub(env)
+    github: await parseGitHub(env),
+    rootFolder: rootFolder === undefined ? "" : rootFolder
   };
 }
 
@@ -55,7 +56,15 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
   env["GITHUB_BASE_REF"] = event.pull_request.base.ref;
   env["GITHUB_REPOSITORY"] = event.pull_request.base.repo.full_name;
   env["GITHUB_REF"] = event.ref;
-  return await createConfig(octokit, event, env);
+  var today = new Date();
+  return await createConfig(
+    octokit,
+    event,
+    `locally_execution_${today.getFullYear()}${
+      today.getMonth() + 1
+    }${today.getDate()}`,
+    env
+  );
 }
 
 async function getEvent(octokit, eventUrl) {

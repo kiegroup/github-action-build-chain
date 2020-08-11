@@ -47,7 +47,7 @@ test("createConfig", async () => {
     }
   };
   // Act
-  const config = await createConfig(undefined, envData, env);
+  const config = await createConfig(undefined, envData, "folder", env);
   // Assert
   const expected = {
     parentDependencies: { "lienzo-core": {}, "lienzo-test": {}, drools: {} },
@@ -75,7 +75,8 @@ test("createConfig", async () => {
       repository: "kiegroup/github-action-build-chain",
       workflow: ".github/workflows/pull_request.yml",
       workflowName: "build chain name"
-    }
+    },
+    rootFolder: "folder"
   };
   expect(config).toEqual(expected);
 });

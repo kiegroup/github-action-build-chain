@@ -1,36 +1,25 @@
-
-name: Build Chain
+name: PR for release branch
 
 on:
   push:
     branches:
       - master
 jobs:
-  cherry-pick:
+  release_pull_request:
     strategy:
       matrix:
         branches: [openjdk8, openjdk11]
     runs-on: ubuntu-latest
-    name: Cherry Pick
+    name: release_pull_request
     steps:
-      - uses: actions/checkout@v2
-      - name: Set git variables
-        id: git
-        shell: bash
-        run: |
-          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-          echo "::set-output name=sha_long::$(git rev-parse HEAD)"
-          echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
-      - name: Print Git variables
-        run: |
-          echo "Branch: ${{ steps.git.outputs.branch }}"
-          echo "Sha: ${{ steps.git.outputs.sha_long }}"
-          echo "Sha short: ${{ steps.git.outputs.sha_short }}"
-      - name: Cherry Pick and push
-        run: |
-          git config --global user.name "${{ secrets.GH_USER }}"
-          git config --global user.email "${{ secrets.GH_MAIL }}"
-          git fetch origin
-          git checkout ${{ matrix.branches }}
-          git cherry-pick ${{ steps.git.outputs.sha_long }}
-          git push origin ${{ matrix.branches }}
+    - name: checkout
+      uses: actions/checkout@v1
+    - name: Create PR
+      uses: gorillio/github-action-cherry-pick@master
+      with:
+        pr_branch: ${{ matrix.branches }}
+        pr_labels: ${{ matrix.branches }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITBOT_EMAIL: ${{ secrets.GH_MAIL }}
+        DRY_RUN: false

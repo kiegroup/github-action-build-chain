@@ -24,6 +24,7 @@ test("start", async () => {
         workflow: "main.yaml",
         group: "defaultGroup",
         project: "projectX",
+        sourceBranch: "sBranch",
         targetBranch: "tBranch"
       },
       rootFolder: "folder"
@@ -47,7 +48,8 @@ test("start", async () => {
   await start(context);
   // Assert
   expect(fetch).toHaveBeenCalledWith(".", "tBranch");
-  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(fetch).toHaveBeenCalledWith(".", "sBranch");
+  expect(fetch).toHaveBeenCalledTimes(2);
   expect(merge).toHaveBeenCalledWith(
     ".",
     "defaultGroup",

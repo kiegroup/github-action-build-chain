@@ -14,6 +14,7 @@ async function start(context) {
     logger.info(
       `Merging root project with ${context.config.github.group}/${context.config.github.project}:${context.config.github.targetBranch}`
     );
+    await fetch(".", context.config.github.sourceBranch);
     await fetch(".", context.config.github.targetBranch);
     await merge(
       ".",

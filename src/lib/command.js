@@ -9,8 +9,8 @@ class ExitError extends Error {
   }
 }
 
-async function execute(cwd, command) {
-  core.startGroup(`Executing ${command} in dir ${cwd}`);
+async function execute(cwd, command, project) {
+  core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
   logger.info(`Execute command '${command}' in dir '${cwd}'`);
   const options = {};
   options.cwd = cwd;

@@ -35,7 +35,8 @@ async function start(context) {
   );
   await executeBuildCommands(
     rootProjectFolder,
-    workflowInformation["buildCommands"]
+    workflowInformation["buildCommands"],
+    context.config.github.project
   );
 }
 
@@ -91,15 +92,16 @@ async function treatParents(
       await executeBuildCommands(
         getDir(context.config.rootFolder, project),
         workflowInformation["buildCommandsUpstream"] ||
-          workflowInformation["buildCommands"]
+          workflowInformation["buildCommands"],
+        project
       );
     }
   }
 }
 
-async function executeBuildCommands(cwd, buildCommands) {
+async function executeBuildCommands(cwd, buildCommands, project) {
   for (const command of buildCommands) {
-    await execute(cwd, treatCommand(command));
+    await execute(cwd, treatCommand(command), project);
   }
 }
 

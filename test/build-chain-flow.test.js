@@ -57,8 +57,16 @@ test("start", async () => {
     "folder/projectX"
   );
   expect(readWorkflowInformation).toHaveBeenCalledTimes(1);
-  expect(execute).toHaveBeenCalledWith("folder/projectX", "command 1");
-  expect(execute).toHaveBeenCalledWith("folder/projectX", "command 2");
+  expect(execute).toHaveBeenCalledWith(
+    "folder/projectX",
+    "command 1",
+    "projectX"
+  );
+  expect(execute).toHaveBeenCalledWith(
+    "folder/projectX",
+    "command 2",
+    "projectX"
+  );
   expect(execute).toHaveBeenCalledTimes(2);
 });
 

@@ -7,6 +7,7 @@ const { merge } = require("./git");
 const { logger } = require("./common");
 const { execute } = require("./command");
 const { treatCommand } = require("./command/command-treatment-delegator");
+const core = require("@actions/core");
 
 async function start(context) {
   try {
@@ -50,10 +51,14 @@ async function treatParents(
   if (!projectList[project]) {
     projectList.push(project);
     if (workflowInformation.parentDependencies) {
+      core.startGroup(
+        `Checking out dependencies ${workflowInformation.parentDependencies} for project ${project}`
+      );
       await checkoutDependencies(
         context,
         workflowInformation.parentDependencies
       );
+      core.endGroup();
       for (const parentProject of Object.keys(
         workflowInformation.parentDependencies
       ).filter(a => a !== null && a !== "")) {

@@ -52,7 +52,9 @@ async function treatParents(
     projectList.push(project);
     if (workflowInformation.parentDependencies) {
       core.startGroup(
-        `Checking out dependencies ${workflowInformation.parentDependencies} for project ${project}`
+        `Checking out dependencies [${Object.keys(
+          workflowInformation.parentDependencies
+        ).join(", ")}] for project ${project}`
       );
       await checkoutDependencies(
         context,

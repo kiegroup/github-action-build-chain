@@ -3,11 +3,26 @@ const {
   getDir,
   readWorkflowInformation
 } = require("./build-chain-flow-helper");
+const { merge } = require("./git");
 const { logger } = require("./common");
 const { execute } = require("./command");
 const { treatCommand } = require("./command/command-treatment-delegator");
 
 async function start(context) {
+  try {
+    await merge(
+      ".",
+      context.config.github.group,
+      context.config.github.project,
+      context.config.github.targetBranch
+    );
+  } catch (err) {
+    logger.error(
+      `Error merging ${context.config.github.serverUrl}/${context.config.github.group}/${context.config.github.project}:${context.config.github.targetBranch}. Please manually merge it and relaunch.`
+    );
+    throw err;
+  }
+
   const workflowInformation = readWorkflowInformation(
     context.config.github.jobName,
     context.config.github.workflow,

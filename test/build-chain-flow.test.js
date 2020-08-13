@@ -1,5 +1,6 @@
 const { start, treatParents } = require("../src/lib/build-chain-flow");
 const {
+  checkouProject,
   checkoutDependencies,
   getDir,
   readWorkflowInformation
@@ -7,8 +8,6 @@ const {
 jest.mock("../src/lib/build-chain-flow-helper");
 const { execute } = require("../src/lib/command");
 jest.mock("../src/lib/command");
-const { merge, fetch } = require("../src/lib/git");
-jest.mock("../src/lib/git");
 jest.mock("@actions/core");
 
 afterEach(() => {
@@ -42,29 +41,23 @@ test("start", async () => {
     buildCommandsUpstream: ["upstream 1", "upstream 2"],
     buildCommandsDownstream: ["downstream 1", "downstream 2"]
   };
-  readWorkflowInformation.mockReturnValue(workflowInformation);
+  readWorkflowInformation.mockReturnValueOnce(workflowInformation);
+  getDir.mockReturnValueOnce("folder/projectX");
 
   // Act
   await start(context);
   // Assert
-  expect(fetch).toHaveBeenCalledWith(".", "tBranch");
-  expect(fetch).toHaveBeenCalledWith(".", "sBranch");
-  expect(fetch).toHaveBeenCalledTimes(2);
-  expect(merge).toHaveBeenCalledWith(
-    ".",
-    "defaultGroup",
-    "projectX",
-    "tBranch"
-  );
-  expect(merge).toHaveBeenCalledTimes(1);
+  expect(checkouProject).toHaveBeenCalledWith(context, "projectX", {
+    group: "defaultGroup"
+  });
   expect(readWorkflowInformation).toHaveBeenCalledWith(
     "job-id",
     "main.yaml",
     "defaultGroup"
   );
   expect(readWorkflowInformation).toHaveBeenCalledTimes(1);
-  expect(execute).toHaveBeenCalledWith(".", "command 1");
-  expect(execute).toHaveBeenCalledWith(".", "command 2");
+  expect(execute).toHaveBeenCalledWith("folder/projectX", "command 1");
+  expect(execute).toHaveBeenCalledWith("folder/projectX", "command 2");
   expect(execute).toHaveBeenCalledTimes(2);
 });
 

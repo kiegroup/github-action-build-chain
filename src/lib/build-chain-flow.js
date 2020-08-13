@@ -1,46 +1,37 @@
 const {
+  checkouProject,
   checkoutDependencies,
   getDir,
   readWorkflowInformation
 } = require("./build-chain-flow-helper");
-const { merge, fetch } = require("./git");
 const { logger } = require("./common");
 const { execute } = require("./command");
 const { treatCommand } = require("./command/command-treatment-delegator");
 const core = require("@actions/core");
 
 async function start(context) {
-  try {
-    logger.info(
-      `Merging root project with ${context.config.github.group}/${context.config.github.project}:${context.config.github.targetBranch}`
-    );
-    await fetch(".", context.config.github.sourceBranch);
-    await fetch(".", context.config.github.targetBranch);
-    await merge(
-      ".",
-      context.config.github.group,
-      context.config.github.project,
-      context.config.github.targetBranch
-    );
-  } catch (err) {
-    logger.error(
-      `Error merging ${context.config.github.serverUrl}/${context.config.github.group}/${context.config.github.project}:${context.config.github.targetBranch}. Please manually merge it and relaunch.`
-    );
-    throw err;
-  }
-
+  core.startGroup(
+    `Checkout ${context.config.github.group}/${context.config.github.project}.`
+  );
+  await checkouProject(context, context.config.github.project, {
+    group: context.config.github.group
+  });
   const workflowInformation = readWorkflowInformation(
     context.config.github.jobName,
     context.config.github.workflow,
     context.config.github.group
   );
+  core.endGroup();
   await treatParents(
     context,
-    [],
+    [context.config.github.project],
     context.config.github.project,
     workflowInformation
   );
-  await executeBuildCommands(".", workflowInformation["buildCommands"]);
+  await executeBuildCommands(
+    getDir(context.config.rootFolder, context.config.github.project),
+    workflowInformation["buildCommands"]
+  );
 }
 
 async function treatParents(

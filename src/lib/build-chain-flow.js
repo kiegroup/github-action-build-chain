@@ -10,6 +10,9 @@ const { treatCommand } = require("./command/command-treatment-delegator");
 
 async function start(context) {
   try {
+    logger.info(
+      `Merging root project with ${context.config.github.group}/${context.config.github.project}:${context.config.github.targetBranch}`
+    );
     await merge(
       ".",
       context.config.github.group,

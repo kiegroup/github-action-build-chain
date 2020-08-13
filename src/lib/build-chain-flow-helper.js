@@ -4,7 +4,8 @@ const {
   clone,
   doesBranchExist,
   merge: gitMerge,
-  hasPullRequest
+  hasPullRequest,
+  getForkedProject
 } = require("./git");
 const { logger, dependenciesToObject } = require("./common");
 const { getYamlFileContent } = require("./fs-helper");
@@ -32,7 +33,7 @@ async function checkouProject(context, project, dependencyInformation) {
 
   if (checkoutInfo.merge) {
     logger.info(
-      `Merging ${context.config.github.serverUrl}${dependencyInformation.group}/${project}:${context.config.github.targetBranch} into ${context.config.github.serverUrl}${checkoutInfo.group}/${project}:${checkoutInfo.branch}`
+      `Merging ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${context.config.github.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
     );
     try {
       await clone(
@@ -47,41 +48,52 @@ async function checkouProject(context, project, dependencyInformation) {
       throw err;
     }
     try {
-      await gitMerge(dir, checkoutInfo.group, project, checkoutInfo.branch);
+      await gitMerge(
+        dir,
+        checkoutInfo.group,
+        checkoutInfo.project,
+        checkoutInfo.branch
+      );
     } catch (err) {
       logger.error(
-        `Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
+        `Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
       );
       throw err;
     }
   } else {
     try {
       logger.info(
-        `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${project}:${checkoutInfo.branch}'  into '${dir}'`
+        `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
       );
       await clone(
-        `${context.config.github.serverUrl}/${checkoutInfo.group}/${project}`,
+        `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
         dir,
         checkoutInfo.branch
       );
     } catch (err) {
       logger.error(
-        `Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${project}.`
+        `Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
       );
       throw err;
     }
   }
 }
 
-async function getCheckoutInfo(context, targetGroup, project, mapping) {
+async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
   const sourceGroup = context.config.github.sourceGroup;
   const sourceBranch = context.config.github.sourceBranch;
   const targetBranch =
     mapping && mapping.source === context.config.github.targetBranch
       ? mapping.target
       : context.config.github.targetBranch;
+  const forkedProjectName = await getForkedProjectName(
+    context.octokit,
+    targetGroup,
+    targetProject,
+    sourceGroup
+  );
   logger.info(
-    `Getting checkout Info for ${project}. sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
+    `Getting checkout Info for ${targetProject}. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
       mapping
         ? "source:" + mapping.source + " target:" + mapping.target
         : "not defined"
@@ -90,16 +102,17 @@ async function getCheckoutInfo(context, targetGroup, project, mapping) {
   return (await doesBranchExist(
     context.octokit,
     sourceGroup,
-    project,
+    forkedProjectName,
     sourceBranch
   ))
     ? {
+        project: forkedProjectName,
         group: sourceGroup,
         branch: sourceBranch,
         merge: await hasPullRequest(
           context.octokit,
           targetGroup,
-          project,
+          targetProject,
           sourceBranch,
           context.config.github.author
         )
@@ -107,16 +120,17 @@ async function getCheckoutInfo(context, targetGroup, project, mapping) {
     : (await doesBranchExist(
         context.octokit,
         targetGroup,
-        project,
+        targetProject,
         sourceBranch
       ))
     ? {
+        project: targetProject,
         group: targetGroup,
         branch: sourceBranch,
         merge: await hasPullRequest(
           context.octokit,
           targetGroup,
-          project,
+          targetProject,
           sourceBranch,
           context.config.github.author
         )
@@ -124,10 +138,15 @@ async function getCheckoutInfo(context, targetGroup, project, mapping) {
     : (await doesBranchExist(
         context.octokit,
         targetGroup,
-        project,
+        targetProject,
         targetBranch
       ))
-    ? { group: targetGroup, branch: targetBranch, merge: false }
+    ? {
+        project: targetProject,
+        group: targetGroup,
+        branch: targetBranch,
+        merge: false
+      }
     : undefined;
 }
 
@@ -183,6 +202,20 @@ function parseWorkflowInformation(jobName, workflowData, defaultGroup) {
 
 function treatCommand(command) {
   return command ? command.split("|").map(item => item.trim()) : undefined;
+}
+
+async function getForkedProjectName(octokit, owner, project, wantedOwner) {
+  if (owner !== wantedOwner) {
+    const forkedProject = await getForkedProject(
+      octokit,
+      owner,
+      project,
+      wantedOwner
+    );
+    return !forkedProject || !forkedProject.name ? project : forkedProject.name;
+  } else {
+    return owner;
+  }
 }
 
 module.exports = {

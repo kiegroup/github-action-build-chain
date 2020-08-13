@@ -9,7 +9,8 @@ const {
   doesBranchExist: doesBranchExistMock,
   clone: cloneMock,
   merge: mergeMock,
-  hasPullRequest: hasPullRequestMock
+  hasPullRequest: hasPullRequestMock,
+  getForkedProject: getForkedProjectMock
 } = require("../src/lib/git");
 
 afterEach(() => {
@@ -69,6 +70,8 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge", async ()
       }
     }
   };
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
+
   // Act
   const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
@@ -81,6 +84,7 @@ test("getCheckoutInfo. group and sourceTarget exist with merge", async () => {
   // Arrange
   doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
   hasPullRequestMock.mockResolvedValueOnce(true);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
   const context = {
     config: {
       github: {
@@ -95,6 +99,7 @@ test("getCheckoutInfo. group and sourceTarget exist with merge", async () => {
   // Act
   const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
+  expect(result.project).toEqual("projectX");
   expect(result.group).toEqual("targetGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(true);
@@ -104,6 +109,7 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist without merge", async
   // Arrange
   doesBranchExistMock.mockResolvedValueOnce(true);
   hasPullRequestMock.mockResolvedValueOnce(false);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
   const context = {
     config: {
       github: {
@@ -117,6 +123,31 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist without merge", async
   // Act
   const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
+  expect(result.project).toEqual("projectXFroked");
+  expect(result.group).toEqual("sourceGroup");
+  expect(result.branch).toEqual("sourceBranch");
+  expect(result.merge).toEqual(false);
+});
+
+test("getCheckoutInfo. sourceBranch and sourceTarget exist without merge and not existing forked project", async () => {
+  // Arrange
+  doesBranchExistMock.mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(false);
+  getForkedProjectMock.mockResolvedValueOnce(undefined);
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sourceBranch",
+        targetBranch: "targetBranch"
+      }
+    }
+  };
+  // Act
+  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
+  // Assert
+  expect(result.project).toEqual("projectX");
   expect(result.group).toEqual("sourceGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(false);
@@ -126,6 +157,7 @@ test("getCheckoutInfo. group and sourceTarget exist without merge", async () => 
   // Arrange
   doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
   hasPullRequestMock.mockResolvedValueOnce(false);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
   const context = {
     config: {
       github: {
@@ -139,6 +171,7 @@ test("getCheckoutInfo. group and sourceTarget exist without merge", async () => 
   // Act
   const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
+  expect(result.project).toEqual("projectX");
   expect(result.group).toEqual("targetGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(false);
@@ -150,6 +183,7 @@ test("getCheckoutInfo. group and targetBranch exist", async () => {
     .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(true);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
   const context = {
     config: {
       github: {
@@ -163,6 +197,7 @@ test("getCheckoutInfo. group and targetBranch exist", async () => {
   // Act
   const result = await getCheckoutInfo(context, "targetGroup", "projectX");
   // Assert
+  expect(result.project).toEqual("projectX");
   expect(result.group).toEqual("targetGroup");
   expect(result.branch).toEqual("targetBranch");
   expect(result.merge).toEqual(false);
@@ -174,6 +209,8 @@ test("getCheckoutInfo. none exist", async () => {
     .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(false);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
+
   const context = {
     config: {
       github: {
@@ -236,6 +273,12 @@ test("checkoutDependencies", async () => {
     .mockResolvedValueOnce(true)
     .mockResolvedValueOnce(true)
     .mockResolvedValueOnce(false);
+  getForkedProjectMock
+    .mockResolvedValueOnce({ name: "project-A" })
+    .mockResolvedValueOnce({ name: "projectB" })
+    .mockResolvedValueOnce({ name: "projectC" })
+    .mockResolvedValueOnce({ name: "projectD" })
+    .mockResolvedValueOnce({ name: "projectEFroked" });
   // Act
   await checkoutDependencies(context, dependencies);
   // Assert
@@ -272,25 +315,25 @@ test("checkoutDependencies", async () => {
     "tBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/sourceGroup/projectE",
+    "URL/sourceGroup/projectEFroked",
     "folder/projectE",
     "sBranch"
   );
   expect(mergeMock).not.toHaveBeenCalledWith(
     "folder/projectE",
     "sourceGroup",
-    "projectE",
+    "projectEFroked",
     "sBranch"
   );
   expect(mergeMock).not.toHaveBeenCalledWith(
     "folder/projectE",
     "groupE",
-    "projectE",
+    "projectEFroked",
     "sBranch"
   );
 });
 
-test("checkouProject author/projectX:sBranch exists has PR", async () => {
+test("checkouProject sGroup/projectXFroked:sBranch exists has PR", async () => {
   // Arrange
   const context = {
     config: {
@@ -307,6 +350,7 @@ test("checkouProject author/projectX:sBranch exists has PR", async () => {
   };
   doesBranchExistMock.mockResolvedValueOnce(true);
   hasPullRequestMock.mockResolvedValueOnce(true);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
   // Act
   await checkouProject(context, "projectx", { group: "groupx" });
   // Assert
@@ -320,12 +364,12 @@ test("checkouProject author/projectX:sBranch exists has PR", async () => {
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/projectx",
     "sGroup",
-    "projectx",
+    "projectXFroked",
     "sBranch"
   );
 });
 
-test("checkouProject author/projectX:sBranch exists has no PR", async () => {
+test("checkouProject sGroup/projectXFroked:sBranch exists has no PR", async () => {
   // Arrange
   const context = {
     config: {
@@ -342,19 +386,20 @@ test("checkouProject author/projectX:sBranch exists has no PR", async () => {
   };
   doesBranchExistMock.mockResolvedValueOnce(true);
   hasPullRequestMock.mockResolvedValueOnce(false);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
   // Act
   await checkouProject(context, "projectx", { group: "groupx" });
   // Assert
   expect(cloneMock).toHaveBeenCalledTimes(1);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/sGroup/projectx",
+    "URL/sGroup/projectXFroked",
     "folder/projectx",
     "sBranch"
   );
   expect(mergeMock).not.toHaveBeenCalled();
 });
 
-test("checkouProject author/projectX:sBranch does not exists but groupx/projectX:sBranch has PR", async () => {
+test("checkouProject sGroup/projectX:sBranch does not exists but groupx/projectX:sBranch has PR", async () => {
   // Arrange
   const context = {
     config: {
@@ -363,13 +408,15 @@ test("checkouProject author/projectX:sBranch does not exists but groupx/projectX
         serverUrl: "URL",
         author: "author",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        sourceGroup: "sGroup"
       },
       rootFolder: "folder"
     }
   };
   doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
   hasPullRequestMock.mockResolvedValueOnce(true);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
 
   // Act
   await checkouProject(context, "projectx", { group: "groupx" });
@@ -398,13 +445,15 @@ test("checkouProject author/projectX:sBranch does not exists but groupx/projectX
         serverUrl: "URL",
         author: "author",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        sourceGroup: "sGroup"
       },
       rootFolder: undefined
     }
   };
   doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
   hasPullRequestMock.mockResolvedValueOnce(true);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
 
   // Act
   await checkouProject(context, "projectx", { group: "groupx" });
@@ -433,13 +482,15 @@ test("checkouProject author/projectX:sBranch does not exists but groupx/projectX
         serverUrl: "URL",
         author: "author",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        sourceGroup: "sGroup"
       },
       rootFolder: "folder"
     }
   };
   doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
   hasPullRequestMock.mockResolvedValueOnce(false);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
 
   // Act
   await checkouProject(context, "projectx", { group: "groupx" });
@@ -462,7 +513,8 @@ test("checkouProject author/projectX:sBranch and groupx/projectX:sBranch but gro
         serverUrl: "URL",
         author: "author",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        sourceGroup: "sGroup"
       },
       rootFolder: "folder"
     }
@@ -471,6 +523,7 @@ test("checkouProject author/projectX:sBranch and groupx/projectX:sBranch but gro
     .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(true);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
 
   // Act
   await checkouProject(context, "projectx", { group: "groupx" });

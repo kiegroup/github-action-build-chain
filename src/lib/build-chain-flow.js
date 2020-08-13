@@ -48,7 +48,10 @@ async function treatParents(
 ) {
   if (!projectList[project]) {
     projectList.push(project);
-    if (workflowInformation.parentDependencies) {
+    if (
+      workflowInformation.parentDependencies &&
+      Object.keys(workflowInformation.parentDependencies).length > 0
+    ) {
       core.startGroup(
         `Checking out dependencies [${Object.keys(
           workflowInformation.parentDependencies

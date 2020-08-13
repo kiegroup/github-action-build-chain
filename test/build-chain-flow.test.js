@@ -53,7 +53,8 @@ test("start", async () => {
   expect(readWorkflowInformation).toHaveBeenCalledWith(
     "job-id",
     "main.yaml",
-    "defaultGroup"
+    "defaultGroup",
+    "folder/projectX"
   );
   expect(readWorkflowInformation).toHaveBeenCalledTimes(1);
   expect(execute).toHaveBeenCalledWith("folder/projectX", "command 1");

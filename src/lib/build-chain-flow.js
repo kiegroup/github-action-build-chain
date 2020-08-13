@@ -13,13 +13,18 @@ async function start(context) {
   core.startGroup(
     `Checkout ${context.config.github.group}/${context.config.github.project}.`
   );
+  const rootProjectFolder = getDir(
+    context.config.rootFolder,
+    context.config.github.project
+  );
   await checkouProject(context, context.config.github.project, {
     group: context.config.github.group
   });
   const workflowInformation = readWorkflowInformation(
     context.config.github.jobName,
     context.config.github.workflow,
-    context.config.github.group
+    context.config.github.group,
+    rootProjectFolder
   );
   core.endGroup();
   await treatParents(
@@ -29,7 +34,7 @@ async function start(context) {
     workflowInformation
   );
   await executeBuildCommands(
-    getDir(context.config.rootFolder, context.config.github.project),
+    rootProjectFolder,
     workflowInformation["buildCommands"]
   );
 }

@@ -3,7 +3,7 @@ const {
   getDir,
   readWorkflowInformation
 } = require("./build-chain-flow-helper");
-const { merge } = require("./git");
+const { merge, fetch } = require("./git");
 const { logger } = require("./common");
 const { execute } = require("./command");
 const { treatCommand } = require("./command/command-treatment-delegator");
@@ -14,6 +14,7 @@ async function start(context) {
     logger.info(
       `Merging root project with ${context.config.github.group}/${context.config.github.project}:${context.config.github.targetBranch}`
     );
+    await fetch(".", context.config.github.targetBranch);
     await merge(
       ".",
       context.config.github.group,

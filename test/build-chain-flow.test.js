@@ -7,8 +7,9 @@ const {
 jest.mock("../src/lib/build-chain-flow-helper");
 const { execute } = require("../src/lib/command");
 jest.mock("../src/lib/command");
-const { merge } = require("../src/lib/git");
+const { merge, fetch } = require("../src/lib/git");
 jest.mock("../src/lib/git");
+jest.mock("@actions/core");
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -45,6 +46,8 @@ test("start", async () => {
   // Act
   await start(context);
   // Assert
+  expect(fetch).toHaveBeenCalledWith(".", "tBranch");
+  expect(fetch).toHaveBeenCalledTimes(1);
   expect(merge).toHaveBeenCalledWith(
     ".",
     "defaultGroup",

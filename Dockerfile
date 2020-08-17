@@ -1,4 +1,4 @@
-FROM openjdk:11
+FROM openjdk:8
 
 RUN echo "Building build-chain docker image"
 

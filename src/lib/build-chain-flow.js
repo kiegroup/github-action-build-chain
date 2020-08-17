@@ -1,4 +1,5 @@
 const {
+  checkouProject,
   checkoutDependencies,
   getDir,
   readWorkflowInformation
@@ -6,20 +7,37 @@ const {
 const { logger } = require("./common");
 const { execute } = require("./command");
 const { treatCommand } = require("./command/command-treatment-delegator");
+const core = require("@actions/core");
 
 async function start(context) {
+  core.startGroup(
+    `Checkout ${context.config.github.group}/${context.config.github.project}.`
+  );
+  const rootProjectFolder = getDir(
+    context.config.rootFolder,
+    context.config.github.project
+  );
+  await checkouProject(context, context.config.github.project, {
+    group: context.config.github.group
+  });
   const workflowInformation = readWorkflowInformation(
     context.config.github.jobName,
     context.config.github.workflow,
-    context.config.github.group
+    context.config.github.group,
+    rootProjectFolder
   );
+  core.endGroup();
   await treatParents(
     context,
-    [],
+    [context.config.github.project],
     context.config.github.project,
     workflowInformation
   );
-  await executeBuildCommands(".", workflowInformation["buildCommands"]);
+  await executeBuildCommands(
+    rootProjectFolder,
+    workflowInformation["buildCommands"],
+    context.config.github.project
+  );
 }
 
 async function treatParents(
@@ -31,11 +49,20 @@ async function treatParents(
 ) {
   if (!projectList[project]) {
     projectList.push(project);
-    if (workflowInformation.parentDependencies) {
+    if (
+      workflowInformation.parentDependencies &&
+      Object.keys(workflowInformation.parentDependencies).length > 0
+    ) {
+      core.startGroup(
+        `Checking out dependencies [${Object.keys(
+          workflowInformation.parentDependencies
+        ).join(", ")}] for project ${project}`
+      );
       await checkoutDependencies(
         context,
         workflowInformation.parentDependencies
       );
+      core.endGroup();
       for (const parentProject of Object.keys(
         workflowInformation.parentDependencies
       ).filter(a => a !== null && a !== "")) {
@@ -65,15 +92,16 @@ async function treatParents(
       await executeBuildCommands(
         getDir(context.config.rootFolder, project),
         workflowInformation["buildCommandsUpstream"] ||
-          workflowInformation["buildCommands"]
+          workflowInformation["buildCommands"],
+        project
       );
     }
   }
 }
 
-async function executeBuildCommands(cwd, buildCommands) {
+async function executeBuildCommands(cwd, buildCommands, project) {
   for (const command of buildCommands) {
-    await execute(cwd, treatCommand(command));
+    await execute(cwd, treatCommand(command), project);
   }
 }
 

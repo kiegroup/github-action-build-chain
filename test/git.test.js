@@ -3,6 +3,8 @@ const git = require("../src/lib/git");
 const { tmpdir } = require("../src/lib/fs-helper");
 const prInfo = require("./resources/pr_list_info.json");
 const prInfoEmpty = require("./resources/pr_list_info_empty.json");
+const forkedProjectListInfo = require("./resources/forked_projects_list_info.json");
+const forkedProjectListInfoEmpty = require("./resources/forked_projects_list_info_empty.json");
 
 async function init(dir) {
   await fse.mkdirs(dir);
@@ -215,4 +217,71 @@ test("hasPullRequest false", async () => {
 
   expect(result).toBe(false);
   expect(octokit.pulls.list).toHaveBeenCalledTimes(2);
+});
+
+test("getForkedProject existing", async () => {
+  const octokit = {
+    repos: {
+      listForks: jest.fn(({ owner, repo }) => {
+        return owner === "ownerx" && repo === "repox"
+          ? { status: 200, data: forkedProjectListInfo }
+          : undefined;
+      })
+    }
+  };
+
+  const result = await git.getForkedProject(
+    octokit,
+    "ownerx",
+    "repox",
+    "Ginxo"
+  );
+
+  expect(octokit.repos.listForks).toHaveBeenCalledTimes(1);
+  expect(result).not.toBeUndefined();
+  expect(result.id).toBe(225822299);
+});
+
+test("getForkedProject not existing", async () => {
+  const octokit = {
+    repos: {
+      listForks: jest.fn(({ owner, repo }) => {
+        return owner === "ownerx" && repo === "repox"
+          ? { status: 200, data: forkedProjectListInfo }
+          : undefined;
+      })
+    }
+  };
+
+  const result = await git.getForkedProject(
+    octokit,
+    "ownerx",
+    "repox",
+    "weirdowner"
+  );
+
+  expect(octokit.repos.listForks).toHaveBeenCalledTimes(1);
+  expect(result).toBeUndefined();
+});
+
+test("getForkedProject empty", async () => {
+  const octokit = {
+    repos: {
+      listForks: jest.fn(({ owner, repo }) => {
+        return owner === "ownerx" && repo === "repox"
+          ? { status: 200, data: forkedProjectListInfoEmpty }
+          : undefined;
+      })
+    }
+  };
+
+  const result = await git.getForkedProject(
+    octokit,
+    "ownerx",
+    "repox",
+    "weirdowner"
+  );
+
+  expect(octokit.repos.listForks).toHaveBeenCalledTimes(1);
+  expect(result).toBeUndefined();
 });

@@ -12,14 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     name: release_pull_request
     steps:
-    - name: checkout
-      uses: actions/checkout@v1
-    - name: Create PR
-      uses: gorillio/github-action-cherry-pick@master
-      with:
-        pr_branch: ${{ matrix.branches }}
-        pr_labels: ${{ matrix.branches }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GITBOT_EMAIL: ${{ secrets.GH_MAIL }}
-        DRY_RUN: false
+      - name: checkout
+        uses: actions/checkout@v1
+      - name: Create PR
+        uses: gorillio/github-action-cherry-pick@master
+        with:
+          pr_branch: ${{ matrix.branches }}
+          pr_labels: ${{ matrix.branches }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITBOT_EMAIL: ${{ secrets.GH_MAIL }}
+          DRY_RUN: false

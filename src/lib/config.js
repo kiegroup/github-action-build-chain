@@ -14,7 +14,9 @@ const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)
 async function createConfig(octokit, eventData, rootFolder, env = {}) {
   async function parseGitHub(env) {
     return {
-      serverUrl: env["GITHUB_SERVER_URL"], // https://github.com
+      serverUrl: env["GITHUB_SERVER_URL"]
+        ? env["GITHUB_SERVER_URL"].replace(/\/$/, "")
+        : undefined, // https://github.com
       action: env["GITHUB_ACTION"], // Ginxogithub-action-build-chain
       sourceGroup: eventData.pull_request.head.repo.full_name.split("/")[0], // forkedGroup
       author: eventData.pull_request.head.user.login, // Ginxo

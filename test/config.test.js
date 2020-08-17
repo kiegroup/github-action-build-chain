@@ -23,7 +23,7 @@ jest.mock("../src/lib/action-utils", () => ({
 test("createConfig", async () => {
   // Arrange
   const env = {
-    GITHUB_SERVER_URL: "githubServerUrl",
+    GITHUB_SERVER_URL: "http://github.com/",
     GITHUB_ACTOR: "actor",
     GITHUB_HEAD_REF: "githubHeadRef",
     GITHUB_BASE_REF: "githubBaseRef",
@@ -61,7 +61,7 @@ test("createConfig", async () => {
     buildCommandsDownstream: "build command downstream",
     github: {
       action: undefined,
-      serverUrl: "githubServerUrl",
+      serverUrl: "http://github.com",
       author: "user",
       actor: "actor",
       sourceGroup: "group",

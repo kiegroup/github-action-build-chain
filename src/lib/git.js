@@ -81,8 +81,6 @@ async function fetch(dir, branch) {
     dir,
     "fetch",
     "--quiet",
-    "--depth",
-    FETCH_DEPTH,
     "origin",
     `${branch}:refs/remotes/origin/${branch}`
   );

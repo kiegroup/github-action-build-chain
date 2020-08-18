@@ -103,6 +103,23 @@ test("parseWorkflowInformation with matrix", () => {
   expect(buildChainInformation).toEqual(expected);
 });
 
+test("parseWorkflowInformation with matrix error definition", () => {
+  // Act
+  try {
+    readWorkflowInformation(
+      "build-chain",
+      "flow-matrix.yaml",
+      "defaultGroup",
+      undefined,
+      "test/resources"
+    );
+  } catch (e) {
+    expect(e.message).toBe(
+      "The variable 'sourceBranch' is not defined in \"with\" 'matrix-variables' so it can't be replaced. Please define it in the flow triggering the job."
+    );
+  }
+});
+
 test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge", async () => {
   // Arrange
   doesBranchExistMock.mockResolvedValueOnce(true);

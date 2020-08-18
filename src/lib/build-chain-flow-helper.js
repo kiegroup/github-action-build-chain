@@ -222,7 +222,7 @@ function treatMatrixVariables(withExpression, matrixVariables) {
   const exp = /((\${{ )([a-zA-Z0-9\\.\\-]*)( }}))/g;
   let match = undefined;
   while ((match = exp.exec(withExpression))) {
-    if (!matrixVariables[match[3]]) {
+    if (!matrixVariables || !matrixVariables[match[3]]) {
       throw new Error(
         `The variable '${match[3]}' is not defined in "with" 'matrix-variables' so it can't be replaced. Please define it in the flow triggering the job.`
       );

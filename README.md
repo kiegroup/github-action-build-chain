@@ -223,12 +223,12 @@ docker build --build-arg OPENJDK_VERSION=11 .
 
 ### Integration testing
 
-In order to execute integration testing you just run `env GITHUB_TOKEN=%TOKEN% URL=%GITHUB_EVENT_URL% ['parent-dependencies=%PARENT_DEPENDENCIES%'] ['child-dependencies=%CHILD_DEPENDENCIES%'] yarn it` where:
+In order to execute integration testing you just run `env GITHUB_TOKEN=%TOKEN% URL=%GITHUB_EVENT_URL% workflow-file-name=%WORKFLOW_FILE_NAME% GITHUB_JOB='%GITHUB_JOB%' yarn it` where:
 
 - %TOKEN%: is your personal token, like `1e2ca1ac1252121d83fbe69ab3c4dd92bcb1ae32`.
-- %GITHUB_EVENT_URL%: the url to your event to test, like `https://github.com/kiegroup/lienzo-core/pull/3`.
-- %PARENT_DEPENDENCIES%: the **optional** comma separated parent project list.
-- `%CHILD_DEPENDENCIES%`: the **optional** comma separated child project list.
+- %GITHUB_EVENT_URL%: the url to your event to test, like `https://github.com/kiegroup/kogito-images/pull/220`.
+- %WORKFLOW_FILE_NAME%: the workflow file name located in `.github/workflows` folder, like `build_images.yml`.
+- %GITHUB_JOB%: the job id from the `%WORKFLOW_FILE_NAME%` to execute.
 
 So the final command would look like
 `env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40 URL=https://github.com/kiegroup/lienzo-core/pull/3 'parent-dependencies=lienzo-core,lienzo-tests' 'child-dependencies=appformer' yarn it`.

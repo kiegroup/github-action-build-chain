@@ -1,4 +1,4 @@
-FROM openjdk:8
+FROM openjdk:11
 
 RUN echo "Building build-chain docker image"
 
@@ -58,5 +58,3 @@ RUN apt-get update && \
   && add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/debian $(lsb_release -cs) stable" \
   && apt-get update \
   && apt-get install -y docker-ce docker-ce-cli containerd.io --no-install-recommends
-
-ENTRYPOINT [ "build-chain-action" ]

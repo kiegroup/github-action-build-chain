@@ -26,6 +26,8 @@ async function start(context) {
     context.config.github.group,
     rootProjectFolder
   );
+
+  console.log("workflowInformation", workflowInformation);
   core.endGroup();
   await treatParents(
     context,

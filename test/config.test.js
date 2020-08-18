@@ -17,6 +17,9 @@ jest.mock("../src/lib/action-utils", () => ({
   },
   getWorkflowfileName: () => {
     return "pull_request.yml";
+  },
+  getMatrixVariables: () => {
+    return { key1: "value1", key2: "value2" };
   }
 }));
 
@@ -59,6 +62,7 @@ test("createConfig", async () => {
     buildCommands: "build command",
     buildCommandsUpstream: "build command upstream",
     buildCommandsDownstream: "build command downstream",
+    matrixVariables: { key1: "value1", key2: "value2" },
     github: {
       action: undefined,
       serverUrl: "http://github.com",

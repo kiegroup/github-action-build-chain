@@ -24,10 +24,10 @@ async function start(context) {
     context.config.github.jobName,
     context.config.github.workflow,
     context.config.github.group,
+    context.config.matrixVariables,
     rootProjectFolder
   );
 
-  console.log("workflowInformation", workflowInformation);
   core.endGroup();
   await treatParents(
     context,
@@ -73,6 +73,7 @@ async function treatParents(
           context.config.github.jobName,
           context.config.github.workflow,
           context.config.github.group,
+          context.config.matrixVariables,
           dir
         );
         if (parentWorkflowInformation) {

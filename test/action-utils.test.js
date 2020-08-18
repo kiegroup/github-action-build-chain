@@ -2,7 +2,8 @@ const {
   getChildDependencies,
   getParentDependencies,
   getBuildCommand,
-  getWorkflowfileName
+  getWorkflowfileName,
+  getMatrixVariables
 } = require("../src/lib/action-utils");
 jest.mock("@actions/core", () => ({
   getInput: param => {
@@ -14,6 +15,8 @@ jest.mock("@actions/core", () => ({
       ? "command 1 x | command 2"
       : param.includes("workflow-file-name")
       ? "pull_request.yml"
+      : param.includes("matrix-variables")
+      ? "matrix.key1:${{ matrix.value1 }}, matrix.key2:${{ matrix.value2 }},matrix.key3: ${{ matrix.value3 }}"
       : undefined;
   }
 }));
@@ -48,4 +51,17 @@ test("getWorkflowfileName", () => {
 
   // Assert
   expect(result).toEqual("pull_request.yml");
+});
+
+test("getMatrixVariables", () => {
+  // Arrange
+  const expectedResult = {
+    "matrix.key1": "${{ matrix.value1 }}",
+    "matrix.key2": "${{ matrix.value2 }}",
+    "matrix.key3": "${{ matrix.value3 }}"
+  };
+  // Act
+  const result = getMatrixVariables();
+  // Assert
+  expect(result).toEqual(expectedResult);
 });

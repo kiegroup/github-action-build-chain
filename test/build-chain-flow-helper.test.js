@@ -23,6 +23,7 @@ test("parseWorkflowInformation", () => {
     "build-chain",
     "flow.yaml",
     "defaultGroup",
+    undefined,
     "test/resources"
   );
   // Assert
@@ -54,6 +55,52 @@ test("parseWorkflowInformation", () => {
     }
   };
   expect(expected).toEqual(buildChainInformation);
+});
+
+test("parseWorkflowInformation with matrix", () => {
+  // Arrange
+  const context = {
+    config: {
+      matrixVariables: {
+        os: "rhel",
+        "matrix.version": "7",
+        sourceBranch: "source",
+        "matrix.targetBranch": "target"
+      }
+    }
+  };
+  // Act
+  const buildChainInformation = readWorkflowInformation(
+    "build-chain",
+    "flow-matrix.yaml",
+    "defaultGroup",
+    context.config.matrixVariables,
+    "test/resources"
+  );
+  // Assert
+  const expected = {
+    id: "build-chain",
+    name: "Build Chain",
+    buildCommands: ["echo rhel", "echo 'without matrix'"],
+    buildCommandsUpstream: ["echo rhel", "echo 7", "echo 'without matrix'"],
+    buildCommandsDownstream: ["echo 'without matrix'", "echo rhel"],
+    childDependencies: {
+      appformer: {
+        group: "defaultGroup",
+        mapping: { source: "source", target: "target" }
+      },
+      "lienzo-tests": { group: "defaultGroup" }
+    },
+    parentDependencies: {
+      "lienzo-core": { group: "defaultGroup" },
+      errai: { group: "groupx" },
+      projectx: {
+        group: "groupy",
+        mapping: { source: "source", target: "master" }
+      }
+    }
+  };
+  expect(buildChainInformation).toEqual(expected);
 });
 
 test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge", async () => {
@@ -505,6 +552,40 @@ test("checkouProject author/projectX:sBranch does not exists but groupx/projectX
 });
 
 test("checkouProject author/projectX:sBranch and groupx/projectX:sBranch but groupx/projectX:tBranch", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        workflow: "main.yml",
+        serverUrl: "URL",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch",
+        sourceGroup: "sGroup"
+      },
+      rootFolder: "folder"
+    }
+  };
+  doesBranchExistMock
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(true);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
+
+  // Act
+  await checkouProject(context, "projectx", { group: "groupx" });
+  // Assert
+  expect(cloneMock).toHaveBeenCalledTimes(1);
+  expect(hasPullRequestMock).toHaveBeenCalledTimes(0);
+  expect(mergeMock).toHaveBeenCalledTimes(0);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/groupx/projectx",
+    "folder/projectx",
+    "tBranch"
+  );
+});
+
+test("treatMatrixVariablaes", async () => {
   // Arrange
   const context = {
     config: {

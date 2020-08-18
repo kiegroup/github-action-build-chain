@@ -26,7 +26,8 @@ test("start", async () => {
         sourceBranch: "sBranch",
         targetBranch: "tBranch"
       },
-      rootFolder: "folder"
+      rootFolder: "folder",
+      matrixVariables: { key1: "value1", key2: "value2" }
     }
   };
   const workflowInformation = {
@@ -54,6 +55,7 @@ test("start", async () => {
     "job-id",
     "main.yaml",
     "defaultGroup",
+    { key1: "value1", key2: "value2" },
     "folder/projectX"
   );
   expect(readWorkflowInformation).toHaveBeenCalledTimes(1);
@@ -79,7 +81,8 @@ test("treatParents", async () => {
         workflow: "main.yaml",
         group: "defaultGroup"
       },
-      rootFolder: "folder"
+      rootFolder: "folder",
+      matrixVariables: { key1: "value1", key2: "value2" }
     }
   };
   const workflowInformation = {
@@ -108,6 +111,7 @@ test("treatParents", async () => {
     "job-id",
     "main.yaml",
     "defaultGroup",
+    { key1: "value1", key2: "value2" },
     undefined
   );
 });
@@ -121,7 +125,8 @@ test("treatParents no rootFolder", async () => {
         workflow: "main.yaml",
         group: "defaultGroup"
       },
-      rootFolder: undefined
+      rootFolder: undefined,
+      matrixVariables: { key1: "value1", key2: "value2" }
     }
   };
   const workflowInformation = {
@@ -150,6 +155,7 @@ test("treatParents no rootFolder", async () => {
     "job-id",
     "main.yaml",
     "defaultGroup",
+    { key1: "value1", key2: "value2" },
     undefined
   );
 });

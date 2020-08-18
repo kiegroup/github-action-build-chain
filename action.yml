@@ -18,7 +18,7 @@ inputs:
     description: "the file flow file name, normally the same one where the flow is stored. Like `pull_request.yml`"
     required: true
   matrix-variables:
-    description: "the map of matrix-variable-key:matrix-variable-value in case you want to use them from build-command/build-command-upstream. Something like 'matrix.os:${{ matrix.os }}, matrix.version:${{ matrix.version }}'."
+    description: "the map of matrix-variable-key:matrix-variable-value in case you want to use them from build-command/build-command-upstream.."
     required: false
 runs:
   using: "docker"

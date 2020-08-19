@@ -77,7 +77,19 @@ to your existing yaml flow definition or to create a new one. Do the same for th
   > ```
   > build-command: 'mvn clean install'
   > build-command: 'mvn clean install|mvn -e -nsu -Dfull -Pwildfly clean install -Prun-code-coverage  -Dcontainer.profile=wildfly -Dcontainer=wildfly -Dintegration-tests=true -Dmaven.test.failure.ignore=true -DjvmArgs="-Xms1g -Xmx4g"'
+  > build-command: 'sh scripts/prepare_environment_build_images.sh | mkdir -p ${{ matrix.images }} | rsync -av --progress . ${{ matrix.images }} --exclude workspaces | make ${{ matrix.images }} ignore_test=true cekit_option="--work-dir ." | make ${{ matrix.images }} ignore_build=true cekit_option="--work-dir ."'
   > ```
+
+- **matrix-variables** (optional): `key:${{ flowvariable1 }}[,key2:${{ flowvariable2 }},matrix.variable:${{ matrix.variable }}]` define it in case you use matrix variables in your with parameters.
+
+  > Example:
+  >
+  > ```
+  build-command: 'mkdir -p ${{ matrix.images }} | rsync -av --progress . ${{ matrix.os }}'
+  matrix-variables: "matrix.images:${{ matrix.images }}, matrix.os:${{ matrix.os }}"
+
+  
+  > ```  
 
 ## Usage example
 

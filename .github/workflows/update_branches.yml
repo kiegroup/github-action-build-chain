@@ -8,7 +8,7 @@ jobs:
   release_pull_request:
     strategy:
       matrix:
-        branches: [openjdk8, openjdk11,python3-cekit]
+        branches: [openjdk8, openjdk11, python3-cekit]
     runs-on: ubuntu-latest
     name: release_pull_request
     steps:

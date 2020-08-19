@@ -15,7 +15,7 @@ const {
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 
-async function createConfig(octokit, eventData, rootFolder, env = {}) {
+async function createConfig(eventData, rootFolder, env = {}) {
   async function parseGitHub(env) {
     return {
       serverUrl: env["GITHUB_SERVER_URL"]
@@ -70,7 +70,6 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
   env["GITHUB_REF"] = event.ref;
   var today = new Date();
   const config = await createConfig(
-    octokit,
     event,
     `locally_execution_${today.getFullYear()}${
       today.getMonth() + 1

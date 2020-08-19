@@ -59,7 +59,7 @@ test("createConfig", async () => {
     }
   };
   // Act
-  const config = await createConfig(undefined, envData, "folder", env);
+  const config = await createConfig(envData, "folder", env);
   // Assert
   const expected = {
     parentDependencies: { "lienzo-core": {}, "lienzo-test": {}, drools: {} },

@@ -18,6 +18,15 @@ jest.mock("../src/lib/action-utils", () => ({
   getWorkflowfileName: () => {
     return "pull_request.yml";
   },
+  getArchiveArtifactsName: () => {
+    return "artifact x";
+  },
+  getArchiveArtifactsPath: () => {
+    return "path1,path2";
+  },
+  getArchiveArtifactsIfNoFilesFound: () => {
+    return "warn";
+  },
   getMatrixVariables: () => {
     return { key1: "value1", key2: "value2" };
   }
@@ -62,6 +71,11 @@ test("createConfig", async () => {
     buildCommands: "build command",
     buildCommandsUpstream: "build command upstream",
     buildCommandsDownstream: "build command downstream",
+    archiveArtifacts: {
+      name: "artifact x",
+      paths: "path1,path2",
+      ifNoFilesFound: "warn"
+    },
     matrixVariables: { key1: "value1", key2: "value2" },
     github: {
       action: undefined,

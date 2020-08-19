@@ -6,7 +6,10 @@ const {
   getParentDependencies,
   getChildDependencies,
   getWorkflowfileName,
-  getMatrixVariables
+  getMatrixVariables,
+  getArchiveArtifactsName,
+  getArchiveArtifactsPath,
+  getArchiveArtifactsIfNoFilesFound
 } = require("./action-utils");
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
@@ -45,6 +48,11 @@ async function createConfig(octokit, eventData, rootFolder, env = {}) {
     buildCommandsUpstream: getBuildCommandUpstream(),
     buildCommandsDownstream: getBuildCommandDownstream(),
     matrixVariables: getMatrixVariables(),
+    archiveArtifacts: {
+      name: getArchiveArtifactsName(),
+      paths: getArchiveArtifactsPath(),
+      ifNoFilesFound: getArchiveArtifactsIfNoFilesFound()
+    },
     github: await parseGitHub(env),
     rootFolder: rootFolder === undefined ? "" : rootFolder
   };
@@ -61,7 +69,7 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
   env["GITHUB_REPOSITORY"] = event.pull_request.base.repo.full_name;
   env["GITHUB_REF"] = event.ref;
   var today = new Date();
-  return await createConfig(
+  const config = await createConfig(
     octokit,
     event,
     `locally_execution_${today.getFullYear()}${
@@ -69,6 +77,8 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
     }${today.getDate()}`,
     env
   );
+  config.isLocally = true;
+  return config;
 }
 
 async function getEvent(octokit, eventUrl) {

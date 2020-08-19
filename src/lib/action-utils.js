@@ -25,6 +25,18 @@ function getWorkflowfileName() {
   return core.getInput("workflow-file-name");
 }
 
+function getArchiveArtifactsName() {
+  return core.getInput("archive-artifacts-name");
+}
+
+function getArchiveArtifactsPath() {
+  return core.getInput("archive-artifacts");
+}
+
+function getArchiveArtifactsIfNoFilesFound() {
+  return core.getInput("archive-artifacts-if-no-files-found");
+}
+
 function getMatrixVariables() {
   const matrixVariables = core.getInput("matrix-variables");
   return matrixVariables
@@ -47,5 +59,8 @@ module.exports = {
   getBuildCommandDownstream,
   getBuildCommand,
   getWorkflowfileName,
-  getMatrixVariables
+  getMatrixVariables,
+  getArchiveArtifactsName,
+  getArchiveArtifactsPath,
+  getArchiveArtifactsIfNoFilesFound
 };

@@ -1,9 +1,9 @@
 const {
   checkouProject,
   checkoutDependencies,
-  getDir,
-  readWorkflowInformation
+  getDir
 } = require("./build-chain-flow-helper");
+const { readWorkflowInformation } = require("./workflow-informaton-reader");
 const { logger } = require("./common");
 const { execute } = require("./command");
 const { treatCommand } = require("./command/command-treatment-delegator");

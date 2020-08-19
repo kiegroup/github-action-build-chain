@@ -72,6 +72,7 @@ to your existing yaml flow definition or to create a new one. Do the same for th
   > ```
 
 - **workflow-file-name** (required): `file_name.yml` You to define which workflow file name will be taken from the rest of the projects to get metainfo. _This is the most embarrassing field we have here :pensive:. It's due to github does not provide filename in case the `name` is defined for the flow. The information is stored in `GITHUB_WORKFLOW` environment variable but it's overridden in case you define a name for it (which is the most common thing). It is better explained in [workflow-file-name section](#workflow-file-name)_.
+
   > Example:
   >
   > ```
@@ -87,7 +88,17 @@ to your existing yaml flow definition or to create a new one. Do the same for th
   > ```
   > build-command: 'mkdir -p ${{ matrix.images }} | rsync -av --progress . ${{ matrix.os }}'
   > matrix-variables: "matrix.images:${{ matrix.images }}, matrix.os:${{ matrix.os }}"
-  > ```  
+  > ```
+
+## Execution environments
+
+The different execution environments are provided by different [docker images](https://github.com/kiegroup/github-action-build-chain/blob/master/Dockerfile) placed in different project branches, the tool remains the same, no matter how many environments to execute commands we have.
+
+- **openjdk8** (default): openjdk8 + maven 3.6.3 + docker + nodejs + yarn latest stable release. [Dockerfile](https://github.com/kiegroup/github-action-build-chain/blob/openjdk8/Dockerfile)
+- **openjdk11**: openjdk11 + maven 3.6.3 + docker + nodejs + yarn latest stable release [Dockerfile](https://github.com/kiegroup/github-action-build-chain/blob/openjdk1/Dockerfile)
+- **python3-cekit**: python3 + python cekit library + docker + nodejs + yarn latest stable release [Dockerfile](https://github.com/kiegroup/github-action-build-chain/blob/python3-cekit/Dockerfile)
+
+In case you want to use a different environment you just have to choose the branch (`@whateverbranch`) from `uses` expression, like `uses: kiegroup/github-action-build-chain@openjdk11` or `uses: kiegroup/github-action-build-chain@python3-cekit`.
 
 ## Usage example
 

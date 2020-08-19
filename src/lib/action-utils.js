@@ -25,6 +25,17 @@ function getWorkflowfileName() {
   return core.getInput("workflow-file-name");
 }
 
+function getMatrixVariables() {
+  const matrixVariables = core.getInput("matrix-variables");
+  return matrixVariables
+    ? matrixVariables.split(",").reduce((acc, variableKeyValue) => {
+        const variableKeyValueSplit = variableKeyValue.trim().split(":");
+        acc[variableKeyValueSplit[0].trim()] = variableKeyValueSplit[1].trim();
+        return acc;
+      }, {})
+    : undefined;
+}
+
 function treatCommands(command) {
   return command ? command.split("|").map(item => item.trim()) : undefined;
 }
@@ -35,5 +46,6 @@ module.exports = {
   getBuildCommandUpstream,
   getBuildCommandDownstream,
   getBuildCommand,
-  getWorkflowfileName
+  getWorkflowfileName,
+  getMatrixVariables
 };

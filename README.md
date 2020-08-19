@@ -85,10 +85,8 @@ to your existing yaml flow definition or to create a new one. Do the same for th
   > Example:
   >
   > ```
-  build-command: 'mkdir -p ${{ matrix.images }} | rsync -av --progress . ${{ matrix.os }}'
-  matrix-variables: "matrix.images:${{ matrix.images }}, matrix.os:${{ matrix.os }}"
-
-  
+  > build-command: 'mkdir -p ${{ matrix.images }} | rsync -av --progress . ${{ matrix.os }}'
+  > matrix-variables: "matrix.images:${{ matrix.images }}, matrix.os:${{ matrix.os }}"
   > ```  
 
 ## Usage example

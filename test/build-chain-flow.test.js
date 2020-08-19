@@ -2,10 +2,13 @@ const { start, treatParents } = require("../src/lib/build-chain-flow");
 const {
   checkouProject,
   checkoutDependencies,
-  getDir,
-  readWorkflowInformation
+  getDir
 } = require("../src/lib/build-chain-flow-helper");
 jest.mock("../src/lib/build-chain-flow-helper");
+const {
+  readWorkflowInformation
+} = require("../src/lib/workflow-informaton-reader");
+jest.mock("../src/lib/workflow-informaton-reader");
 const { execute } = require("../src/lib/command");
 jest.mock("../src/lib/command");
 jest.mock("@actions/core");

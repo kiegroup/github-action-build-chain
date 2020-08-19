@@ -5,25 +5,25 @@ const { findFilesToUpload } = require("./search");
 
 async function run(archiveArtifacts) {
   try {
-    core.startGroup(`Uploading artifacts for path [${archiveArtifacts.path}]`);
-    const searchResult = await findFilesToUpload(archiveArtifacts.path);
+    core.startGroup(`Uploading artifacts for path [${archiveArtifacts.paths}]`);
+    const searchResult = await findFilesToUpload(archiveArtifacts.paths);
     if (searchResult.filesToUpload.length === 0) {
       switch (archiveArtifacts.ifNoFilesFound) {
         case noFileOptions.warn: {
           core.warning(
-            `No files were found with the provided path: ${archiveArtifacts.path}. No artifacts will be uploaded.`
+            `No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
           );
           break;
         }
         case noFileOptions.error: {
           core.setFailed(
-            `No files were found with the provided path: ${archiveArtifacts.path}. No artifacts will be uploaded.`
+            `No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
           );
           break;
         }
         case noFileOptions.ignore: {
           core.info(
-            `No files were found with the provided path: ${archiveArtifacts.path}. No artifacts will be uploaded.`
+            `No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
           );
           break;
         }

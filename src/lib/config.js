@@ -5,7 +5,8 @@ const {
   getBuildCommandUpstream,
   getParentDependencies,
   getChildDependencies,
-  getWorkflowfileName
+  getWorkflowfileName,
+  getMatrixVariables
 } = require("./action-utils");
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
@@ -43,6 +44,7 @@ async function createConfig(octokit, eventData, rootFolder, env = {}) {
     buildCommands: getBuildCommand(),
     buildCommandsUpstream: getBuildCommandUpstream(),
     buildCommandsDownstream: getBuildCommandDownstream(),
+    matrixVariables: getMatrixVariables(),
     github: await parseGitHub(env),
     rootFolder: rootFolder === undefined ? "" : rootFolder
   };

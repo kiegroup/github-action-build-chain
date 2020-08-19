@@ -2,11 +2,10 @@ const { create } = require("@actions/artifact");
 const core = require("@actions/core");
 const noFileOptions = require("./constants");
 const { findFilesToUpload } = require("./search");
-const { logger } = require("../common");
 
 async function run(archiveArtifacts) {
-  logger.info("Uploading artifacts");
   try {
+    core.startGroup(`Uploading artifacts for path [${archiveArtifacts.path}]`);
     const searchResult = await findFilesToUpload(archiveArtifacts.path);
     if (searchResult.filesToUpload.length === 0) {
       switch (archiveArtifacts.ifNoFilesFound) {
@@ -58,6 +57,8 @@ async function run(archiveArtifacts) {
     }
   } catch (err) {
     core.setFailed(err.message);
+  } finally {
+    core.endGroup();
   }
 }
 module.exports = {

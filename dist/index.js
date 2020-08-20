@@ -22863,7 +22863,7 @@ async function archiveArtifacts(workflowInformationArray) {
       : "No artifacts to archive"
   );
   const uploadResponses = await Promise.all(
-    wiArrayWithArtifacts.map(async wi => {
+    await wiArrayWithArtifacts.map(async wi => {
       logger.info(`Project ${wi.project}. Uploading artifacts...`);
       const uploadResponse = await uploadArtifacts.run(wi.archiveArtifacts);
       if (uploadResponse) {

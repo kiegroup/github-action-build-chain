@@ -11,10 +11,30 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
+test("run no files, default", async () => {
+  // Arrange
+  const archiveArtifacts = {
+    name: "whatevername",
+    paths: "whateverpath"
+  };
+  findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
+  // Act
+  const result = await run(archiveArtifacts);
+
+  // Assert
+  expect(warning).toHaveBeenCalledTimes(1);
+  expect(info).toHaveBeenCalledTimes(0);
+  expect(setFailed).toHaveBeenCalledTimes(0);
+  expect(create).toHaveBeenCalledTimes(0);
+  expect(result).toStrictEqual(undefined);
+});
+
 test("run no files, WARNING", async () => {
   // Arrange
   const archiveArtifacts = {
-    ifNoFilesFound: "warn"
+    ifNoFilesFound: "warn",
+    name: "whatevername",
+    paths: "whateverpath"
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
@@ -31,7 +51,9 @@ test("run no files, WARNING", async () => {
 test("run no files, IGNORE", async () => {
   // Arrange
   const archiveArtifacts = {
-    ifNoFilesFound: "ignore"
+    ifNoFilesFound: "ignore",
+    name: "whatevername",
+    paths: "whateverpath"
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
@@ -48,7 +70,9 @@ test("run no files, IGNORE", async () => {
 test("run no files, ERROR", async () => {
   // Arrange
   const archiveArtifacts = {
-    ifNoFilesFound: "error"
+    ifNoFilesFound: "error",
+    name: "whatevername",
+    paths: "whateverpath"
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
@@ -65,7 +89,8 @@ test("run no files, ERROR", async () => {
 test("run with files no failed Items", async () => {
   // Arrange
   const archiveArtifacts = {
-    name: "name"
+    name: "name",
+    paths: "whateverpath"
   };
 
   findFilesToUpload.mockResolvedValueOnce({
@@ -101,7 +126,8 @@ test("run with files no failed Items", async () => {
 test("run with files and failed Items", async () => {
   // Arrange
   const archiveArtifacts = {
-    name: "name"
+    name: "name",
+    paths: "whateverpath"
   };
 
   findFilesToUpload.mockResolvedValueOnce({

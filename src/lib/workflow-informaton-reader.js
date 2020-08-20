@@ -142,9 +142,13 @@ function getArchiveArtifacts(step) {
     step.with["archive-artifacts"] ||
     step.with["archive-artifacts-if-no-files-found"]
     ? {
-        name: step.with["archive-artifacts-name"],
+        name: step.with["archive-artifacts-name"]
+          ? step.with["archive-artifacts-name"]
+          : "artifact",
         paths: step.with["archive-artifacts"],
         ifNoFilesFound: step.with["archive-artifacts-if-no-files-found"]
+          ? step.with["archive-artifacts-if-no-files-found"]
+          : "warn"
       }
     : undefined;
 }

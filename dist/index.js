@@ -3266,9 +3266,13 @@ function getArchiveArtifacts(step) {
     step.with["archive-artifacts"] ||
     step.with["archive-artifacts-if-no-files-found"]
     ? {
-        name: step.with["archive-artifacts-name"],
+        name: step.with["archive-artifacts-name"]
+          ? step.with["archive-artifacts-name"]
+          : "artifact",
         paths: step.with["archive-artifacts"],
         ifNoFilesFound: step.with["archive-artifacts-if-no-files-found"]
+          ? step.with["archive-artifacts-if-no-files-found"]
+          : "warn"
       }
     : undefined;
 }
@@ -10642,19 +10646,17 @@ const core = __webpack_require__(393);
 const noFileOptions = __webpack_require__(787);
 const { findFilesToUpload } = __webpack_require__(84);
 const { logger } = __webpack_require__(79);
+var assert = __webpack_require__(357);
 
 async function run(archiveArtifacts) {
+  assert(archiveArtifacts, "archiveArtifacts is not defined");
+  assert(archiveArtifacts.paths, "archiveArtifacts.paths is not defined");
+  assert(archiveArtifacts.name, "archiveArtifacts.name is not defined");
   try {
     logger.info(`Uploading artifacts for path [${archiveArtifacts.paths}]`);
     const searchResult = await findFilesToUpload(archiveArtifacts.paths);
     if (searchResult.filesToUpload.length === 0) {
       switch (archiveArtifacts.ifNoFilesFound) {
-        case noFileOptions.warn: {
-          core.warning(
-            `[WARNING] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
-          );
-          break;
-        }
         case noFileOptions.error: {
           core.setFailed(
             `[ERROR] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
@@ -10666,6 +10668,12 @@ async function run(archiveArtifacts) {
             `[INFO] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
           );
           break;
+        }
+        case noFileOptions.warn:
+        default: {
+          core.warning(
+            `[WARNING] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
+          );
         }
       }
     } else {
@@ -22854,7 +22862,7 @@ async function executeBuildCommandsWorkflowInformation(
 
 async function archiveArtifacts(workflowInformationArray) {
   const wiArrayWithArtifacts = workflowInformationArray.filter(
-    wi => wi.archiveArtifacts
+    wi => wi.archiveArtifacts && wi.archiveArtifacts.paths
   );
   logger.info(
     wiArrayWithArtifacts.length > 0

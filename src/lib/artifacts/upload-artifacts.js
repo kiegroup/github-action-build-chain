@@ -3,19 +3,17 @@ const core = require("@actions/core");
 const noFileOptions = require("./constants");
 const { findFilesToUpload } = require("./search");
 const { logger } = require("../common");
+var assert = require("assert");
 
 async function run(archiveArtifacts) {
+  assert(archiveArtifacts, "archiveArtifacts is not defined");
+  assert(archiveArtifacts.paths, "archiveArtifacts.paths is not defined");
+  assert(archiveArtifacts.name, "archiveArtifacts.name is not defined");
   try {
     logger.info(`Uploading artifacts for path [${archiveArtifacts.paths}]`);
     const searchResult = await findFilesToUpload(archiveArtifacts.paths);
     if (searchResult.filesToUpload.length === 0) {
       switch (archiveArtifacts.ifNoFilesFound) {
-        case noFileOptions.warn: {
-          core.warning(
-            `[WARNING] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
-          );
-          break;
-        }
         case noFileOptions.error: {
           core.setFailed(
             `[ERROR] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
@@ -27,6 +25,12 @@ async function run(archiveArtifacts) {
             `[INFO] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
           );
           break;
+        }
+        case noFileOptions.warn:
+        default: {
+          core.warning(
+            `[WARNING] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
+          );
         }
       }
     } else {

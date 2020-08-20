@@ -348,3 +348,50 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
   };
   expect(expected).toEqual(buildChainInformation);
 });
+
+test("parseWorkflowInformation without matrix definition and with archive-artifacts no name and ifNoFilesFound", () => {
+  // Act
+  const buildChainInformation = readWorkflowInformation(
+    "projectx",
+    "build-chain",
+    "flow-archiveartifactsnoname.yaml",
+    "defaultGroup",
+    undefined,
+    "test/resources"
+  );
+  // Assert
+  const expected = {
+    id: "build-chain",
+    project: "projectx",
+    name: "Build Chain",
+    buildCommands: [
+      "mvn clean",
+      'mvn -e -nsu -Dfull clean install -Prun-code-coverage -Dcontainer.profile=wildfly -Dintegration-tests=true -Dmaven.test.failure.ignore=true -DjvmArgs="-Xms1g -Xmx4g -XX:+CMSClassUnloadingEnabled"'
+    ],
+    buildCommandsUpstream: [
+      "mvn clean",
+      "mvn -e -T1C clean install -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true -Drevapi.skip=true"
+    ],
+    buildCommandsDownstream: [
+      "mvn clean",
+      "mvn -e -nsu -fae -T1C clean install -Dfull -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -DjvmArgs=-Xmx4g"
+    ],
+    childDependencies: {
+      appformer: {
+        group: "defaultGroup",
+        mapping: { source: "7.x", target: "master" }
+      },
+      "lienzo-tests": { group: "defaultGroup" }
+    },
+    parentDependencies: {
+      "lienzo-core": { group: "defaultGroup" },
+      errai: { group: "groupx" }
+    },
+    archiveArtifacts: {
+      name: "artifact",
+      paths: "pathsx",
+      ifNoFilesFound: "warn"
+    }
+  };
+  expect(expected).toEqual(buildChainInformation);
+});

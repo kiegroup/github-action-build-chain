@@ -22,7 +22,7 @@ inputs:
     required: false
 runs:
   using: 'node12'
-  main: 'bin/build-chain.js'
+  main: 'dist/index.js'
 branding:
   icon: "link"
   color: "purple"

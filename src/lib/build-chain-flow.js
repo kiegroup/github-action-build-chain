@@ -76,17 +76,14 @@ async function archiveArtifacts(workflowInformationArray) {
   );
   logger.info(
     wiArrayWithArtifacts.length > 0
-      ? `Archiving artifacts for ${wiArrayWithArtifacts}`
+      ? `Archiving artifacts for ${wiArrayWithArtifacts.map(wi => wi.project)}`
       : "No artifacts to archive"
   );
   const uploadResponses = await Promise.all(
-    await wiArrayWithArtifacts.map(async wi => {
+    wiArrayWithArtifacts.map(async wi => {
       logger.info(`Project ${wi.project}. Uploading artifacts...`);
       const uploadResponse = await uploadArtifacts.run(wi.archiveArtifacts);
       if (uploadResponse) {
-        logger.info(
-          `Project ${wi.project}. Artifact name ${uploadResponse.artifactName} uploaded.`
-        );
         if (
           uploadResponse.failedItems &&
           uploadResponse.failedItems.length > 0

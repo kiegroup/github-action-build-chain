@@ -2,7 +2,7 @@
 
 const process = require("process");
 
-const fse = require("fs-extra");
+// const fse = require("fs-extra");
 const { ArgumentParser } = require("argparse");
 const { Octokit } = require("@octokit/rest");
 
@@ -51,9 +51,16 @@ async function main() {
   if (args.url) {
     config = await createConfigLocally(octokit, args.url, process.env);
   } else {
-    const eventPath = env("GITHUB_EVENT_PATH");
-    const eventDataStr = await fse.readFile(eventPath, "utf8");
-    const eventData = JSON.parse(eventDataStr);
+    // const eventPath = env("GITHUB_EVENT_PATH");
+    // const eventDataStr = await fse.readFile(eventPath, "utf8");
+    // const eventData = JSON.parse(eventDataStr);
+    const eventData = {
+      pull_request: {
+        head: { repo: { full_name: "Ginxo/lienzo-tests" } },
+        user: { login: "ginxo" }
+      },
+      repository: { name: "lienzo-tests" }
+    };
     config = await createConfig(octokit, eventData, undefined, process.env);
   }
 

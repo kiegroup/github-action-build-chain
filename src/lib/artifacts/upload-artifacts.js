@@ -31,7 +31,7 @@ async function run(archiveArtifacts) {
       }
     } else {
       core.info(
-        `[INFO] With the provided path, there will be ${searchResult.filesToUpload.length} file(s) uploaded`
+        `[INFO] With the provided path (${archiveArtifacts.paths}), there will be ${searchResult.filesToUpload.length} file(s) uploaded`
       );
       core.debug(
         `[DEBUG] Root artifact directory is ${searchResult.rootDirectory}`

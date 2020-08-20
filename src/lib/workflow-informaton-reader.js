@@ -3,8 +3,61 @@ const path = require("path");
 const { logger, dependenciesToObject } = require("./common");
 const { getYamlFileContent } = require("./fs-helper");
 var assert = require("assert");
+const core = require("@actions/core");
+const { checkoutDependencies, getDir } = require("./build-chain-flow-helper");
+
+async function checkoutParentsAndGetWorkflowInformation(
+  context,
+  projectList,
+  project,
+  parentDependencies
+) {
+  if (!projectList[project]) {
+    projectList.push(project);
+    if (parentDependencies && Object.keys(parentDependencies).length > 0) {
+      core.startGroup(
+        `Checking out dependencies [${Object.keys(parentDependencies).join(
+          ", "
+        )}] for project ${project}`
+      );
+      await checkoutDependencies(context, parentDependencies);
+      core.endGroup();
+      for (const parentProject of Object.keys(parentDependencies).filter(
+        parentDependency => parentDependency !== null && parentDependency !== ""
+      )) {
+        const dir = getDir(context.config.rootFolder, parentProject);
+        const parentWorkflowInformation = readWorkflowInformation(
+          parentProject,
+          context.config.github.jobName,
+          context.config.github.workflow,
+          context.config.github.group,
+          context.config.matrixVariables,
+          dir
+        );
+
+        if (parentWorkflowInformation) {
+          return [parentWorkflowInformation].concat(
+            await checkoutParentsAndGetWorkflowInformation(
+              context,
+              projectList,
+              parentProject,
+              parentWorkflowInformation.parentDependencies
+            )
+          );
+        } else {
+          logger.warn(
+            `workflow information ${context.config.github.workflow} not present for ${parentProject}.`
+          );
+          return [];
+        }
+      }
+    }
+  }
+  return [];
+}
 
 function readWorkflowInformation(
+  project,
   triggeringJobName,
   workflowFilePath,
   defaultGroup,
@@ -17,6 +70,7 @@ function readWorkflowInformation(
     return undefined;
   }
   return parseWorkflowInformation(
+    project,
     triggeringJobName,
     getYamlFileContent(filePath),
     defaultGroup,
@@ -25,6 +79,7 @@ function readWorkflowInformation(
 }
 
 function parseWorkflowInformation(
+  project,
   jobName,
   workflowData,
   defaultGroup,
@@ -42,6 +97,7 @@ function parseWorkflowInformation(
     }, {});
   return {
     id: buildChainStep.id,
+    project,
     name: buildChainStep.name,
     buildCommands: treatCommand(buildChainStep.with["build-command"]),
     buildCommandsUpstream: treatCommand(
@@ -57,7 +113,8 @@ function parseWorkflowInformation(
     parentDependencies: dependenciesToObject(
       buildChainStep.with["parent-dependencies"],
       defaultGroup
-    )
+    ),
+    archiveArtifacts: getArchiveArtifacts(buildChainStep)
   };
 }
 
@@ -80,6 +137,19 @@ function treatMatrixVariables(withExpression, matrixVariables) {
   return result;
 }
 
+function getArchiveArtifacts(step) {
+  return step.with["archive-artifacts-name"] ||
+    step.with["archive-artifacts"] ||
+    step.with["archive-artifacts-if-no-files-found"]
+    ? {
+        name: step.with["archive-artifacts-name"],
+        paths: step.with["archive-artifacts"],
+        ifNoFilesFound: step.with["archive-artifacts-if-no-files-found"]
+      }
+    : undefined;
+}
+
 module.exports = {
-  readWorkflowInformation
+  readWorkflowInformation,
+  checkoutParentsAndGetWorkflowInformation
 };

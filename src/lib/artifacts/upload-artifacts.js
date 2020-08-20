@@ -11,28 +11,30 @@ async function run(archiveArtifacts) {
       switch (archiveArtifacts.ifNoFilesFound) {
         case noFileOptions.warn: {
           core.warning(
-            `No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
+            `[WARNING] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
           );
           break;
         }
         case noFileOptions.error: {
           core.setFailed(
-            `No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
+            `[ERROR] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
           );
           break;
         }
         case noFileOptions.ignore: {
           core.info(
-            `No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
+            `[INFO] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
           );
           break;
         }
       }
     } else {
       core.info(
-        `With the provided path, there will be ${searchResult.filesToUpload.length} file(s) uploaded`
+        `[INFO] With the provided path, there will be ${searchResult.filesToUpload.length} file(s) uploaded`
       );
-      core.debug(`Root artifact directory is ${searchResult.rootDirectory}`);
+      core.debug(
+        `[DEBUG] Root artifact directory is ${searchResult.rootDirectory}`
+      );
 
       const artifactClient = create();
       const options = {
@@ -44,22 +46,23 @@ async function run(archiveArtifacts) {
         searchResult.rootDirectory,
         options
       );
-
       if (uploadResponse.failedItems.length > 0) {
         core.setFailed(
-          `An error was encountered when uploading ${uploadResponse.artifactName}. There were ${uploadResponse.failedItems.length} items that failed to upload.`
+          `[ERROR] An error was encountered when uploading ${uploadResponse.artifactName}. There were ${uploadResponse.failedItems.length} items that failed to upload.`
         );
       } else {
         core.info(
-          `Artifact ${uploadResponse.artifactName} has been successfully uploaded!`
+          `[INFO] Artifact ${uploadResponse.artifactName} has been successfully uploaded!`
         );
       }
+      return uploadResponse;
     }
   } catch (err) {
     core.setFailed(err.message);
   } finally {
     core.endGroup();
   }
+  return undefined;
 }
 module.exports = {
   run

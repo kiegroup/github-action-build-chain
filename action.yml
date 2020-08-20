@@ -38,8 +38,8 @@ inputs:
     default: "warn"
     required: false
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: 'node12'
+  main: 'dist/index.js'
 branding:
   icon: "link"
   color: "purple"

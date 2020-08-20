@@ -16,7 +16,7 @@ It is just to add the step (replacing dependencies and commands):
 ```
 - name: Build Chain
       id: build-chain
-      uses: kiegroup/github-action-build-chain@openjdk8
+      uses: kiegroup/github-action-build-chain
       with:
         parent-dependencies: 'projectA,projectB'
         child-dependencies: 'projectC,projectD'
@@ -25,7 +25,7 @@ It is just to add the step (replacing dependencies and commands):
         workflow-file-name: "whatever_flow.yml"
 ```
 
-to your existing yaml flow definition or to create a new one. Do the same for the rest of the projects you need.
+to your existing yaml flow definition or to create a new one. Do the same for the rest of the projects you need. The `@actions/checkout` step is not needed since is the tool the one which is going to handle what to checkout for every project in the chain.
 
 ## With Fields
 
@@ -90,15 +90,18 @@ to your existing yaml flow definition or to create a new one. Do the same for th
   > matrix-variables: "matrix.images:${{ matrix.images }}, matrix.os:${{ matrix.os }}"
   > ```
 
-## Execution environments
+## Execution environment
 
-The different execution environments are provided by different [docker images](https://github.com/kiegroup/github-action-build-chain/blob/master/Dockerfile) placed in different project branches, the tool remains the same, no matter how many environments to execute commands we have.
+The environment execution definition is part of the worklfow (the `.yml` file) and it depends on the commands you require to execute. If you require to execute maven commands you will have to add the `actions/setup-java@v1` with its java version, or in case you need python commands `actions/setup-python` is the one. You can find differente examples in https://github.com/YOURGROUP/YOURPROJECT/actions/new.
 
-- **openjdk8** (default): openjdk8 + maven 3.6.3 + docker + nodejs + yarn latest stable release. [Dockerfile](https://github.com/kiegroup/github-action-build-chain/blob/openjdk8/Dockerfile)
-- **openjdk11**: openjdk11 + maven 3.6.3 + docker + nodejs + yarn latest stable release [Dockerfile](https://github.com/kiegroup/github-action-build-chain/blob/openjdk1/Dockerfile)
+It could be the case where you require a very specific environment to execute your stuff as it is the case for [python3-cekit](https://github.com/kiegroup/github-action-build-chain/tree/python3-cekit). Feel free to propose the environment you need as a pull request to this project:
+- Create a branch based on `python3-cekit` one
+- Modify [the Dockerfile from there](https://github.com/kiegroup/github-action-build-chain/blob/python3-cekit/Dockerfile)
+
+Current environments:
+
 - **python3-cekit**: python3 + python cekit library + docker + nodejs + yarn latest stable release [Dockerfile](https://github.com/kiegroup/github-action-build-chain/blob/python3-cekit/Dockerfile)
 
-In case you want to use a different environment you just have to choose the branch (`@whateverbranch`) from `uses` expression, like `uses: kiegroup/github-action-build-chain@openjdk11` or `uses: kiegroup/github-action-build-chain@python3-cekit`.
 
 ## Usage example
 
@@ -118,10 +121,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Pull Request openjdk8
     steps:
-    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
     - name: Build Chain
       id: build-chain
-      uses: kiegroup/github-action-build-chain@openjdk8
+      uses: kiegroup/github-action-build-chain
       with:
         child-dependencies: 'projectC,projectD'
         build-command: 'mvn whatever goals'
@@ -141,10 +147,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Pull Request openjdk8
     steps:
-    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
     - name: Build Chain
       id: build-chain
-      uses: kiegroup/github-action-build-chain@openjdk8
+      uses: kiegroup/github-action-build-chain
       with:
         child-dependencies: 'projectD'
         build-command: 'mvn whatever goals'
@@ -164,10 +173,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Pull Request openjdk8
     steps:
-    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
     - name: Build Chain
       id: build-chain
-      uses: kiegroup/github-action-build-chain@openjdk8
+      uses: kiegroup/github-action-build-chain
       with:
         parent-dependencies: 'projectD'
         build-command: 'mvn whatever goals'
@@ -187,10 +199,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Pull Request openjdk8
     steps:
-    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
     - name: Build Chain
       id: build-chain
-      uses: kiegroup/github-action-build-chain@openjdk8
+      uses: kiegroup/github-action-build-chain
       with:
         parent-dependencies: 'projectA,projectB'
         child-dependencies: 'projectE'
@@ -211,10 +226,13 @@ jobs:
     runs-on: ubuntu-latest
     name: Pull Request openjdk8
     steps:
-    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
     - name: Build Chain
       id: build-chain
-      uses: kiegroup/github-action-build-chain@openjdk8
+      uses: kiegroup/github-action-build-chain
       with:
         parent-dependencies: 'projectD'
         build-command: 'mvn whatever goals'
@@ -256,56 +274,6 @@ So the final command would look like
 
 ## Github limitations
 
-### matrix in uses
-
-It's not possible to use matrix variables in `uses` like this:
-
-```
-jobs:
-  build-chain-jdk:
-    strategy:
-      matrix:
-        buid-chain-system: [openjdk8, openjdk11]
-    runs-on: ubuntu-latest
-    name: Pull Request
-    steps:
-      - uses: actions/checkout@v2
-      - name: Build Chain
-        id: build-chain
-        uses: kiegroup/github-action-build-chain@${{ matrix.buid-chain-system }}
-        with:
-          ...
-          ...
-```
-
-instead you have to duplicate job definition for different environments, like:
-
-```
-jobs:
-  build-chain-openjdk8:
-    runs-on: ubuntu-latest
-    name: Build Pull Request openjdk8
-    steps:
-    - uses: actions/checkout@v2
-    - name: Build Chain
-      id: build-chain
-      uses: kiegroup/github-action-build-chain@openjdk8
-      with:
-        ...
-        ...
-  build-chain-openjdk11:
-    runs-on: ubuntu-latest
-    name: Build Pull Request openjdk11
-    steps:
-    - uses: actions/checkout@v2
-    - name: Build Chain
-      id: build-chain
-      uses: kiegroup/github-action-build-chain@openjdk11
-      with:
-        ...
-        ...
-```
-
 ### workflow-file-name
 
 You are probably wondering why the input field `workflow-file-name` even exists. Why don't we take the filename directly from the job and keep the same name for all the flow files in the chain?. Well, we can in case the `name` is not defined in the flow, then the file name information can be taken from `GITHUB_WORKFLOW` environment variable but in case the name is set, `GITHUB_WORKFLOW` becomes the name and there's no other way to get filename from the tool.
@@ -316,4 +284,4 @@ This is a github action limitation already reported as a suggestion to provide f
 > Just in case you are interested in adapting this code or in case you want to create your own tool.
 
 It's not possible to use expressions like `image: "docker://kie-group:github-action-build-chain:{{ inputs.build-chain-build-system }}"`. This way it would be easy to dynamically select image to run with a simple `with` input from flow yml file and we could skip errors like [matrix in uses](#matrix-in-uses).
-Just because of this we have to maintain different Dockerfile definitions in different branches and to tag every branch for every version we release like `openjdk8-v1`.
+Just because of this we have to maintain different Dockerfile definitions in different branches and to tag every branch for every version we release like `python3-cekit-v1`.

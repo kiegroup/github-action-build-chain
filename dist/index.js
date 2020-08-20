@@ -10641,10 +10641,11 @@ const { create } = __webpack_require__(214);
 const core = __webpack_require__(393);
 const noFileOptions = __webpack_require__(787);
 const { findFilesToUpload } = __webpack_require__(84);
+const { logger } = __webpack_require__(79);
 
 async function run(archiveArtifacts) {
   try {
-    core.startGroup(`Uploading artifacts for path [${archiveArtifacts.paths}]`);
+    logger.info(`Uploading artifacts for path [${archiveArtifacts.paths}]`);
     const searchResult = await findFilesToUpload(archiveArtifacts.paths);
     if (searchResult.filesToUpload.length === 0) {
       switch (archiveArtifacts.ifNoFilesFound) {
@@ -10698,8 +10699,6 @@ async function run(archiveArtifacts) {
     }
   } catch (err) {
     core.setFailed(err.message);
-  } finally {
-    core.endGroup();
   }
   return undefined;
 }

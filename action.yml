@@ -21,8 +21,8 @@ inputs:
     description: "the map of matrix-variable-key:matrix-variable-value in case you want to use them from build-command/build-command-upstream.."
     required: false
 runs:
-  using: "docker"
-  image: "Dockerfile"
+  using: 'node12'
+  main: 'dist/index.js'
 branding:
   icon: "link"
   color: "purple"

@@ -1,13 +1,5 @@
 const { ClientError, logger } = require("./common");
-const {
-  getBuildCommand,
-  getBuildCommandDownstream,
-  getBuildCommandUpstream,
-  getParentDependencies,
-  getChildDependencies,
-  getWorkflowfileName,
-  getMatrixVariables
-} = require("./action-utils");
+const { getWorkflowfileName } = require("./action-utils");
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
@@ -39,12 +31,6 @@ async function createConfig(octokit, eventData, rootFolder, env = {}) {
     };
   }
   return {
-    parentDependencies: getParentDependencies(),
-    childDependencies: getChildDependencies(),
-    buildCommands: getBuildCommand(),
-    buildCommandsUpstream: getBuildCommandUpstream(),
-    buildCommandsDownstream: getBuildCommandDownstream(),
-    matrixVariables: getMatrixVariables(),
     github: await parseGitHub(env),
     rootFolder: rootFolder === undefined ? "" : rootFolder
   };

@@ -1,25 +1,7 @@
 const { createConfig } = require("../src/lib/config");
 jest.mock("../src/lib/action-utils", () => ({
-  getParentDependencies: () => {
-    return { "lienzo-core": {}, "lienzo-test": {}, drools: {} };
-  },
-  getChildDependencies: () => {
-    return { "lienzo-core": {}, "lienzo-test": {}, "drools-jbpm": {} };
-  },
-  getBuildCommand: () => {
-    return "build command";
-  },
-  getBuildCommandUpstream: () => {
-    return "build command upstream";
-  },
-  getBuildCommandDownstream: () => {
-    return "build command downstream";
-  },
   getWorkflowfileName: () => {
     return "pull_request.yml";
-  },
-  getMatrixVariables: () => {
-    return { key1: "value1", key2: "value2" };
   }
 }));
 
@@ -53,16 +35,6 @@ test("createConfig", async () => {
   const config = await createConfig(undefined, envData, "folder", env);
   // Assert
   const expected = {
-    parentDependencies: { "lienzo-core": {}, "lienzo-test": {}, drools: {} },
-    childDependencies: {
-      "lienzo-core": {},
-      "lienzo-test": {},
-      "drools-jbpm": {}
-    },
-    buildCommands: "build command",
-    buildCommandsUpstream: "build command upstream",
-    buildCommandsDownstream: "build command downstream",
-    matrixVariables: { key1: "value1", key2: "value2" },
     github: {
       action: undefined,
       serverUrl: "http://github.com",

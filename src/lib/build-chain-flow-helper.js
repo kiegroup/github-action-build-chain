@@ -162,7 +162,7 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
     );
     return !forkedProject || !forkedProject.name ? project : forkedProject.name;
   } else {
-    return owner;
+    return project;
   }
 }
 

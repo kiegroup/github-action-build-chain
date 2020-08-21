@@ -3015,41 +3015,10 @@ function inspect(obj) {
   return util.inspect(obj, false, null, true);
 }
 
-function dependenciesToObject(dependencies, defaultGroup) {
-  const dependenciesObject = {};
-  dependencies
-    ? dependencies
-        .split("\n")
-        .filter(line => line)
-        .forEach(item => {
-          const dependency = item.trim().includes("@")
-            ? item.trim().split("@")
-            : [item, undefined];
-          const groupProject = dependency[0].includes("/")
-            ? dependency[0].trim().split("/")
-            : [defaultGroup, dependency[0]];
-
-          dependency[1]
-            ? (dependenciesObject[groupProject[1].trim()] = {
-                group: groupProject[0],
-                mapping: {
-                  source: dependency[1].split(":")[0],
-                  target: dependency[1].split(":")[1]
-                }
-              })
-            : (dependenciesObject[groupProject[1].trim()] = {
-                group: groupProject[0]
-              });
-        })
-    : {};
-  return dependenciesObject;
-}
-
 module.exports = {
   ClientError,
   TimeoutError,
-  logger,
-  dependenciesToObject
+  logger
 };
 
 
@@ -3060,7 +3029,7 @@ module.exports = {
 
 const fs = __webpack_require__(747);
 const path = __webpack_require__(622);
-const { logger, dependenciesToObject } = __webpack_require__(79);
+const { logger } = __webpack_require__(79);
 const { getYamlFileContent } = __webpack_require__(360);
 var assert = __webpack_require__(357);
 
@@ -3103,11 +3072,11 @@ function parseWorkflowInformation(
   return {
     id: buildChainStep.id,
     name: buildChainStep.name,
-    buildCommands: treatCommand(buildChainStep.with["build-command"]),
-    buildCommandsUpstream: treatCommand(
+    buildCommands: splitCommands(buildChainStep.with["build-command"]),
+    buildCommandsUpstream: splitCommands(
       buildChainStep.with["build-command-upstream"]
     ),
-    buildCommandsDownstream: treatCommand(
+    buildCommandsDownstream: splitCommands(
       buildChainStep.with["build-command-downstream"]
     ),
     childDependencies: dependenciesToObject(
@@ -3121,9 +3090,9 @@ function parseWorkflowInformation(
   };
 }
 
-function treatCommand(command) {
-  return command
-    ? command
+function splitCommands(commands) {
+  return commands
+    ? commands
         .split("\n")
         .filter(line => line)
         .map(item => item.trim())
@@ -3145,8 +3114,39 @@ function treatMatrixVariables(withExpression, matrixVariables) {
   return result;
 }
 
+function dependenciesToObject(dependencies, defaultGroup) {
+  const dependenciesObject = {};
+  dependencies
+    ? dependencies
+        .split("\n")
+        .filter(line => line)
+        .forEach(item => {
+          const dependency = item.trim().includes("@")
+            ? item.trim().split("@")
+            : [item, undefined];
+          const groupProject = dependency[0].includes("/")
+            ? dependency[0].trim().split("/")
+            : [defaultGroup, dependency[0]];
+
+          dependency[1]
+            ? (dependenciesObject[groupProject[1].trim()] = {
+                group: groupProject[0],
+                mapping: {
+                  source: dependency[1].split(":")[0],
+                  target: dependency[1].split(":")[1]
+                }
+              })
+            : (dependenciesObject[groupProject[1].trim()] = {
+                group: groupProject[0]
+              });
+        })
+    : {};
+  return dependenciesObject;
+}
+
 module.exports = {
-  readWorkflowInformation
+  readWorkflowInformation,
+  dependenciesToObject
 };
 
 
@@ -4230,15 +4230,7 @@ module.exports.MaxBufferError = MaxBufferError;
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const { ClientError, logger } = __webpack_require__(79);
-const {
-  getBuildCommand,
-  getBuildCommandDownstream,
-  getBuildCommandUpstream,
-  getParentDependencies,
-  getChildDependencies,
-  getWorkflowfileName,
-  getMatrixVariables
-} = __webpack_require__(316);
+const { getWorkflowfileName } = __webpack_require__(316);
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
@@ -4270,12 +4262,6 @@ async function createConfig(octokit, eventData, rootFolder, env = {}) {
     };
   }
   return {
-    parentDependencies: getParentDependencies(),
-    childDependencies: getChildDependencies(),
-    buildCommands: getBuildCommand(),
-    buildCommandsUpstream: getBuildCommandUpstream(),
-    buildCommandsDownstream: getBuildCommandDownstream(),
-    matrixVariables: getMatrixVariables(),
     github: await parseGitHub(env),
     rootFolder: rootFolder === undefined ? "" : rootFolder
   };
@@ -7574,55 +7560,13 @@ if (typeof Object.create === 'function') {
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const core = __webpack_require__(393);
-const { dependenciesToObject } = __webpack_require__(79);
-
-function getParentDependencies() {
-  return dependenciesToObject(core.getInput("parent-dependencies"));
-}
-
-function getChildDependencies() {
-  return dependenciesToObject(core.getInput("child-dependencies"));
-}
-
-function getBuildCommand() {
-  return treatCommands(core.getInput("build-command"));
-}
-
-function getBuildCommandUpstream() {
-  return treatCommands(core.getInput("build-command-upstream"));
-}
-
-function getBuildCommandDownstream() {
-  return treatCommands(core.getInput("build-command-downstream"));
-}
 
 function getWorkflowfileName() {
   return core.getInput("workflow-file-name");
 }
 
-function getMatrixVariables() {
-  const matrixVariables = core.getInput("matrix-variables");
-  return matrixVariables
-    ? matrixVariables.split(",").reduce((acc, variableKeyValue) => {
-        const variableKeyValueSplit = variableKeyValue.trim().split(":");
-        acc[variableKeyValueSplit[0].trim()] = variableKeyValueSplit[1].trim();
-        return acc;
-      }, {})
-    : undefined;
-}
-
-function treatCommands(command) {
-  return command ? command.split("|").map(item => item.trim()) : undefined;
-}
-
 module.exports = {
-  getParentDependencies,
-  getChildDependencies,
-  getBuildCommandUpstream,
-  getBuildCommandDownstream,
-  getBuildCommand,
-  getWorkflowfileName,
-  getMatrixVariables
+  getWorkflowfileName
 };
 
 

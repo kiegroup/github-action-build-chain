@@ -92,7 +92,8 @@ to your existing yaml flow definition or to create a new one. Do the same for th
   > ```
 
 - **workflow-file-name** (required): `file_name.yml` it defines which workflow file name will be taken from the rest of the projects to get metainfo. _This is the most embarrassing field we have here :pensive:. It's due to github does not provide filename in case the `name` is defined for the flow. The information is stored in `GITHUB_WORKFLOW` environment variable but it's overridden in case you define a name for it (which is the most common thing). It is better explained in [workflow-file-name section](#workflow-file-name)_.
-> **_Warning:_** The flow files should be placed in `.github/workflows` folder for every project from the chain. Don't specify `.github/workflows/whateverflowfilename.yaml`, just `whateverflowfilename.yaml`.
+
+  > **_Warning:_** The flow files should be placed in `.github/workflows` folder for every project from the chain. Don't specify `.github/workflows/whateverflowfilename.yaml`, just `whateverflowfilename.yaml`.
 
   > Example:
   >

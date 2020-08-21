@@ -53,36 +53,8 @@ function inspect(obj) {
   return util.inspect(obj, false, null, true);
 }
 
-function dependenciesToObject(dependencies, defaultGroup) {
-  const dependenciesObject = {};
-  dependencies
-    ? dependencies.split("\n").filter(line => line).forEach(item => {
-        const dependency = item.trim().includes("@")
-          ? item.trim().split("@")
-          : [item, undefined];
-        const groupProject = dependency[0].includes("/")
-          ? dependency[0].trim().split("/")
-          : [defaultGroup, dependency[0]];
-
-        dependency[1]
-          ? (dependenciesObject[groupProject[1].trim()] = {
-              group: groupProject[0],
-              mapping: {
-                source: dependency[1].split(":")[0],
-                target: dependency[1].split(":")[1]
-              }
-            })
-          : (dependenciesObject[groupProject[1].trim()] = {
-              group: groupProject[0]
-            });
-      })
-    : {};
-  return dependenciesObject;
-}
-
 module.exports = {
   ClientError,
   TimeoutError,
-  logger,
-  dependenciesToObject
+  logger
 };

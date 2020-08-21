@@ -19865,6 +19865,11 @@ async function treatParents(
 
 async function executeBuildCommands(cwd, buildCommands, project) {
   for (const command of buildCommands) {
+    logger.info("executeBuildCommands.command", command);
+    logger.info(
+      "executeBuildCommands.treatCommand(command)",
+      treatCommand(command)
+    );
     await execute(cwd, treatCommand(command), project);
   }
 }

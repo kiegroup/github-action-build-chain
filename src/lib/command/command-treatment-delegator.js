@@ -1,19 +1,12 @@
-const { logger } = require("../common");
+const noTreatment = require("./no-treatment");
+const mavenTreatment = require("./maven-treatment");
 
 function treatCommand(command) {
-  logger.info("treatCommand.command", command);
-  logger.info("treatCommand.command.match", command.match(/.*mvn .*/));
-  let libraryToLoad = "./no-treatment";
+  let libraryToExecute = noTreatment;
   if (command.match(/.*mvn .*/)) {
-    libraryToLoad = "./maven-treatment";
+    libraryToExecute = mavenTreatment;
   }
-  logger.info("treatCommand.libraryToLoad", libraryToLoad);
-  logger.info(
-    "treatCommand.treat(command)",
-    require(libraryToLoad).treat(command)
-  );
-
-  return require(libraryToLoad).treat(command);
+  return libraryToExecute.treat(command);
 }
 
 module.exports = {

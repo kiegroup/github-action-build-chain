@@ -90,9 +90,9 @@ async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
   );
   logger.info(
     `Getting checkout Info for ${targetProject}. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
-    mapping
-      ? "source:" + mapping.source + " target:" + mapping.target
-      : "not defined"
+      mapping
+        ? "source:" + mapping.source + " target:" + mapping.target
+        : "not defined"
     }`
   );
   return (await doesBranchExist(
@@ -102,24 +102,24 @@ async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
     sourceBranch
   ))
     ? {
-      project: forkedProjectName,
-      group: sourceGroup,
-      branch: sourceBranch,
-      merge: await hasPullRequest(
+        project: forkedProjectName,
+        group: sourceGroup,
+        branch: sourceBranch,
+        merge: await hasPullRequest(
+          context.octokit,
+          targetGroup,
+          targetProject,
+          sourceBranch,
+          context.config.github.author
+        )
+      }
+    : (await doesBranchExist(
         context.octokit,
         targetGroup,
         targetProject,
-        sourceBranch,
-        context.config.github.author
-      )
-    }
-    : (await doesBranchExist(
-      context.octokit,
-      targetGroup,
-      targetProject,
-      sourceBranch
-    ))
-      ? {
+        sourceBranch
+      ))
+    ? {
         project: targetProject,
         group: targetGroup,
         branch: sourceBranch,
@@ -131,19 +131,19 @@ async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
           context.config.github.author
         )
       }
-      : (await doesBranchExist(
+    : (await doesBranchExist(
         context.octokit,
         targetGroup,
         targetProject,
         targetBranch
       ))
-        ? {
-          project: targetProject,
-          group: targetGroup,
-          branch: targetBranch,
-          merge: false
-        }
-        : undefined;
+    ? {
+        project: targetProject,
+        group: targetGroup,
+        branch: targetBranch,
+        merge: false
+      }
+    : undefined;
 }
 
 function getDir(rootFolder, project) {
@@ -153,9 +153,6 @@ function getDir(rootFolder, project) {
 }
 
 async function getForkedProjectName(octokit, owner, project, wantedOwner) {
-  logger.info("getForkedProjectName.owner", owner);
-  logger.info("getForkedProjectName.wantedOwner", wantedOwner);
-  logger.info("getForkedProjectName.project", project);
   if (owner !== wantedOwner) {
     const forkedProject = await getForkedProject(
       octokit,
@@ -163,11 +160,8 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
       project,
       wantedOwner
     );
-    logger.info("getForkedProjectName.forkedProject", forkedProject);
-    logger.info("getForkedProjectName.forkedProject.return ", !forkedProject || !forkedProject.name ? project : forkedProject.name);
     return !forkedProject || !forkedProject.name ? project : forkedProject.name;
   } else {
-    logger.info("getForkedProjectName.forkedProject.return2", project);
     return project;
   }
 }

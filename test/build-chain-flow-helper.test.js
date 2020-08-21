@@ -187,6 +187,33 @@ test("getCheckoutInfo. none exist", async () => {
   expect(result).toEqual(undefined);
 });
 
+test("getCheckoutInfo. group and targetBranch exist. Same owner and group", async () => {
+  // Arrange
+  doesBranchExistMock.mockResolvedValueOnce(true);
+  const context = {
+    octokit: "octokitclient",
+    config: {
+      github: {
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sourceBranch",
+        targetBranch: "targetBranch"
+      }
+    }
+  };
+  // Act
+  await getCheckoutInfo(context, "sourceGroup", "projectX");
+  // Assert
+  expect(getForkedProjectMock).toHaveBeenCalledTimes(0);
+  expect(doesBranchExistMock).toHaveBeenCalledTimes(1);
+  expect(doesBranchExistMock).toHaveBeenCalledWith(
+    "octokitclient",
+    "sourceGroup",
+    "projectX",
+    "sourceBranch"
+  );
+});
+
 test("checkoutDependencies", async () => {
   // Arrange
   const context = {

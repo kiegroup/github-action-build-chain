@@ -2759,9 +2759,6 @@ function getDir(rootFolder, project) {
 }
 
 async function getForkedProjectName(octokit, owner, project, wantedOwner) {
-  logger.info("getForkedProjectName.owner", owner);
-  logger.info("getForkedProjectName.wantedOwner", wantedOwner);
-  logger.info("getForkedProjectName.project", project);
   if (owner !== wantedOwner) {
     const forkedProject = await getForkedProject(
       octokit,
@@ -2769,14 +2766,8 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
       project,
       wantedOwner
     );
-    logger.info("getForkedProjectName.forkedProject", forkedProject);
-    logger.info(
-      "getForkedProjectName.forkedProject.return ",
-      !forkedProject || !forkedProject.name ? project : forkedProject.name
-    );
     return !forkedProject || !forkedProject.name ? project : forkedProject.name;
   } else {
-    logger.info("getForkedProjectName.forkedProject.return2", project);
     return project;
   }
 }

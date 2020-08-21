@@ -2434,11 +2434,17 @@ module.exports = windowsRelease;
 /***/ 52:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
+const { logger } = __webpack_require__(79);
+
 function treatCommand(command) {
+  logger.info("treatCommand.command", command);
+  logger.info("treatCommand.command.match", command.match(/.*mvn .*/));
   let libraryToLoad = "./no-treatment";
   if (command.match(/.*mvn .*/)) {
     libraryToLoad = "./maven-treatment";
   }
+  logger.info("treatCommand.libraryToLoad", libraryToLoad);
+
   return __webpack_require__(121).treat(command);
 }
 
@@ -19865,11 +19871,6 @@ async function treatParents(
 
 async function executeBuildCommands(cwd, buildCommands, project) {
   for (const command of buildCommands) {
-    logger.info("executeBuildCommands.command", command);
-    logger.info(
-      "executeBuildCommands.treatCommand(command)",
-      treatCommand(command)
-    );
     await execute(cwd, treatCommand(command), project);
   }
 }

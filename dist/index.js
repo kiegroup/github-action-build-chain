@@ -26673,12 +26673,9 @@ module.exports = {
 /***/ }),
 
 /***/ 981:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const { logger } = __webpack_require__(79);
+/***/ (function(module) {
 
 function treat(command) {
-  logger.info(`No treatment for command ${command}`);
   return command;
 }
 

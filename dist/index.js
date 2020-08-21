@@ -2444,6 +2444,10 @@ function treatCommand(command) {
     libraryToLoad = "./maven-treatment";
   }
   logger.info("treatCommand.libraryToLoad", libraryToLoad);
+  logger.info(
+    "treatCommand.treat(command)",
+    __webpack_require__(121).treat(command)
+  );
 
   return __webpack_require__(121).treat(command);
 }

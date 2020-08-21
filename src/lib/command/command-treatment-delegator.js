@@ -8,6 +8,10 @@ function treatCommand(command) {
     libraryToLoad = "./maven-treatment";
   }
   logger.info("treatCommand.libraryToLoad", libraryToLoad);
+  logger.info(
+    "treatCommand.treat(command)",
+    require(libraryToLoad).treat(command)
+  );
 
   return require(libraryToLoad).treat(command);
 }

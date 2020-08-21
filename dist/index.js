@@ -2431,34 +2431,6 @@ module.exports = windowsRelease;
 
 /***/ }),
 
-/***/ 52:
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const { logger } = __webpack_require__(79);
-
-function treatCommand(command) {
-  logger.info("treatCommand.command", command);
-  logger.info("treatCommand.command.match", command.match(/.*mvn .*/));
-  let libraryToLoad = "./no-treatment";
-  if (command.match(/.*mvn .*/)) {
-    libraryToLoad = "./maven-treatment";
-  }
-  logger.info("treatCommand.libraryToLoad", libraryToLoad);
-  logger.info(
-    "treatCommand.treat(command)",
-    __webpack_require__(121).treat(command)
-  );
-
-  return __webpack_require__(121).treat(command);
-}
-
-module.exports = {
-  treatCommand
-};
-
-
-/***/ }),
-
 /***/ 54:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -4006,20 +3978,6 @@ const macosRelease = release => {
 module.exports = macosRelease;
 // TODO: remove this in the next major version
 module.exports.default = macosRelease;
-
-
-/***/ }),
-
-/***/ 121:
-/***/ (function(module) {
-
-function treat(command) {
-  return `${command} -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B`;
-}
-
-module.exports = {
-  treat
-};
 
 
 /***/ }),
@@ -19777,7 +19735,6 @@ const {
 const { readWorkflowInformation } = __webpack_require__(81);
 const { logger } = __webpack_require__(79);
 const { execute } = __webpack_require__(703);
-const { treatCommand } = __webpack_require__(52);
 const core = __webpack_require__(393);
 
 async function start(context) {
@@ -19875,7 +19832,8 @@ async function treatParents(
 
 async function executeBuildCommands(cwd, buildCommands, project) {
   for (const command of buildCommands) {
-    await execute(cwd, treatCommand(command), project);
+    await execute(cwd, command, project);
+    // await execute(cwd, treatCommand(command), project);
   }
 }
 

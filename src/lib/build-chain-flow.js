@@ -6,7 +6,6 @@ const {
 const { readWorkflowInformation } = require("./workflow-informaton-reader");
 const { logger } = require("./common");
 const { execute } = require("./command");
-const { treatCommand } = require("./command/command-treatment-delegator");
 const core = require("@actions/core");
 
 async function start(context) {
@@ -104,7 +103,8 @@ async function treatParents(
 
 async function executeBuildCommands(cwd, buildCommands, project) {
   for (const command of buildCommands) {
-    await execute(cwd, treatCommand(command), project);
+    await execute(cwd, command, project);
+    // await execute(cwd, treatCommand(command), project);
   }
 }
 

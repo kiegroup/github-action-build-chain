@@ -66,8 +66,10 @@ test("getChildDependencies", () => {
 test("getChildDependencies multiple", () => {
   // Arrange
   getInput.mockImplementationOnce(param =>
-    param === "child-dependencies" ? `appformer
- groupx/projectx` : undefined
+    param === "child-dependencies"
+      ? `appformer
+ groupx/projectx`
+      : undefined
   );
   // Act
   const result = getChildDependencies();

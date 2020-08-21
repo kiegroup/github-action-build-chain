@@ -62,7 +62,12 @@ function parseWorkflowInformation(
 }
 
 function treatCommand(command) {
-  return command ? command.split("\n").filter(line => line).map(item => item.trim()) : undefined;
+  return command
+    ? command
+        .split("\n")
+        .filter(line => line)
+        .map(item => item.trim())
+    : undefined;
 }
 
 function treatMatrixVariables(withExpression, matrixVariables) {

@@ -56,7 +56,7 @@ function inspect(obj) {
 function dependenciesToObject(dependencies, defaultGroup) {
   const dependenciesObject = {};
   dependencies
-    ? dependencies.split(",").forEach(item => {
+    ? dependencies.split("\n").filter(line => line).forEach(item => {
         const dependency = item.trim().includes("@")
           ? item.trim().split("@")
           : [item, undefined];

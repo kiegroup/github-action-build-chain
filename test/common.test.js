@@ -10,7 +10,10 @@ test("dependenciesToObject without branch", () => {
   };
   // Act
   const dependencies = dependenciesToObject(
-    "projectA,projectB, projectC,projectD",
+    `projectA
+projectB
+ projectC
+projectD`,
     "defaultGroup"
   );
   // Assert
@@ -27,7 +30,10 @@ test("dependenciesToObject without branch and with group", () => {
   };
   // Act
   const dependencies = dependenciesToObject(
-    "groupx/projectA,groupy/projectB, groupz/projectC,projectD",
+    `groupx/projectA
+groupy/projectB
+ groupz/projectC
+projectD`,
     "defaultGroup"
   );
   // Assert
@@ -68,7 +74,10 @@ test("dependenciesToObject with branch", () => {
   };
   // Act
   const dependencies = dependenciesToObject(
-    "projectA,projectB@7.x:master, projectC,projectD@8.0.0:9.1.1",
+    `projectA
+projectB@7.x:master
+ projectC
+projectD@8.0.0:9.1.1`,
     "defaultGroup"
   );
   // Assert

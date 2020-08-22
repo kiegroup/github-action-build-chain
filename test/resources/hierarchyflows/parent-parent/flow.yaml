@@ -1,0 +1,15 @@
+on: [pull_request]
+
+jobs:
+  build-chain:
+    runs-on: ubuntu-latest
+    name: Build Chain Flow
+    steps:
+      - name: Build Chain
+        id: build-chain
+        uses: kiegroup/github-action-build-chain@master
+        with:
+          child-dependencies: "parent"
+          build-command: 'echo "parent-parent"'
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

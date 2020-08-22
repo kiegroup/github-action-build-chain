@@ -2,6 +2,18 @@ const { createConfig } = require("../src/lib/config");
 jest.mock("../src/lib/action-utils", () => ({
   getWorkflowfileName: () => {
     return "pull_request.yml";
+  },
+  getArchiveArtifactsName: () => {
+    return "artifact x";
+  },
+  getArchiveArtifactsPath: () => {
+    return "path1,path2";
+  },
+  getArchiveArtifactsIfNoFilesFound: () => {
+    return "warn";
+  },
+  getMatrixVariables: () => {
+    return { key1: "value1", key2: "value2" };
   }
 }));
 
@@ -32,7 +44,7 @@ test("createConfig", async () => {
     }
   };
   // Act
-  const config = await createConfig(undefined, envData, "folder", env);
+  const config = await createConfig(envData, "folder", env);
   // Assert
   const expected = {
     github: {

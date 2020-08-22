@@ -4,7 +4,7 @@ const { getWorkflowfileName } = require("./action-utils");
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 
-async function createConfig(octokit, eventData, rootFolder, env = {}) {
+async function createConfig(eventData, rootFolder, env = {}) {
   async function parseGitHub(env) {
     return {
       serverUrl: env["GITHUB_SERVER_URL"]
@@ -47,14 +47,15 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
   env["GITHUB_REPOSITORY"] = event.pull_request.base.repo.full_name;
   env["GITHUB_REF"] = event.ref;
   var today = new Date();
-  return await createConfig(
-    octokit,
+  const config = await createConfig(
     event,
     `locally_execution_${today.getFullYear()}${
       today.getMonth() + 1
     }${today.getDate()}`,
     env
   );
+  config.isLocally = true;
+  return config;
 }
 
 async function getEvent(octokit, eventUrl) {

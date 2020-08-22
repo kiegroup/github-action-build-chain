@@ -9,11 +9,11 @@ const { logger } = require("./common");
 
 async function checkoutDependencies(context, dependencies) {
   for (const dependencyKey of Object.keys(dependencies)) {
-    await checkouProject(context, dependencyKey, dependencies[dependencyKey]);
+    await checkoutProject(context, dependencyKey, dependencies[dependencyKey]);
   }
 }
 
-async function checkouProject(context, project, dependencyInformation) {
+async function checkoutProject(context, project, dependencyInformation) {
   const dir = getDir(context.config.rootFolder, project);
   const checkoutInfo = await getCheckoutInfo(
     context,
@@ -168,7 +168,7 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
 
 module.exports = {
   checkoutDependencies,
-  checkouProject,
+  checkoutProject,
   getCheckoutInfo,
   getDir
 };

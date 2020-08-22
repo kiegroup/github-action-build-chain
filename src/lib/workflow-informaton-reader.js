@@ -114,7 +114,7 @@ function parseWorkflowInformation(
       buildChainStep.with["parent-dependencies"],
       defaultGroup
     ),
-    archiveArtifacts: getArchiveArtifacts(buildChainStep)
+    archiveArtifacts: getArchiveArtifacts(buildChainStep, project)
   };
 }
 
@@ -142,15 +142,15 @@ function treatMatrixVariables(withExpression, matrixVariables) {
   return result;
 }
 
-function getArchiveArtifacts(step) {
+function getArchiveArtifacts(step, defaultName = "artifact") {
   return step.with["archive-artifacts-name"] ||
-    step.with["archive-artifacts"] ||
+    step.with["archive-artifacts-path"] ||
     step.with["archive-artifacts-if-no-files-found"]
     ? {
         name: step.with["archive-artifacts-name"]
           ? step.with["archive-artifacts-name"]
-          : "artifact",
-        paths: step.with["archive-artifacts"],
+          : defaultName,
+        path: step.with["archive-artifacts-path"],
         ifNoFilesFound: step.with["archive-artifacts-if-no-files-found"]
           ? step.with["archive-artifacts-if-no-files-found"]
           : "warn"

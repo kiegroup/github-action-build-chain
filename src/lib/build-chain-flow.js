@@ -72,7 +72,7 @@ async function executeBuildCommandsWorkflowInformation(
 
 async function archiveArtifacts(workflowInformationArray) {
   const wiArrayWithArtifacts = workflowInformationArray.filter(
-    wi => wi.archiveArtifacts && wi.archiveArtifacts.paths
+    wi => wi.archiveArtifacts && wi.archiveArtifacts.path
   );
   logger.info(
     wiArrayWithArtifacts.length > 0

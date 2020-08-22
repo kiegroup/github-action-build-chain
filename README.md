@@ -29,7 +29,7 @@ It is just to add the step (replacing dependencies and commands):
 
 to your existing yaml flow definition or to create a new one. Do the same for the rest of the projects you need. The `@actions/checkout` step is not needed since is the tool the one which is going to handle what to checkout for every project in the chain.
 
-## With Fields
+## Input Fields
 
 See [action.yml](action.yml)
 
@@ -122,25 +122,25 @@ See [action.yml](action.yml)
   >   matrix.os:${{ matrix.os }}
   > ```
 
-- **archive-artifacts** (optional): `file path` (see: [@actions/glob](https://github.com/actions/toolkit/tree/main/packages/glob) and [Archiving Artifacts](#archiving-artifacts)). define it in case you want to archive artifacts after building the project chain.
+- **archive-artifacts-path** (optional): `file path` (see: [@actions/glob](https://github.com/actions/toolkit/tree/main/packages/glob) and [Archiving Artifacts](#archiving-artifacts)). define it in case you want to archive artifacts after building the project chain.
 
   > Example: see [Archiving Artifacts](#archiving-artifacts)
 
-- **archive-artifacts-name** (optional, default: `artifact`): `a string` (see: [Archiving Artifacts](#archiving-artifacts) and [Uploading without an artifact name](#uploading-without-an-artifact-name)). define it in case you want to archive artifacts after building the project chain.
+- **archive-artifacts-name** (optional, default: `the project name`): `a string` (see: [Archiving Artifacts](#archiving-artifacts) and [Uploading without an artifact name](#uploading-without-an-artifact-name)). define it in case you want to archive artifacts after building the project chain.
 
-  > **_Warning:_** `archive-artifacts` input is mandatory in case you want to use this field (it does not make sense to specify an artifact name without defining what you want to upload)
+  > **_Warning:_** `archive-artifacts-path` input is mandatory in case you want to use this field (it does not make sense to specify an artifact name without defining what you want to upload)
 
   > Example: see [Archiving Artifacts](#archiving-artifacts)
 
 - **archive-artifacts-if-no-files-found** (optional, default: `warn`): `warn|ignore|error` (see: [Archiving Artifacts](#archiving-artifacts) and [Customization if no files are found](#customization-if-no-files-are-found)). Allows you to customize the behavior of the action if no files are found..
 
-  > **_Warning:_** `archive-artifacts` input is mandatory in case you want to use this field (it does not make sense to specify the failure behaviour without defining what you want to upload)
+  > **_Warning:_** `archive-artifacts-path` input is mandatory in case you want to use this field (it does not make sense to specify the failure behaviour without defining what you want to upload)
 
   > Example: see [Archiving Artifacts](#archiving-artifacts)
 
 ## Archiving Artifacts
 
-The archive artifacts algorithm is basically copied from [actions/upload-artifact project](https://github.com/actions/upload-artifact) and (manually) transpile to javascript. The usage is basically the same (the inputs are different named and the [Conditional Artifact Upload](https://github.com/actions/upload-artifact#conditional-artifact-upload) is not enabled), so why do we include this `archive artifacts` mechanism in this tool if it's already implemented by another tool? well, because this treats the archive artifacts mechanism for the whole build chain, so in case you define an `archive-artifacts` in a different project from the chain, all of them will be uploaded. If you are wondering if you are able to use `actions/upload-artifact` instead of the one we propose, the answer is 'yes', just take into consideration the artifacts will be archived based on the definition from the project triggering the job.
+The archive artifacts algorithm is basically copied from [actions/upload-artifact project](https://github.com/actions/upload-artifact) and (manually) transpile to javascript. The usage is basically the same (the inputs are different named adding `archive-artifacts` prefix and the [Conditional Artifact Upload](https://github.com/actions/upload-artifact#conditional-artifact-upload) is not enabled), so why do we include this `archive artifacts` mechanism in this tool if it's already implemented by another tool? well, because this treats the archive artifacts mechanism for the whole build chain, so in case you define an `archive-artifacts-path` in a different project from the chain, all of them will be uploaded. If you are wondering if you are able to use `actions/upload-artifact` instead of the one we propose, the answer is 'yes', just take into consideration the artifacts will be archived based on the definition from the project triggering the job.
 
 ### Upload an Individual File
 
@@ -151,7 +151,7 @@ steps:
     ...
     ...
     archive-artifacts-name: my-artifact
-    archive-artifacts: path/to/artifact/world.txt
+    archive-artifacts-path: path/to/artifact/world.txt
 ```
 
 ### Upload an Entire Directory
@@ -163,7 +163,7 @@ steps:
     ...
     ...
     archive-artifacts-name: my-artifact
-    archive-artifacts: path/to/artifact/ # or path/to/artifact
+    archive-artifacts-path: path/to/artifact/ # or path/to/artifact
 ```
 
 ### Upload using a Wildcard Pattern
@@ -175,7 +175,7 @@ steps:
     ...
     ...
     archive-artifacts-name: my-artifact
-    archive-artifacts: path/**/[abc]rtifac?/*
+    archive-artifacts-path: path/**/[abc]rtifac?/*
 ```
 
 ### Upload using Multiple Paths and Exclusions
@@ -187,7 +187,7 @@ steps:
     ...
     ...
     archive-artifacts-name: my-artifact
-    archive-artifacts: |
+    archive-artifacts-path: |
       path/output/bin/
       path/output/test-results
       !path/**/*.tmp
@@ -226,7 +226,7 @@ steps:
     ...
     ...
     archive-artifacts-name: my-artifact
-    archive-artifacts: path/to/artifact/
+    archive-artifacts-path: path/to/artifact/
     archive-artifacts-if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
 ```
 
@@ -243,7 +243,7 @@ You can upload an artifact without specifying a name
   with:
     ...
     ...
-    archive-artifacts: path/to/artifact/world.txt
+    archive-artifacts-path: path/to/artifact/world.txt
 ```
 
 If not provided, `artifact` will be used as the default name which will manifest itself in the UI after upload.
@@ -258,7 +258,7 @@ Each artifact behaves as a file share. Uploading to the same artifact multiple t
   with:
     ...
     ...
-    archive-artifacts: world.txt
+    archive-artifacts-path: world.txt
 ```
 
 ```yaml
@@ -267,7 +267,7 @@ Each artifact behaves as a file share. Uploading to the same artifact multiple t
   with:
     ...
     ...
-    archive-artifacts: extra-file.txt
+    archive-artifacts-path: extra-file.txt
 ```
 
 ```yaml
@@ -276,7 +276,7 @@ Each artifact behaves as a file share. Uploading to the same artifact multiple t
   with:
     ...
     ...
-    archive-artifacts: world.txt
+    archive-artifacts-path: world.txt
 ```
 
 With the following example, the available artifact (named `artifact` which is the default if no name is provided) would contain both `world.txt` and `extra-file.txt`.
@@ -298,7 +298,7 @@ With the following example, the available artifact (named `artifact` which is th
             ...
             ...
             archive-artifacts-name: my-artifact
-            archive-artifacts: world.txt
+            archive-artifacts-path: world.txt
 ```
 
 In the above example, four jobs will upload four different files to the same artifact but there will only be one file available when `my-artifact` is downloaded. Each job overwrites what was previously uploaded. To ensure that jobs don't overwrite existing artifacts, use a different name per job.
@@ -309,7 +309,7 @@ In the above example, four jobs will upload four different files to the same art
           ...
           ...
           archive-artifacts-name: my-artifact ${{ matrix.java-version }}
-          archive-artifacts: world.txt
+          archive-artifacts-path: world.txt
           matrix-variables: "matrix.java-version:${{ matrix.java-version }}
 ```
 
@@ -323,7 +323,7 @@ You can use `~` in the path input as a substitute for `$HOME`. Basic tilde expan
         ...
         ...
         archive-artifacts-name: 'Artifacts-V2'
-        archive-artifacts: '~/new/**/*'
+        archive-artifacts-path: '~/new/**/*'
 ```
 
 ## Where does the upload go?

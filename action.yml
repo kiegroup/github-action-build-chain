@@ -20,7 +20,7 @@ inputs:
   matrix-variables:
     description: "the map of matrix-variable-key:matrix-variable-value in case you want to use them from build-command/build-command-upstream.."
     required: false
-  archive-artifacts:
+  archive-artifacts-path:
     description: "A file, directory or wildcard pattern that describes what to upload"
     required: false
   archive-artifacts-name:

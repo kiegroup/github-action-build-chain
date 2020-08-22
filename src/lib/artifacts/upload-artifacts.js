@@ -7,35 +7,35 @@ var assert = require("assert");
 
 async function run(archiveArtifacts) {
   assert(archiveArtifacts, "archiveArtifacts is not defined");
-  assert(archiveArtifacts.paths, "archiveArtifacts.paths is not defined");
+  assert(archiveArtifacts.path, "archiveArtifacts.path is not defined");
   assert(archiveArtifacts.name, "archiveArtifacts.name is not defined");
   try {
-    logger.info(`Uploading artifacts for path [${archiveArtifacts.paths}]`);
-    const searchResult = await findFilesToUpload(archiveArtifacts.paths);
+    logger.info(`Uploading artifacts for path [${archiveArtifacts.path}]`);
+    const searchResult = await findFilesToUpload(archiveArtifacts.path);
     if (searchResult.filesToUpload.length === 0) {
       switch (archiveArtifacts.ifNoFilesFound) {
         case noFileOptions.error: {
           core.setFailed(
-            `[ERROR] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
+            `[ERROR] No files were found with the provided path: ${archiveArtifacts.path}. No artifacts will be uploaded.`
           );
           break;
         }
         case noFileOptions.ignore: {
           core.info(
-            `[INFO] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
+            `[INFO] No files were found with the provided path: ${archiveArtifacts.path}. No artifacts will be uploaded.`
           );
           break;
         }
         case noFileOptions.warn:
         default: {
           core.warning(
-            `[WARNING] No files were found with the provided path: ${archiveArtifacts.paths}. No artifacts will be uploaded.`
+            `[WARNING] No files were found with the provided path: ${archiveArtifacts.path}. No artifacts will be uploaded.`
           );
         }
       }
     } else {
       core.info(
-        `[INFO] With the provided path (${archiveArtifacts.paths}), there will be ${searchResult.filesToUpload.length} file(s) uploaded`
+        `[INFO] With the provided path (${archiveArtifacts.path}), there will be ${searchResult.filesToUpload.length} file(s) uploaded`
       );
       core.debug(
         `[DEBUG] Root artifact directory is ${searchResult.rootDirectory}`

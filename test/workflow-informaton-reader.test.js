@@ -343,7 +343,7 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
     },
     archiveArtifacts: {
       name: "namex",
-      paths: "pathsx",
+      path: "pathsx",
       ifNoFilesFound: "warn"
     }
   };
@@ -389,8 +389,8 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
       errai: { group: "groupx" }
     },
     archiveArtifacts: {
-      name: "artifact",
-      paths: "pathsx",
+      name: "projectx",
+      path: "pathsx",
       ifNoFilesFound: "warn"
     }
   };
@@ -437,7 +437,7 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
     },
     archiveArtifacts: {
       name: "namex",
-      paths: `path/output/bin/
+      path: `path/output/bin/
 path/output/test-results
 !path/**/*.tmp
 `,

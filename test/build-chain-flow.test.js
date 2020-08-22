@@ -117,7 +117,7 @@ test("start no parent dependencies archive artifacts", async () => {
     buildCommandsUpstream: ["upstream 1"],
     buildCommandsDownstream: ["downstream 1"],
     archiveArtifacts: {
-      paths: "whateverpath",
+      path: "whateverpath",
       name: "artifact1"
     }
   };
@@ -142,7 +142,7 @@ test("start no parent dependencies archive artifacts", async () => {
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
   expect(runUploadArtifactsMock).toHaveBeenCalledWith({
     name: "artifact1",
-    paths: "whateverpath"
+    path: "whateverpath"
   });
 });
 
@@ -295,7 +295,7 @@ test("start with parent dependencies with upstream command", async () => {
   );
 });
 
-test("start with parent dependencies with archive artifacts with paths", async () => {
+test("start with parent dependencies with archive artifacts with path", async () => {
   // Arrange
   const context = {
     config: {
@@ -324,7 +324,7 @@ test("start with parent dependencies with archive artifacts with paths", async (
     buildCommandsUpstream: ["command-child-upstream"],
     buildCommandsDownstream: ["command-child-downstream"],
     archiveArtifacts: {
-      paths: "whateverpath",
+      path: "whateverpath",
       name: "artifactChild"
     }
   };
@@ -341,7 +341,7 @@ test("start with parent dependencies with archive artifacts with paths", async (
     buildCommands: ["command-parent"],
     buildCommandsDownstream: ["command-parent-dowstream"],
     archiveArtifacts: {
-      paths: "whateverpath",
+      path: "whateverpath",
       name: "artifactParent"
     }
   };
@@ -368,16 +368,16 @@ test("start with parent dependencies with archive artifacts with paths", async (
   // Assert
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(2);
   expect(runUploadArtifactsMock).toHaveBeenCalledWith({
-    paths: "whateverpath",
+    path: "whateverpath",
     name: "artifactChild"
   });
   expect(runUploadArtifactsMock).toHaveBeenCalledWith({
-    paths: "whateverpath",
+    path: "whateverpath",
     name: "artifactParent"
   });
 });
 
-test("start with parent dependencies with archive artifacts one of them without paths", async () => {
+test("start with parent dependencies with archive artifacts one of them without path", async () => {
   // Arrange
   const context = {
     config: {
@@ -422,7 +422,7 @@ test("start with parent dependencies with archive artifacts one of them without 
     buildCommands: ["command-parent"],
     buildCommandsDownstream: ["command-parent-dowstream"],
     archiveArtifacts: {
-      paths: "whateverpath",
+      path: "whateverpath",
       name: "artifactParent"
     }
   };
@@ -449,7 +449,7 @@ test("start with parent dependencies with archive artifacts one of them without 
   // Assert
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
   expect(runUploadArtifactsMock).toHaveBeenCalledWith({
-    paths: "whateverpath",
+    path: "whateverpath",
     name: "artifactParent"
   });
 });

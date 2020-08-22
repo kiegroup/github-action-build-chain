@@ -26,7 +26,7 @@ jobs:
             mvn clean
             mvn -e -nsu -fae -T1C clean install -Dfull -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -DjvmArgs=-Xmx4g
           archive-artifacts-name: "namex"
-          archive-artifacts: |
+          archive-artifacts-path: |
             path/output/bin/
             path/output/test-results
             !path/**/*.tmp

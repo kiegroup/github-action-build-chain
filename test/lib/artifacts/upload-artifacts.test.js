@@ -15,7 +15,7 @@ test("run no files, default", async () => {
   // Arrange
   const archiveArtifacts = {
     name: "whatevername",
-    paths: "whateverpath"
+    path: "whateverpath"
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
@@ -34,7 +34,7 @@ test("run no files, WARNING", async () => {
   const archiveArtifacts = {
     ifNoFilesFound: "warn",
     name: "whatevername",
-    paths: "whateverpath"
+    path: "whateverpath"
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
@@ -53,7 +53,7 @@ test("run no files, IGNORE", async () => {
   const archiveArtifacts = {
     ifNoFilesFound: "ignore",
     name: "whatevername",
-    paths: "whateverpath"
+    path: "whateverpath"
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
@@ -72,7 +72,7 @@ test("run no files, ERROR", async () => {
   const archiveArtifacts = {
     ifNoFilesFound: "error",
     name: "whatevername",
-    paths: "whateverpath"
+    path: "whateverpath"
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
@@ -90,7 +90,7 @@ test("run with files no failed Items", async () => {
   // Arrange
   const archiveArtifacts = {
     name: "name",
-    paths: "whateverpath"
+    path: "whateverpath"
   };
 
   findFilesToUpload.mockResolvedValueOnce({
@@ -127,7 +127,7 @@ test("run with files and failed Items", async () => {
   // Arrange
   const archiveArtifacts = {
     name: "name",
-    paths: "whateverpath"
+    path: "whateverpath"
   };
 
   findFilesToUpload.mockResolvedValueOnce({

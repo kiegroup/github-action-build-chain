@@ -22801,30 +22801,73 @@ async function archiveArtifacts(workflowInformationArray) {
       ? `Archiving artifacts for ${wiArrayWithArtifacts.map(wi => wi.project)}`
       : "No artifacts to archive"
   );
-  const uploadResponses = await Promise.all(
+
+  Promise.allSettled(
     wiArrayWithArtifacts.map(async wi => {
-      logger.info(`Project ${wi.project}. Uploading artifacts...`);
+      logger.info(`Project [${wi.project}]. Uploading artifacts...`);
       const uploadResponse = await uploadArtifacts.run(wi.archiveArtifacts);
       if (uploadResponse) {
+        const uploadArtifactsMessage =
+          uploadResponse.artifactItems &&
+          uploadResponse.artifactItems.length > 0
+            ? `Uploaded Items (${uploadResponse.artifactItems.length}): ${uploadResponse.artifactItems}.`
+            : "";
         if (
           uploadResponse.failedItems &&
           uploadResponse.failedItems.length > 0
         ) {
-          logger.info(
-            `Project ${wi.project}. These items have failed ${uploadResponse.failedItems}.`
+          logger.error(
+            `Project [${wi.project}] Failed State. Artifact [${uploadResponse.artifactName}]. Failed Items (${uploadResponse.failedItems.length}): ${uploadResponse.failedItems}. ${uploadArtifactsMessage}`
           );
+          return Promise.reject(uploadResponse);
+        } else {
+          logger.info(
+            `Project [${wi.project}]. Artifact [${uploadResponse.artifactName}]. ${uploadArtifactsMessage}`
+          );
+          return Promise.resolve(uploadResponse);
         }
       } else {
-        logger.info(`Project ${wi.project}. No artifacts uploaded`);
+        logger.info(`Project [${wi.project}]. No artifacts uploaded`);
+        return Promise.resolve(undefined);
       }
-      return uploadResponse;
     })
-  );
-  if (uploadResponses && uploadResponses.length > 0) {
-    logger.info(
-      `A total of ${uploadResponses.length} artifacts have been uploaded.`
+  ).then(promises => {
+    logger.info("Upload finished");
+    const totalUploadResponses = promises
+      .map(promiseResult => promiseResult.value || promiseResult.reason)
+      .filter(
+        uploadResponse =>
+          uploadResponse.artifactItems &&
+          uploadResponse.artifactItems.length > 0
+      );
+    const uploadedFiles = totalUploadResponses.map(
+      uploadResponse => uploadResponse.artifactItems
     );
-  }
+    const failureUploadResponses = promises
+      .filter(promiseResult => promiseResult.reason)
+      .map(promiseResult => promiseResult.reason)
+      .filter(
+        uploadResponse =>
+          uploadResponse.failedItems && uploadResponse.failedItems.length > 0
+      );
+    const failedFiles = failureUploadResponses.map(
+      uploadResponse => uploadResponse.failedItems
+    );
+    logger.info(
+      `Artifacts uploaded (${
+        totalUploadResponses.length
+      }): ${totalUploadResponses.map(
+        uploadResponse => uploadResponse.artifactName
+      )}. Files (${uploadedFiles.length}): ${uploadedFiles}`
+    );
+    logger.info(
+      `Artifacts failed (${
+        failureUploadResponses.length
+      }): ${failureUploadResponses.map(
+        uploadResponse => uploadResponse.artifactName
+      )}. Files (${failedFiles.length}): ${failedFiles}`
+    );
+  });
 }
 
 async function executeBuildCommands(cwd, buildCommands, project) {

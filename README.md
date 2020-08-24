@@ -35,10 +35,6 @@ Just defining the **build chain** flow in every project from the chain, the tool
 
 - It will archive artifacts in case `archive-artifacts-path` input is defined.
 
-### Rest of the flows
-
-PENDING: https://issues.redhat.com/browse/BXMSPROD-959
-
 ## How to add it to your project(s)
 
 It is just to add the step (replacing dependencies and commands):

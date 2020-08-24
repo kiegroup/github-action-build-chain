@@ -22840,7 +22840,7 @@ async function archiveArtifacts(workflowInformationArray) {
           uploadResponse.artifactItems &&
           uploadResponse.artifactItems.length > 0
       );
-    const uploadedFiles = totalUploadResponses.map(
+    const uploadedFiles = totalUploadResponses.flatMap(
       uploadResponse => uploadResponse.artifactItems
     );
     const failureUploadResponses = promises
@@ -22850,7 +22850,7 @@ async function archiveArtifacts(workflowInformationArray) {
         uploadResponse =>
           uploadResponse.failedItems && uploadResponse.failedItems.length > 0
       );
-    const failedFiles = failureUploadResponses.map(
+    const failedFiles = failureUploadResponses.flatMap(
       uploadResponse => uploadResponse.failedItems
     );
     logger.info(

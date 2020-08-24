@@ -22832,7 +22832,7 @@ async function archiveArtifacts(workflowInformationArray) {
       }
     })
   ).then(promises => {
-    logger.info("Upload finished");
+    logger.info("-------------- ARCHIVE ARTIFACTS SUMMARY --------------");
     const totalUploadResponses = promises
       .map(promiseResult => promiseResult.value || promiseResult.reason)
       .filter(

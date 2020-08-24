@@ -1,6 +1,9 @@
 # Github Action Build Chain
 
-Github action build chain is a tool for github actions to build multiple projects from different repositories in a single action. Let's consider you have a project hierarchy like:
+Github action build chain is a tool for github actions to build multiple projects from different repositories in a single action.
+This tool is trying to solve the problem when a project depends on another project (most probably from the same organization) and one change can/should be performed in different repositories. How can we assure one specific pull request will work with the latest changes from/in the dependant/dependency projects and it won't break something? This is what we call **cross-repo pull requests** and **build-chain** is the way we have to solve it.
+
+Let's consider you have a project hierarchy like:
 
 ![Project hierarchy](/docs/project-hierarchy.png)
 
@@ -8,6 +11,33 @@ and you want to upstream/downstream build whatever project from this hierarchy, 
 You can check [Usage example](#usage-example).
 
 Just defining the **build chain** flow in every project from the chain, the tool will get meta-info from them and will compose but a chain build means for you and will execute in a single github action.
+
+## Build Chain Flows
+
+### Pull request flow
+
+- It checks out the current project and reads the workflow information from the YAML file triggering the job.
+
+  - It merges the TARGET_GROUP:PROJECT:TARGET_BRANCH into the SOURCE_GROUP:PROJECT:SOURCE_BRANCH from the pull request triggering the job.
+    > **_Warning:_** It will fail in case it can't be done automatically, properly informing to please resolve conflicts.
+
+- It recursively checks out and read workflow information for the rest of the `parent-dependencies` defined in every YAML flow file.
+
+  - For each parent dependency:
+    - It will look for forked project belonging same github group as the one triggering the job.
+    - It will try to checkout SOURCE_GROUP:PROJECT:SOURCE_BRANCH. In case the it exists and it has a pull request over the TARGET_GROUP:PROJECT:TARGET_BRANCH it will check it out and will merge it with target branch.
+    - If previous checkout fails, it will try the same with TARGET_GROUP:PROJECT:SOURCE_BRANCH this time.
+    - If previous checkout fails, it will checkout TARGET_GROUP:PROJECT:TARGET_BRANCH.
+
+- Once all the projects are checked out, it will run as many commands are defined in `build-command-upstream` input (it will take `build-command` input in case there's no `build-command-upstream` defined) for every parent dependency starting from the highest level of the hierarchy to the lowest one.
+
+- It will run as many commands are defined in `build-command`for the project triggering the job.
+
+- It will archive artifacts in case `archive-artifacts-path` input is defined.
+
+### Rest of the flows
+
+PENDING: https://issues.redhat.com/browse/BXMSPROD-959
 
 ## How to add it to your project(s)
 

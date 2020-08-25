@@ -573,3 +573,18 @@ This is a github action limitation already reported as a suggestion to provide f
 
 It's not possible to use expressions like `image: "docker://kie-group:github-action-build-chain:{{ inputs.build-chain-build-system }}"`. This way it would be easy to dynamically select image to run with a simple `with` input from flow yml file and we could skip errors like [matrix in uses](#matrix-in-uses).
 Just because of this we have to maintain different Dockerfile definitions in different branches and to tag every branch for every version we release like `python3-cekit-v1`.
+
+
+### Contributors
+
+<table>
+<tr>
+    <td align="center">
+        <a href=https://github.com/ginxo>
+            <img src=https://avatars2.githubusercontent.com/u/25130444?v=4 width="100;" style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;" alt=Ginxo/>
+            <br />
+            <sub style="font-size:14px"><b>Ginxo</b></sub>
+        </a>
+    </td>
+</tr>
+</table>

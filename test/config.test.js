@@ -3,17 +3,8 @@ jest.mock("../src/lib/action-utils", () => ({
   getWorkflowfileName: () => {
     return "pull_request.yml";
   },
-  getArchiveArtifactsName: () => {
-    return "artifact x";
-  },
-  getArchiveArtifactsPath: () => {
-    return "path1,path2";
-  },
-  getArchiveArtifactsIfNoFilesFound: () => {
-    return "warn";
-  },
-  getMatrixVariables: () => {
-    return { key1: "value1", key2: "value2" };
+  getEnv: () => {
+    return { ENV_KEY: "env value" };
   }
 }));
 
@@ -64,7 +55,8 @@ test("createConfig", async () => {
       workflow: ".github/workflows/pull_request.yml",
       workflowName: "build chain name"
     },
-    rootFolder: "folder"
+    rootFolder: "folder",
+    env: { ENV_KEY: "env value" }
   };
   expect(config).toEqual(expected);
 });

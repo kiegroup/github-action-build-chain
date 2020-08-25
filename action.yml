@@ -37,6 +37,9 @@ inputs:
         ignore: Do not output any warnings or errors, the action does not fail
     default: "warn"
     required: false
+  env:
+    description: "Environment inputs since github actions does not allow secrets from forked projects"
+    required: false
 runs:
   using: "node12"
   main: "dist/index.js"

@@ -56,6 +56,7 @@ async function main() {
     const eventData = JSON.parse(eventDataStr);
     config = await createConfig(eventData, undefined, process.env);
   }
+  console.log("config.env", config.env);
 
   const context = { token, octokit, config };
   await executeGitHubAction(context);

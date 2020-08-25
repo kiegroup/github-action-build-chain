@@ -1,5 +1,5 @@
 const { ClientError, logger } = require("./common");
-const { getWorkflowfileName } = require("./action-utils");
+const { getWorkflowfileName, getEnv } = require("./action-utils");
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
@@ -32,6 +32,7 @@ async function createConfig(eventData, rootFolder, env = {}) {
   }
   return {
     github: await parseGitHub(env),
+    env: getEnv(),
     rootFolder: rootFolder === undefined ? "" : rootFolder
   };
 }

@@ -4811,7 +4811,7 @@ module.exports.MaxBufferError = MaxBufferError;
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const { ClientError, logger } = __webpack_require__(79);
-const { getWorkflowfileName } = __webpack_require__(316);
+const { getWorkflowfileName, getEnv } = __webpack_require__(316);
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
@@ -4844,6 +4844,7 @@ async function createConfig(eventData, rootFolder, env = {}) {
   }
   return {
     github: await parseGitHub(env),
+    env: getEnv(),
     rootFolder: rootFolder === undefined ? "" : rootFolder
   };
 }
@@ -8973,8 +8974,13 @@ function getWorkflowfileName() {
   return core.getInput("workflow-file-name");
 }
 
+function getEnv() {
+  return core.getInput("env");
+}
+
 module.exports = {
-  getWorkflowfileName
+  getWorkflowfileName,
+  getEnv
 };
 
 
@@ -9848,6 +9854,7 @@ async function main() {
     const eventData = JSON.parse(eventDataStr);
     config = await createConfig(eventData, undefined, process.env);
   }
+  console.log("config.env", config.env);
 
   const context = { token, octokit, config };
   await executeGitHubAction(context);

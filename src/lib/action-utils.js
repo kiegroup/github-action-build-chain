@@ -4,6 +4,11 @@ function getWorkflowfileName() {
   return core.getInput("workflow-file-name");
 }
 
+function getEnv() {
+  return core.getInput("env");
+}
+
 module.exports = {
-  getWorkflowfileName
+  getWorkflowfileName,
+  getEnv
 };

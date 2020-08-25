@@ -245,9 +245,33 @@ test("getForkedProject existing", async () => {
 test("getForkedProject not existing", async () => {
   const octokit = {
     repos: {
-      listForks: jest.fn(({ owner, repo }) => {
-        return owner === "ownerx" && repo === "repox"
+      listForks: jest.fn(({ owner, repo, page }) => {
+        return owner === "ownerx" && repo === "repox" && page == 1
           ? { status: 200, data: forkedProjectListInfo }
+          : owner === "ownerx" && repo === "repox" && page == 2
+          ? { status: 304, data: forkedProjectListInfoEmpty }
+          : undefined;
+      })
+    }
+  };
+
+  const result = await git.getForkedProject(
+    octokit,
+    "ownerx",
+    "repox",
+    "weirdowner"
+  );
+
+  expect(octokit.repos.listForks).toHaveBeenCalledTimes(2);
+  expect(result).toBeUndefined();
+});
+
+test("getForkedProject empty", async () => {
+  const octokit = {
+    repos: {
+      listForks: jest.fn(({ owner, repo, page }) => {
+        return owner === "ownerx" && repo === "repox" && page == 1
+          ? { status: 200, data: forkedProjectListInfoEmpty }
           : undefined;
       })
     }
@@ -264,11 +288,13 @@ test("getForkedProject not existing", async () => {
   expect(result).toBeUndefined();
 });
 
-test("getForkedProject empty", async () => {
+test("getForkedProject second page empty", async () => {
   const octokit = {
     repos: {
-      listForks: jest.fn(({ owner, repo }) => {
-        return owner === "ownerx" && repo === "repox"
+      listForks: jest.fn(({ owner, repo, page }) => {
+        return owner === "ownerx" && repo === "repox" && page == 1
+          ? { status: 200, data: forkedProjectListInfo }
+          : owner === "ownerx" && repo === "repox" && page == 2
           ? { status: 200, data: forkedProjectListInfoEmpty }
           : undefined;
       })
@@ -282,6 +308,6 @@ test("getForkedProject empty", async () => {
     "weirdowner"
   );
 
-  expect(octokit.repos.listForks).toHaveBeenCalledTimes(1);
+  expect(octokit.repos.listForks).toHaveBeenCalledTimes(2);
   expect(result).toBeUndefined();
 });

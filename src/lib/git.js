@@ -276,21 +276,46 @@ async function hasOriginPullRequest(octokit, owner, repo, branch) {
   }
 }
 
-async function getForkedProject(octokit, owner, repo, wantedOwner) {
+async function getForkedProject(
+  octokit,
+  owner,
+  repo,
+  wantedOwner,
+  page = 1,
+  per_page = 100
+) {
   assert(owner, "owner is not defined");
   assert(repo, "repo is not defined");
   assert(wantedOwner, "wantedOwner is not defined");
+  assert(page, "page is not defined");
   try {
     const { status, data } = await octokit.repos.listForks({
       owner,
-      repo
+      repo,
+      page
     });
-    return status == 200
-      ? data.find(forkedProject => forkedProject.owner.login === wantedOwner)
-      : undefined;
+    if (status == 200) {
+      if (data && data.length > 0) {
+        const forkedProject = data.find(
+          forkedProject => forkedProject.owner.login === wantedOwner
+        );
+        return forkedProject
+          ? forkedProject
+          : await getForkedProject(
+              octokit,
+              owner,
+              repo,
+              wantedOwner,
+              ++page,
+              per_page
+            );
+      } else {
+        return undefined;
+      }
+    }
   } catch (e) {
     logger.error(
-      `Error getting forked project list from  https://api.github.com/repos/${owner}/${repo}/forks'".`
+      `Error getting forked project list from  https://api.github.com/repos/${owner}/${repo}/forks?per_page=${per_page}&page=${page}'".`
     );
     throw e;
   }

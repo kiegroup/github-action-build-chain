@@ -28,7 +28,7 @@ Just defining the **build chain** flow in every project from the chain, the tool
     - It will try to checkout SOURCE_GROUP:PROJECT:SOURCE_BRANCH. In case the it exists and it has a pull request over the TARGET_GROUP:PROJECT:TARGET_BRANCH it will check it out and will merge it with target branch.
     - If previous checkout fails, it will try the same with TARGET_GROUP:PROJECT:SOURCE_BRANCH this time.
     - If previous checkout fails, it will checkout TARGET_GROUP:PROJECT:TARGET_BRANCH.
-    > **_Warning:_** It will fail in case it can't be done automatically, properly informing to please resolve conflicts.
+      > **_Warning:_** It will fail in case it can't be done automatically, properly informing to please resolve conflicts.
 
 - Once all the projects are checked out, it will run as many commands are defined in `build-command-upstream` input (it will take `build-command` input in case there's no `build-command-upstream` defined) for every parent dependency starting from the highest level of the hierarchy to the lowest one.
 

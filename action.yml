@@ -1,6 +1,7 @@
-name: "Github action chain"
+name: "Github action build chain. Cross-repo builds"
 author: "Enrique Mingorance Cano <emingora@redhat.com>"
-description: "GitHub action to define action chains"
+description: |
+  Github action build chain is a tool for github actions to build multiple projects from different repositories in a single action. This tool is trying to solve the problem when a project depends on another project (most probably from the same organization) and one change can/should be performed in different repositories. How can we assure one specific pull request will work with the latest changes from/in the dependant/dependency projects and it won't break something? This is what we call cross-repo pull requests and build-chain is the way we have to solve it.
 inputs:
   parent-dependencies:
     description: "the list of parent project dependencies separated by comma. Something like lienzo-core,lienzo-tests"
@@ -41,5 +42,5 @@ runs:
   using: "node12"
   main: "dist/index.js"
 branding:
-  icon: "link"
-  color: "purple"
+  icon: "box"
+  color: "red"

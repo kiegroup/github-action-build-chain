@@ -5,7 +5,10 @@ const {
 } = require("../src/lib/workflow-informaton-reader");
 jest.mock("../src/lib/git");
 jest.mock("@actions/core");
-const { getDir } = require("../src/lib/build-chain-flow-helper");
+const {
+  getDir,
+  checkoutDependencies
+} = require("../src/lib/build-chain-flow-helper");
 jest.mock("../src/lib/build-chain-flow-helper");
 
 afterEach(() => {
@@ -21,7 +24,8 @@ test("checkoutParentsAndGetWorkflowInformation no parents", async () => {
         jobName: "build-chain",
         workflow: "flow.yaml",
         group: "groupX",
-        project: project
+        project: project,
+        targetBranch: "tBranch"
       }
     }
   };
@@ -32,6 +36,7 @@ test("checkoutParentsAndGetWorkflowInformation no parents", async () => {
     context,
     projectList,
     project,
+    context.config.github.targetBranch,
     undefined
   );
 
@@ -52,17 +57,23 @@ test("checkoutParentsAndGetWorkflowInformation 1 level", async () => {
         jobName: "build-chain",
         workflow: "flow.yaml",
         group: "groupX",
-        project: project
+        project: project,
+        targetBranch: "tBranch"
       }
     }
   };
 
   const projectList = [];
+
+  checkoutDependencies.mockResolvedValueOnce({
+    "parent-parent": { targetBranch: context.config.github.targetBranch }
+  });
   // Act
   const workflowInformationArray = await checkoutParentsAndGetWorkflowInformation(
     context,
     projectList,
     project,
+    context.config.github.targetBranch,
     { "parent-parent": { group: "groupX" } }
   );
 
@@ -86,17 +97,26 @@ test("checkoutParentsAndGetWorkflowInformation 2 levels", async () => {
         jobName: "build-chain",
         workflow: "flow.yaml",
         group: "groupX",
-        project: project
+        project: project,
+        targetBranch: "tBranch"
       }
     }
   };
 
   const projectList = [];
+  checkoutDependencies
+    .mockResolvedValueOnce({
+      parent: { targetBranch: context.config.github.targetBranch }
+    })
+    .mockResolvedValueOnce({
+      "parent-parent": { targetBranch: context.config.github.targetBranch }
+    });
   // Act
   const workflowInformationArray = await checkoutParentsAndGetWorkflowInformation(
     context,
     projectList,
     project,
+    context.config.github.targetBranch,
     { parent: { group: "groupX" } }
   );
 
@@ -126,17 +146,29 @@ test("checkoutParentsAndGetWorkflowInformation 3 levels", async () => {
         jobName: "build-chain",
         workflow: "flow.yaml",
         group: "groupX",
-        project: project
+        project: project,
+        targetBranch: "tBranch"
       }
     }
   };
 
   const projectList = [];
+  checkoutDependencies
+    .mockResolvedValueOnce({
+      child: { targetBranch: context.config.github.targetBranch }
+    })
+    .mockResolvedValueOnce({
+      parent: { targetBranch: context.config.github.targetBranch }
+    })
+    .mockResolvedValueOnce({
+      "parent-parent": { targetBranch: context.config.github.targetBranch }
+    });
   // Act
   const workflowInformationArray = await checkoutParentsAndGetWorkflowInformation(
     context,
     projectList,
     project,
+    context.config.github.targetBranch,
     { child: { group: "groupX" } }
   );
 
@@ -169,17 +201,26 @@ test("checkoutParentsAndGetWorkflowInformation 3 levels repeated project", async
         jobName: "build-chain",
         workflow: "flow.yaml",
         group: "groupX",
-        project: project
+        project: project,
+        targetBranch: "tBranch"
       }
     }
   };
 
   const projectList = ["parent-parent"];
+  checkoutDependencies
+    .mockResolvedValueOnce({
+      child: { targetBranch: context.config.github.targetBranch }
+    })
+    .mockResolvedValueOnce({
+      parent: { targetBranch: context.config.github.targetBranch }
+    });
   // Act
   const workflowInformationArray = await checkoutParentsAndGetWorkflowInformation(
     context,
     projectList,
     project,
+    context.config.github.targetBranch,
     { child: { group: "groupX" } }
   );
 

@@ -2664,18 +2664,35 @@ const {
 } = __webpack_require__(484);
 const { logger } = __webpack_require__(79);
 
-async function checkoutDependencies(context, dependencies) {
+async function checkoutDependencies(
+  context,
+  dependencies,
+  currentTargetBranch
+) {
+  const result = {};
   for (const dependencyKey of Object.keys(dependencies)) {
-    await checkoutProject(context, dependencyKey, dependencies[dependencyKey]);
+    result[dependencyKey] = await checkoutProject(
+      context,
+      dependencyKey,
+      dependencies[dependencyKey],
+      currentTargetBranch
+    );
   }
+  return result;
 }
 
-async function checkoutProject(context, project, dependencyInformation) {
+async function checkoutProject(
+  context,
+  project,
+  dependencyInformation,
+  currentTargetBranch
+) {
   const dir = getDir(context.config.rootFolder, project);
   const checkoutInfo = await getCheckoutInfo(
     context,
     dependencyInformation.group,
     project,
+    currentTargetBranch,
     dependencyInformation.mapping
   );
   if (checkoutInfo == undefined) {
@@ -2686,13 +2703,13 @@ async function checkoutProject(context, project, dependencyInformation) {
 
   if (checkoutInfo.merge) {
     logger.info(
-      `Merging ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${context.config.github.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      `Merging ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
     );
     try {
       await clone(
         `${context.config.github.serverUrl}/${dependencyInformation.group}/${project}`,
         dir,
-        context.config.github.targetBranch
+        checkoutInfo.targetBranch
       );
     } catch (err) {
       logger.error(
@@ -2730,15 +2747,22 @@ async function checkoutProject(context, project, dependencyInformation) {
       throw err;
     }
   }
+  return checkoutInfo;
 }
 
-async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
+async function getCheckoutInfo(
+  context,
+  targetGroup,
+  targetProject,
+  currentTargetBranch,
+  mapping
+) {
   const sourceGroup = context.config.github.sourceGroup;
   const sourceBranch = context.config.github.sourceBranch;
   const targetBranch =
-    mapping && mapping.source === context.config.github.targetBranch
+    mapping && mapping.source === currentTargetBranch
       ? mapping.target
-      : context.config.github.targetBranch;
+      : currentTargetBranch;
   const forkedProjectName = await getForkedProjectName(
     context.octokit,
     targetGroup,
@@ -2762,6 +2786,7 @@ async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
         project: forkedProjectName,
         group: sourceGroup,
         branch: sourceBranch,
+        targetBranch,
         merge: await hasPullRequest(
           context.octokit,
           targetGroup,
@@ -2780,6 +2805,7 @@ async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
         project: targetProject,
         group: targetGroup,
         branch: sourceBranch,
+        targetBranch,
         merge: await hasPullRequest(
           context.octokit,
           targetGroup,
@@ -2798,6 +2824,7 @@ async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
         project: targetProject,
         group: targetGroup,
         branch: targetBranch,
+        targetBranch,
         merge: false
       }
     : undefined;
@@ -3109,6 +3136,7 @@ async function checkoutParentsAndGetWorkflowInformation(
   context,
   projectList,
   project,
+  currentTargetBranch,
   parentDependencies
 ) {
   if (!projectList[project]) {
@@ -3119,7 +3147,11 @@ async function checkoutParentsAndGetWorkflowInformation(
           ", "
         )}] for project ${project}`
       );
-      await checkoutDependencies(context, parentDependencies);
+      const checkoutInfos = await checkoutDependencies(
+        context,
+        parentDependencies,
+        currentTargetBranch
+      );
       core.endGroup();
       for (const parentProject of Object.keys(parentDependencies).filter(
         parentDependency => parentDependency !== null && parentDependency !== ""
@@ -3140,6 +3172,7 @@ async function checkoutParentsAndGetWorkflowInformation(
               context,
               projectList,
               parentProject,
+              checkoutInfos[parentProject].targetBranch,
               parentWorkflowInformation.parentDependencies
             )
           );
@@ -22764,9 +22797,14 @@ async function start(context) {
     context.config.rootFolder,
     context.config.github.project
   );
-  await checkoutProject(context, context.config.github.project, {
-    group: context.config.github.group
-  });
+  await checkoutProject(
+    context,
+    context.config.github.project,
+    {
+      group: context.config.github.group
+    },
+    context.config.github.targetBranch
+  );
   const workflowInformation = readWorkflowInformation(
     context.config.github.project,
     context.config.github.jobName,
@@ -22782,6 +22820,7 @@ async function start(context) {
       context,
       [context.config.github.project],
       context.config.github.project,
+      context.config.github.targetBranch,
       workflowInformation.parentDependencies
     )
   ).reverse();

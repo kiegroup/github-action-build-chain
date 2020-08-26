@@ -33,11 +33,17 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge", async ()
   getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
 
   // Act
-  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
+  const result = await getCheckoutInfo(
+    context,
+    "targetGroup",
+    "projectX",
+    context.config.github.targetBranch
+  );
   // Assert
   expect(result.group).toEqual("sourceGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(true);
+  expect(result.targetBranch).toEqual("targetBranch");
 });
 
 test("getCheckoutInfo. group and sourceTarget exist with merge", async () => {
@@ -57,12 +63,18 @@ test("getCheckoutInfo. group and sourceTarget exist with merge", async () => {
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
+  const result = await getCheckoutInfo(
+    context,
+    "targetGroup",
+    "projectX",
+    context.config.github.targetBranch
+  );
   // Assert
   expect(result.project).toEqual("projectX");
   expect(result.group).toEqual("targetGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(true);
+  expect(result.targetBranch).toEqual("targetBranch");
 });
 
 test("getCheckoutInfo. sourceBranch and sourceTarget exist without merge", async () => {
@@ -81,12 +93,18 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist without merge", async
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
+  const result = await getCheckoutInfo(
+    context,
+    "targetGroup",
+    "projectX",
+    context.config.github.targetBranch
+  );
   // Assert
   expect(result.project).toEqual("projectXFroked");
   expect(result.group).toEqual("sourceGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(false);
+  expect(result.targetBranch).toEqual("targetBranch");
 });
 
 test("getCheckoutInfo. sourceBranch and sourceTarget exist without merge and not existing forked project", async () => {
@@ -105,12 +123,18 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist without merge and not
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
+  const result = await getCheckoutInfo(
+    context,
+    "targetGroup",
+    "projectX",
+    context.config.github.targetBranch
+  );
   // Assert
   expect(result.project).toEqual("projectX");
   expect(result.group).toEqual("sourceGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(false);
+  expect(result.targetBranch).toEqual("targetBranch");
 });
 
 test("getCheckoutInfo. group and sourceTarget exist without merge", async () => {
@@ -129,12 +153,18 @@ test("getCheckoutInfo. group and sourceTarget exist without merge", async () => 
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
+  const result = await getCheckoutInfo(
+    context,
+    "targetGroup",
+    "projectX",
+    context.config.github.targetBranch
+  );
   // Assert
   expect(result.project).toEqual("projectX");
   expect(result.group).toEqual("targetGroup");
   expect(result.branch).toEqual("sourceBranch");
   expect(result.merge).toEqual(false);
+  expect(result.targetBranch).toEqual("targetBranch");
 });
 
 test("getCheckoutInfo. group and targetBranch exist", async () => {
@@ -155,12 +185,18 @@ test("getCheckoutInfo. group and targetBranch exist", async () => {
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
+  const result = await getCheckoutInfo(
+    context,
+    "targetGroup",
+    "projectX",
+    context.config.github.targetBranch
+  );
   // Assert
   expect(result.project).toEqual("projectX");
   expect(result.group).toEqual("targetGroup");
   expect(result.branch).toEqual("targetBranch");
   expect(result.merge).toEqual(false);
+  expect(result.targetBranch).toEqual("targetBranch");
 });
 
 test("getCheckoutInfo. none exist", async () => {
@@ -182,7 +218,12 @@ test("getCheckoutInfo. none exist", async () => {
     }
   };
   // Act
-  const result = await getCheckoutInfo(context, "targetGroup", "projectX");
+  const result = await getCheckoutInfo(
+    context,
+    "targetGroup",
+    "projectX",
+    context.config.github.targetBranch
+  );
   // Assert
   expect(result).toEqual(undefined);
 });
@@ -202,7 +243,12 @@ test("getCheckoutInfo. group and targetBranch exist. Same owner and group", asyn
     }
   };
   // Act
-  await getCheckoutInfo(context, "sourceGroup", "projectX");
+  await getCheckoutInfo(
+    context,
+    "sourceGroup",
+    "projectX",
+    context.config.github.targetBranch
+  );
   // Assert
   expect(getForkedProjectMock).toHaveBeenCalledTimes(0);
   expect(doesBranchExistMock).toHaveBeenCalledTimes(1);
@@ -212,6 +258,68 @@ test("getCheckoutInfo. group and targetBranch exist. Same owner and group", asyn
     "projectX",
     "sourceBranch"
   );
+});
+
+test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge. Mapping matching", async () => {
+  // Arrange
+  doesBranchExistMock.mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true);
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sourceBranch",
+        targetBranch: "targetBranch"
+      }
+    }
+  };
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
+
+  // Act
+  const result = await getCheckoutInfo(
+    context,
+    "targetGroup",
+    "projectX",
+    context.config.github.targetBranch,
+    { source: "targetBranch", target: "mappedTargetBranch" }
+  );
+  // Assert
+  expect(result.group).toEqual("sourceGroup");
+  expect(result.branch).toEqual("sourceBranch");
+  expect(result.merge).toEqual(true);
+  expect(result.targetBranch).toEqual("mappedTargetBranch");
+});
+
+test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge. Mapping not matching", async () => {
+  // Arrange
+  doesBranchExistMock.mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true);
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sourceBranch",
+        targetBranch: "targetBranch"
+      }
+    }
+  };
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
+
+  // Act
+  const result = await getCheckoutInfo(
+    context,
+    "targetGroup",
+    "projectX",
+    context.config.github.targetBranch,
+    { source: "targetBranchX", target: "mappedTargetBranch" }
+  );
+  // Assert
+  expect(result.group).toEqual("sourceGroup");
+  expect(result.branch).toEqual("sourceBranch");
+  expect(result.merge).toEqual(true);
+  expect(result.targetBranch).toEqual("targetBranch");
 });
 
 test("checkoutDependencies", async () => {
@@ -267,7 +375,11 @@ test("checkoutDependencies", async () => {
     .mockResolvedValueOnce({ name: "projectD" })
     .mockResolvedValueOnce({ name: "projectEFroked" });
   // Act
-  await checkoutDependencies(context, dependencies);
+  await checkoutDependencies(
+    context,
+    dependencies,
+    context.config.github.targetBranch
+  );
   // Assert
   expect(cloneMock).toHaveBeenCalledWith(
     "URL/groupA/project-A",
@@ -339,7 +451,12 @@ test("checkoutProject sGroup/projectXFroked:sBranch exists has PR", async () => 
   hasPullRequestMock.mockResolvedValueOnce(true);
   getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
   // Act
-  await checkoutProject(context, "projectx", { group: "groupx" });
+  await checkoutProject(
+    context,
+    "projectx",
+    { group: "groupx" },
+    context.config.github.targetBranch
+  );
   // Assert
   expect(cloneMock).toHaveBeenCalledTimes(1);
   expect(mergeMock).toHaveBeenCalledTimes(1);
@@ -375,7 +492,12 @@ test("checkoutProject sGroup/projectXFroked:sBranch exists has no PR", async () 
   hasPullRequestMock.mockResolvedValueOnce(false);
   getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
   // Act
-  await checkoutProject(context, "projectx", { group: "groupx" });
+  await checkoutProject(
+    context,
+    "projectx",
+    { group: "groupx" },
+    context.config.github.targetBranch
+  );
   // Assert
   expect(cloneMock).toHaveBeenCalledTimes(1);
   expect(cloneMock).toHaveBeenCalledWith(
@@ -406,7 +528,12 @@ test("checkoutProject sGroup/projectX:sBranch does not exists but groupx/project
   getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
 
   // Act
-  await checkoutProject(context, "projectx", { group: "groupx" });
+  await checkoutProject(
+    context,
+    "projectx",
+    { group: "groupx" },
+    context.config.github.targetBranch
+  );
   // Assert
   expect(cloneMock).toHaveBeenCalledTimes(1);
   expect(mergeMock).toHaveBeenCalledTimes(1);
@@ -443,7 +570,12 @@ test("checkoutProject author/projectX:sBranch does not exists but groupx/project
   getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
 
   // Act
-  await checkoutProject(context, "projectx", { group: "groupx" });
+  await checkoutProject(
+    context,
+    "projectx",
+    { group: "groupx" },
+    context.config.github.targetBranch
+  );
   // Assert
   expect(cloneMock).toHaveBeenCalledTimes(1);
   expect(mergeMock).toHaveBeenCalledTimes(1);
@@ -480,7 +612,12 @@ test("checkoutProject author/projectX:sBranch does not exists but groupx/project
   getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
 
   // Act
-  await checkoutProject(context, "projectx", { group: "groupx" });
+  await checkoutProject(
+    context,
+    "projectx",
+    { group: "groupx" },
+    context.config.github.targetBranch
+  );
   // Assert
   expect(cloneMock).toHaveBeenCalledTimes(1);
   expect(mergeMock).toHaveBeenCalledTimes(0);
@@ -513,7 +650,12 @@ test("checkoutProject author/projectX:sBranch and groupx/projectX:sBranch but gr
   getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
 
   // Act
-  await checkoutProject(context, "projectx", { group: "groupx" });
+  await checkoutProject(
+    context,
+    "projectx",
+    { group: "groupx" },
+    context.config.github.targetBranch
+  );
   // Assert
   expect(cloneMock).toHaveBeenCalledTimes(1);
   expect(hasPullRequestMock).toHaveBeenCalledTimes(0);
@@ -522,5 +664,93 @@ test("checkoutProject author/projectX:sBranch and groupx/projectX:sBranch but gr
     "URL/groupx/projectx",
     "folder/projectx",
     "tBranch"
+  );
+});
+
+test("checkoutProject sGroup/projectXFroked:sBranch exists has PR. With mapping matching", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        workflow: "main.yml",
+        serverUrl: "URL",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch",
+        sourceGroup: "sGroup"
+      },
+      rootFolder: "folder"
+    }
+  };
+  doesBranchExistMock.mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
+  // Act
+  await checkoutProject(
+    context,
+    "projectx",
+    {
+      group: "groupx",
+      mapping: { source: "tBranch", target: "tBranchMapped" }
+    },
+    context.config.github.targetBranch
+  );
+  // Assert
+  expect(cloneMock).toHaveBeenCalledTimes(1);
+  expect(mergeMock).toHaveBeenCalledTimes(1);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/groupx/projectx",
+    "folder/projectx",
+    "tBranchMapped"
+  );
+  expect(mergeMock).toHaveBeenCalledWith(
+    "folder/projectx",
+    "sGroup",
+    "projectXFroked",
+    "sBranch"
+  );
+});
+
+test("checkoutProject sGroup/projectXFroked:sBranch exists has PR. With mapping matching", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        workflow: "main.yml",
+        serverUrl: "URL",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch",
+        sourceGroup: "sGroup"
+      },
+      rootFolder: "folder"
+    }
+  };
+  doesBranchExistMock.mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
+  // Act
+  await checkoutProject(
+    context,
+    "projectx",
+    {
+      group: "groupx",
+      mapping: { source: "tBranch", target: "tBranchMapped" }
+    },
+    context.config.github.targetBranch
+  );
+  // Assert
+  expect(cloneMock).toHaveBeenCalledTimes(1);
+  expect(mergeMock).toHaveBeenCalledTimes(1);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/groupx/projectx",
+    "folder/projectx",
+    "tBranchMapped"
+  );
+  expect(mergeMock).toHaveBeenCalledWith(
+    "folder/projectx",
+    "sGroup",
+    "projectXFroked",
+    "sBranch"
   );
 });

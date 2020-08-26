@@ -22901,6 +22901,7 @@ async function archiveArtifacts(workflowInformationArray) {
       .map(promiseResult => promiseResult.value || promiseResult.reason)
       .filter(
         uploadResponse =>
+          uploadResponse &&
           uploadResponse.artifactItems &&
           uploadResponse.artifactItems.length > 0
       );
@@ -22912,7 +22913,9 @@ async function archiveArtifacts(workflowInformationArray) {
       .map(promiseResult => promiseResult.reason)
       .filter(
         uploadResponse =>
-          uploadResponse.failedItems && uploadResponse.failedItems.length > 0
+          uploadResponse &&
+          uploadResponse.failedItems &&
+          uploadResponse.failedItems.length > 0
       );
     const failedFiles = failureUploadResponses.flatMap(
       uploadResponse => uploadResponse.failedItems

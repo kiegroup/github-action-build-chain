@@ -17,9 +17,14 @@ async function start(context) {
     context.config.rootFolder,
     context.config.github.project
   );
-  await checkoutProject(context, context.config.github.project, {
-    group: context.config.github.group
-  });
+  await checkoutProject(
+    context,
+    context.config.github.project,
+    {
+      group: context.config.github.group
+    },
+    context.config.github.targetBranch
+  );
   const workflowInformation = readWorkflowInformation(
     context.config.github.project,
     context.config.github.jobName,
@@ -35,6 +40,7 @@ async function start(context) {
       context,
       [context.config.github.project],
       context.config.github.project,
+      context.config.github.targetBranch,
       workflowInformation.parentDependencies
     )
   ).reverse();

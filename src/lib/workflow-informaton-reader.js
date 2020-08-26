@@ -10,6 +10,7 @@ async function checkoutParentsAndGetWorkflowInformation(
   context,
   projectList,
   project,
+  currentTargetBranch,
   parentDependencies
 ) {
   if (!projectList[project]) {
@@ -20,7 +21,11 @@ async function checkoutParentsAndGetWorkflowInformation(
           ", "
         )}] for project ${project}`
       );
-      await checkoutDependencies(context, parentDependencies);
+      const checkoutInfos = await checkoutDependencies(
+        context,
+        parentDependencies,
+        currentTargetBranch
+      );
       core.endGroup();
       for (const parentProject of Object.keys(parentDependencies).filter(
         parentDependency => parentDependency !== null && parentDependency !== ""
@@ -41,6 +46,7 @@ async function checkoutParentsAndGetWorkflowInformation(
               context,
               projectList,
               parentProject,
+              checkoutInfos[parentProject].targetBranch,
               parentWorkflowInformation.parentDependencies
             )
           );

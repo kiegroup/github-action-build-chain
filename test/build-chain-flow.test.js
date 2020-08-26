@@ -49,7 +49,8 @@ test("start no parent dependencies", async () => {
     },
     buildCommands: ["command 1", "command 2"],
     buildCommandsUpstream: ["upstream 1", "upstream 2"],
-    buildCommandsDownstream: ["downstream 1", "downstream 2"]
+    buildCommandsDownstream: ["downstream 1", "downstream 2"],
+    parentDependencies: []
   };
   readWorkflowInformation.mockReturnValueOnce(workflowInformation);
   checkoutParentsAndGetWorkflowInformation.mockResolvedValueOnce([]);
@@ -61,9 +62,14 @@ test("start no parent dependencies", async () => {
   await start(context);
   // Assert
   expect(checkoutProject).toHaveBeenCalledTimes(1);
-  expect(checkoutProject).toHaveBeenCalledWith(context, "projectX", {
-    group: "defaultGroup"
-  });
+  expect(checkoutProject).toHaveBeenCalledWith(
+    context,
+    "projectX",
+    {
+      group: "defaultGroup"
+    },
+    context.config.github.targetBranch
+  );
   expect(readWorkflowInformation).toHaveBeenCalledWith(
     "projectX",
     "job-id",
@@ -73,6 +79,15 @@ test("start no parent dependencies", async () => {
     "folder/projectX"
   );
   expect(readWorkflowInformation).toHaveBeenCalledTimes(1);
+
+  expect(checkoutParentsAndGetWorkflowInformation).toHaveBeenCalledWith(
+    context,
+    [context.config.github.project],
+    context.config.github.project,
+    context.config.github.targetBranch,
+    workflowInformation.parentDependencies
+  );
+
   expect(getDir).toHaveBeenCalledTimes(2);
   expect(execute).toHaveBeenCalledWith(
     "folder/projectX",
@@ -144,6 +159,22 @@ test("start no parent dependencies archive artifacts", async () => {
     name: "artifact1",
     path: "whateverpath"
   });
+  expect(checkoutProject).toHaveBeenCalledTimes(1);
+  expect(checkoutProject).toHaveBeenCalledWith(
+    context,
+    "projectX",
+    {
+      group: "defaultGroup"
+    },
+    context.config.github.targetBranch
+  );
+  expect(checkoutParentsAndGetWorkflowInformation).toHaveBeenCalledWith(
+    context,
+    [context.config.github.project],
+    context.config.github.project,
+    context.config.github.targetBranch,
+    workflowInformation.parentDependencies
+  );
 });
 
 test("start with parent dependencies without upstream command", async () => {
@@ -201,9 +232,14 @@ test("start with parent dependencies without upstream command", async () => {
   await start(context);
   // Assert
   expect(checkoutProject).toHaveBeenCalledTimes(1);
-  expect(checkoutProject).toHaveBeenCalledWith(context, "projectXChild", {
-    group: "defaultGroup"
-  });
+  expect(checkoutProject).toHaveBeenCalledWith(
+    context,
+    "projectXChild",
+    {
+      group: "defaultGroup"
+    },
+    context.config.github.targetBranch
+  );
   expect(readWorkflowInformation).toHaveBeenCalledWith(
     "projectXChild",
     "job-id",
@@ -213,6 +249,15 @@ test("start with parent dependencies without upstream command", async () => {
     "folder/projectXChild"
   );
   expect(readWorkflowInformation).toHaveBeenCalledTimes(1);
+
+  expect(checkoutParentsAndGetWorkflowInformation).toHaveBeenCalledWith(
+    context,
+    [context.config.github.project],
+    context.config.github.project,
+    context.config.github.targetBranch,
+    workflowInformation.parentDependencies
+  );
+
   expect(getDir).toHaveBeenCalledTimes(3);
   expect(execute).toHaveBeenCalledWith(
     "folder/projectXParent",
@@ -283,6 +328,23 @@ test("start with parent dependencies with upstream command", async () => {
   // Act
   await start(context);
   // Assert
+  expect(checkoutProject).toHaveBeenCalledTimes(1);
+  expect(checkoutProject).toHaveBeenCalledWith(
+    context,
+    "projectXChild",
+    {
+      group: "defaultGroup"
+    },
+    context.config.github.targetBranch
+  );
+  expect(checkoutParentsAndGetWorkflowInformation).toHaveBeenCalledWith(
+    context,
+    [context.config.github.project],
+    context.config.github.project,
+    context.config.github.targetBranch,
+    workflowInformation.parentDependencies
+  );
+
   expect(execute).toHaveBeenCalledWith(
     "folder/projectXParent",
     "command-parent-upstream",
@@ -366,6 +428,23 @@ test("start with parent dependencies with archive artifacts with path", async ()
   // Act
   await start(context);
   // Assert
+  expect(checkoutProject).toHaveBeenCalledTimes(1);
+  expect(checkoutProject).toHaveBeenCalledWith(
+    context,
+    "projectXChild",
+    {
+      group: "defaultGroup"
+    },
+    context.config.github.targetBranch
+  );
+  expect(checkoutParentsAndGetWorkflowInformation).toHaveBeenCalledWith(
+    context,
+    [context.config.github.project],
+    context.config.github.project,
+    context.config.github.targetBranch,
+    workflowInformation.parentDependencies
+  );
+
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(2);
   expect(runUploadArtifactsMock).toHaveBeenCalledWith({
     path: "whateverpath",
@@ -447,6 +526,23 @@ test("start with parent dependencies with archive artifacts one of them without 
   // Act
   await start(context);
   // Assert
+  expect(checkoutProject).toHaveBeenCalledTimes(1);
+  expect(checkoutProject).toHaveBeenCalledWith(
+    context,
+    "projectXChild",
+    {
+      group: "defaultGroup"
+    },
+    context.config.github.targetBranch
+  );
+  expect(checkoutParentsAndGetWorkflowInformation).toHaveBeenCalledWith(
+    context,
+    [context.config.github.project],
+    context.config.github.project,
+    context.config.github.targetBranch,
+    workflowInformation.parentDependencies
+  );
+
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
   expect(runUploadArtifactsMock).toHaveBeenCalledWith({
     path: "whateverpath",

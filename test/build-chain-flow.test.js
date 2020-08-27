@@ -53,7 +53,10 @@ test("start no parent dependencies", async () => {
     buildCommands: ["command 1", "command 2"],
     buildCommandsUpstream: ["upstream 1", "upstream 2"],
     buildCommandsDownstream: ["downstream 1", "downstream 2"],
-    parentDependencies: []
+    parentDependencies: [],
+    archiveArtifacts: {
+      dependencies: "none"
+    }
   };
   readWorkflowInformation.mockReturnValueOnce(workflowInformation);
   checkoutParentsAndGetWorkflowInformation.mockResolvedValueOnce([]);
@@ -139,7 +142,8 @@ test("start no parent dependencies archive artifacts", async () => {
     buildCommandsDownstream: ["downstream 1"],
     archiveArtifacts: {
       path: "whateverpath",
-      name: "artifact1"
+      name: "artifact1",
+      dependencies: "none"
     }
   };
   readWorkflowInformation.mockReturnValueOnce(workflowInformation);
@@ -163,7 +167,8 @@ test("start no parent dependencies archive artifacts", async () => {
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
   expect(runUploadArtifactsMock).toHaveBeenCalledWith({
     name: "artifact1",
-    path: "whateverpath"
+    path: "whateverpath",
+    dependencies: "none"
   });
   expect(checkoutProject).toHaveBeenCalledTimes(1);
   expect(checkoutProject).toHaveBeenCalledWith(
@@ -213,7 +218,10 @@ test("start with parent dependencies without upstream command", async () => {
     },
     buildCommands: ["command-child"],
     buildCommandsUpstream: ["command-child-upstream"],
-    buildCommandsDownstream: ["command-child-downstream"]
+    buildCommandsDownstream: ["command-child-downstream"],
+    archiveArtifacts: {
+      dependencies: "none"
+    }
   };
 
   const workflowInformationParent = {
@@ -226,7 +234,10 @@ test("start with parent dependencies without upstream command", async () => {
       }
     },
     buildCommands: ["command-parent"],
-    buildCommandsDownstream: ["command-parent-dowstream"]
+    buildCommandsDownstream: ["command-parent-dowstream"],
+    archiveArtifacts: {
+      dependencies: "none"
+    }
   };
   readWorkflowInformation.mockReturnValueOnce(workflowInformation);
   checkoutParentsAndGetWorkflowInformation.mockResolvedValueOnce([
@@ -312,7 +323,10 @@ test("start with parent dependencies with upstream command", async () => {
     },
     buildCommands: ["command-child"],
     buildCommandsUpstream: ["command-child-upstream"],
-    buildCommandsDownstream: ["command-child-downstream"]
+    buildCommandsDownstream: ["command-child-downstream"],
+    archiveArtifacts: {
+      dependencies: "none"
+    }
   };
 
   const workflowInformationParent = {
@@ -326,7 +340,10 @@ test("start with parent dependencies with upstream command", async () => {
     },
     buildCommands: ["command-parent"],
     buildCommandsUpstream: ["command-parent-upstream"],
-    buildCommandsDownstream: ["command-parent-dowstream"]
+    buildCommandsDownstream: ["command-parent-dowstream"],
+    archiveArtifacts: {
+      dependencies: "none"
+    }
   };
   readWorkflowInformation.mockReturnValueOnce(workflowInformation);
   checkoutParentsAndGetWorkflowInformation.mockResolvedValueOnce([
@@ -402,7 +419,8 @@ test("start with parent dependencies with archive artifacts with path", async ()
     buildCommandsDownstream: ["command-child-downstream"],
     archiveArtifacts: {
       path: "whateverpath",
-      name: "artifactChild"
+      name: "artifactChild",
+      dependencies: ["projectXParent"]
     }
   };
 
@@ -419,7 +437,8 @@ test("start with parent dependencies with archive artifacts with path", async ()
     buildCommandsDownstream: ["command-parent-dowstream"],
     archiveArtifacts: {
       path: "whateverpath",
-      name: "artifactParent"
+      name: "artifactParent",
+      dependencies: "none"
     }
   };
   readWorkflowInformation.mockReturnValueOnce(workflowInformation);
@@ -463,17 +482,120 @@ test("start with parent dependencies with archive artifacts with path", async ()
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(2);
   expect(runUploadArtifactsMock).toHaveBeenCalledWith({
     path: "whateverpath",
-    name: "artifactChild"
+    name: "artifactChild",
+    dependencies: ["projectXParent"]
   });
   expect(runUploadArtifactsMock).toHaveBeenCalledWith({
     path: "whateverpath",
-    name: "artifactParent"
+    name: "artifactParent",
+    dependencies: "none"
   });
-  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
-  expect(printCheckoutInformation).toHaveBeenCalledWith({});
 });
 
-test("start with parent dependencies with archive artifacts one of them without path", async () => {
+test("start with parent dependencies with archive artifacts with path dependencies all", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        jobName: "job-id",
+        workflow: "main.yaml",
+        group: "defaultGroup",
+        project: "projectXChild",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: "folder",
+      matrixVariables: { key1: "value1", key2: "value2" }
+    }
+  };
+  const workflowInformation = {
+    id: "build-chain",
+    name: "Build Chain",
+    project: "projectXChild",
+    config: {
+      github: {
+        workflow: "main.yaml"
+      }
+    },
+    buildCommands: ["command-child"],
+    buildCommandsUpstream: ["command-child-upstream"],
+    buildCommandsDownstream: ["command-child-downstream"],
+    archiveArtifacts: {
+      path: "whateverpath",
+      name: "artifactChild",
+      dependencies: "all"
+    }
+  };
+
+  const workflowInformationParent = {
+    id: "build-chain",
+    name: "Build Chain",
+    project: "projectXParent",
+    config: {
+      github: {
+        workflow: "main.yaml"
+      }
+    },
+    buildCommands: ["command-parent"],
+    buildCommandsDownstream: ["command-parent-dowstream"],
+    archiveArtifacts: {
+      path: "whateverpath",
+      name: "artifactParent",
+      dependencies: "none"
+    }
+  };
+  readWorkflowInformation.mockReturnValueOnce(workflowInformation);
+  checkoutParentsAndGetWorkflowInformation.mockResolvedValueOnce([
+    workflowInformationParent
+  ]);
+  getDir
+    .mockReturnValueOnce("folder/projectXChild")
+    .mockReturnValueOnce("folder/projectXParent")
+    .mockReturnValueOnce("folder/projectXChild");
+  runUploadArtifactsMock
+    .mockResolvedValueOnce({
+      failedItems: [],
+      artifactName: "artifactName1"
+    })
+    .mockResolvedValueOnce({
+      failedItems: [],
+      artifactName: "artifactName2"
+    });
+
+  // Act
+  await start(context);
+  // Assert
+  expect(checkoutProject).toHaveBeenCalledTimes(1);
+  expect(checkoutProject).toHaveBeenCalledWith(
+    context,
+    "projectXChild",
+    {
+      group: "defaultGroup"
+    },
+    context.config.github.targetBranch
+  );
+  expect(checkoutParentsAndGetWorkflowInformation).toHaveBeenCalledWith(
+    context,
+    [context.config.github.project],
+    context.config.github.project,
+    context.config.github.targetBranch,
+    workflowInformation.parentDependencies
+  );
+
+  expect(runUploadArtifactsMock).toHaveBeenCalledTimes(2);
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith({
+    path: "whateverpath",
+    name: "artifactChild",
+    dependencies: "all"
+  });
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith({
+    path: "whateverpath",
+    name: "artifactParent",
+    dependencies: "none"
+  });
+});
+
+test("start with parent dependencies with archive artifacts with path dependencies not matching", async () => {
   // Arrange
   const context = {
     config: {
@@ -503,7 +625,9 @@ test("start with parent dependencies with archive artifacts one of them without 
     buildCommandsUpstream: ["command-child-upstream"],
     buildCommandsDownstream: ["command-child-downstream"],
     archiveArtifacts: {
-      name: "artifactChild"
+      path: "whateverpath",
+      name: "artifactChild",
+      dependencies: ["projectXParentX"]
     }
   };
 
@@ -520,7 +644,8 @@ test("start with parent dependencies with archive artifacts one of them without 
     buildCommandsDownstream: ["command-parent-dowstream"],
     archiveArtifacts: {
       path: "whateverpath",
-      name: "artifactParent"
+      name: "artifactParent",
+      dependencies: "none"
     }
   };
   readWorkflowInformation.mockReturnValueOnce(workflowInformation);
@@ -564,7 +689,108 @@ test("start with parent dependencies with archive artifacts one of them without 
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
   expect(runUploadArtifactsMock).toHaveBeenCalledWith({
     path: "whateverpath",
-    name: "artifactParent"
+    name: "artifactChild",
+    dependencies: ["projectXParentX"]
+  });
+  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
+  expect(printCheckoutInformation).toHaveBeenCalledWith({});
+});
+
+test("start with parent dependencies with archive artifacts one of them without path", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        jobName: "job-id",
+        workflow: "main.yaml",
+        group: "defaultGroup",
+        project: "projectXChild",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: "folder",
+      matrixVariables: { key1: "value1", key2: "value2" }
+    },
+    checkoutInfo: {}
+  };
+  const workflowInformation = {
+    id: "build-chain",
+    name: "Build Chain",
+    project: "projectXChild",
+    config: {
+      github: {
+        workflow: "main.yaml"
+      }
+    },
+    buildCommands: ["command-child"],
+    buildCommandsUpstream: ["command-child-upstream"],
+    buildCommandsDownstream: ["command-child-downstream"],
+    archiveArtifacts: {
+      name: "artifactChild",
+      dependencies: ["projectXParent"]
+    }
+  };
+
+  const workflowInformationParent = {
+    id: "build-chain",
+    name: "Build Chain",
+    project: "projectXParent",
+    config: {
+      github: {
+        workflow: "main.yaml"
+      }
+    },
+    buildCommands: ["command-parent"],
+    buildCommandsDownstream: ["command-parent-dowstream"],
+    archiveArtifacts: {
+      path: "whateverpath",
+      name: "artifactParent",
+      dependencies: "none"
+    }
+  };
+  readWorkflowInformation.mockReturnValueOnce(workflowInformation);
+  checkoutParentsAndGetWorkflowInformation.mockResolvedValueOnce([
+    workflowInformationParent
+  ]);
+  getDir
+    .mockReturnValueOnce("folder/projectXChild")
+    .mockReturnValueOnce("folder/projectXParent")
+    .mockReturnValueOnce("folder/projectXChild");
+  runUploadArtifactsMock
+    .mockResolvedValueOnce({
+      failedItems: [],
+      artifactName: "artifactName1"
+    })
+    .mockResolvedValueOnce({
+      failedItems: [],
+      artifactName: "artifactName2"
+    });
+
+  // Act
+  await start(context);
+  // Assert
+  expect(checkoutProject).toHaveBeenCalledTimes(1);
+  expect(checkoutProject).toHaveBeenCalledWith(
+    context,
+    "projectXChild",
+    {
+      group: "defaultGroup"
+    },
+    context.config.github.targetBranch
+  );
+  expect(checkoutParentsAndGetWorkflowInformation).toHaveBeenCalledWith(
+    context,
+    [context.config.github.project],
+    context.config.github.project,
+    context.config.github.targetBranch,
+    workflowInformation.parentDependencies
+  );
+
+  expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith({
+    path: "whateverpath",
+    name: "artifactParent",
+    dependencies: "none"
   });
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith({});

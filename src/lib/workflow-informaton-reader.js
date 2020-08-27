@@ -149,19 +149,40 @@ function treatMatrixVariables(withExpression, matrixVariables) {
 }
 
 function getArchiveArtifacts(step, defaultName = "artifact") {
-  return step.with["archive-artifacts-name"] ||
-    step.with["archive-artifacts-path"] ||
-    step.with["archive-artifacts-if-no-files-found"]
-    ? {
-        name: step.with["archive-artifacts-name"]
-          ? step.with["archive-artifacts-name"]
-          : defaultName,
-        path: step.with["archive-artifacts-path"],
-        ifNoFilesFound: step.with["archive-artifacts-if-no-files-found"]
-          ? step.with["archive-artifacts-if-no-files-found"]
-          : "warn"
-      }
-    : undefined;
+  return {
+    name: step.with["archive-artifacts-name"]
+      ? step.with["archive-artifacts-name"]
+      : step.with["archive-artifacts-path"]
+      ? defaultName
+      : undefined,
+    path: step.with["archive-artifacts-path"],
+    ifNoFilesFound: step.with["archive-artifacts-if-no-files-found"]
+      ? step.with["archive-artifacts-if-no-files-found"]
+      : step.with["archive-artifacts-path"]
+      ? "warn"
+      : undefined,
+    dependencies: treatArchiveArtifactsDependencies(
+      step.with["archive-artifacts-dependencies"]
+    )
+  };
+}
+
+function treatArchiveArtifactsDependencies(archiveArtifactsDependencies) {
+  if (archiveArtifactsDependencies) {
+    if (
+      archiveArtifactsDependencies === "all" ||
+      archiveArtifactsDependencies === "none"
+    ) {
+      return archiveArtifactsDependencies;
+    } else {
+      return archiveArtifactsDependencies
+        .split("\n")
+        .filter(line => line)
+        .map(item => item.trim());
+    }
+  } else {
+    return "none";
+  }
 }
 
 function dependenciesToObject(dependencies, defaultGroup) {

@@ -33,10 +33,20 @@ inputs:
       The desired behavior if no files are found using the provided path.
 
       Available Options:
-        warn: Output a warning but do not fail the action
-        error: Fail the action with an error message
-        ignore: Do not output any warnings or errors, the action does not fail
+        warn: Output a warning but do not fail the action.
+        error: Fail the action with an error message.
+        ignore: Do not output any warnings or errors, the action does not fail.
     default: "warn"
+    required: false
+  archive-artifacts-dependencies:
+    description: >
+      whether the artifacts from the dependencies has to be uploaded or not.
+
+      Available Options:
+        none: no artifact from any dependency/dependant project will be uploaded.
+        all: all the artifacts defined by the dependencies will be uploaded.
+        a list of projects: only the projects defined here will be uploaded.
+    default: "none"
     required: false
 runs:
   using: "node12"

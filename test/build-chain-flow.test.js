@@ -17,6 +17,8 @@ jest.mock("../src/lib/artifacts/upload-artifacts");
 const { execute } = require("../src/lib/command");
 jest.mock("../src/lib/command");
 jest.mock("@actions/core");
+const { printCheckoutInformation } = require("../src/lib/summary");
+jest.mock("../src/lib/summary");
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -36,7 +38,8 @@ test("start no parent dependencies", async () => {
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    }
+    },
+    checkoutInfo: {}
   };
   const workflowInformation = {
     id: "build-chain",
@@ -101,6 +104,8 @@ test("start no parent dependencies", async () => {
   );
   expect(execute).toHaveBeenCalledTimes(2);
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(0);
+  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
+  expect(printCheckoutInformation).toHaveBeenCalledWith({});
 });
 
 test("start no parent dependencies archive artifacts", async () => {
@@ -117,7 +122,8 @@ test("start no parent dependencies archive artifacts", async () => {
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    }
+    },
+    checkoutInfo: {}
   };
   const workflowInformation = {
     id: "build-chain",
@@ -175,6 +181,8 @@ test("start no parent dependencies archive artifacts", async () => {
     context.config.github.targetBranch,
     workflowInformation.parentDependencies
   );
+  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
+  expect(printCheckoutInformation).toHaveBeenCalledWith({});
 });
 
 test("start with parent dependencies without upstream command", async () => {
@@ -191,7 +199,8 @@ test("start with parent dependencies without upstream command", async () => {
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    }
+    },
+    checkoutInfo: {}
   };
   const workflowInformation = {
     id: "build-chain",
@@ -271,6 +280,8 @@ test("start with parent dependencies without upstream command", async () => {
   );
   expect(execute).toHaveBeenCalledTimes(2);
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(0);
+  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
+  expect(printCheckoutInformation).toHaveBeenCalledWith({});
 });
 
 test("start with parent dependencies with upstream command", async () => {
@@ -287,7 +298,8 @@ test("start with parent dependencies with upstream command", async () => {
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    }
+    },
+    checkoutInfo: {}
   };
   const workflowInformation = {
     id: "build-chain",
@@ -355,6 +367,8 @@ test("start with parent dependencies with upstream command", async () => {
     "command-parent",
     "projectXParent"
   );
+  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
+  expect(printCheckoutInformation).toHaveBeenCalledWith({});
 });
 
 test("start with parent dependencies with archive artifacts with path", async () => {
@@ -371,7 +385,8 @@ test("start with parent dependencies with archive artifacts with path", async ()
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    }
+    },
+    checkoutInfo: {}
   };
   const workflowInformation = {
     id: "build-chain",
@@ -454,6 +469,8 @@ test("start with parent dependencies with archive artifacts with path", async ()
     path: "whateverpath",
     name: "artifactParent"
   });
+  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
+  expect(printCheckoutInformation).toHaveBeenCalledWith({});
 });
 
 test("start with parent dependencies with archive artifacts one of them without path", async () => {
@@ -470,7 +487,8 @@ test("start with parent dependencies with archive artifacts one of them without 
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    }
+    },
+    checkoutInfo: {}
   };
   const workflowInformation = {
     id: "build-chain",
@@ -548,4 +566,6 @@ test("start with parent dependencies with archive artifacts one of them without 
     path: "whateverpath",
     name: "artifactParent"
   });
+  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
+  expect(printCheckoutInformation).toHaveBeenCalledWith({});
 });

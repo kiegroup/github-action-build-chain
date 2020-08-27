@@ -372,7 +372,7 @@ The idea of the field `archive-artifacts-dependencies` is to allow to define fro
         ...
         ...
         archive-artifacts-path: '~/new/**/*'
-        archive-artifacts-path: 'none'
+        archive-artifacts-dependencies: 'none'
 ```
 
 ```yaml
@@ -381,7 +381,7 @@ The idea of the field `archive-artifacts-dependencies` is to allow to define fro
         ...
         ...
         archive-artifacts-path: '~/new/**/*'
-        archive-artifacts-path: 'all'
+        archive-artifacts-dependencies: 'all'
 ```
 ```yaml
   - uses: kiegroup/github-action-build-chain
@@ -389,7 +389,7 @@ The idea of the field `archive-artifacts-dependencies` is to allow to define fro
         ...
         ...
         archive-artifacts-path: '~/new/**/*'
-        archive-artifacts-path: |
+        archive-artifacts-dependencies: |
           projectX
           projectY
 ```

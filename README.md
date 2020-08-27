@@ -362,9 +362,10 @@ You can use `~` in the path input as a substitute for `$HOME`. Basic tilde expan
 ### archive-artifacts-dependencies usage
 
 The idea of the field `archive-artifacts-dependencies` is to allow to define from the project triggering the job which artifacts you want to archive from the whole chain. Possible values:
-* `none` no artifact from its dependencies will be uploaded, no matter what the dependencies projects define.
-* `all` all artifacts from its dependencies will be uploaded, dependending on what the dependencies define.
-* `list of projects` define which of the projects in the chain will be treated to upload artifacts, dependending on what the dependencies define.
+
+- `none` no artifact from its dependencies will be uploaded, no matter what the dependencies projects define.
+- `all` all artifacts from its dependencies will be uploaded, dependending on what the dependencies define.
+- `list of projects` define which of the projects in the chain will be treated to upload artifacts, dependending on what the dependencies define.
 
 ```yaml
   - uses: kiegroup/github-action-build-chain
@@ -383,6 +384,7 @@ The idea of the field `archive-artifacts-dependencies` is to allow to define fro
         archive-artifacts-path: '~/new/**/*'
         archive-artifacts-dependencies: 'all'
 ```
+
 ```yaml
   - uses: kiegroup/github-action-build-chain
       with:

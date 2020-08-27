@@ -90,6 +90,7 @@ async function checkoutProject(
       throw err;
     }
   }
+  context.checkoutInfo[project] = checkoutInfo;
   return checkoutInfo;
 }
 
@@ -129,6 +130,7 @@ async function getCheckoutInfo(
         project: forkedProjectName,
         group: sourceGroup,
         branch: sourceBranch,
+        targetGroup,
         targetBranch,
         merge: await hasPullRequest(
           context.octokit,
@@ -148,6 +150,7 @@ async function getCheckoutInfo(
         project: targetProject,
         group: targetGroup,
         branch: sourceBranch,
+        targetGroup,
         targetBranch,
         merge: await hasPullRequest(
           context.octokit,
@@ -167,6 +170,7 @@ async function getCheckoutInfo(
         project: targetProject,
         group: targetGroup,
         branch: targetBranch,
+        targetGroup,
         targetBranch,
         merge: false
       }

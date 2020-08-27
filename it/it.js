@@ -20,7 +20,7 @@ async function main() {
     process.env.URL,
     process.env
   );
-  const context = { token, octokit, config };
+  const context = { token, octokit, config, checkoutInfo: {} };
   await executeGitHubAction(context);
 }
 

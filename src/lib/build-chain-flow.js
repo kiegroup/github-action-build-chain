@@ -52,6 +52,7 @@ async function start(context) {
   );
   core.startGroup(`Archiving artifacts...`);
   await archiveArtifacts(
+    workflowInformation,
     parentWorkflowInformationArray.concat(workflowInformation)
   );
   core.endGroup();
@@ -76,10 +77,25 @@ async function executeBuildCommandsWorkflowInformation(
   );
 }
 
-async function archiveArtifacts(workflowInformationArray) {
-  const wiArrayWithArtifacts = workflowInformationArray.filter(
-    wi => wi.archiveArtifacts && wi.archiveArtifacts.path
+async function archiveArtifacts(
+  workflowInformationTriggering,
+  workflowInformationArray
+) {
+  const archiveDependencies =
+    workflowInformationTriggering.archiveArtifacts.dependencies;
+  logger.info(
+    `${archiveDependencies} parent artifact(s) will be treated to be uploaded`
   );
+  const wiArrayWithArtifacts =
+    archiveDependencies === "none"
+      ? [workflowInformationTriggering].filter(wi => wi.archiveArtifacts.path)
+      : workflowInformationArray.filter(
+          wi =>
+            wi.archiveArtifacts.path &&
+            (archiveDependencies === "all" ||
+              archiveDependencies.includes(wi.project) ||
+              wi.project === workflowInformationTriggering.project)
+        );
   logger.info(
     wiArrayWithArtifacts.length > 0
       ? `Archiving artifacts for ${wiArrayWithArtifacts.map(wi => wi.project)}`

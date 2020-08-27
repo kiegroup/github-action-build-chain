@@ -1,4 +1,5 @@
 const { checkoutProject, getDir } = require("./build-chain-flow-helper");
+const { printCheckoutInformation } = require("./summary");
 const {
   readWorkflowInformation,
   checkoutParentsAndGetWorkflowInformation
@@ -44,6 +45,10 @@ async function start(context) {
       workflowInformation.parentDependencies
     )
   ).reverse();
+
+  core.startGroup(`Checkout Summary...`);
+  printCheckoutInformation(context.checkoutInfo);
+  core.endGroup();
 
   await executeBuildCommandsWorkflowInformation(
     context.config.rootFolder,

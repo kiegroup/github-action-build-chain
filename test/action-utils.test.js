@@ -1,67 +1,21 @@
-const {
-  getChildDependencies,
-  getParentDependencies,
-  getBuildCommand,
-  getWorkflowfileName,
-  getMatrixVariables
-} = require("../src/lib/action-utils");
-jest.mock("@actions/core", () => ({
-  getInput: param => {
-    return param === "parent-dependencies"
-      ? "lienzo-core, lienzo-test,drools"
-      : param === "child-dependencies"
-      ? "appformer"
-      : param.includes("build-command")
-      ? "command 1 x | command 2"
-      : param.includes("workflow-file-name")
-      ? "pull_request.yml"
-      : param.includes("matrix-variables")
-      ? "matrix.key1:${{ matrix.value1 }}, matrix.key2:${{ matrix.value2 }},matrix.key3: ${{ matrix.value3 }}"
-      : undefined;
-  }
-}));
+const { getWorkflowfileName } = require("../src/lib/action-utils");
 
-test("getParentDependencies", () => {
-  // Act
-  const result = getParentDependencies();
+const { getInput } = require("@actions/core");
+jest.mock("@actions/core");
 
-  // Assert
-  expect(result).toEqual({ "lienzo-core": {}, "lienzo-test": {}, drools: {} });
-});
-
-test("getChildDependencies", () => {
-  // Act
-  const result = getChildDependencies();
-
-  // Assert
-  expect(result).toEqual({ appformer: {} });
-});
-
-test("getBuildCommand", () => {
-  // Act
-  const result = getBuildCommand();
-
-  // Assert
-  expect(result).toEqual(["command 1 x", "command 2"]);
+afterEach(() => {
+  jest.clearAllMocks();
 });
 
 test("getWorkflowfileName", () => {
+  // Arrange
+  const expectedResult = "pull_request.yml";
+  getInput.mockImplementationOnce(param =>
+    param === "workflow-file-name" ? expectedResult : undefined
+  );
   // Act
   const result = getWorkflowfileName();
 
-  // Assert
-  expect(result).toEqual("pull_request.yml");
-});
-
-test("getMatrixVariables", () => {
-  // Arrange
-  const expectedResult = {
-    "matrix.key1": "${{ matrix.value1 }}",
-    "matrix.key2": "${{ matrix.value2 }}",
-    "matrix.key3": "${{ matrix.value3 }}"
-  };
-  // Act
-  const result = getMatrixVariables();
   // Assert
   expect(result).toEqual(expectedResult);
 });

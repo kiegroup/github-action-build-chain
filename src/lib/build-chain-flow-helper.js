@@ -7,18 +7,35 @@ const {
 } = require("./git");
 const { logger } = require("./common");
 
-async function checkoutDependencies(context, dependencies) {
+async function checkoutDependencies(
+  context,
+  dependencies,
+  currentTargetBranch
+) {
+  const result = {};
   for (const dependencyKey of Object.keys(dependencies)) {
-    await checkouProject(context, dependencyKey, dependencies[dependencyKey]);
+    result[dependencyKey] = await checkoutProject(
+      context,
+      dependencyKey,
+      dependencies[dependencyKey],
+      currentTargetBranch
+    );
   }
+  return result;
 }
 
-async function checkouProject(context, project, dependencyInformation) {
+async function checkoutProject(
+  context,
+  project,
+  dependencyInformation,
+  currentTargetBranch
+) {
   const dir = getDir(context.config.rootFolder, project);
   const checkoutInfo = await getCheckoutInfo(
     context,
     dependencyInformation.group,
     project,
+    currentTargetBranch,
     dependencyInformation.mapping
   );
   if (checkoutInfo == undefined) {
@@ -29,13 +46,13 @@ async function checkouProject(context, project, dependencyInformation) {
 
   if (checkoutInfo.merge) {
     logger.info(
-      `Merging ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${context.config.github.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      `Merging ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
     );
     try {
       await clone(
         `${context.config.github.serverUrl}/${dependencyInformation.group}/${project}`,
         dir,
-        context.config.github.targetBranch
+        checkoutInfo.targetBranch
       );
     } catch (err) {
       logger.error(
@@ -73,15 +90,23 @@ async function checkouProject(context, project, dependencyInformation) {
       throw err;
     }
   }
+  context.checkoutInfo[project] = checkoutInfo;
+  return checkoutInfo;
 }
 
-async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
+async function getCheckoutInfo(
+  context,
+  targetGroup,
+  targetProject,
+  currentTargetBranch,
+  mapping
+) {
   const sourceGroup = context.config.github.sourceGroup;
   const sourceBranch = context.config.github.sourceBranch;
   const targetBranch =
-    mapping && mapping.source === context.config.github.targetBranch
+    mapping && mapping.source === currentTargetBranch
       ? mapping.target
-      : context.config.github.targetBranch;
+      : currentTargetBranch;
   const forkedProjectName = await getForkedProjectName(
     context.octokit,
     targetGroup,
@@ -105,6 +130,8 @@ async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
         project: forkedProjectName,
         group: sourceGroup,
         branch: sourceBranch,
+        targetGroup,
+        targetBranch,
         merge: await hasPullRequest(
           context.octokit,
           targetGroup,
@@ -123,6 +150,8 @@ async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
         project: targetProject,
         group: targetGroup,
         branch: sourceBranch,
+        targetGroup,
+        targetBranch,
         merge: await hasPullRequest(
           context.octokit,
           targetGroup,
@@ -141,6 +170,8 @@ async function getCheckoutInfo(context, targetGroup, targetProject, mapping) {
         project: targetProject,
         group: targetGroup,
         branch: targetBranch,
+        targetGroup,
+        targetBranch,
         merge: false
       }
     : undefined;
@@ -162,13 +193,13 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
     );
     return !forkedProject || !forkedProject.name ? project : forkedProject.name;
   } else {
-    return owner;
+    return project;
   }
 }
 
 module.exports = {
   checkoutDependencies,
-  checkouProject,
+  checkoutProject,
   getCheckoutInfo,
   getDir
 };

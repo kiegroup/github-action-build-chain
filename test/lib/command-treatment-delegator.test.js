@@ -64,3 +64,11 @@ test("treatCommand no command", () => {
   // Assert
   expect(result).toEqual("same command");
 });
+
+test("treatCommand echo ", () => {
+  // Act
+  const result = treatCommand('echo "command 1"');
+
+  // Assert
+  expect(result).toEqual("same command");
+});

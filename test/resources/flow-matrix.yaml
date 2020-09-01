@@ -10,11 +10,27 @@ jobs:
         id: build-chain
         uses: kiegroup/github-action-build-chain@master
         with:
-          parent-dependencies: "lienzo-core,groupx/errai,groupy/projectx@${{ sourceBranch }}:master"
-          child-dependencies: "appformer@${{ sourceBranch }}:${{ matrix.targetBranch }},lienzo-tests"
-          build-command: "echo ${{ os }} | echo 'without matrix'"
-          build-command-upstream: "echo ${{ os }} | echo ${{ matrix.version }} | echo 'without matrix'"
-          build-command-downstream: "echo 'without matrix'| echo ${{ os }}"
-          matrix-variables: "os: ${{ matrix.os }}, matrix.version: ${{ matrix.version }}, sourceBranch: ${{ matrix.sourceBranch }}, matrix.targetBranch: ${{ matrix.sourceBranch }}"
+          parent-dependencies: |
+            lienzo-core
+            groupx/errai
+            groupy/projectx@${{ sourceBranch }}:master
+          child-dependencies: |
+            appformer@${{ sourceBranch }}:${{ matrix.targetBranch }}
+            lienzo-tests
+          build-command: |
+            echo ${{ os }}
+            echo 'without matrix'
+          build-command-upstream: |
+            echo ${{ os }}
+            echo ${{ matrix.version }}
+            echo 'without matrix'
+          build-command-downstream: |
+            echo 'without matrix'
+            echo ${{ os }}
+          matrix-variables: |
+            os: ${{ matrix.os }}
+            matrix.version: ${{ matrix.version }}
+            sourceBranch: ${{ matrix.sourceBranch }}
+            matrix.targetBranch: ${{ matrix.sourceBranch }}
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

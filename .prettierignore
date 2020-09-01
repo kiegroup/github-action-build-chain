@@ -1,1 +1,3 @@
 *.diff
+dist/index.js
+locally_execution_*/**

@@ -55,7 +55,7 @@
   "jest": {
     "testEnvironment": "node",
     "modulePathIgnorePatterns": [
-      "locally_execution_2020827/"
+      "locally_execution/"
     ]
   },
   "prettier": {

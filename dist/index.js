@@ -4909,6 +4909,7 @@ async function createConfig(eventData, rootFolder, env = {}) {
 async function createConfigLocally(octokit, eventUrl, env = {}) {
   const event = await getEvent(octokit, eventUrl);
   const m = eventUrl.match(GIT_URL_REGEXP);
+  console.log("eventUrl", eventUrl, m);
   env["GITHUB_SERVER_URL"] = m[1];
   env["GITHUB_ACTION"] = undefined;
   env["GITHUB_ACTOR"] = event.pull_request.head.user.login;
@@ -4919,7 +4920,7 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
   var today = new Date();
   const config = await createConfig(
     event,
-    `locally_execution_${today.getFullYear()}${
+    `locally_execution/${m[2]}_${m[3]}_${m[5]}/${today.getFullYear()}${
       today.getMonth() + 1
     }${today.getDate()}`,
     env
@@ -25212,7 +25213,7 @@ exports.SearchState = SearchState;
 /* 731 */
 /***/ (function(module) {
 
-module.exports = {"name":"build-chain-action","version":"0.0.1","description":"GitHub action to define action chains","main":"src/lib/api.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":true,"bin":{"build-chain-action":"./bin/build-chain.js"},"scripts":{"test":"jest","it":"node it/it.js","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@octokit/rest":"^17.6.0","argparse":"^1.0.7","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","dotenv":"^8.2.0","eslint":"^7.5.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution_2020827/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
+module.exports = {"name":"build-chain-action","version":"0.0.1","description":"GitHub action to define action chains","main":"src/lib/api.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":true,"bin":{"build-chain-action":"./bin/build-chain.js"},"scripts":{"test":"jest","it":"node it/it.js","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@octokit/rest":"^17.6.0","argparse":"^1.0.7","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","dotenv":"^8.2.0","eslint":"^7.5.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
 
 /***/ }),
 /* 732 */,

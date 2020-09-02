@@ -39,6 +39,7 @@ async function createConfig(eventData, rootFolder, env = {}) {
 async function createConfigLocally(octokit, eventUrl, env = {}) {
   const event = await getEvent(octokit, eventUrl);
   const m = eventUrl.match(GIT_URL_REGEXP);
+  console.log("eventUrl", eventUrl, m);
   env["GITHUB_SERVER_URL"] = m[1];
   env["GITHUB_ACTION"] = undefined;
   env["GITHUB_ACTOR"] = event.pull_request.head.user.login;
@@ -49,7 +50,7 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
   var today = new Date();
   const config = await createConfig(
     event,
-    `locally_execution_${today.getFullYear()}${
+    `locally_execution/${m[2]}_${m[3]}_${m[5]}/${today.getFullYear()}${
       today.getMonth() + 1
     }${today.getDate()}`,
     env

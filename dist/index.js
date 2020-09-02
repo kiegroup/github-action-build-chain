@@ -4909,7 +4909,6 @@ async function createConfig(eventData, rootFolder, env = {}) {
 async function createConfigLocally(octokit, eventUrl, env = {}) {
   const event = await getEvent(octokit, eventUrl);
   const m = eventUrl.match(GIT_URL_REGEXP);
-  console.log("eventUrl", eventUrl, m);
   env["GITHUB_SERVER_URL"] = m[1];
   env["GITHUB_ACTION"] = undefined;
   env["GITHUB_ACTOR"] = event.pull_request.head.user.login;

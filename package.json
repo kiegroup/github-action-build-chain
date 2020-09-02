@@ -21,7 +21,8 @@
     "ncc-build": "ncc build bin/build-chain.js"
   },
   "git-pre-hooks": {
-    "pre-commit": "npm run prettier && npm run ncc-build && git add dist/index.js"
+    "pre-commit": "npm run prettier && npm run ncc-build && git add dist/index.js",
+    "pre-push": "npm ci"
   },
   "dependencies": {
     "@actions/artifact": "^0.3.5",
@@ -54,7 +55,7 @@
   "jest": {
     "testEnvironment": "node",
     "modulePathIgnorePatterns": [
-      "locally_execution/**"
+      "locally_execution/"
     ]
   },
   "prettier": {

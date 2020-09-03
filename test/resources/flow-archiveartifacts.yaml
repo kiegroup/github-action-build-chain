@@ -28,5 +28,6 @@ jobs:
           archive-artifacts-name: "namex"
           archive-artifacts-path: "pathsx"
           archive-artifacts-if-no-files-found: "warn"
+          workflow-file-name: "flow-archiveartifacts.yaml"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

@@ -29,8 +29,8 @@ test("start no parent dependencies", async () => {
   const context = {
     config: {
       github: {
-        jobName: "job-id",
-        workflow: "main.yaml",
+        jobId: "job-id",
+        flowFile: "main.yaml",
         group: "defaultGroup",
         project: "projectX",
         sourceBranch: "sBranch",
@@ -38,8 +38,7 @@ test("start no parent dependencies", async () => {
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    },
-    checkoutInfo: {}
+    }
   };
   const workflowInformation = {
     id: "build-chain",
@@ -47,7 +46,7 @@ test("start no parent dependencies", async () => {
     project: "projectX",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command 1", "command 2"],
@@ -79,7 +78,7 @@ test("start no parent dependencies", async () => {
   expect(readWorkflowInformation).toHaveBeenCalledWith(
     "projectX",
     "job-id",
-    "main.yaml",
+    ".github/workflows/main.yaml",
     "defaultGroup",
     { key1: "value1", key2: "value2" },
     "folder/projectX"
@@ -91,7 +90,7 @@ test("start no parent dependencies", async () => {
     [context.config.github.project],
     context.config.github.project,
     context.config.github.targetBranch,
-    workflowInformation.parentDependencies
+    workflowInformation
   );
 
   expect(getDir).toHaveBeenCalledTimes(2);
@@ -116,8 +115,8 @@ test("start no parent dependencies archive artifacts", async () => {
   const context = {
     config: {
       github: {
-        jobName: "job-id",
-        workflow: "main.yaml",
+        jobId: "job-id",
+        flowFile: "main.yaml",
         group: "defaultGroup",
         project: "projectX",
         sourceBranch: "sBranch",
@@ -125,8 +124,7 @@ test("start no parent dependencies archive artifacts", async () => {
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    },
-    checkoutInfo: {}
+    }
   };
   const workflowInformation = {
     id: "build-chain",
@@ -134,7 +132,7 @@ test("start no parent dependencies archive artifacts", async () => {
     project: "projectX",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command 1"],
@@ -184,7 +182,7 @@ test("start no parent dependencies archive artifacts", async () => {
     [context.config.github.project],
     context.config.github.project,
     context.config.github.targetBranch,
-    workflowInformation.parentDependencies
+    workflowInformation
   );
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith({});
@@ -195,8 +193,8 @@ test("start with parent dependencies without upstream command", async () => {
   const context = {
     config: {
       github: {
-        jobName: "job-id",
-        workflow: "main.yaml",
+        jobId: "job-id",
+        flowFile: "main.yaml",
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
@@ -204,8 +202,7 @@ test("start with parent dependencies without upstream command", async () => {
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    },
-    checkoutInfo: {}
+    }
   };
   const workflowInformation = {
     id: "build-chain",
@@ -213,7 +210,7 @@ test("start with parent dependencies without upstream command", async () => {
     project: "projectXChild",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-child"],
@@ -230,7 +227,7 @@ test("start with parent dependencies without upstream command", async () => {
     project: "projectXParent",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-parent"],
@@ -263,7 +260,7 @@ test("start with parent dependencies without upstream command", async () => {
   expect(readWorkflowInformation).toHaveBeenCalledWith(
     "projectXChild",
     "job-id",
-    "main.yaml",
+    ".github/workflows/main.yaml",
     "defaultGroup",
     { key1: "value1", key2: "value2" },
     "folder/projectXChild"
@@ -275,7 +272,7 @@ test("start with parent dependencies without upstream command", async () => {
     [context.config.github.project],
     context.config.github.project,
     context.config.github.targetBranch,
-    workflowInformation.parentDependencies
+    workflowInformation
   );
 
   expect(getDir).toHaveBeenCalledTimes(3);
@@ -300,8 +297,8 @@ test("start with parent dependencies with upstream command", async () => {
   const context = {
     config: {
       github: {
-        jobName: "job-id",
-        workflow: "main.yaml",
+        jobId: "job-id",
+        flowFile: "main.yaml",
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
@@ -309,8 +306,7 @@ test("start with parent dependencies with upstream command", async () => {
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    },
-    checkoutInfo: {}
+    }
   };
   const workflowInformation = {
     id: "build-chain",
@@ -318,7 +314,7 @@ test("start with parent dependencies with upstream command", async () => {
     project: "projectXChild",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-child"],
@@ -335,7 +331,7 @@ test("start with parent dependencies with upstream command", async () => {
     project: "projectXParent",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-parent"],
@@ -371,7 +367,7 @@ test("start with parent dependencies with upstream command", async () => {
     [context.config.github.project],
     context.config.github.project,
     context.config.github.targetBranch,
-    workflowInformation.parentDependencies
+    workflowInformation
   );
 
   expect(execute).toHaveBeenCalledWith(
@@ -393,8 +389,8 @@ test("start with parent dependencies with archive artifacts with path", async ()
   const context = {
     config: {
       github: {
-        jobName: "job-id",
-        workflow: "main.yaml",
+        jobId: "job-id",
+        flowFile: "main.yaml",
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
@@ -402,8 +398,7 @@ test("start with parent dependencies with archive artifacts with path", async ()
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    },
-    checkoutInfo: {}
+    }
   };
   const workflowInformation = {
     id: "build-chain",
@@ -411,7 +406,7 @@ test("start with parent dependencies with archive artifacts with path", async ()
     project: "projectXChild",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-child"],
@@ -430,7 +425,7 @@ test("start with parent dependencies with archive artifacts with path", async ()
     project: "projectXParent",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-parent"],
@@ -476,7 +471,7 @@ test("start with parent dependencies with archive artifacts with path", async ()
     [context.config.github.project],
     context.config.github.project,
     context.config.github.targetBranch,
-    workflowInformation.parentDependencies
+    workflowInformation
   );
 
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(2);
@@ -497,8 +492,8 @@ test("start with parent dependencies with archive artifacts with path dependenci
   const context = {
     config: {
       github: {
-        jobName: "job-id",
-        workflow: "main.yaml",
+        jobId: "job-id",
+        flowFile: "main.yaml",
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
@@ -514,7 +509,7 @@ test("start with parent dependencies with archive artifacts with path dependenci
     project: "projectXChild",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-child"],
@@ -533,7 +528,7 @@ test("start with parent dependencies with archive artifacts with path dependenci
     project: "projectXParent",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-parent"],
@@ -579,7 +574,7 @@ test("start with parent dependencies with archive artifacts with path dependenci
     [context.config.github.project],
     context.config.github.project,
     context.config.github.targetBranch,
-    workflowInformation.parentDependencies
+    workflowInformation
   );
 
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(2);
@@ -600,8 +595,8 @@ test("start with parent dependencies with archive artifacts with path dependenci
   const context = {
     config: {
       github: {
-        jobName: "job-id",
-        workflow: "main.yaml",
+        jobId: "job-id",
+        flowFile: "main.yaml",
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
@@ -609,8 +604,7 @@ test("start with parent dependencies with archive artifacts with path dependenci
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    },
-    checkoutInfo: {}
+    }
   };
   const workflowInformation = {
     id: "build-chain",
@@ -618,7 +612,7 @@ test("start with parent dependencies with archive artifacts with path dependenci
     project: "projectXChild",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-child"],
@@ -637,7 +631,7 @@ test("start with parent dependencies with archive artifacts with path dependenci
     project: "projectXParent",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-parent"],
@@ -683,7 +677,7 @@ test("start with parent dependencies with archive artifacts with path dependenci
     [context.config.github.project],
     context.config.github.project,
     context.config.github.targetBranch,
-    workflowInformation.parentDependencies
+    workflowInformation
   );
 
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
@@ -701,8 +695,8 @@ test("start with parent dependencies with archive artifacts one of them without 
   const context = {
     config: {
       github: {
-        jobName: "job-id",
-        workflow: "main.yaml",
+        jobId: "job-id",
+        flowFile: "main.yaml",
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
@@ -710,8 +704,7 @@ test("start with parent dependencies with archive artifacts one of them without 
       },
       rootFolder: "folder",
       matrixVariables: { key1: "value1", key2: "value2" }
-    },
-    checkoutInfo: {}
+    }
   };
   const workflowInformation = {
     id: "build-chain",
@@ -719,7 +712,7 @@ test("start with parent dependencies with archive artifacts one of them without 
     project: "projectXChild",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-child"],
@@ -737,7 +730,7 @@ test("start with parent dependencies with archive artifacts one of them without 
     project: "projectXParent",
     config: {
       github: {
-        workflow: "main.yaml"
+        flowFile: "main.yaml"
       }
     },
     buildCommands: ["command-parent"],
@@ -783,7 +776,7 @@ test("start with parent dependencies with archive artifacts one of them without 
     [context.config.github.project],
     context.config.github.project,
     context.config.github.targetBranch,
-    workflowInformation.parentDependencies
+    workflowInformation
   );
 
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);

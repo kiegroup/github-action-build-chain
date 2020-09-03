@@ -6,6 +6,7 @@ const {
   getForkedProject
 } = require("./git");
 const { logger } = require("./common");
+const { saveCheckoutInfo } = require("./context");
 
 async function checkoutDependencies(
   context,
@@ -90,7 +91,7 @@ async function checkoutProject(
       throw err;
     }
   }
-  context.checkoutInfo[project] = checkoutInfo;
+  saveCheckoutInfo(context, project, checkoutInfo);
   return checkoutInfo;
 }
 

@@ -57,7 +57,7 @@ async function main() {
     config = await createConfig(eventData, undefined, process.env);
   }
 
-  const context = { token, octokit, config, checkoutInfo: {} };
+  const context = { token, octokit, config };
   await executeGitHubAction(context);
 }
 

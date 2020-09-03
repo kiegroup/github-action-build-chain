@@ -9,6 +9,7 @@ const { execute } = require("./command");
 const { treatCommand } = require("./command/command-treatment-delegator");
 const core = require("@actions/core");
 const uploadArtifacts = require("./artifacts/upload-artifacts");
+const { getCheckoutInfo } = require("./context");
 
 async function start(context) {
   core.startGroup(
@@ -28,8 +29,8 @@ async function start(context) {
   );
   const workflowInformation = readWorkflowInformation(
     context.config.github.project,
-    context.config.github.jobName,
-    context.config.github.workflow,
+    context.config.github.jobId,
+    `.github/workflows/${context.config.github.flowFile}`,
     context.config.github.group,
     context.config.matrixVariables,
     projectFolder
@@ -42,12 +43,12 @@ async function start(context) {
       [context.config.github.project],
       context.config.github.project,
       context.config.github.targetBranch,
-      workflowInformation.parentDependencies
+      workflowInformation
     )
   ).reverse();
 
   core.startGroup(`Checkout Summary...`);
-  printCheckoutInformation(context.checkoutInfo);
+  printCheckoutInformation(getCheckoutInfo(context));
   core.endGroup();
 
   await executeBuildCommandsWorkflowInformation(

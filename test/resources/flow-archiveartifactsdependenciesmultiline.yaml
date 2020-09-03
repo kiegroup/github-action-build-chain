@@ -31,5 +31,6 @@ jobs:
             none
             all
             projectB
+          workflow-file-name: "flow-archiveartifactsdependenciesmultiline.yaml"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

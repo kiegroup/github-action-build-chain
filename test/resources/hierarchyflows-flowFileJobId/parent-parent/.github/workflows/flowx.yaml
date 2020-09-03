@@ -1,0 +1,16 @@
+on: [pull_request]
+
+jobs:
+  build-chain-2:
+    runs-on: ubuntu-latest
+    name: Build Chain Flow
+    steps:
+      - name: Build Chain
+        id: build-chain
+        uses: kiegroup/github-action-build-chain@master
+        with:
+          child-dependencies: "parent"
+          build-command: 'echo "parent-parent"'
+          workflow-file-name: "flowx.yaml"
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

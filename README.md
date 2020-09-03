@@ -60,10 +60,12 @@ to your existing yaml flow definition or to create a new one. Do the same for th
 
 See [action.yml](action.yml)
 
-- **parent-dependencies** (optional): `[group/]projectName[@branchSource:branchTarget]` The parent projects dependencies to depend on. You can defined several depencies thanks to the [yaml block scalar functionality](https://yaml.org/spec/1.2/spec.html#Block). They are basically the projects to depend on.
+- **parent-dependencies** (optional): `[group/]projectName[@branchSource:branchTarget][|[flowfile.yaml][:jobId]]]` The parent projects dependencies to depend on. You can defined several depencies thanks to the [yaml block scalar functionality](https://yaml.org/spec/1.2/spec.html#Block). They are basically the projects to depend on.
   - `group/`: (optional) The github group where the project is, otherwise it will be taken from same group.
   - `projectName`: (mandatory) The project name.
   - `@branchSource:branchTarget`: (optional) It is possible to map branches for projects. `projectx@master:7.x` would map whatever pull request is performed for `master` branch to `projectX:7.x`.
+  - `|flowfile.yaml`: (optional) in case the dependency has a different flow file name.
+  - `|:jobId`: (optional) in case the dependency has a different jobId.
 
 > Example:
 >
@@ -74,12 +76,20 @@ See [action.yml](action.yml)
 >   groupX/projectB
 >   projectC@master:7.x
 >   groupy/projectD@8.0.0:9.0.1
+>   groupy/projectD|flow.yml:jobIdX
+>   groupy/projectD|:jobIdX
+>   groupy/projectD|flow.yml
+>   groupy/projectD@8.0.0:9.0.1|flow.yml:jobIdX
+>   groupy/projectD@8.0.0:9.0.1|:jobIdX
+>   groupy/projectD@8.0.0:9.0.1|flow.yml
 > ```
 
-- **child-dependencies** (optional): `[group/]projectName[@branchSource:branchTarget]` The child projects dependencies that depends on this project. You can defined several depencies thanks to the [yaml block scalar functionality](https://yaml.org/spec/1.2/spec.html#Block).
+- **child-dependencies** (optional): `[group/]projectName[@branchSource:branchTarget][|[flowfile.yaml][:jobId]]]` The child projects dependencies that depends on this project. You can defined several depencies thanks to the [yaml block scalar functionality](https://yaml.org/spec/1.2/spec.html#Block).
   - `group/`: (optional) The github group where the project is, otherwise it will be taken from the same group.
   - `projectName`: (mandatory) The project name.
   - `@branchSource:branchTarget`: (optional) It is possible to map branches for projects. `projectx@master:7.x` would map whatever pull request is performed for `master` branch to `projectX:7.x`.
+  - `|flowfile.yaml`: (optional) in case the dependency has a different flow file name.
+  - `|:jobId`: (optional) in case the dependency has a different jobId.
 
 > Examples:
 >
@@ -90,6 +100,12 @@ See [action.yml](action.yml)
 >   groupX/projectB
 >   projectC@master:7.x
 >   groupy/projectD@8.0.0:9.0.1
+>   groupy/projectD|flow.yml:jobIdX
+>   groupy/projectD|:jobIdX
+>   groupy/projectD|flow.yml
+>   groupy/projectD@8.0.0:9.0.1|flow.yml:jobIdX
+>   groupy/projectD@8.0.0:9.0.1|:jobIdX
+>   groupy/projectD@8.0.0:9.0.1|flow.yml
 > ```
 
 - **build-command** (required): `command1[\ncommand2\ncommand3]` The command(s) to build. You can defined several commands thanks to the [yaml block scalar functionality](https://yaml.org/spec/1.2/spec.html#Block).

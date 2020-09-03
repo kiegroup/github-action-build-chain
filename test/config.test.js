@@ -57,11 +57,11 @@ test("createConfig", async () => {
       project: "github-action-build-chain",
       sourceBranch: "githubHeadRef",
       targetBranch: "githubBaseRef",
-      jobName: "githubJob",
+      jobId: "githubJob",
       ref: undefined,
       sourceRepository: "group/projectx",
       repository: "kiegroup/github-action-build-chain",
-      workflow: ".github/workflows/pull_request.yml",
+      flowFile: "pull_request.yml",
       workflowName: "build chain name"
     },
     rootFolder: "folder"

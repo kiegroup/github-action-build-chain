@@ -31,5 +31,6 @@ jobs:
             path/output/test-results
             !path/**/*.tmp
           archive-artifacts-if-no-files-found: "warn"
+          workflow-file-name: "flow-multiline.yaml"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

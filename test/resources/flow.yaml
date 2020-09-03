@@ -25,5 +25,6 @@ jobs:
           build-command-downstream: |
             mvn clean
             mvn -e -nsu -fae -T1C clean install -Dfull -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -DjvmArgs=-Xmx4g
+          workflow-file-name: "flow.yaml"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

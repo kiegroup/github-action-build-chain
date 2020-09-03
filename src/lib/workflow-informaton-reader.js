@@ -11,30 +11,42 @@ async function checkoutParentsAndGetWorkflowInformation(
   projectList,
   project,
   currentTargetBranch,
-  parentDependencies
+  workflowInformation
 ) {
   if (!projectList[project]) {
     projectList.push(project);
-    if (parentDependencies && Object.keys(parentDependencies).length > 0) {
+    if (
+      workflowInformation.parentDependencies &&
+      Object.keys(workflowInformation.parentDependencies).length > 0
+    ) {
       core.startGroup(
-        `Checking out dependencies [${Object.keys(parentDependencies).join(
-          ", "
-        )}] for project ${project}`
+        `Checking out dependencies [${Object.keys(
+          workflowInformation.parentDependencies
+        ).join(", ")}] for project ${project}`
       );
       const checkoutInfos = await checkoutDependencies(
         context,
-        parentDependencies,
+        workflowInformation.parentDependencies,
         currentTargetBranch
       );
       core.endGroup();
-      for (const parentProject of Object.keys(parentDependencies).filter(
-        parentDependency => parentDependency !== null && parentDependency !== ""
+      for (const [parentProject, parentDependency] of Object.entries(
+        workflowInformation.parentDependencies
+      ).filter(
+        ([parentDependencyKey]) =>
+          parentDependencyKey !== null && parentDependencyKey !== ""
       )) {
         const dir = getDir(context.config.rootFolder, parentProject);
         const parentWorkflowInformation = readWorkflowInformation(
           parentProject,
-          context.config.github.jobName,
-          context.config.github.workflow,
+          parentDependency.jobId
+            ? parentDependency.jobId
+            : workflowInformation.jobId,
+          `.github/workflows/${
+            parentDependency.flowFile
+              ? parentDependency.flowFile
+              : workflowInformation.flowFile
+          }`,
           context.config.github.group,
           context.config.matrixVariables,
           dir
@@ -47,12 +59,16 @@ async function checkoutParentsAndGetWorkflowInformation(
               projectList,
               parentProject,
               checkoutInfos[parentProject].targetBranch,
-              parentWorkflowInformation.parentDependencies
+              parentWorkflowInformation
             )
           );
         } else {
           logger.warn(
-            `workflow information ${context.config.github.workflow} not present for ${parentProject}.`
+            `workflow information ${
+              parentDependency.flowFile
+                ? parentDependency.flowFile
+                : context.config.github.flowFile
+            } not present for ${parentProject}.`
           );
           return [];
         }
@@ -64,7 +80,7 @@ async function checkoutParentsAndGetWorkflowInformation(
 
 function readWorkflowInformation(
   project,
-  triggeringJobName,
+  jobId,
   workflowFilePath,
   defaultGroup,
   matrixVariables,
@@ -77,7 +93,7 @@ function readWorkflowInformation(
   }
   return parseWorkflowInformation(
     project,
-    triggeringJobName,
+    jobId,
     getYamlFileContent(filePath),
     defaultGroup,
     matrixVariables
@@ -86,14 +102,18 @@ function readWorkflowInformation(
 
 function parseWorkflowInformation(
   project,
-  jobName,
+  jobId,
   workflowData,
   defaultGroup,
   matrixVariables
 ) {
-  assert(workflowData.jobs[jobName], `The job id '${jobName}' does not exist`);
-  const buildChainStep = workflowData.jobs[jobName].steps.find(
+  assert(workflowData.jobs[jobId], `The job id '${jobId}' does not exist`);
+  const buildChainStep = workflowData.jobs[jobId].steps.find(
     step => step.uses && step.uses.includes("github-action-build-chain")
+  );
+  assert(
+    buildChainStep.with["workflow-file-name"],
+    `The workflow file name does not exist for '${project}' and it's mandatory`
   );
   buildChainStep.with = Object.entries(buildChainStep.with)
     .filter(([key]) => key !== "matrix-variables")
@@ -120,7 +140,9 @@ function parseWorkflowInformation(
       buildChainStep.with["parent-dependencies"],
       defaultGroup
     ),
-    archiveArtifacts: getArchiveArtifacts(buildChainStep, project)
+    archiveArtifacts: getArchiveArtifacts(buildChainStep, project),
+    jobId,
+    flowFile: buildChainStep.with["workflow-file-name"]
   };
 }
 
@@ -191,28 +213,47 @@ function dependenciesToObject(dependencies, defaultGroup) {
     ? dependencies
         .split("\n")
         .filter(line => line)
-        .forEach(item => {
-          const dependency = item.trim().includes("@")
-            ? item.trim().split("@")
-            : [item, undefined];
-          const groupProject = dependency[0].includes("/")
-            ? dependency[0].trim().split("/")
-            : [defaultGroup, dependency[0]];
-
-          dependency[1]
-            ? (dependenciesObject[groupProject[1].trim()] = {
-                group: groupProject[0],
-                mapping: {
-                  source: dependency[1].split(":")[0],
-                  target: dependency[1].split(":")[1]
-                }
-              })
-            : (dependenciesObject[groupProject[1].trim()] = {
-                group: groupProject[0]
-              });
+        .forEach(dependency => {
+          const projectName = getProjectName(dependency.trim());
+          dependenciesObject[projectName] = {
+            group: getGroupFromDependency(dependency, defaultGroup),
+            mapping: getMappingFromDependency(dependency),
+            flowFile: getFlowFileFromDependency(dependency),
+            jobId: getJobIdFromDependency(dependency)
+          };
         })
     : {};
   return dependenciesObject;
+}
+
+function getProjectName(dependency) {
+  const match = dependency.match(/(.*\/)?([\w\-.]*).*/);
+  return match[2];
+}
+
+function getGroupFromDependency(dependency, defaultGroup) {
+  const match = dependency.match(/([\w\-.]*)\//);
+  return match ? match[1] : defaultGroup;
+}
+
+function getMappingFromDependency(dependency) {
+  const match = dependency.match(/@([\w\-.]*):([\w\-.]*)/);
+  return match
+    ? {
+        source: match[1],
+        target: match[2]
+      }
+    : undefined;
+}
+
+function getFlowFileFromDependency(dependency) {
+  const match = dependency.match(/\|([\w\-.]*):?/);
+  return match && match[1] ? match[1] : undefined;
+}
+
+function getJobIdFromDependency(dependency) {
+  const match = dependency.match(/\|.*:([\w\-.]*)/);
+  return match && match[1] ? match[1] : undefined;
 }
 
 module.exports = {

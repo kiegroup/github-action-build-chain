@@ -15,13 +15,15 @@ test("run no files, default", async () => {
   // Arrange
   const archiveArtifacts = {
     name: "whatevername",
-    path: "whateverpath"
+    paths: [{ path: "whateverpath", on: "success" }]
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
   const result = await run(archiveArtifacts);
 
   // Assert
+  expect(findFilesToUpload).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledWith(`whateverpath`);
   expect(warning).toHaveBeenCalledTimes(1);
   expect(info).toHaveBeenCalledTimes(0);
   expect(setFailed).toHaveBeenCalledTimes(0);
@@ -34,13 +36,15 @@ test("run no files, WARNING", async () => {
   const archiveArtifacts = {
     ifNoFilesFound: "warn",
     name: "whatevername",
-    path: "whateverpath"
+    paths: [{ path: "whateverpath", on: "success" }]
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
   const result = await run(archiveArtifacts);
 
   // Assert
+  expect(findFilesToUpload).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledWith(`whateverpath`);
   expect(warning).toHaveBeenCalledTimes(1);
   expect(info).toHaveBeenCalledTimes(0);
   expect(setFailed).toHaveBeenCalledTimes(0);
@@ -53,13 +57,15 @@ test("run no files, IGNORE", async () => {
   const archiveArtifacts = {
     ifNoFilesFound: "ignore",
     name: "whatevername",
-    path: "whateverpath"
+    paths: [{ path: "whateverpath", on: "success" }]
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
   const result = await run(archiveArtifacts);
 
   // Assert
+  expect(findFilesToUpload).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledWith(`whateverpath`);
   expect(warning).toHaveBeenCalledTimes(0);
   expect(info).toHaveBeenCalledTimes(1);
   expect(setFailed).toHaveBeenCalledTimes(0);
@@ -72,13 +78,15 @@ test("run no files, ERROR", async () => {
   const archiveArtifacts = {
     ifNoFilesFound: "error",
     name: "whatevername",
-    path: "whateverpath"
+    paths: [{ path: "whateverpath", on: "success" }]
   };
   findFilesToUpload.mockResolvedValueOnce({ filesToUpload: [] });
   // Act
   const result = await run(archiveArtifacts);
 
   // Assert
+  expect(findFilesToUpload).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledWith(`whateverpath`);
   expect(warning).toHaveBeenCalledTimes(0);
   expect(info).toHaveBeenCalledTimes(0);
   expect(setFailed).toHaveBeenCalledTimes(1);
@@ -90,7 +98,7 @@ test("run with files no failed Items", async () => {
   // Arrange
   const archiveArtifacts = {
     name: "name",
-    path: "whateverpath"
+    paths: [{ path: "whateverpath", on: "success" }]
   };
 
   findFilesToUpload.mockResolvedValueOnce({
@@ -107,6 +115,8 @@ test("run with files no failed Items", async () => {
 
   // Assert
   expect(create).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledWith(`whateverpath`);
   expect(uploadArtifact).toHaveBeenCalledTimes(1);
   expect(uploadArtifact).toHaveBeenCalledWith(
     "name",
@@ -127,7 +137,7 @@ test("run with files and failed Items", async () => {
   // Arrange
   const archiveArtifacts = {
     name: "name",
-    path: "whateverpath"
+    paths: [{ path: "whateverpath", on: "success" }]
   };
 
   findFilesToUpload.mockResolvedValueOnce({
@@ -144,6 +154,8 @@ test("run with files and failed Items", async () => {
 
   // Assert
   expect(create).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledWith(`whateverpath`);
   expect(uploadArtifact).toHaveBeenCalledTimes(1);
   expect(uploadArtifact).toHaveBeenCalledWith(
     "name",
@@ -158,4 +170,102 @@ test("run with files and failed Items", async () => {
   );
   expect(result.artifactName).toStrictEqual("artifactName");
   expect(result.failedItems).toStrictEqual([{}, {}]);
+});
+
+test("run with files no failed Items success event", async () => {
+  // Arrange
+  const archiveArtifacts = {
+    name: "name",
+    paths: [
+      { path: "successpath1", on: "success" },
+      { path: "successpath2", on: "success" },
+      { path: "failurepath1", on: "failure" },
+      { path: "failurepath2", on: "failure" },
+      { path: "alwayspath1", on: "always" },
+      { path: "alwayspath2", on: "always" }
+    ]
+  };
+
+  findFilesToUpload.mockResolvedValueOnce({
+    filesToUpload: [{ file: "a" }, { file: "b" }],
+    rootDirectory: "folderx"
+  });
+  const uploadArtifact = jest
+    .fn()
+    .mockResolvedValue({ failedItems: [], artifactName: "artifactName" });
+  create.mockReturnValueOnce({ uploadArtifact });
+
+  // Act
+  const result = await run(archiveArtifacts, ["success", "always"]);
+
+  // Assert
+  expect(create).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledWith(`successpath1
+successpath2
+alwayspath1
+alwayspath2`);
+  expect(uploadArtifact).toHaveBeenCalledTimes(1);
+  expect(uploadArtifact).toHaveBeenCalledWith(
+    "name",
+    [{ file: "a" }, { file: "b" }],
+    "folderx",
+    {
+      continueOnError: false
+    }
+  );
+  expect(info).toHaveBeenCalledWith(
+    "[INFO] Artifact artifactName has been successfully uploaded!"
+  );
+  expect(result.artifactName).toStrictEqual("artifactName");
+  expect(result.failedItems).toStrictEqual([]);
+});
+
+test("run with files no failed Items failure event", async () => {
+  // Arrange
+  const archiveArtifacts = {
+    name: "name",
+    paths: [
+      { path: "successpath1", on: "success" },
+      { path: "successpath2", on: "success" },
+      { path: "failurepath1", on: "failure" },
+      { path: "failurepath2", on: "failure" },
+      { path: "alwayspath1", on: "always" },
+      { path: "alwayspath2", on: "always" }
+    ]
+  };
+
+  findFilesToUpload.mockResolvedValueOnce({
+    filesToUpload: [{ file: "a" }, { file: "b" }],
+    rootDirectory: "folderx"
+  });
+  const uploadArtifact = jest
+    .fn()
+    .mockResolvedValue({ failedItems: [], artifactName: "artifactName" });
+  create.mockReturnValueOnce({ uploadArtifact });
+
+  // Act
+  const result = await run(archiveArtifacts, ["failure", "always"]);
+
+  // Assert
+  expect(create).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledTimes(1);
+  expect(findFilesToUpload).toHaveBeenCalledWith(`failurepath1
+failurepath2
+alwayspath1
+alwayspath2`);
+  expect(uploadArtifact).toHaveBeenCalledTimes(1);
+  expect(uploadArtifact).toHaveBeenCalledWith(
+    "name",
+    [{ file: "a" }, { file: "b" }],
+    "folderx",
+    {
+      continueOnError: false
+    }
+  );
+  expect(info).toHaveBeenCalledWith(
+    "[INFO] Artifact artifactName has been successfully uploaded!"
+  );
+  expect(result.artifactName).toStrictEqual("artifactName");
+  expect(result.failedItems).toStrictEqual([]);
 });

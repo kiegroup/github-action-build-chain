@@ -7,8 +7,8 @@ jest.mock("../src/lib/build-chain-flow-helper");
 const {
   readWorkflowInformation,
   checkoutParentsAndGetWorkflowInformation
-} = require("../src/lib/workflow-informaton-reader");
-jest.mock("../src/lib/workflow-informaton-reader");
+} = require("../src/lib/workflow-information/reader");
+jest.mock("../src/lib/workflow-information/reader");
 const {
   run: runUploadArtifactsMock
 } = require("../src/lib/artifacts/upload-artifacts");
@@ -139,7 +139,12 @@ test("start no parent dependencies archive artifacts", async () => {
     buildCommandsUpstream: ["upstream 1"],
     buildCommandsDownstream: ["downstream 1"],
     archiveArtifacts: {
-      path: "whateverpath",
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
       name: "artifact1",
       dependencies: "none"
     }
@@ -163,11 +168,19 @@ test("start no parent dependencies archive artifacts", async () => {
   await start(context);
   // Assert
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
-  expect(runUploadArtifactsMock).toHaveBeenCalledWith({
-    name: "artifact1",
-    path: "whateverpath",
-    dependencies: "none"
-  });
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith(
+    {
+      name: "artifact1",
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
+      dependencies: "none"
+    },
+    ["success", "always"]
+  );
   expect(checkoutProject).toHaveBeenCalledTimes(1);
   expect(checkoutProject).toHaveBeenCalledWith(
     context,
@@ -413,7 +426,12 @@ test("start with parent dependencies with archive artifacts with path", async ()
     buildCommandsUpstream: ["command-child-upstream"],
     buildCommandsDownstream: ["command-child-downstream"],
     archiveArtifacts: {
-      path: "whateverpath",
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
       name: "artifactChild",
       dependencies: ["projectXParent"]
     }
@@ -431,7 +449,12 @@ test("start with parent dependencies with archive artifacts with path", async ()
     buildCommands: ["command-parent"],
     buildCommandsDownstream: ["command-parent-dowstream"],
     archiveArtifacts: {
-      path: "whateverpath",
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
       name: "artifactParent",
       dependencies: "none"
     }
@@ -475,16 +498,121 @@ test("start with parent dependencies with archive artifacts with path", async ()
   );
 
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(2);
-  expect(runUploadArtifactsMock).toHaveBeenCalledWith({
-    path: "whateverpath",
-    name: "artifactChild",
-    dependencies: ["projectXParent"]
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith(
+    {
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
+      name: "artifactChild",
+      dependencies: ["projectXParent"]
+    },
+    ["success", "always"]
+  );
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith(
+    {
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
+      name: "artifactParent",
+      dependencies: "none"
+    },
+    ["success", "always"]
+  );
+});
+
+test("start with parent dependencies with archive artifacts with path exception", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        jobId: "job-id",
+        flowFile: "main.yaml",
+        group: "defaultGroup",
+        project: "exceptionProject",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: "folder",
+      matrixVariables: { key1: "value1", key2: "value2" }
+    }
+  };
+  const workflowInformation = {
+    id: "build-chain",
+    name: "Build Chain",
+    project: "exceptionProject",
+    config: {
+      github: {
+        flowFile: "main.yaml"
+      }
+    },
+    buildCommands: ["command-child"],
+    buildCommandsUpstream: ["command-child-upstream"],
+    buildCommandsDownstream: ["command-child-downstream"],
+    archiveArtifacts: {
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
+      name: "artifactChild",
+      dependencies: "all"
+    }
+  };
+
+  readWorkflowInformation.mockReturnValueOnce(workflowInformation);
+  getDir.mockReturnValueOnce("folder/exceptionProject");
+  checkoutParentsAndGetWorkflowInformation.mockResolvedValueOnce([]);
+
+  execute.mockImplementationOnce(async () => {
+    throw new Error("error executing command");
   });
-  expect(runUploadArtifactsMock).toHaveBeenCalledWith({
-    path: "whateverpath",
-    name: "artifactParent",
-    dependencies: "none"
-  });
+  // Act
+  try {
+    await start(context);
+  } catch (ex) {
+    expect(ex.message).toBe(
+      "Command executions have failed, please review latest execution"
+    );
+  }
+  // Assert
+  expect(checkoutProject).toHaveBeenCalledTimes(1);
+  expect(checkoutProject).toHaveBeenCalledWith(
+    context,
+    "exceptionProject",
+    {
+      group: "defaultGroup"
+    },
+    context.config.github.targetBranch
+  );
+  expect(checkoutParentsAndGetWorkflowInformation).toHaveBeenCalledWith(
+    context,
+    [context.config.github.project],
+    context.config.github.project,
+    context.config.github.targetBranch,
+    workflowInformation
+  );
+
+  expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith(
+    {
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
+      name: "artifactChild",
+      dependencies: "all"
+    },
+    ["failure", "always"]
+  );
 });
 
 test("start with parent dependencies with archive artifacts with path dependencies all", async () => {
@@ -516,7 +644,12 @@ test("start with parent dependencies with archive artifacts with path dependenci
     buildCommandsUpstream: ["command-child-upstream"],
     buildCommandsDownstream: ["command-child-downstream"],
     archiveArtifacts: {
-      path: "whateverpath",
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
       name: "artifactChild",
       dependencies: "all"
     }
@@ -534,7 +667,12 @@ test("start with parent dependencies with archive artifacts with path dependenci
     buildCommands: ["command-parent"],
     buildCommandsDownstream: ["command-parent-dowstream"],
     archiveArtifacts: {
-      path: "whateverpath",
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
       name: "artifactParent",
       dependencies: "none"
     }
@@ -578,16 +716,32 @@ test("start with parent dependencies with archive artifacts with path dependenci
   );
 
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(2);
-  expect(runUploadArtifactsMock).toHaveBeenCalledWith({
-    path: "whateverpath",
-    name: "artifactChild",
-    dependencies: "all"
-  });
-  expect(runUploadArtifactsMock).toHaveBeenCalledWith({
-    path: "whateverpath",
-    name: "artifactParent",
-    dependencies: "none"
-  });
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith(
+    {
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
+      name: "artifactChild",
+      dependencies: "all"
+    },
+    ["success", "always"]
+  );
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith(
+    {
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
+      name: "artifactParent",
+      dependencies: "none"
+    },
+    ["success", "always"]
+  );
 });
 
 test("start with parent dependencies with archive artifacts with path dependencies not matching", async () => {
@@ -619,7 +773,12 @@ test("start with parent dependencies with archive artifacts with path dependenci
     buildCommandsUpstream: ["command-child-upstream"],
     buildCommandsDownstream: ["command-child-downstream"],
     archiveArtifacts: {
-      path: "whateverpath",
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
       name: "artifactChild",
       dependencies: ["projectXParentX"]
     }
@@ -637,7 +796,12 @@ test("start with parent dependencies with archive artifacts with path dependenci
     buildCommands: ["command-parent"],
     buildCommandsDownstream: ["command-parent-dowstream"],
     archiveArtifacts: {
-      path: "whateverpath",
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
       name: "artifactParent",
       dependencies: "none"
     }
@@ -681,11 +845,19 @@ test("start with parent dependencies with archive artifacts with path dependenci
   );
 
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
-  expect(runUploadArtifactsMock).toHaveBeenCalledWith({
-    path: "whateverpath",
-    name: "artifactChild",
-    dependencies: ["projectXParentX"]
-  });
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith(
+    {
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
+      name: "artifactChild",
+      dependencies: ["projectXParentX"]
+    },
+    ["success", "always"]
+  );
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith({});
 });
@@ -736,7 +908,12 @@ test("start with parent dependencies with archive artifacts one of them without 
     buildCommands: ["command-parent"],
     buildCommandsDownstream: ["command-parent-dowstream"],
     archiveArtifacts: {
-      path: "whateverpath",
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
       name: "artifactParent",
       dependencies: "none"
     }
@@ -780,11 +957,19 @@ test("start with parent dependencies with archive artifacts one of them without 
   );
 
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(1);
-  expect(runUploadArtifactsMock).toHaveBeenCalledWith({
-    path: "whateverpath",
-    name: "artifactParent",
-    dependencies: "none"
-  });
+  expect(runUploadArtifactsMock).toHaveBeenCalledWith(
+    {
+      paths: [
+        {
+          path: "whateverpath",
+          on: "success"
+        }
+      ],
+      name: "artifactParent",
+      dependencies: "none"
+    },
+    ["success", "always"]
+  );
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith({});
 });

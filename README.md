@@ -165,23 +165,25 @@ See [action.yml](action.yml)
   >   matrix.os:${{ matrix.os }}
   > ```
 
-- **archive-artifacts-path** (optional): `file path` (see: [@actions/glob](https://github.com/actions/toolkit/tree/main/packages/glob) and [Archiving Artifacts](#archiving-artifacts)). define it in case you want to archive artifacts after building the project chain.
+- **archive-artifacts-path** (optional): `file path[@success|failure|always (success by default)]` (see: [@actions/glob](https://github.com/actions/toolkit/tree/main/packages/glob) and [Archiving Artifacts](#archiving-artifacts)). define it in case you want to archive artifacts after building the project chain.
 
   > Example: see [Archiving Artifacts](#archiving-artifacts)
+  >
+  > Example about `[@success|failure|always]`: [Upload for different execution results](https://github.com/actions/upload-artifact#upload-for-different-execution-results)
 
-- **archive-artifacts-name** (optional, default: `the project name`): `a string` (see: [Archiving Artifacts](#archiving-artifacts) and [Uploading without an artifact name](#uploading-without-an-artifact-name)). define it in case you want to archive artifacts after building the project chain.
+* **archive-artifacts-name** (optional, default: `the project name`): `a string` (see: [Archiving Artifacts](#archiving-artifacts) and [Uploading without an artifact name](#uploading-without-an-artifact-name)). define it in case you want to archive artifacts after building the project chain.
 
   > **_Warning:_** `archive-artifacts-path` input is mandatory in case you want to use this field (it does not make sense to specify an artifact name without defining what you want to upload)
 
   > Example: see [Archiving Artifacts](#archiving-artifacts)
 
-- **archive-artifacts-if-no-files-found** (optional, default: `warn`): `warn|ignore|error` (see: [Archiving Artifacts](#archiving-artifacts) and [Customization if no files are found](#customization-if-no-files-are-found)). Allows you to customize the behavior of the action if no files are found.
+* **archive-artifacts-if-no-files-found** (optional, default: `warn`): `warn|ignore|error` (see: [Archiving Artifacts](#archiving-artifacts) and [Customization if no files are found](#customization-if-no-files-are-found)). Allows you to customize the behavior of the action if no files are found.
 
   > **_Warning:_** `archive-artifacts-path` input is mandatory in case you want to use this field (it does not make sense to specify the failure behaviour without defining what you want to upload)
 
   > Example: see [Archiving Artifacts](#archiving-artifacts)
 
-- **archive-artifacts-dependencies** (optional, default: `none`): `all|none|list of projects` (see: [Archiving Artifacts](#archiving-artifacts) and [archive-artifacts-dependencies usage](#archive-artifacts-dependencies-usage)). Allows you to decide which projects you want treat to upload artifacts from the project triggering the job.
+* **archive-artifacts-dependencies** (optional, default: `none`): `all|none|list of projects` (see: [Archiving Artifacts](#archiving-artifacts) and [archive-artifacts-dependencies usage](#archive-artifacts-dependencies-usage)). Allows you to decide which projects you want treat to upload artifacts from the project triggering the job.
 
   > **_Note:_** `archive-artifacts-path` input is **NOT** mandatory in case you want to use this field
 
@@ -190,6 +192,8 @@ See [action.yml](action.yml)
 ## Archiving Artifacts
 
 The archive artifacts algorithm is basically copied from [actions/upload-artifact project](https://github.com/actions/upload-artifact) and (manually) transpile to javascript. The usage is basically the same (the inputs are different named adding `archive-artifacts` prefix and the [Conditional Artifact Upload](https://github.com/actions/upload-artifact#conditional-artifact-upload) is not enabled), so why do we include this `archive artifacts` mechanism in this tool if it's already implemented by another tool? well, because this treats the archive artifacts mechanism for the whole build chain, so in case you define an `archive-artifacts-path` in a different project from the chain, all of them will be uploaded. If you are wondering if you are able to use `actions/upload-artifact` instead of the one we propose, the answer is 'yes', just take into consideration the artifacts will be archived based on the definition from the project triggering the job.
+
+The `archive-artifacts-path` input brings you the chance to specify if the path will be uploaded in case of build success (default), in case of failure or always for every single path. For example specifying something like `path/to/artifact/world.txt@failure` will archive `path/to/artifact/world.txt` in case of execution failure. You can check [Upload for different execution results](https://github.com/actions/upload-artifact#upload-for-different-execution-results).
 
 ### Upload an Individual File
 
@@ -241,6 +245,31 @@ steps:
       path/output/test-results
       !path/**/*.tmp
 ```
+
+### Upload for different execution results
+
+This is something additional to [@actions/glob](https://github.com/actions/toolkit/tree/main/packages/glob)
+
+```yaml
+steps:
+- uses: kiegroup/github-action-build-chain
+  with:
+    ...
+    ...
+    archive-artifacts-name: my-artifact
+    archive-artifacts-path: |
+      path/output/bin/
+      path2/output2/bin2/@sucess
+      path/output/test-results@failure
+      !path/**/*.tmp@always
+```
+
+- will upload `path/output/bin/` just in case of `success`
+- will upload `path2/output2/bin2/` just in case of `success`
+- will upload `path/output/test-results` just in case of `failure`
+- will upload `!path/**/*.tmp` in every case
+
+### Path Wildcards
 
 For supported wildcards along with behavior and documentation, see [@actions/glob](https://github.com/actions/toolkit/tree/main/packages/glob) which is used internally to search for files.
 

@@ -51,17 +51,27 @@ async function start(context) {
   printCheckoutInformation(getCheckoutInfo(context));
   core.endGroup();
 
-  await executeBuildCommandsWorkflowInformation(
+  const executionResult = await executeBuildCommandsWorkflowInformation(
     context.config.rootFolder,
     workflowInformation,
     parentWorkflowInformationArray
-  );
+  )
+    .then(() => true)
+    .catch(e => e);
+
   core.startGroup(`Archiving artifacts...`);
   await archiveArtifacts(
     workflowInformation,
-    parentWorkflowInformationArray.concat(workflowInformation)
+    parentWorkflowInformationArray.concat(workflowInformation),
+    executionResult === true ? ["success", "always"] : ["failure", "always"]
   );
   core.endGroup();
+  if (executionResult !== true) {
+    logger.error(executionResult);
+    throw new Error(
+      "Command executions have failed, please review latest execution"
+    );
+  }
 }
 
 async function executeBuildCommandsWorkflowInformation(
@@ -86,7 +96,7 @@ async function executeBuildCommandsWorkflowInformation(
 async function archiveArtifacts(
   workflowInformationTriggering,
   workflowInformationArray,
-  on = ["success"]
+  on
 ) {
   const archiveDependencies =
     workflowInformationTriggering.archiveArtifacts.dependencies;

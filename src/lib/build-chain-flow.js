@@ -3,7 +3,7 @@ const { printCheckoutInformation } = require("./summary");
 const {
   readWorkflowInformation,
   checkoutParentsAndGetWorkflowInformation
-} = require("./workflow-informaton-reader");
+} = require("./workflow-information/reader");
 const { logger } = require("./common");
 const { execute } = require("./command");
 const { treatCommand } = require("./command/command-treatment-delegator");
@@ -85,19 +85,20 @@ async function executeBuildCommandsWorkflowInformation(
 
 async function archiveArtifacts(
   workflowInformationTriggering,
-  workflowInformationArray
+  workflowInformationArray,
+  on = ["success"]
 ) {
   const archiveDependencies =
     workflowInformationTriggering.archiveArtifacts.dependencies;
   logger.info(
-    `${archiveDependencies} parent artifact(s) will be treated to be uploaded`
+    `${archiveDependencies} parent artifact(s) will be treated to be uploaded. Events ${on}`
   );
   const wiArrayWithArtifacts =
     archiveDependencies === "none"
-      ? [workflowInformationTriggering].filter(wi => wi.archiveArtifacts.path)
+      ? [workflowInformationTriggering].filter(wi => wi.archiveArtifacts.paths)
       : workflowInformationArray.filter(
           wi =>
-            wi.archiveArtifacts.path &&
+            wi.archiveArtifacts.paths &&
             (archiveDependencies === "all" ||
               archiveDependencies.includes(wi.project) ||
               wi.project === workflowInformationTriggering.project)
@@ -111,7 +112,7 @@ async function archiveArtifacts(
   await Promise.allSettled(
     wiArrayWithArtifacts.map(async wi => {
       logger.info(`Project [${wi.project}]. Uploading artifacts...`);
-      const uploadResponse = await uploadArtifacts.run(wi.archiveArtifacts);
+      const uploadResponse = await uploadArtifacts.run(wi.archiveArtifacts, on);
       if (uploadResponse) {
         const uploadArtifactsMessage =
           uploadResponse.artifactItems &&

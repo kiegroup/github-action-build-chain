@@ -2,14 +2,14 @@ const {
   readWorkflowInformation,
   checkoutParentsAndGetWorkflowInformation,
   dependenciesToObject
-} = require("../src/lib/workflow-informaton-reader");
-jest.mock("../src/lib/git");
+} = require("../../../src/lib/workflow-information/reader");
+jest.mock("../../../src/lib/git");
 jest.mock("@actions/core");
 const {
   getDir,
   checkoutDependencies
-} = require("../src/lib/build-chain-flow-helper");
-jest.mock("../src/lib/build-chain-flow-helper");
+} = require("../../../src/lib/build-chain-flow-helper");
+jest.mock("../../../src/lib/build-chain-flow-helper");
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -513,7 +513,12 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
     },
     archiveArtifacts: {
       name: "namex",
-      path: "pathsx",
+      paths: [
+        {
+          path: "pathsx",
+          on: "success"
+        }
+      ],
       ifNoFilesFound: "warn",
       dependencies: "none"
     }
@@ -563,7 +568,12 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
     },
     archiveArtifacts: {
       name: "projectx",
-      path: "pathsx",
+      paths: [
+        {
+          path: "pathsx",
+          on: "success"
+        }
+      ],
       ifNoFilesFound: "warn",
       dependencies: "none"
     }
@@ -613,10 +623,146 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
     },
     archiveArtifacts: {
       name: "namex",
-      path: `path/output/bin/
-path/output/test-results
-!path/**/*.tmp
-`,
+      paths: [
+        {
+          path: "path/output/bin/",
+          on: "success"
+        },
+        {
+          path: "path/output/test-results",
+          on: "success"
+        },
+        {
+          path: "!path/**/*.tmp",
+          on: "success"
+        }
+      ],
+      ifNoFilesFound: "warn",
+      dependencies: "none"
+    }
+  };
+  expect(buildChainInformation).toEqual(expected);
+});
+
+test("parseWorkflowInformation without matrix definition and with archive-artifacts singleline on event", () => {
+  // Act
+  const buildChainInformation = readWorkflowInformation(
+    "projectx",
+    "build-chain",
+    "flow-singleline-archive-on.yaml",
+    "defaultGroup",
+    undefined,
+    "test/resources"
+  );
+  // Assert
+  const expected = {
+    id: "build-chain",
+    project: "projectx",
+    name: "Build Chain",
+    jobId: "build-chain",
+    flowFile: "flow-singleline-archive-on.yaml",
+    buildCommands: [
+      "mvn clean",
+      'mvn -e -nsu -Dfull clean install -Prun-code-coverage -Dcontainer.profile=wildfly -Dintegration-tests=true -Dmaven.test.failure.ignore=true -DjvmArgs="-Xms1g -Xmx4g -XX:+CMSClassUnloadingEnabled"'
+    ],
+    buildCommandsUpstream: [
+      "mvn clean",
+      "mvn -e -T1C clean install -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true -Drevapi.skip=true"
+    ],
+    buildCommandsDownstream: [
+      "mvn clean",
+      "mvn -e -nsu -fae -T1C clean install -Dfull -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -DjvmArgs=-Xmx4g"
+    ],
+    childDependencies: {
+      appformer: {
+        group: "defaultGroup",
+        mapping: { source: "7.x", target: "master" }
+      },
+      "lienzo-tests": { group: "defaultGroup" }
+    },
+    parentDependencies: {
+      "lienzo-core": { group: "defaultGroup" },
+      errai: { group: "groupx" }
+    },
+    archiveArtifacts: {
+      name: "namex",
+      paths: [
+        {
+          path: "path/output/bin/",
+          on: "failure"
+        }
+      ],
+      ifNoFilesFound: "warn",
+      dependencies: "none"
+    }
+  };
+  expect(buildChainInformation).toEqual(expected);
+});
+
+test("parseWorkflowInformation without matrix definition and with archive-artifacts multiline different on events", () => {
+  // Act
+  const buildChainInformation = readWorkflowInformation(
+    "projectx",
+    "build-chain",
+    "flow-multiline-archive-on.yaml",
+    "defaultGroup",
+    undefined,
+    "test/resources"
+  );
+  // Assert
+  const expected = {
+    id: "build-chain",
+    project: "projectx",
+    name: "Build Chain",
+    jobId: "build-chain",
+    flowFile: "flow-multiline-archive-on.yaml",
+    buildCommands: [
+      "mvn clean",
+      'mvn -e -nsu -Dfull clean install -Prun-code-coverage -Dcontainer.profile=wildfly -Dintegration-tests=true -Dmaven.test.failure.ignore=true -DjvmArgs="-Xms1g -Xmx4g -XX:+CMSClassUnloadingEnabled"'
+    ],
+    buildCommandsUpstream: [
+      "mvn clean",
+      "mvn -e -T1C clean install -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true -Drevapi.skip=true"
+    ],
+    buildCommandsDownstream: [
+      "mvn clean",
+      "mvn -e -nsu -fae -T1C clean install -Dfull -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -DjvmArgs=-Xmx4g"
+    ],
+    childDependencies: {
+      appformer: {
+        group: "defaultGroup",
+        mapping: { source: "7.x", target: "master" }
+      },
+      "lienzo-tests": { group: "defaultGroup" }
+    },
+    parentDependencies: {
+      "lienzo-core": { group: "defaultGroup" },
+      errai: { group: "groupx" }
+    },
+    archiveArtifacts: {
+      name: "namex",
+      paths: [
+        {
+          path: "path/output/bin/",
+          on: "success"
+        },
+        {
+          path: "path/output/test-results",
+          on: "failure"
+        },
+        {
+          path: "!path/**/*.tmp",
+          on: "always"
+        },
+        {
+          path: "!path/**/*.tmp2",
+          on: "success"
+        },
+        {
+          path: "!path/**/*.tmp3",
+          on: "success"
+        }
+      ],
       ifNoFilesFound: "warn",
       dependencies: "none"
     }
@@ -666,7 +812,12 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
     },
     archiveArtifacts: {
       name: "projectx",
-      path: "pathsx",
+      paths: [
+        {
+          path: "pathsx",
+          on: "success"
+        }
+      ],
       ifNoFilesFound: "warn",
       dependencies: "none"
     }
@@ -716,7 +867,12 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
     },
     archiveArtifacts: {
       name: "projectx",
-      path: "pathsx",
+      paths: [
+        {
+          path: "pathsx",
+          on: "success"
+        }
+      ],
       ifNoFilesFound: "warn",
       dependencies: "all"
     }
@@ -766,7 +922,12 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
     },
     archiveArtifacts: {
       name: "projectx",
-      path: "pathsx",
+      paths: [
+        {
+          path: "pathsx",
+          on: "success"
+        }
+      ],
       ifNoFilesFound: "warn",
       dependencies: ["projectA", "none", "all", "projectB"]
     }
@@ -816,7 +977,12 @@ test("parseWorkflowInformation without matrix definition and with archive-artifa
     },
     archiveArtifacts: {
       name: "projectx",
-      path: "pathsx",
+      paths: [
+        {
+          path: "pathsx",
+          on: "success"
+        }
+      ],
       ifNoFilesFound: "warn",
       dependencies: ["projectA"]
     }

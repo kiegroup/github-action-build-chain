@@ -8,6 +8,7 @@ Link
 
 - To be able to define a dependency with a different flow file name
 - To be able to define a dependency with a different job identifier
+- artifacts in case of failure
 
 # V1.4
 

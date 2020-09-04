@@ -1,10 +1,10 @@
 const fs = require("fs");
 const path = require("path");
-const { logger } = require("./common");
-const { getYamlFileContent } = require("./fs-helper");
+const { logger } = require("../common");
+const { getYamlFileContent } = require("../fs-helper");
 var assert = require("assert");
 const core = require("@actions/core");
-const { checkoutDependencies, getDir } = require("./build-chain-flow-helper");
+const { checkoutDependencies, getDir } = require("../build-chain-flow-helper");
 
 async function checkoutParentsAndGetWorkflowInformation(
   context,
@@ -177,7 +177,8 @@ function getArchiveArtifacts(step, defaultName = "artifact") {
       : step.with["archive-artifacts-path"]
       ? defaultName
       : undefined,
-    path: step.with["archive-artifacts-path"],
+
+    paths: treatArchiveArtifactsPath(step.with["archive-artifacts-path"]),
     ifNoFilesFound: step.with["archive-artifacts-if-no-files-found"]
       ? step.with["archive-artifacts-if-no-files-found"]
       : step.with["archive-artifacts-path"]
@@ -187,6 +188,28 @@ function getArchiveArtifacts(step, defaultName = "artifact") {
       step.with["archive-artifacts-dependencies"]
     )
   };
+}
+
+function treatArchiveArtifactsPath(archiveArtifacts) {
+  return archiveArtifacts
+    ? archiveArtifacts
+        .split("\n")
+        .filter(line => line)
+        .reduce((acc, pathExpression) => {
+          acc.push(convertPathExpressionToPath(pathExpression));
+          return acc;
+        }, [])
+    : undefined;
+}
+
+function convertPathExpressionToPath(pathExpression) {
+  const match = pathExpression.match(/([^@]*)@?(always|success|failure)?/);
+  return match
+    ? {
+        path: match[1],
+        on: match[2] ? match[2] : "success"
+      }
+    : pathExpression;
 }
 
 function treatArchiveArtifactsDependencies(archiveArtifactsDependencies) {

@@ -1,16 +1,7 @@
 const { createConfig } = require("../src/lib/config");
-jest.mock("../src/lib/action-utils", () => ({
-  getWorkflowfileName: () => {
-    return "pull_request.yml";
-  },
-  getArchiveArtifactsName: () => {
-    return "artifact x";
-  },
-  getArchiveArtifactsPath: () => {
-    return "path1,path2";
-  },
-  getArchiveArtifactsIfNoFilesFound: () => {
-    return "warn";
+jest.mock("../src/lib/util/action-utils", () => ({
+  getDefinitionFile: () => {
+    return "definition-file.yaml";
   },
   getMatrixVariables: () => {
     return { key1: "value1", key2: "value2" };
@@ -61,8 +52,15 @@ test("createConfig", async () => {
       ref: undefined,
       sourceRepository: "group/projectx",
       repository: "kiegroup/github-action-build-chain",
-      flowFile: "pull_request.yml",
-      workflowName: "build chain name"
+      groupProject: "kiegroup/github-action-build-chain",
+      workflowName: "build chain name",
+      inputs: {
+        definitionFile: "definition-file.yaml",
+        matrixVariables: {
+          key1: "value1",
+          key2: "value2"
+        }
+      }
     },
     rootFolder: "folder"
   };

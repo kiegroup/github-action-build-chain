@@ -1,8 +1,18 @@
 const { ClientError, logger } = require("./common");
-const { getWorkflowfileName } = require("./action-utils");
+const {
+  getDefinitionFile,
+  getMatrixVariables
+} = require("./util/action-utils");
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
+
+function getInputs() {
+  return {
+    definitionFile: getDefinitionFile(),
+    matrixVariables: getMatrixVariables()
+  };
+}
 
 async function createConfig(eventData, rootFolder, env = {}) {
   async function parseGitHub(env) {
@@ -25,9 +35,10 @@ async function createConfig(eventData, rootFolder, env = {}) {
       repository: env["GITHUB_REPOSITORY"], // Ginxo/lienzo-tests
       group: env["GITHUB_REPOSITORY"].split("/")[0], // Ginxo
       project: env["GITHUB_REPOSITORY"].split("/")[1], // lienzo-tests
-      flowFile: getWorkflowfileName(), // main.yml
+      groupProject: env["GITHUB_REPOSITORY"],
       workflowName: env["GITHUB_WORKFLOW"], // Build Chain
-      ref: env["GITHUB_REF"] // refs/pull/1/merge'
+      ref: env["GITHUB_REF"], // refs/pull/1/merge'
+      inputs: getInputs()
     };
   }
   return {

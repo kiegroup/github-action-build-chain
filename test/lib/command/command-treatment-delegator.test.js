@@ -1,13 +1,13 @@
 const {
   treatCommand
-} = require("../../src/lib/command/command-treatment-delegator");
-jest.mock("../../src/lib/command/maven-treatment", () => ({
+} = require("../../../src/lib/command/command-treatment-delegator");
+jest.mock("../../../src/lib/command/maven-treatment", () => ({
   treat: () => {
     return "maven command";
   }
 }));
 
-jest.mock("../../src/lib/command/no-treatment", () => ({
+jest.mock("../../../src/lib/command/no-treatment", () => ({
   treat: () => {
     return "same command";
   }

@@ -8,6 +8,23 @@ const {
 const { logger } = require("./common");
 const { saveCheckoutInfo } = require("./context");
 
+// async function checkoutDefinitionTree(
+//   context,
+//   definitionTree,
+//   alreadyCheckedOut = []
+// ) {
+//   const result = {};
+//   for (const dependencyKey of Object.keys(dependencies)) {
+//     result[dependencyKey] = await checkoutProject(
+//       context,
+//       dependencyKey,
+//       dependencies[dependencyKey],
+//       currentTargetBranch
+//     );
+//   }
+//   return result;
+// }
+
 async function checkoutDependencies(
   context,
   dependencies,

@@ -5,6 +5,8 @@ const { getYamlFileContent } = require("../fs-helper");
 var assert = require("assert");
 const core = require("@actions/core");
 const { checkoutDependencies, getDir } = require("../build-chain-flow-helper");
+const { checkUrlExist } = require("../util/http");
+const { getTreeForProject } = require("build-chain-configuration-reader");
 
 async function checkoutParentsAndGetWorkflowInformation(
   context,
@@ -48,7 +50,7 @@ async function checkoutParentsAndGetWorkflowInformation(
               : workflowInformation.flowFile
           }`,
           context.config.github.group,
-          context.config.matrixVariables,
+          context.config.github.inputs.matrixVariables,
           dir
         );
 
@@ -76,6 +78,61 @@ async function checkoutParentsAndGetWorkflowInformation(
     }
   }
   return [];
+}
+
+/**
+ * retrieves definition from definitionFile expression
+ * @param {string} definitionFile it can be a filesystem path, or a URL with ${GROUP} and ${BRANCH} expressions to replace
+ * @param {string} groupProject group/project string. Something like kiegroup/drools
+ * @param {Object} sourceInfo an object containing group and branch keys
+ * @param {Object} targetInfo an object containing group and branch keys
+ */
+async function getBuildChainDefinition(
+  definitionFile,
+  groupProject,
+  sourceInfo,
+  targetInfo
+) {
+  assert(
+    definitionFile,
+    "Definition file is not specified, it's a pitty we cannot magically decide what to do here, we will do it soon in next releases but not yet woman/man!! So, please, you, kind of intellegent living thing, try to behave coherently and define one."
+  );
+  let buildChainDefinition = undefined;
+
+  if (
+    definitionFile.includes("${GROUP}") ||
+    definitionFile.includes("${BRANCH}")
+  ) {
+    const sourceUrl = definitionFile
+      .replace("${GROUP}", sourceInfo.group)
+      .replace("${BRANCH}", sourceInfo.branch);
+    const targetUrl = definitionFile
+      .replace("${GROUP}", targetInfo.group)
+      .replace("${BRANCH}", targetInfo.branch);
+    const finalUrl = (await checkUrlExist(sourceUrl))
+      ? sourceUrl
+      : (await checkUrlExist(targetUrl))
+      ? targetUrl
+      : undefined;
+    assert(
+      finalUrl,
+      `neither ${sourceUrl} and ${targetUrl} exists, so please check you defined ${definitionFile} properly`
+    );
+
+    logger.info(`Getting definition from ${finalUrl}`);
+    buildChainDefinition = await getTreeForProject(finalUrl, groupProject);
+  } else {
+    logger.info(`Getting definition from ${definitionFile}`);
+    buildChainDefinition = await getTreeForProject(
+      definitionFile,
+      groupProject
+    );
+  }
+  assert(
+    buildChainDefinition,
+    "Build chain definition is empty or couldn't be loaded"
+  );
+  return buildChainDefinition;
 }
 
 function readWorkflowInformation(
@@ -282,5 +339,6 @@ function getJobIdFromDependency(dependency) {
 module.exports = {
   readWorkflowInformation,
   checkoutParentsAndGetWorkflowInformation,
-  dependenciesToObject
+  dependenciesToObject,
+  getBuildChainDefinition
 };

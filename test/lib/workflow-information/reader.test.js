@@ -1,7 +1,8 @@
 const {
   readWorkflowInformation,
   checkoutParentsAndGetWorkflowInformation,
-  dependenciesToObject
+  dependenciesToObject,
+  getBuildChainDefinition
 } = require("../../../src/lib/workflow-information/reader");
 jest.mock("../../../src/lib/git");
 jest.mock("@actions/core");
@@ -10,6 +11,16 @@ const {
   checkoutDependencies
 } = require("../../../src/lib/build-chain-flow-helper");
 jest.mock("../../../src/lib/build-chain-flow-helper");
+
+const {
+  getTreeForProject: getTreeForProjectMock
+} = require("build-chain-configuration-reader");
+jest.mock("build-chain-configuration-reader");
+
+const {
+  checkUrlExist: checkUrlExistMock
+} = require("../../../src/lib/util/http");
+jest.mock("../../../src/lib/util/http");
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -61,7 +72,10 @@ test("checkoutParentsAndGetWorkflowInformation 1 level", async () => {
         flowFile: "flow.yaml",
         group: "groupX",
         project: project,
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whatever"
+        }
       }
     }
   };
@@ -105,7 +119,10 @@ test("checkoutParentsAndGetWorkflowInformation 2 levels", async () => {
         flowFile: "flow.yaml",
         group: "groupX",
         project: project,
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile"
+        }
       }
     }
   };
@@ -158,7 +175,10 @@ test("checkoutParentsAndGetWorkflowInformation 3 levels", async () => {
         flowFile: "flow.yaml",
         group: "groupX",
         project: project,
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile"
+        }
       }
     }
   };
@@ -217,7 +237,10 @@ test("checkoutParentsAndGetWorkflowInformation 3 levels repeated project", async
         flowFile: "flow.yaml",
         group: "groupX",
         project: project,
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile"
+        }
       }
     }
   };
@@ -267,7 +290,10 @@ test("checkoutParentsAndGetWorkflowInformation flowFile and jobId", async () => 
         flowFile: "flow.yaml",
         group: "groupX",
         project: project,
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile"
+        }
       }
     }
   };
@@ -313,7 +339,10 @@ test("checkoutParentsAndGetWorkflowInformation 2 levels flowFile and jobId", asy
         flowFile: "flow.yaml",
         group: "groupX",
         project: project,
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile"
+        }
       }
     }
   };
@@ -404,11 +433,15 @@ test("parseWorkflowInformation with matrix", () => {
   // Arrange
   const context = {
     config: {
-      matrixVariables: {
-        os: "rhel",
-        "matrix.version": "7",
-        sourceBranch: "source",
-        "matrix.targetBranch": "target"
+      github: {
+        inputs: {
+          matrixVariables: {
+            os: "rhel",
+            "matrix.version": "7",
+            sourceBranch: "source",
+            "matrix.targetBranch": "target"
+          }
+        }
       }
     }
   };
@@ -418,7 +451,7 @@ test("parseWorkflowInformation with matrix", () => {
     "build-chain",
     "flow-matrix.yaml",
     "defaultGroup",
-    context.config.matrixVariables,
+    context.config.github.inputs.matrixVariables,
     "test/resources"
   );
   // Assert
@@ -1231,4 +1264,96 @@ test("dependenciesToObject single with job id", () => {
   );
   // Assert
   expect(dependencies).toEqual(expected);
+});
+
+test("getBuildChainDefinition file system", async () => {
+  // Arrange
+  const expected = [{ project: "projectx" }];
+  getTreeForProjectMock.mockResolvedValueOnce(expected);
+
+  // Act
+  const result = await getBuildChainDefinition(
+    "whateverfile",
+    "groupx/projectx",
+    { group: "sourceGroup", branch: "sourceBranch" },
+    { group: "targetGroup", branch: "targetBranch" }
+  );
+
+  // Assert
+  expect(getTreeForProjectMock).toHaveBeenCalledWith(
+    "whateverfile",
+    "groupx/projectx"
+  );
+  expect(getTreeForProjectMock).toHaveBeenCalledTimes(1);
+  expect(result).toBe(expected);
+});
+
+test("getBuildChainDefinition simple URL", async () => {
+  // Arrange
+  const expected = [{ project: "projectx" }];
+  getTreeForProjectMock.mockResolvedValueOnce(expected);
+
+  // Act
+  const result = await getBuildChainDefinition(
+    "http://www.redhat.com/definitionfile.yaml",
+    "groupx/projectx",
+    { group: "sourceGroup", branch: "sourceBranch" },
+    { group: "targetGroup", branch: "targetBranch" }
+  );
+
+  // Assert
+  expect(getTreeForProjectMock).toHaveBeenCalledWith(
+    "http://www.redhat.com/definitionfile.yaml",
+    "groupx/projectx"
+  );
+  expect(getTreeForProjectMock).toHaveBeenCalledTimes(1);
+  expect(result).toBe(expected);
+});
+
+test("getBuildChainDefinition GROUP and BRANCH expression URL. source exists", async () => {
+  // Arrange
+  const expected = [{ project: "projectx" }];
+  getTreeForProjectMock.mockResolvedValueOnce(expected);
+  checkUrlExistMock.mockResolvedValueOnce(true);
+
+  // Act
+  const result = await getBuildChainDefinition(
+    "http://www.redhat.com/${GROUP}/${BRANCH}/definitionfile.yaml",
+    "groupx/projectx",
+    { group: "sourceGroup", branch: "sourceBranch" },
+    { group: "targetGroup", branch: "targetBranch" }
+  );
+
+  // Assert
+  expect(getTreeForProjectMock).toHaveBeenCalledWith(
+    "http://www.redhat.com/sourceGroup/sourceBranch/definitionfile.yaml",
+    "groupx/projectx"
+  );
+  expect(checkUrlExistMock).toHaveBeenCalledTimes(1);
+  expect(getTreeForProjectMock).toHaveBeenCalledTimes(1);
+  expect(result).toBe(expected);
+});
+
+test("getBuildChainDefinition GROUP and BRANCH expression URL. source does not exist but target", async () => {
+  // Arrange
+  const expected = [{ project: "projectx" }];
+  getTreeForProjectMock.mockResolvedValueOnce(expected);
+  checkUrlExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+
+  // Act
+  const result = await getBuildChainDefinition(
+    "http://www.redhat.com/${GROUP}/${BRANCH}/definitionfile.yaml",
+    "groupx/projectx",
+    { group: "sourceGroup", branch: "sourceBranch" },
+    { group: "targetGroup", branch: "targetBranch" }
+  );
+
+  // Assert
+  expect(getTreeForProjectMock).toHaveBeenCalledWith(
+    "http://www.redhat.com/targetGroup/targetBranch/definitionfile.yaml",
+    "groupx/projectx"
+  );
+  expect(checkUrlExistMock).toHaveBeenCalledTimes(2);
+  expect(getTreeForProjectMock).toHaveBeenCalledTimes(1);
+  expect(result).toBe(expected);
 });

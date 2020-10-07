@@ -2,16 +2,28 @@ const { checkoutProject, getDir } = require("./build-chain-flow-helper");
 const { printCheckoutInformation } = require("./summary");
 const {
   readWorkflowInformation,
-  checkoutParentsAndGetWorkflowInformation
+  checkoutParentsAndGetWorkflowInformation,
+  getBuildChainDefinition
 } = require("./workflow-information/reader");
 const { logger } = require("./common");
-const { execute } = require("./command");
+const { execute } = require("./command/command");
 const { treatCommand } = require("./command/command-treatment-delegator");
 const core = require("@actions/core");
 const uploadArtifacts = require("./artifacts/upload-artifacts");
 const { getCheckoutInfo } = require("./context");
 
 async function start(context) {
+  core.startGroup(`Get ${context.config.github.groupProject} definition`);
+  const buildChainDefinition = await getBuildChainDefinition(
+    context.config.github.inputs.definitionFile,
+    `${context.config.groupProject}`,
+    { group: context.config.sourceGroup, branch: context.config.sourceBranch },
+    { group: context.config.group, branch: context.config.targetBranch }
+  );
+  console.log(buildChainDefinition);
+  // TODO: something with buildChainDefinition
+  core.endGroup();
+
   core.startGroup(
     `Checkout ${context.config.github.group}/${context.config.github.project}.`
   );
@@ -32,7 +44,7 @@ async function start(context) {
     context.config.github.jobId,
     `.github/workflows/${context.config.github.flowFile}`,
     context.config.github.group,
-    context.config.matrixVariables,
+    context.config.github.inputs.matrixVariables,
     projectFolder
   );
   core.endGroup();

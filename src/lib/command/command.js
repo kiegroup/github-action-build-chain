@@ -1,4 +1,4 @@
-const { logger } = require("./common");
+const { logger } = require("../common");
 const exec = require("@actions/exec");
 const core = require("@actions/core");
 

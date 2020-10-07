@@ -14,8 +14,8 @@ const {
 } = require("../src/lib/artifacts/upload-artifacts");
 jest.mock("../src/lib/artifacts/upload-artifacts");
 
-const { execute } = require("../src/lib/command");
-jest.mock("../src/lib/command");
+const { execute } = require("../src/lib/command/command");
+jest.mock("../src/lib/command/command");
 jest.mock("@actions/core");
 const { printCheckoutInformation } = require("../src/lib/summary");
 jest.mock("../src/lib/summary");
@@ -34,10 +34,13 @@ test("start no parent dependencies", async () => {
         group: "defaultGroup",
         project: "projectX",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile",
+          matrixVariables: { key1: "value1", key2: "value2" }
+        }
       },
-      rootFolder: "folder",
-      matrixVariables: { key1: "value1", key2: "value2" }
+      rootFolder: "folder"
     }
   };
   const workflowInformation = {
@@ -120,10 +123,13 @@ test("start no parent dependencies archive artifacts", async () => {
         group: "defaultGroup",
         project: "projectX",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile",
+          matrixVariables: { key1: "value1", key2: "value2" }
+        }
       },
-      rootFolder: "folder",
-      matrixVariables: { key1: "value1", key2: "value2" }
+      rootFolder: "folder"
     }
   };
   const workflowInformation = {
@@ -211,10 +217,13 @@ test("start with parent dependencies without upstream command", async () => {
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile",
+          matrixVariables: { key1: "value1", key2: "value2" }
+        }
       },
-      rootFolder: "folder",
-      matrixVariables: { key1: "value1", key2: "value2" }
+      rootFolder: "folder"
     }
   };
   const workflowInformation = {
@@ -315,10 +324,13 @@ test("start with parent dependencies with upstream command", async () => {
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile",
+          matrixVariables: { key1: "value1", key2: "value2" }
+        }
       },
-      rootFolder: "folder",
-      matrixVariables: { key1: "value1", key2: "value2" }
+      rootFolder: "folder"
     }
   };
   const workflowInformation = {
@@ -407,10 +419,13 @@ test("start with parent dependencies with archive artifacts with path", async ()
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile",
+          matrixVariables: { key1: "value1", key2: "value2" }
+        }
       },
-      rootFolder: "folder",
-      matrixVariables: { key1: "value1", key2: "value2" }
+      rootFolder: "folder"
     }
   };
   const workflowInformation = {
@@ -536,10 +551,13 @@ test("start with parent dependencies with archive artifacts with path exception"
         group: "defaultGroup",
         project: "exceptionProject",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile",
+          matrixVariables: { key1: "value1", key2: "value2" }
+        }
       },
-      rootFolder: "folder",
-      matrixVariables: { key1: "value1", key2: "value2" }
+      rootFolder: "folder"
     }
   };
   const workflowInformation = {
@@ -625,10 +643,13 @@ test("start with parent dependencies with archive artifacts with path dependenci
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile",
+          matrixVariables: { key1: "value1", key2: "value2" }
+        }
       },
-      rootFolder: "folder",
-      matrixVariables: { key1: "value1", key2: "value2" }
+      rootFolder: "folder"
     }
   };
   const workflowInformation = {
@@ -754,10 +775,13 @@ test("start with parent dependencies with archive artifacts with path dependenci
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile",
+          matrixVariables: { key1: "value1", key2: "value2" }
+        }
       },
-      rootFolder: "folder",
-      matrixVariables: { key1: "value1", key2: "value2" }
+      rootFolder: "folder"
     }
   };
   const workflowInformation = {
@@ -872,10 +896,13 @@ test("start with parent dependencies with archive artifacts one of them without 
         group: "defaultGroup",
         project: "projectXChild",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch"
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: "whateverfile",
+          matrixVariables: { key1: "value1", key2: "value2" }
+        }
       },
-      rootFolder: "folder",
-      matrixVariables: { key1: "value1", key2: "value2" }
+      rootFolder: "folder"
     }
   };
   const workflowInformation = {

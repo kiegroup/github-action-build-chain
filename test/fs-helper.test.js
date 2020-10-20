@@ -40,8 +40,7 @@ lienzo-tests
 `,
               "parent-dependencies": `lienzo-core
 groupx/errai
-`,
-              "workflow-file-name": "flow.yaml"
+`
             }
           }
         ]

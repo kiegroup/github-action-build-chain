@@ -12,9 +12,6 @@ async function main() {
     auth: `token ${token}`,
     userAgent: "kiegroup/github-build-chain-action-it"
   });
-  addInputVariableToEnv("parent-dependencies");
-  addInputVariableToEnv("child-dependencies");
-  addInputVariableToEnv("workflow-file-name");
   const config = await createConfigLocally(
     octokit,
     process.env.URL,
@@ -22,13 +19,6 @@ async function main() {
   );
   const context = { token, octokit, config };
   await executeGitHubAction(context);
-}
-
-function addInputVariableToEnv(inputVariable) {
-  if (process.env[inputVariable]) {
-    process.env[`INPUT_${inputVariable.replace(/ /g, "_").toUpperCase()}`] =
-      process.env[inputVariable];
-  }
 }
 
 main().catch(e => {

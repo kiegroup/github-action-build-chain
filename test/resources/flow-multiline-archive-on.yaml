@@ -33,6 +33,5 @@ jobs:
             !path/**/*.tmp2
             !path/**/*.tmp3@not_existing
           archive-artifacts-if-no-files-found: "warn"
-          workflow-file-name: "flow-multiline-archive-on.yaml"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

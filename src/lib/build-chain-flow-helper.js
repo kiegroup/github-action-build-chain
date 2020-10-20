@@ -6,75 +6,56 @@ const {
   getForkedProject
 } = require("./git");
 const { logger } = require("./common");
-const { saveCheckoutInfo } = require("./context");
+const { parentChainFromNode } = require("build-chain-configuration-reader");
 
-// async function checkoutDefinitionTree(
-//   context,
-//   definitionTree,
-//   alreadyCheckedOut = []
-// ) {
-//   const result = {};
-//   for (const dependencyKey of Object.keys(dependencies)) {
-//     result[dependencyKey] = await checkoutProject(
-//       context,
-//       dependencyKey,
-//       dependencies[dependencyKey],
-//       currentTargetBranch
-//     );
-//   }
-//   return result;
-// }
-
-async function checkoutDependencies(
-  context,
-  dependencies,
-  currentTargetBranch
-) {
-  const result = {};
-  for (const dependencyKey of Object.keys(dependencies)) {
-    result[dependencyKey] = await checkoutProject(
-      context,
-      dependencyKey,
-      dependencies[dependencyKey],
-      currentTargetBranch
-    );
+async function checkoutDefinitionTree(context, treeNode) {
+  const nodeChain = await parentChainFromNode(treeNode);
+  let currentTargetBranch = context.config.github.targetBranch;
+  for (const node of [...nodeChain].reverse()) {
+    try {
+      node.checkoutInfo = await checkoutProject(
+        context,
+        node,
+        currentTargetBranch
+      );
+      currentTargetBranch = node.checkoutInfo.targetBranch;
+    } catch (err) {
+      logger.error(`Error checking out project ${node.project}`);
+      throw err;
+    }
   }
-  return result;
+
+  return nodeChain;
 }
 
-async function checkoutProject(
-  context,
-  project,
-  dependencyInformation,
-  currentTargetBranch
-) {
-  const dir = getDir(context.config.rootFolder, project);
+async function checkoutProject(context, node, currentTargetBranch) {
+  logger.info(`Checking out project ${node.project}`);
+  const dir = getDir(context.config.rootFolder, node.project);
   const checkoutInfo = await getCheckoutInfo(
     context,
-    dependencyInformation.group,
-    project,
+    node.repo.group,
+    node.repo.name,
     currentTargetBranch,
-    dependencyInformation.mapping
+    node.mapping
   );
   if (checkoutInfo == undefined) {
-    const msg = `Trying to checking out ${project} into '${dir}'. It does not exist.`;
+    const msg = `Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
     logger.error(msg);
     throw new Error(msg);
   }
-
   if (checkoutInfo.merge) {
     logger.info(
-      `Merging ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      `Merging ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
     );
     try {
       await clone(
-        `${context.config.github.serverUrl}/${dependencyInformation.group}/${project}`,
+        `${context.config.github.serverUrl}/${node.project}`,
         dir,
         checkoutInfo.targetBranch
       );
     } catch (err) {
       logger.error(
-        `Error checking out (before merging)  ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${context.config.github.targetBranch}`
+        `Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
       );
       throw err;
     }
@@ -108,7 +89,6 @@ async function checkoutProject(
       throw err;
     }
   }
-  saveCheckoutInfo(context, project, checkoutInfo);
   return checkoutInfo;
 }
 
@@ -216,8 +196,7 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
 }
 
 module.exports = {
-  checkoutDependencies,
-  checkoutProject,
+  checkoutDefinitionTree,
   getCheckoutInfo,
   getDir
 };

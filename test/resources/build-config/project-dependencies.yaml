@@ -29,6 +29,11 @@ dependencies:
       - project: kiegroup/appformer
       - project: kiegroup/kie-soup
 
+  - project: kiegroup/jbpm
+    dependencies:
+      - project: kiegroup/drools
+      - project: kiegroup/kie-soup
+
   - project: kiegroup/optaplanner
     dependencies:
       - project: kiegroup/drools
@@ -39,11 +44,6 @@ dependencies:
         mapping:
           source: 7.x
           target: master
-
-  - project: kiegroup/jbpm
-    dependencies:
-      - project: kiegroup/drools
-      - project: kiegroup/kie-soup
 
   - project: kiegroup/kie-jpmml-integration
     dependencies:

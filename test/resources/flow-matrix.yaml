@@ -32,6 +32,5 @@ jobs:
             matrix.version: ${{ matrix.version }}
             sourceBranch: ${{ matrix.sourceBranch }}
             matrix.targetBranch: ${{ matrix.sourceBranch }}
-          workflow-file-name: "flow-matrix.yaml"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

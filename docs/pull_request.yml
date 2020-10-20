@@ -6,13 +6,10 @@ jobs:
     name: Build Pull Request
     steps:
       - uses: actions/checkout@v2
-      - name: Build Chain
+      - name: Build Chain ${{ matrix.java-version }}
         id: build-chain
-        uses: kiegroup/github-action-build-chain@master
+        uses: ginxo/github-action-build-chain@BXMSPROD-1025
         with:
-          parent-dependencies: "lienzo-core"
-          child-dependencies: "droolsjbpm-build-bootstrap"
-          build-command: "mvn clean install"
-          build-command-upstream: "mvn clean"
+          definition-file: https://raw.githubusercontent.com/${GROUP}/${PROJECT_NAME}/${BRANCH}/.ci/pull-request-config.yaml
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

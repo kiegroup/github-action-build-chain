@@ -8,7 +8,7 @@ class ExitError extends Error {
   }
 }
 
-async function execute(cwd, command, project) {
+async function execute(cwd, command) {
   logger.info(`Execute command '${command}' in dir '${cwd}'`);
   const options = {};
   options.cwd = cwd;

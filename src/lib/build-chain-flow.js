@@ -107,7 +107,7 @@ async function executeBuildCommands(cwd, buildCommands, project) {
     ? buildCommands
     : [buildCommands]) {
     core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
-    await execute(cwd, treatCommand(command), project);
+    await execute(cwd, treatCommand(command));
     core.endGroup();
   }
 }

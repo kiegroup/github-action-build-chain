@@ -107,18 +107,15 @@ test("start no parent dependencies. project triggering the job", async () => {
   expect(execute).toHaveBeenCalledTimes(3);
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/lienzo_core",
-    "current command",
-    "kiegroup/lienzo-core"
+    "current command"
   );
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/lienzo_core",
-    "before current command",
-    "kiegroup/lienzo-core"
+    "before current command"
   );
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/lienzo_core",
-    "after current command",
-    "kiegroup/lienzo-core"
+    "after current command"
   );
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(0);
 });
@@ -210,33 +207,27 @@ test("start no parent dependencies. 2 projects", async () => {
   expect(execute).toHaveBeenCalledTimes(6);
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/lienzo_core",
-    "upstream command",
-    "kiegroup/lienzo-core"
+    "upstream command"
   );
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/lienzo_core",
-    "before upstream command",
-    "kiegroup/lienzo-core"
+    "before upstream command"
   );
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/lienzo_core",
-    "after upstream command",
-    "kiegroup/lienzo-core"
+    "after upstream command"
   );
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/droolsjbpm_build_bootstrap",
-    "current command",
-    "kiegroup/droolsjbpm-build-bootstrap"
+    "current command"
   );
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/droolsjbpm_build_bootstrap",
-    "before current command",
-    "kiegroup/droolsjbpm-build-bootstrap"
+    "before current command"
   );
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/droolsjbpm_build_bootstrap",
-    "after current command",
-    "kiegroup/droolsjbpm-build-bootstrap"
+    "after current command"
   );
 
   expect(runUploadArtifactsMock).toHaveBeenCalledTimes(0);
@@ -329,18 +320,15 @@ test("start no parent dependencies archive artifacts", async () => {
   expect(execute).toHaveBeenCalledTimes(3);
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/lienzo_core",
-    "current command",
-    "kiegroup/lienzo-core"
+    "current command"
   );
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/lienzo_core",
-    "before current command",
-    "kiegroup/lienzo-core"
+    "before current command"
   );
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/lienzo_core",
-    "after current command",
-    "kiegroup/lienzo-core"
+    "after current command"
   );
 
   expect(archiveArtifacts).toHaveBeenCalledTimes(1);
@@ -448,8 +436,7 @@ test("start no parent dependencies archive artifacts. Execute Exception", async 
   expect(execute).toHaveBeenCalledTimes(1);
   expect(execute).toHaveBeenCalledWith(
     "kiegroup/lienzo_core",
-    "before current command",
-    "kiegroup/lienzo-core"
+    "before current command"
   );
 
   expect(archiveArtifacts).toHaveBeenCalledTimes(1);

@@ -22881,8 +22881,10 @@ exports.createGZipFileInBuffer = createGZipFileInBuffer;
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const buildChainFlow = __webpack_require__(653);
+const { logger } = __webpack_require__(79);
 
 async function executeGitHubAction(context) {
+  logger.info("Executing action", __dirname);
   await buildChainFlow.start(context);
 }
 

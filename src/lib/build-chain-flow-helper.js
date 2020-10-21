@@ -31,7 +31,7 @@ async function checkoutDefinitionTree(context, treeNode) {
 }
 
 async function checkoutProject(context, node, currentTargetBranch) {
-  logger.info(`Checking out project ${node.project}`);
+  logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
   const checkoutInfo = await getCheckoutInfo(
     context,
@@ -47,7 +47,7 @@ async function checkoutProject(context, node, currentTargetBranch) {
   }
   if (checkoutInfo.merge) {
     logger.info(
-      `Merging ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      `[${node.repo.group}/${node.project}] Merging ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
     );
     try {
       await clone(
@@ -114,7 +114,7 @@ async function getCheckoutInfo(
     sourceGroup
   );
   logger.info(
-    `Getting checkout Info for ${targetProject}. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
+    `[${targetGroup}/${targetProject}] Getting checkout Info for. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
       mapping
         ? "source:" + mapping.source + " target:" + mapping.target
         : "not defined"

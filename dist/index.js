@@ -1200,7 +1200,7 @@ async function checkoutDefinitionTree(context, treeNode) {
 }
 
 async function checkoutProject(context, node, currentTargetBranch) {
-  logger.info(`Checking out project ${node.project}`);
+  logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
   const checkoutInfo = await getCheckoutInfo(
     context,
@@ -1216,7 +1216,7 @@ async function checkoutProject(context, node, currentTargetBranch) {
   }
   if (checkoutInfo.merge) {
     logger.info(
-      `Merging ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      `[${node.repo.group}/${node.project}] Merging ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
     );
     try {
       await clone(
@@ -1283,7 +1283,7 @@ async function getCheckoutInfo(
     sourceGroup
   );
   logger.info(
-    `Getting checkout Info for ${targetProject}. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
+    `[${targetGroup}/${targetProject}] Getting checkout Info for. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
       mapping
         ? "source:" + mapping.source + " target:" + mapping.target
         : "not defined"
@@ -22919,7 +22919,10 @@ const {
   getDir,
   getUrlPlaceHolders
 } = __webpack_require__(57);
-const { getTreeForProject } = __webpack_require__(702);
+const {
+  getTreeForProject,
+  treatUrl
+} = __webpack_require__(702);
 
 const { printCheckoutInformation } = __webpack_require__(656);
 const { logger } = __webpack_require__(79);
@@ -22934,15 +22937,19 @@ async function start(context) {
   core.startGroup(
     `Checking out ${context.config.github.groupProject} and its dependencies`
   );
+  const placeHolders = getUrlPlaceHolders(context);
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
     context.config.github.repository,
-    getUrlPlaceHolders(context)
+    placeHolders
   );
   logger.info(
-    `Tree for project ${context.config.github.repository} loaded from ${
-      definitionTree.sourceFile
-    }. Dependencies: ${definitionTree.dependencies.map(node => node.project)}`
+    `Tree for project ${
+      context.config.github.repository
+    } loaded from ${treatUrl(
+      context.config.github.inputs.definitionFile,
+      placeHolders
+    )}. Dependencies: ${definitionTree.dependencies.map(node => node.project)}`
   );
   const nodeChain = await checkoutDefinitionTree(context, definitionTree);
   core.endGroup();
@@ -23024,12 +23031,14 @@ function getCommand(buildCommand, isProjectTriggeringJob) {
 }
 
 async function executeBuildCommands(cwd, buildCommands, project) {
-  for (const command of Array.isArray(buildCommands)
-    ? buildCommands
-    : [buildCommands]) {
-    core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
-    await execute(cwd, treatCommand(command));
-    core.endGroup();
+  if (buildCommands) {
+    for (const command of Array.isArray(buildCommands)
+      ? buildCommands.filter(c => c)
+      : [buildCommands]) {
+      core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
+      await execute(cwd, treatCommand(command));
+      core.endGroup();
+    }
   }
 }
 
@@ -25111,12 +25120,14 @@ module.exports = (promise, onFinally) => {
 const { getTree, getTreeForProject } = __webpack_require__(101);
 const { readDefinitionFile } = __webpack_require__(799);
 const { parentChainFromNode } = __webpack_require__(636);
+const { treatUrl } = __webpack_require__(824);
 
 module.exports = {
   getTree,
   getTreeForProject,
   readDefinitionFile,
-  parentChainFromNode
+  parentChainFromNode,
+  treatUrl
 };
 
 
@@ -25202,7 +25213,7 @@ exports.SearchState = SearchState;
 /* 731 */
 /***/ (function(module) {
 
-module.exports = {"name":"build-chain-action","version":"0.0.1","description":"GitHub action to define action chains","main":"src/lib/api.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":true,"bin":{"build-chain-action":"./bin/build-chain.js"},"scripts":{"test":"jest","it":"node it/it.js","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@kie/build-chain-configuration-reader":"^0.0.2","@octokit/rest":"^17.6.0","argparse":"^1.0.7","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","dotenv":"^8.2.0","eslint":"^7.10.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
+module.exports = {"name":"build-chain-action","version":"0.0.1","description":"GitHub action to define action chains","main":"src/lib/api.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":true,"bin":{"build-chain-action":"./bin/build-chain.js"},"scripts":{"test":"jest","it":"node it/it.js","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@kie/build-chain-configuration-reader":"^0.0.4","@octokit/rest":"^17.6.0","argparse":"^1.0.7","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","dotenv":"^8.2.0","eslint":"^7.10.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
 
 /***/ }),
 /* 732 */,
@@ -25786,6 +25797,7 @@ exports.getUserAgent = getUserAgent;
 const fs = __webpack_require__(747);
 
 const { getUrlContent } = __webpack_require__(593);
+const { treatUrl } = __webpack_require__(824);
 const {
   validateDefinition,
   validateDependencies
@@ -25811,13 +25823,11 @@ async function readDefinitionFile(file, urlPlaceHolders = {}) {
  */
 async function readDefinitionFileFromFile(filePath, urlPlaceHolders) {
   const defintionFileContent = fs.readFileSync(filePath, "utf8");
-  const yamlObject = loadYaml(
+  return loadYaml(
     readYaml(defintionFileContent),
     filePath.substring(0, filePath.lastIndexOf("/")),
     urlPlaceHolders
   );
-  yamlObject.sourceFile = filePath;
-  return yamlObject;
 }
 
 /**
@@ -25836,15 +25846,12 @@ async function readDefinitionFileFromUrl(url, urlPlaceHolders) {
   ) {
     const dependenciesContent = await getUrlContent(
       `${treatedUrl.substring(0, treatedUrl.lastIndexOf("/"))}/${
-      definitionYaml.dependencies
+        definitionYaml.dependencies
       }`
     );
     fs.writeFileSync(definitionYaml.dependencies, dependenciesContent);
   }
-  const yamlObject = loadYaml(definitionYaml, "./", urlPlaceHolders);
-  yamlObject.sourceFile = treatedUrl;
-  console.log("sourcefile", yamlObject.sourceFile);
-  return yamlObject;
+  return loadYaml(definitionYaml, "./", urlPlaceHolders);
 }
 
 /**
@@ -25860,31 +25867,17 @@ async function loadYaml(definitionYaml, definitionFileFolder, urlPlaceHolders) {
       "http"
     )
       ? await getUrlContent(
-        treatUrl(definitionYaml.dependencies, urlPlaceHolders)
-      )
+          treatUrl(definitionYaml.dependencies, urlPlaceHolders)
+        )
       : fs.readFileSync(
-        `${definitionFileFolder}/${definitionYaml.dependencies}`,
-        "utf8"
-      );
+          `${definitionFileFolder}/${definitionYaml.dependencies}`,
+          "utf8"
+        );
     const dependenciesYaml = readYaml(dependenciesFileContent);
     validateDependencies(dependenciesYaml);
     definitionYaml.dependencies = dependenciesYaml.dependencies;
   }
-
   return definitionYaml;
-}
-
-/**
- * it treats the url in case it contains
- * @param {String} url a http(s)://whatever.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/whateverfile.txt format, where place olders are optional and can be placed anywhere on the string
- * @param {Object} placeHolders the key/values to replace url's place holders
- */
-function treatUrl(url, placeHolders) {
-  let result = url;
-  Object.entries(placeHolders).forEach(
-    ([key, value]) => (result = result.replace(`$\{${key}}`, value))
-  );
-  return result;
 }
 
 module.exports = { readDefinitionFile };
@@ -26250,7 +26243,26 @@ module.exports.addConstructor = deprecated('addConstructor');
 /* 821 */,
 /* 822 */,
 /* 823 */,
-/* 824 */,
+/* 824 */
+/***/ (function(module) {
+
+/**
+ * it treats the url in case it contains
+ * @param {String} url a http(s)://whatever.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/whateverfile.txt format, where place olders are optional and can be placed anywhere on the string
+ * @param {Object} placeHolders the key/values to replace url's place holders
+ */
+function treatUrl(url, placeHolders) {
+  let result = url;
+  Object.entries(placeHolders).forEach(
+    ([key, value]) => (result = result.replace(`$\{${key}}`, value))
+  );
+  return result;
+}
+
+module.exports = { treatUrl };
+
+
+/***/ }),
 /* 825 */,
 /* 826 */,
 /* 827 */,

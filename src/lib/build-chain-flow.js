@@ -3,7 +3,10 @@ const {
   getDir,
   getUrlPlaceHolders
 } = require("./build-chain-flow-helper");
-const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
+const {
+  getTreeForProject,
+  treatUrl
+} = require("@kie/build-chain-configuration-reader");
 
 const { printCheckoutInformation } = require("./summary");
 const { logger } = require("./common");
@@ -18,15 +21,19 @@ async function start(context) {
   core.startGroup(
     `Checking out ${context.config.github.groupProject} and its dependencies`
   );
+  const placeHolders = getUrlPlaceHolders(context);
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
     context.config.github.repository,
-    getUrlPlaceHolders(context)
+    placeHolders
   );
   logger.info(
-    `Tree for project ${context.config.github.repository} loaded from ${
-      definitionTree.sourceFile
-    }. Dependencies: ${definitionTree.dependencies.map(node => node.project)}`
+    `Tree for project ${
+      context.config.github.repository
+    } loaded from ${treatUrl(
+      context.config.github.inputs.definitionFile,
+      placeHolders
+    )}. Dependencies: ${definitionTree.dependencies.map(node => node.project)}`
   );
   const nodeChain = await checkoutDefinitionTree(context, definitionTree);
   core.endGroup();
@@ -108,12 +115,14 @@ function getCommand(buildCommand, isProjectTriggeringJob) {
 }
 
 async function executeBuildCommands(cwd, buildCommands, project) {
-  for (const command of Array.isArray(buildCommands)
-    ? buildCommands
-    : [buildCommands]) {
-    core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
-    await execute(cwd, treatCommand(command));
-    core.endGroup();
+  if (buildCommands) {
+    for (const command of Array.isArray(buildCommands)
+      ? buildCommands.filter(c => c)
+      : [buildCommands]) {
+      core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
+      await execute(cwd, treatCommand(command));
+      core.endGroup();
+    }
   }
 }
 

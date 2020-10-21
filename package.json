@@ -1,36 +1,27 @@
 {
-  "name": "build-chain-configuration-reader",
+  "name": "build-chain-action",
   "version": "0.0.1",
-  "description": "A library to read build-chain tool configuration files",
-  "main": "src/lib/reader.js",
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:kiegroup/build-chain-configuration-reader"
+  "description": "GitHub action to define action chains",
+  "main": "src/lib/api.js",
+  "author": "Enrique Mingorance Cano <emingora@redhat.com>",
+  "license": "SEE LICENSE IN LICENSE",
+  "private": true,
+  "bin": {
+    "build-chain-action": "./bin/build-chain.js"
   },
-  "keywords": [
-    "build chain",
-    "github actions",
-    "cross",
-    "pull requests",
-    "PR",
-    "build"
-  ],
-  "author": "Enrique Mingorance <emingora@redhat.com>",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/kiegroup/build-chain-configuration-reader/issues"
-  },
-  "homepage": "https://github.com/kiegroup/build-chain-configuration-reader",
   "scripts": {
     "test": "jest",
+    "it": "node it/it.js",
+    "locktt": "locktt",
     "lint": "eslint .",
     "prettier": "prettier -l src/** test/**/*.js",
     "prettier-write": "prettier --write .",
     "lint-final": "npm run prettier && npm run lint",
-    "prepublish": "npm run lint && npm run test"
+    "prepublish": "npm run lint && npm run test",
+    "ncc-build": "ncc build bin/build-chain.js"
   },
   "git-pre-hooks": {
-    "pre-commit": "npm run prettier",
+    "pre-commit": "npm run prettier && npm run ncc-build && git add dist/index.js",
     "pre-push": "npm ci"
   },
   "dependencies": {
@@ -46,6 +37,7 @@
     "tmp": "^0.2.1"
   },
   "devDependencies": {
+    "@zeit/ncc": "^0.22.3",
     "dotenv": "^8.2.0",
     "eslint": "^7.10.0",
     "eslint-config-google": "^0.14.0",

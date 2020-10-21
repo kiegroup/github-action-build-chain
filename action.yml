@@ -5,10 +5,7 @@ description: |
 inputs:
   definition-file:
     description: "the file where the build chain is defined. It can a file in the same repository (relative path) or a URL"
-    required: false
-  matrix-variables:
-    description: "the map of matrix-variable-key:matrix-variable-value in case you want to use them from build-command/build-command-upstream.."
-    required: false
+    required: true
 runs:
   using: "node12"
   main: "dist/index.js"

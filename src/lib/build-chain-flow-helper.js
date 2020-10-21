@@ -6,58 +6,60 @@ const {
   getForkedProject
 } = require("./git");
 const { logger } = require("./common");
-const { saveCheckoutInfo } = require("./context");
+const {
+  parentChainFromNode,
+  treatUrl
+} = require("@kie/build-chain-configuration-reader");
+const { checkUrlExist } = require("./util/http");
 
-async function checkoutDependencies(
-  context,
-  dependencies,
-  currentTargetBranch
-) {
-  const result = {};
-  for (const dependencyKey of Object.keys(dependencies)) {
-    result[dependencyKey] = await checkoutProject(
-      context,
-      dependencyKey,
-      dependencies[dependencyKey],
-      currentTargetBranch
-    );
+async function checkoutDefinitionTree(context, treeNode) {
+  const nodeChain = await parentChainFromNode(treeNode);
+  let currentTargetBranch = context.config.github.targetBranch;
+  for (const node of [...nodeChain].reverse()) {
+    try {
+      node.checkoutInfo = await checkoutProject(
+        context,
+        node,
+        currentTargetBranch
+      );
+      currentTargetBranch = node.checkoutInfo.targetBranch;
+    } catch (err) {
+      logger.error(`Error checking out project ${node.project}`);
+      throw err;
+    }
   }
-  return result;
+
+  return nodeChain;
 }
 
-async function checkoutProject(
-  context,
-  project,
-  dependencyInformation,
-  currentTargetBranch
-) {
-  const dir = getDir(context.config.rootFolder, project);
+async function checkoutProject(context, node, currentTargetBranch) {
+  logger.info(`[${node.project}] Checking out project`);
+  const dir = getDir(context.config.rootFolder, node.project);
   const checkoutInfo = await getCheckoutInfo(
     context,
-    dependencyInformation.group,
-    project,
+    node.repo.group,
+    node.repo.name,
     currentTargetBranch,
-    dependencyInformation.mapping
+    node.mapping
   );
   if (checkoutInfo == undefined) {
-    const msg = `Trying to checking out ${project} into '${dir}'. It does not exist.`;
+    const msg = `Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
     logger.error(msg);
     throw new Error(msg);
   }
-
   if (checkoutInfo.merge) {
     logger.info(
-      `Merging ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      `[${node.project}] Merging ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
     );
     try {
       await clone(
-        `${context.config.github.serverUrl}/${dependencyInformation.group}/${project}`,
+        `${context.config.github.serverUrl}/${node.project}`,
         dir,
         checkoutInfo.targetBranch
       );
     } catch (err) {
       logger.error(
-        `Error checking out (before merging)  ${context.config.github.serverUrl}/${dependencyInformation.group}/${project}:${context.config.github.targetBranch}`
+        `Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
       );
       throw err;
     }
@@ -91,7 +93,6 @@ async function checkoutProject(
       throw err;
     }
   }
-  saveCheckoutInfo(context, project, checkoutInfo);
   return checkoutInfo;
 }
 
@@ -115,7 +116,7 @@ async function getCheckoutInfo(
     sourceGroup
   );
   logger.info(
-    `Getting checkout Info for ${targetProject}. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
+    `[${targetGroup}/${targetProject}] Getting checkout Info. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
       mapping
         ? "source:" + mapping.source + " target:" + mapping.target
         : "not defined"
@@ -198,9 +199,50 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
   }
 }
 
+/**
+ * it checks what's the proper URL to retrieve definition from in case a URL with ${} expression is defined. It will try sourceGroup/sourceBranch then targetGroup/sourceBranch and then targetGroup/targetBranch in this order.
+ * @param {Object} context the context information
+ * @param {Object} definitionFile the definition file path or URL
+ */
+async function getFinalDefinitionFilePath(context, definitionFile) {
+  if (definitionFile.startsWith("http") && definitionFile.includes("${")) {
+    const sourceGroupAndBranchOption = treatUrl(definitionFile, {
+      GROUP: context.config.github.sourceGroup,
+      PROJECT_NAME: context.config.github.project,
+      BRANCH: context.config.github.sourceBranch
+    });
+    if (!(await checkUrlExist(sourceGroupAndBranchOption))) {
+      const targetGroupSourceBranchOption = treatUrl(definitionFile, {
+        GROUP: context.config.github.group,
+        PROJECT_NAME: context.config.github.project,
+        BRANCH: context.config.github.sourceBranch
+      });
+      if (!(await checkUrlExist(targetGroupSourceBranchOption))) {
+        const targetGroupAndBranchOption = treatUrl(definitionFile, {
+          GROUP: context.config.github.group,
+          PROJECT_NAME: context.config.github.project,
+          BRANCH: context.config.github.targetBranch
+        });
+        if (!(await checkUrlExist(targetGroupAndBranchOption))) {
+          throw new Error(
+            `Definition file ${definitionFile} does not exist for any of these cases: ${sourceGroupAndBranchOption}, ${targetGroupSourceBranchOption} or ${targetGroupAndBranchOption}`
+          );
+        } else {
+          return targetGroupAndBranchOption;
+        }
+      } else {
+        return targetGroupSourceBranchOption;
+      }
+    } else {
+      return sourceGroupAndBranchOption;
+    }
+  }
+  return definitionFile;
+}
+
 module.exports = {
-  checkoutDependencies,
-  checkoutProject,
+  checkoutDefinitionTree,
   getCheckoutInfo,
-  getDir
+  getDir,
+  getFinalDefinitionFilePath
 };

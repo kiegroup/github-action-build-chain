@@ -12,9 +12,7 @@ async function main() {
     auth: `token ${token}`,
     userAgent: "kiegroup/github-build-chain-action-it"
   });
-  addInputVariableToEnv("parent-dependencies");
-  addInputVariableToEnv("child-dependencies");
-  addInputVariableToEnv("workflow-file-name");
+  addInputVariableToEnv("definition-file", true);
   const config = await createConfigLocally(
     octokit,
     process.env.URL,
@@ -24,10 +22,19 @@ async function main() {
   await executeGitHubAction(context);
 }
 
-function addInputVariableToEnv(inputVariable) {
+/**
+ * The idea here is to add every env variable as an INPUT_X variable, this is the way github actions sets variables to the environment, so it's the way to introduce inputs from command line
+ * @param {String} inputVariable the input variable name
+ * @param {Boolean} mandatory is the input variable mandatory
+ */
+function addInputVariableToEnv(inputVariable, mandatory) {
   if (process.env[inputVariable]) {
     process.env[`INPUT_${inputVariable.replace(/ /g, "_").toUpperCase()}`] =
       process.env[inputVariable];
+  } else if (mandatory) {
+    throw new Error(
+      `Input variable ${inputVariable} is mandatory and it's not defined. Please add it following documentation.`
+    );
   }
 }
 

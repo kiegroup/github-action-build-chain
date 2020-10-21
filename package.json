@@ -1,6 +1,6 @@
 {
   "name": "build-chain-action",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "description": "GitHub action to define action chains",
   "main": "src/lib/api.js",
   "author": "Enrique Mingorance Cano <emingora@redhat.com>",
@@ -29,6 +29,7 @@
     "@actions/core": "^1.1.3",
     "@actions/exec": "^1.0.4",
     "@actions/glob": "^0.1.0",
+    "@kie/build-chain-configuration-reader": "^0.0.4",
     "@octokit/rest": "^17.6.0",
     "argparse": "^1.0.7",
     "fs-extra": "^9.0.0",
@@ -38,7 +39,7 @@
   "devDependencies": {
     "@zeit/ncc": "^0.22.3",
     "dotenv": "^8.2.0",
-    "eslint": "^7.5.0",
+    "eslint": "^7.10.0",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^6.11.0",
     "eslint-config-standard": "^14.1.1",

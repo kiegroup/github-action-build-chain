@@ -1,7 +1,7 @@
 const {
   getCheckoutInfo,
-  checkoutDependencies,
-  checkoutProject
+  checkoutDefinitionTree,
+  getFinalDefinitionFilePath
 } = require("../src/lib/build-chain-flow-helper");
 jest.mock("../src/lib/git");
 const {
@@ -11,6 +11,12 @@ const {
   hasPullRequest: hasPullRequestMock,
   getForkedProject: getForkedProjectMock
 } = require("../src/lib/git");
+
+const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
+const path = require("path");
+
+const { checkUrlExist } = require("../src/lib/util/http");
+jest.mock("../src/lib/util/http");
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -322,12 +328,17 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge. Mapping n
   expect(result.targetBranch).toEqual("targetBranch");
 });
 
-test("checkoutDependencies", async () => {
+test("checkoutDefinitionTree", async () => {
   // Arrange
+  const project = "kiegroup/droolsjbpm-build-bootstrap";
+  const definitionTree = await getTreeForProject(
+    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
+    project
+  );
+
   const context = {
     config: {
       github: {
-        flowFile: "main.yml",
         serverUrl: "URL",
         sourceGroup: "sourceGroup",
         author: "author",
@@ -337,428 +348,715 @@ test("checkoutDependencies", async () => {
       rootFolder: "folder"
     }
   };
-  const dependencies = {
-    "project-A": { group: "groupA" },
-    projectB: {
-      group: "groupB",
-      mapping: { source: "tBranch", target: "tBranchMapped" }
-    },
-    projectC: { group: "groupC" },
-    projectD: {
-      group: "groupD",
-      mapping: { source: "branchX", target: "branchY" }
-    },
-    projectE: {
-      group: "groupE",
-      mapping: { source: "branchX", target: "tBranchMapped" }
+  getForkedProjectMock
+    .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" })
+    .mockResolvedValueOnce({ name: "lienzo-core-forked" });
+  doesBranchExistMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+
+  // Act
+  const result = await checkoutDefinitionTree(context, definitionTree);
+
+  // Assert
+  expect(mergeMock).toHaveBeenCalledTimes(2);
+  expect(mergeMock).toHaveBeenCalledWith(
+    "folder/kiegroup/lienzo_core",
+    "sourceGroup",
+    "lienzo-core-forked",
+    "sBranch"
+  );
+  expect(mergeMock).toHaveBeenCalledWith(
+    "folder/kiegroup/droolsjbpm_build_bootstrap",
+    "sourceGroup",
+    "droolsjbpm-build-bootstrap-forked",
+    "sBranch"
+  );
+
+  expect(cloneMock).toHaveBeenCalledTimes(2);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/lienzo-core",
+    "folder/kiegroup/lienzo_core",
+    "tBranch"
+  );
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/droolsjbpm-build-bootstrap",
+    "folder/kiegroup/droolsjbpm_build_bootstrap",
+    "tBranch"
+  );
+
+  expect(result.length).toBe(2);
+  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
+  expect(result[0].checkoutInfo).toStrictEqual({
+    project: "lienzo-core-forked",
+    group: "sourceGroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: true
+  });
+  expect(result[1].project).toStrictEqual(
+    "kiegroup/droolsjbpm-build-bootstrap"
+  );
+  expect(result[1].checkoutInfo).toStrictEqual({
+    project: "droolsjbpm-build-bootstrap-forked",
+    group: "sourceGroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: true
+  });
+});
+
+test("checkoutDefinitionTree has no PR", async () => {
+  // Arrange
+  const project = "kiegroup/droolsjbpm-build-bootstrap";
+  const definitionTree = await getTreeForProject(
+    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
+    project
+  );
+
+  const context = {
+    config: {
+      github: {
+        serverUrl: "URL",
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: "folder"
     }
   };
+  getForkedProjectMock
+    .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" })
+    .mockResolvedValueOnce({ name: "lienzo-core-forked" });
+  doesBranchExistMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+
+  // Act
+  const result = await checkoutDefinitionTree(context, definitionTree);
+
+  // Assert
+  expect(mergeMock).toHaveBeenCalledTimes(1);
+  expect(mergeMock).toHaveBeenCalledWith(
+    "folder/kiegroup/lienzo_core",
+    "sourceGroup",
+    "lienzo-core-forked",
+    "sBranch"
+  );
+
+  expect(cloneMock).toHaveBeenCalledTimes(2);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/lienzo-core",
+    "folder/kiegroup/lienzo_core",
+    "tBranch"
+  );
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/sourceGroup/droolsjbpm-build-bootstrap-forked",
+    "folder/kiegroup/droolsjbpm_build_bootstrap",
+    "sBranch"
+  );
+
+  expect(result.length).toBe(2);
+  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
+  expect(result[0].checkoutInfo).toStrictEqual({
+    project: "lienzo-core-forked",
+    group: "sourceGroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: true
+  });
+  expect(result[1].project).toStrictEqual(
+    "kiegroup/droolsjbpm-build-bootstrap"
+  );
+  expect(result[1].checkoutInfo).toStrictEqual({
+    project: "droolsjbpm-build-bootstrap-forked",
+    group: "sourceGroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: false
+  });
+});
+
+test("checkoutDefinitionTree sBranch does not exists but has PR", async () => {
+  // Arrange
+  const project = "kiegroup/droolsjbpm-build-bootstrap";
+  const definitionTree = await getTreeForProject(
+    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
+    project
+  );
+
+  const context = {
+    config: {
+      github: {
+        serverUrl: "URL",
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: "folder"
+    }
+  };
+  getForkedProjectMock
+    .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" })
+    .mockResolvedValueOnce({ name: "lienzo-core-forked" });
+  doesBranchExistMock
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+
+  // Act
+  const result = await checkoutDefinitionTree(context, definitionTree);
+
+  // Assert
+  expect(mergeMock).toHaveBeenCalledTimes(2);
+  expect(mergeMock).toHaveBeenCalledWith(
+    "folder/kiegroup/lienzo_core",
+    "sourceGroup",
+    "lienzo-core-forked",
+    "sBranch"
+  );
+  expect(mergeMock).toHaveBeenCalledWith(
+    "folder/kiegroup/droolsjbpm_build_bootstrap",
+    "kiegroup",
+    "droolsjbpm-build-bootstrap",
+    "sBranch"
+  );
+
+  expect(cloneMock).toHaveBeenCalledTimes(2);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/lienzo-core",
+    "folder/kiegroup/lienzo_core",
+    "tBranch"
+  );
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/droolsjbpm-build-bootstrap",
+    "folder/kiegroup/droolsjbpm_build_bootstrap",
+    "tBranch"
+  );
+
+  expect(result.length).toBe(2);
+  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
+  expect(result[0].checkoutInfo).toStrictEqual({
+    project: "lienzo-core-forked",
+    group: "sourceGroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: true
+  });
+  expect(result[1].project).toStrictEqual(
+    "kiegroup/droolsjbpm-build-bootstrap"
+  );
+  expect(result[1].checkoutInfo).toStrictEqual({
+    project: "droolsjbpm-build-bootstrap",
+    group: "kiegroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: true
+  });
+});
+
+test("checkoutDefinitionTree sBranch does not exists but has PR no root Folder", async () => {
+  // Arrange
+  const project = "kiegroup/droolsjbpm-build-bootstrap";
+  const definitionTree = await getTreeForProject(
+    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
+    project
+  );
+
+  const context = {
+    config: {
+      github: {
+        serverUrl: "URL",
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: undefined
+    }
+  };
+  getForkedProjectMock
+    .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" })
+    .mockResolvedValueOnce({ name: "lienzo-core-forked" });
+  doesBranchExistMock
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+
+  // Act
+  const result = await checkoutDefinitionTree(context, definitionTree);
+
+  // Assert
+  expect(mergeMock).toHaveBeenCalledTimes(2);
+  expect(mergeMock).toHaveBeenCalledWith(
+    "./kiegroup/lienzo_core",
+    "sourceGroup",
+    "lienzo-core-forked",
+    "sBranch"
+  );
+  expect(mergeMock).toHaveBeenCalledWith(
+    "./kiegroup/droolsjbpm_build_bootstrap",
+    "kiegroup",
+    "droolsjbpm-build-bootstrap",
+    "sBranch"
+  );
+
+  expect(cloneMock).toHaveBeenCalledTimes(2);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/lienzo-core",
+    "./kiegroup/lienzo_core",
+    "tBranch"
+  );
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/droolsjbpm-build-bootstrap",
+    "./kiegroup/droolsjbpm_build_bootstrap",
+    "tBranch"
+  );
+
+  expect(result.length).toBe(2);
+  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
+  expect(result[0].checkoutInfo).toStrictEqual({
+    project: "lienzo-core-forked",
+    group: "sourceGroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: true
+  });
+  expect(result[1].project).toStrictEqual(
+    "kiegroup/droolsjbpm-build-bootstrap"
+  );
+  expect(result[1].checkoutInfo).toStrictEqual({
+    project: "droolsjbpm-build-bootstrap",
+    group: "kiegroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: true
+  });
+});
+
+test("checkoutDefinitionTree sBranch does not exists but has no PR", async () => {
+  // Arrange
+  const project = "kiegroup/droolsjbpm-build-bootstrap";
+  const definitionTree = await getTreeForProject(
+    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
+    project
+  );
+
+  const context = {
+    config: {
+      github: {
+        serverUrl: "URL",
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: "folder"
+    }
+  };
+  getForkedProjectMock
+    .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" })
+    .mockResolvedValueOnce({ name: "lienzo-core-forked" });
+  doesBranchExistMock
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+
+  // Act
+  const result = await checkoutDefinitionTree(context, definitionTree);
+
+  // Assert
+  expect(mergeMock).toHaveBeenCalledTimes(1);
+  expect(mergeMock).toHaveBeenCalledWith(
+    "folder/kiegroup/lienzo_core",
+    "sourceGroup",
+    "lienzo-core-forked",
+    "sBranch"
+  );
+
+  expect(cloneMock).toHaveBeenCalledTimes(2);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/lienzo-core",
+    "folder/kiegroup/lienzo_core",
+    "tBranch"
+  );
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/droolsjbpm-build-bootstrap",
+    "folder/kiegroup/droolsjbpm_build_bootstrap",
+    "sBranch"
+  );
+
+  expect(result.length).toBe(2);
+  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
+  expect(result[0].checkoutInfo).toStrictEqual({
+    project: "lienzo-core-forked",
+    group: "sourceGroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: true
+  });
+  expect(result[1].project).toStrictEqual(
+    "kiegroup/droolsjbpm-build-bootstrap"
+  );
+  expect(result[1].checkoutInfo).toStrictEqual({
+    project: "droolsjbpm-build-bootstrap",
+    group: "kiegroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: false
+  });
+});
+
+test("checkoutDefinitionTree sBranch does not exists but tBranch", async () => {
+  // Arrange
+  const project = "kiegroup/droolsjbpm-build-bootstrap";
+  const definitionTree = await getTreeForProject(
+    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
+    project
+  );
+
+  const context = {
+    config: {
+      github: {
+        serverUrl: "URL",
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: "folder"
+    }
+  };
+  getForkedProjectMock
+    .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" })
+    .mockResolvedValueOnce({ name: "lienzo-core-forked" });
+  doesBranchExistMock
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+
+  // Act
+  const result = await checkoutDefinitionTree(context, definitionTree);
+
+  // Assert
+  expect(mergeMock).toHaveBeenCalledTimes(1);
+  expect(mergeMock).toHaveBeenCalledWith(
+    "folder/kiegroup/lienzo_core",
+    "sourceGroup",
+    "lienzo-core-forked",
+    "sBranch"
+  );
+
+  expect(cloneMock).toHaveBeenCalledTimes(2);
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/lienzo-core",
+    "folder/kiegroup/lienzo_core",
+    "tBranch"
+  );
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/droolsjbpm-build-bootstrap",
+    "folder/kiegroup/droolsjbpm_build_bootstrap",
+    "tBranch"
+  );
+
+  expect(result.length).toBe(2);
+  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
+  expect(result[0].checkoutInfo).toStrictEqual({
+    project: "lienzo-core-forked",
+    group: "sourceGroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: true
+  });
+  expect(result[1].project).toStrictEqual(
+    "kiegroup/droolsjbpm-build-bootstrap"
+  );
+  expect(result[1].checkoutInfo).toStrictEqual({
+    project: "droolsjbpm-build-bootstrap",
+    group: "kiegroup",
+    branch: "tBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "tBranch",
+    merge: false
+  });
+});
+
+test("checkoutDefinitionTree with mapping", async () => {
+  // Arrange
+  const project = "kiegroup/optaplanner";
+  const definitionTree = await getTreeForProject(
+    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
+    project
+  );
+
+  const context = {
+    config: {
+      github: {
+        serverUrl: "URL",
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "7.x"
+      },
+      rootFolder: "folder"
+    }
+  };
+  getForkedProjectMock
+    .mockResolvedValueOnce({ name: "optaplanner-forked" })
+    .mockResolvedValueOnce({ name: "jbpm-forked" })
+    .mockResolvedValueOnce({ name: "drools-forked" })
+    .mockResolvedValueOnce({ name: "appformer-forked" })
+    .mockResolvedValueOnce({ name: "kie-soup-forked" })
+    .mockResolvedValueOnce({ name: "lienzo-tests-forked" })
+    .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" })
+    .mockResolvedValueOnce({ name: "lienzo-core-forked" });
   doesBranchExistMock
     .mockResolvedValueOnce(true)
-    .mockResolvedValueOnce(false)
-    .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(true)
-    .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(true)
-    .mockResolvedValueOnce(false)
-    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true)
     .mockResolvedValueOnce(true)
     .mockResolvedValueOnce(true);
   hasPullRequestMock
     .mockResolvedValueOnce(true)
     .mockResolvedValueOnce(true)
-    .mockResolvedValueOnce(false);
-  getForkedProjectMock
-    .mockResolvedValueOnce({ name: "project-A" })
-    .mockResolvedValueOnce({ name: "projectB" })
-    .mockResolvedValueOnce({ name: "projectC" })
-    .mockResolvedValueOnce({ name: "projectD" })
-    .mockResolvedValueOnce({ name: "projectEFroked" });
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true)
+    .mockResolvedValueOnce(true);
+
   // Act
-  await checkoutDependencies(
-    context,
-    dependencies,
-    context.config.github.targetBranch
-  );
+  const result = await checkoutDefinitionTree(context, definitionTree);
+
   // Assert
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupA/project-A",
-    "folder/project_A",
-    "tBranch"
-  );
+  expect(mergeMock).toHaveBeenCalledTimes(8);
   expect(mergeMock).toHaveBeenCalledWith(
-    "folder/project_A",
+    "folder/kiegroup/optaplanner",
     "sourceGroup",
-    "project-A",
+    "optaplanner-forked",
     "sBranch"
-  );
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupB/projectB",
-    "folder/projectB",
-    "tBranchMapped"
-  );
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupC/projectC",
-    "folder/projectC",
-    "tBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
-    "folder/projectC",
-    "groupC",
-    "projectC",
-    "sBranch"
-  );
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupD/projectD",
-    "folder/projectD",
-    "tBranch"
-  );
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/sourceGroup/projectEFroked",
-    "folder/projectE",
-    "sBranch"
-  );
-  expect(mergeMock).not.toHaveBeenCalledWith(
-    "folder/projectE",
+    "folder/kiegroup/jbpm",
     "sourceGroup",
-    "projectEFroked",
+    "jbpm-forked",
     "sBranch"
-  );
-  expect(mergeMock).not.toHaveBeenCalledWith(
-    "folder/projectE",
-    "groupE",
-    "projectEFroked",
-    "sBranch"
-  );
-});
-
-test("checkoutProject sGroup/projectXFroked:sBranch exists has PR", async () => {
-  // Arrange
-  const context = {
-    config: {
-      github: {
-        flowFile: "main.yml",
-        serverUrl: "URL",
-        author: "author",
-        sourceBranch: "sBranch",
-        targetBranch: "tBranch",
-        sourceGroup: "sGroup"
-      },
-      rootFolder: "folder"
-    }
-  };
-  doesBranchExistMock.mockResolvedValueOnce(true);
-  hasPullRequestMock.mockResolvedValueOnce(true);
-  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
-  // Act
-  const result = await checkoutProject(
-    context,
-    "projectx",
-    { group: "groupx" },
-    context.config.github.targetBranch
-  );
-  // Assert
-  expect(cloneMock).toHaveBeenCalledTimes(1);
-  expect(mergeMock).toHaveBeenCalledTimes(1);
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupx/projectx",
-    "folder/projectx",
-    "tBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
-    "folder/projectx",
-    "sGroup",
-    "projectXFroked",
+    "folder/kiegroup/drools",
+    "sourceGroup",
+    "drools-forked",
     "sBranch"
-  );
-  expect(context.checkoutInfo).toStrictEqual({ projectx: result });
-});
-
-test("checkoutProject sGroup/projectXFroked:sBranch exists has no PR", async () => {
-  // Arrange
-  const context = {
-    config: {
-      github: {
-        flowFile: "main.yml",
-        serverUrl: "URL",
-        author: "author",
-        sourceBranch: "sBranch",
-        targetBranch: "tBranch",
-        sourceGroup: "sGroup"
-      },
-      rootFolder: "folder"
-    }
-  };
-  doesBranchExistMock.mockResolvedValueOnce(true);
-  hasPullRequestMock.mockResolvedValueOnce(false);
-  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
-  // Act
-  const result = await checkoutProject(
-    context,
-    "projectx",
-    { group: "groupx" },
-    context.config.github.targetBranch
-  );
-  // Assert
-  expect(cloneMock).toHaveBeenCalledTimes(1);
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/sGroup/projectXFroked",
-    "folder/projectx",
-    "sBranch"
-  );
-  expect(mergeMock).not.toHaveBeenCalled();
-  expect(context.checkoutInfo).toStrictEqual({ projectx: result });
-});
-
-test("checkoutProject sGroup/projectX:sBranch does not exists but groupx/projectX:sBranch has PR", async () => {
-  // Arrange
-  const context = {
-    config: {
-      github: {
-        flowFile: "main.yml",
-        serverUrl: "URL",
-        author: "author",
-        sourceBranch: "sBranch",
-        targetBranch: "tBranch",
-        sourceGroup: "sGroup"
-      },
-      rootFolder: "folder"
-    }
-  };
-  doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-  hasPullRequestMock.mockResolvedValueOnce(true);
-  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
-
-  // Act
-  const result = await checkoutProject(
-    context,
-    "projectx",
-    { group: "groupx" },
-    context.config.github.targetBranch
-  );
-  // Assert
-  expect(cloneMock).toHaveBeenCalledTimes(1);
-  expect(mergeMock).toHaveBeenCalledTimes(1);
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupx/projectx",
-    "folder/projectx",
-    "tBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
-    "folder/projectx",
-    "groupx",
-    "projectx",
+    "folder/kiegroup/lienzo_core",
+    "sourceGroup",
+    "lienzo-core-forked",
     "sBranch"
   );
-  expect(context.checkoutInfo).toStrictEqual({ projectx: result });
-});
 
-test("checkoutProject author/projectX:sBranch does not exists but groupx/projectX:sBranch has PR no rootFolder", async () => {
-  // Arrange
-  const context = {
-    config: {
-      github: {
-        flowFile: "main.yml",
-        serverUrl: "URL",
-        author: "author",
-        sourceBranch: "sBranch",
-        targetBranch: "tBranch",
-        sourceGroup: "sGroup"
-      },
-      rootFolder: undefined
-    }
-  };
-  doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-  hasPullRequestMock.mockResolvedValueOnce(true);
-  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
-
-  // Act
-  const result = await checkoutProject(
-    context,
-    "projectx",
-    { group: "groupx" },
-    context.config.github.targetBranch
-  );
-  // Assert
-  expect(cloneMock).toHaveBeenCalledTimes(1);
-  expect(mergeMock).toHaveBeenCalledTimes(1);
+  expect(cloneMock).toHaveBeenCalledTimes(8);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupx/projectx",
-    "./projectx",
-    "tBranch"
+    "URL/kiegroup/optaplanner",
+    "folder/kiegroup/optaplanner",
+    "7.x"
   );
-  expect(mergeMock).toHaveBeenCalledWith(
-    "./projectx",
-    "groupx",
-    "projectx",
-    "sBranch"
-  );
-  expect(context.checkoutInfo).toStrictEqual({ projectx: result });
-});
-
-test("checkoutProject author/projectX:sBranch does not exists but groupx/projectX:sBranch has no PR", async () => {
-  // Arrange
-  const context = {
-    config: {
-      github: {
-        flowFile: "main.yml",
-        serverUrl: "URL",
-        author: "author",
-        sourceBranch: "sBranch",
-        targetBranch: "tBranch",
-        sourceGroup: "sGroup"
-      },
-      rootFolder: "folder"
-    }
-  };
-  doesBranchExistMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
-  hasPullRequestMock.mockResolvedValueOnce(false);
-  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
-
-  // Act
-  const result = await checkoutProject(
-    context,
-    "projectx",
-    { group: "groupx" },
-    context.config.github.targetBranch
-  );
-  // Assert
-  expect(cloneMock).toHaveBeenCalledTimes(1);
-  expect(mergeMock).toHaveBeenCalledTimes(0);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupx/projectx",
-    "folder/projectx",
-    "sBranch"
+    "URL/kiegroup/jbpm",
+    "folder/kiegroup/jbpm",
+    "master"
   );
-  expect(context.checkoutInfo).toStrictEqual({ projectx: result });
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/drools",
+    "folder/kiegroup/drools",
+    "master"
+  );
+  expect(cloneMock).toHaveBeenCalledWith(
+    "URL/kiegroup/lienzo-core",
+    "folder/kiegroup/lienzo_core",
+    "master"
+  );
+
+  expect(result.length).toBe(8);
+  expect(result[7].project).toStrictEqual("kiegroup/optaplanner");
+  expect(result[7].checkoutInfo).toStrictEqual({
+    project: "optaplanner-forked",
+    group: "sourceGroup",
+    branch: "sBranch",
+    targetGroup: "kiegroup",
+    targetBranch: "7.x",
+    merge: true
+  });
 });
 
-test("checkoutProject author/projectX:sBranch and groupx/projectX:sBranch but groupx/projectX:tBranch", async () => {
+test("getFinalDefinitionFilePath no url", async () => {
   // Arrange
   const context = {
     config: {
       github: {
-        flowFile: "main.yml",
-        serverUrl: "URL",
-        author: "author",
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch",
-        sourceGroup: "sGroup"
-      },
-      rootFolder: "folder"
+        targetBranch: "tBranch"
+      }
     }
   };
-  doesBranchExistMock
+  const definitionFile = "./definition-file.yaml";
+  // Act
+  const result = await getFinalDefinitionFilePath(context, definitionFile);
+
+  // Assert
+  expect(result).toBe(definitionFile);
+});
+
+test("getFinalDefinitionFilePath url no ${} expression", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  const definitionFile = "http://whateverurl.domain/file.yaml";
+  // Act
+  const result = await getFinalDefinitionFilePath(context, definitionFile);
+
+  // Assert
+  expect(result).toBe(definitionFile);
+});
+
+test("getFinalDefinitionFilePath url. source group and branch ok", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  const definitionFile =
+    "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+  checkUrlExist.mockResolvedValueOnce(true);
+  // Act
+  const result = await getFinalDefinitionFilePath(context, definitionFile);
+
+  // Assert
+  expect(checkUrlExist).toHaveBeenCalledTimes(1);
+  expect(result).toBe(
+    "http://whateverurl.domain/sGroup/projectx/sBranch/file.yaml"
+  );
+});
+
+test("getFinalDefinitionFilePath url. target group and source branch ok", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  const definitionFile =
+    "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+  checkUrlExist.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+  // Act
+  const result = await getFinalDefinitionFilePath(context, definitionFile);
+
+  // Assert
+  expect(checkUrlExist).toHaveBeenCalledTimes(2);
+  expect(result).toBe(
+    "http://whateverurl.domain/tGroup/projectx/sBranch/file.yaml"
+  );
+});
+
+test("getFinalDefinitionFilePath url. target group and branch ok", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  const definitionFile =
+    "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+  checkUrlExist
     .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(true);
-  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
-
   // Act
-  const result = await checkoutProject(
-    context,
-    "projectx",
-    { group: "groupx" },
-    context.config.github.targetBranch
-  );
+  const result = await getFinalDefinitionFilePath(context, definitionFile);
+
   // Assert
-  expect(cloneMock).toHaveBeenCalledTimes(1);
-  expect(hasPullRequestMock).toHaveBeenCalledTimes(0);
-  expect(mergeMock).toHaveBeenCalledTimes(0);
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupx/projectx",
-    "folder/projectx",
-    "tBranch"
+  expect(checkUrlExist).toHaveBeenCalledTimes(3);
+  expect(result).toBe(
+    "http://whateverurl.domain/tGroup/projectx/tBranch/file.yaml"
   );
-  expect(context.checkoutInfo).toStrictEqual({ projectx: result });
 });
 
-test("checkoutProject sGroup/projectXFroked:sBranch exists has PR. With mapping matching", async () => {
+test("getFinalDefinitionFilePath url. error", async () => {
   // Arrange
   const context = {
     config: {
       github: {
-        flowFile: "main.yml",
-        serverUrl: "URL",
-        author: "author",
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
         sourceBranch: "sBranch",
-        targetBranch: "tBranch",
-        sourceGroup: "sGroup"
-      },
-      rootFolder: "folder"
+        targetBranch: "tBranch"
+      }
     }
   };
-  doesBranchExistMock.mockResolvedValueOnce(true);
-  hasPullRequestMock.mockResolvedValueOnce(true);
-  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
+  const definitionFile =
+    "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+  checkUrlExist
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(false);
   // Act
-  const result = await checkoutProject(
-    context,
-    "projectx",
-    {
-      group: "groupx",
-      mapping: { source: "tBranch", target: "tBranchMapped" }
-    },
-    context.config.github.targetBranch
-  );
-  // Assert
-  expect(cloneMock).toHaveBeenCalledTimes(1);
-  expect(mergeMock).toHaveBeenCalledTimes(1);
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupx/projectx",
-    "folder/projectx",
-    "tBranchMapped"
-  );
-  expect(mergeMock).toHaveBeenCalledWith(
-    "folder/projectx",
-    "sGroup",
-    "projectXFroked",
-    "sBranch"
-  );
-  expect(context.checkoutInfo).toStrictEqual({ projectx: result });
-});
-
-test("checkoutProject sGroup/projectXFroked:sBranch exists has PR. With mapping matching", async () => {
-  // Arrange
-  const context = {
-    config: {
-      github: {
-        flowFile: "main.yml",
-        serverUrl: "URL",
-        author: "author",
-        sourceBranch: "sBranch",
-        targetBranch: "tBranch",
-        sourceGroup: "sGroup"
-      },
-      rootFolder: "folder"
-    }
-  };
-  doesBranchExistMock.mockResolvedValueOnce(true);
-  hasPullRequestMock.mockResolvedValueOnce(true);
-  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
-  // Act
-  const result = await checkoutProject(
-    context,
-    "projectx",
-    {
-      group: "groupx",
-      mapping: { source: "tBranch", target: "tBranchMapped" }
-    },
-    context.config.github.targetBranch
-  );
-  // Assert
-  expect(cloneMock).toHaveBeenCalledTimes(1);
-  expect(mergeMock).toHaveBeenCalledTimes(1);
-  expect(cloneMock).toHaveBeenCalledWith(
-    "URL/groupx/projectx",
-    "folder/projectx",
-    "tBranchMapped"
-  );
-  expect(mergeMock).toHaveBeenCalledWith(
-    "folder/projectx",
-    "sGroup",
-    "projectXFroked",
-    "sBranch"
-  );
-  expect(context.checkoutInfo).toStrictEqual({ projectx: result });
+  try {
+    await getFinalDefinitionFilePath(context, definitionFile);
+  } catch (ex) {
+    expect(ex.message).toBe(
+      "Definition file http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml does not exist for any of these cases: http://whateverurl.domain/sGroup/projectx/sBranch/file.yaml, http://whateverurl.domain/tGroup/projectx/sBranch/file.yaml or http://whateverurl.domain/tGroup/projectx/tBranch/file.yaml"
+    );
+  }
 });

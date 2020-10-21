@@ -28,6 +28,5 @@ jobs:
           archive-artifacts-name: "namex"
           archive-artifacts-path: path/output/bin/@failure
           archive-artifacts-if-no-files-found: "warn"
-          workflow-file-name: "flow-singleline-archive-on.yaml"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

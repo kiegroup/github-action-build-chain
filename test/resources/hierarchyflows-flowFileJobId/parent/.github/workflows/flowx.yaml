@@ -12,6 +12,5 @@ jobs:
           parent-dependencies: "parent-parent|:build-chain-2"
           child-dependencies: "child"
           build-command: 'echo "parent"'
-          workflow-file-name: "flowx.yaml"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"

@@ -1,4 +1,4 @@
-const { getWorkflowfileName } = require("../src/lib/action-utils");
+const { getDefinitionFile } = require("../../../src/lib/util/action-utils");
 
 const { getInput } = require("@actions/core");
 jest.mock("@actions/core");
@@ -7,14 +7,14 @@ afterEach(() => {
   jest.clearAllMocks();
 });
 
-test("getWorkflowfileName", () => {
+test("getDefinitionFile", () => {
   // Arrange
-  const expectedResult = "pull_request.yml";
+  const expectedResult = "./whateverfile";
   getInput.mockImplementationOnce(param =>
-    param === "workflow-file-name" ? expectedResult : undefined
+    param === "definition-file" ? expectedResult : undefined
   );
   // Act
-  const result = getWorkflowfileName();
+  const result = getDefinitionFile();
 
   // Assert
   expect(result).toEqual(expectedResult);

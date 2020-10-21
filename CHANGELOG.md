@@ -1,14 +1,17 @@
 # Changelog
 
-# V1.5 (next release)
+# V2.0 (next release)
 
-Link
+[Link](https://github.com/kiegroup/github-action-build-chain/releases/tag/v2.0)
 
 ## Enhancements:
 
-- To be able to define a dependency with a different flow file name
-- To be able to define a dependency with a different job identifier
 - artifacts in case of failure
+- centralized flow definition file
+- definition-file input added
+- rest of inputs removed since they are not needed anymore
+- default configuration for every project
+- before and after commands added
 
 # V1.4
 

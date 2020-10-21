@@ -13,7 +13,6 @@ async function main() {
     userAgent: "kiegroup/github-build-chain-action-it"
   });
   addInputVariableToEnv("definition-file", true);
-  addInputVariableToEnv("matrix-variables", false);
   const config = await createConfigLocally(
     octokit,
     process.env.URL,

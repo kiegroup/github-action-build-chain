@@ -58,8 +58,7 @@ test("start no parent dependencies. project triggering the job", async () => {
             "resources",
             "build-config",
             "build-config.yaml"
-          ),
-          matrixVariables: { key1: "value1", key2: "value2" }
+          )
         },
         repository: project
       },
@@ -151,8 +150,7 @@ test("start no parent dependencies. 2 projects", async () => {
             "resources",
             "build-config",
             "build-config.yaml"
-          ),
-          matrixVariables: { key1: "value1", key2: "value2" }
+          )
         },
         repository: project
       },
@@ -266,8 +264,7 @@ test("start no parent dependencies archive artifacts", async () => {
             "resources",
             "build-config",
             "build-config.yaml"
-          ),
-          matrixVariables: { key1: "value1", key2: "value2" }
+          )
         },
         repository: project
       },
@@ -374,8 +371,7 @@ test("start no parent dependencies archive artifacts. Execute Exception", async 
             "resources",
             "build-config",
             "build-config.yaml"
-          ),
-          matrixVariables: { key1: "value1", key2: "value2" }
+          )
         },
         repository: project
       },

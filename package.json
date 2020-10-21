@@ -1,6 +1,6 @@
 {
   "name": "build-chain-action",
-  "version": "0.0.1",
+  "version": "2.0.0",
   "description": "GitHub action to define action chains",
   "main": "src/lib/api.js",
   "author": "Enrique Mingorance Cano <emingora@redhat.com>",

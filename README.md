@@ -147,24 +147,6 @@ See [action.yml](action.yml)
   > workflow-file-name: "whateverflowfilename.yml"
   > ```
 
-- **matrix-variables** (optional): `key:${{ flowvariable1 }}[\nkey2:${{ flowvariable2 }}\nmatrix.variable:${{ matrix.variable }}]` define it in case you use matrix variables in your with parameters.
-
-  > Examples:
-  >
-  > ```
-  > build-command: mkdir -p ${{ matrix.images }}
-  > matrix-variables: matrix.images:${{ matrix.images }}
-  > ```
-
-  > ```
-  > build-command-upstream: |
-  >   mkdir -p ${{ matrix.images }}
-  >   rsync -av --progress . ${{ matrix.os }}
-  > matrix-variables: |
-  >   matrix.images:${{ matrix.images }}
-  >   matrix.os:${{ matrix.os }}
-  > ```
-
 - **archive-artifacts-path** (optional): `file path[@success|failure|always (success by default)]` (see: [@actions/glob](https://github.com/actions/toolkit/tree/main/packages/glob) and [Archiving Artifacts](#archiving-artifacts)). define it in case you want to archive artifacts after building the project chain.
 
   > Example: see [Archiving Artifacts](#archiving-artifacts)
@@ -388,7 +370,6 @@ In the above example, four jobs will upload four different files to the same art
           ...
           archive-artifacts-name: my-artifact ${{ matrix.java-version }}
           archive-artifacts-path: world.txt
-          matrix-variables: "matrix.java-version:${{ matrix.java-version }}
 ```
 
 ### Environment Variables and Tilde Expansion
@@ -632,7 +613,7 @@ docker build --build-arg OPENJDK_VERSION=11 .
 
 ## Execution
 
-It is possible to execute build-chain flow anywhere you want (just remember your machine would need to meet requirements to execute commands). In order to execute it locally (wherever) you just run `env GITHUB_TOKEN=%TOKEN% URL=%GITHUB_EVENT_URL% definition-file=%DEFINITION_FILE% matrix-variables='%MATRIX_VARIABLES%' yarn it` where:
+It is possible to execute build-chain flow anywhere you want (just remember your machine would need to meet requirements to execute commands). In order to execute it locally (wherever) you just run `env GITHUB_TOKEN=%TOKEN% URL=%GITHUB_EVENT_URL% definition-file=%DEFINITION_FILE% yarn it` where:
 
 - %TOKEN%: is your personal token, like `1e2ca1ac1252121d83fbe69ab3c4dd92bcb1ae32`.
 - %GITHUB_EVENT_URL%: the url to your event to test, like `https://github.com/kiegroup/kogito-images/pull/220`.
@@ -653,11 +634,6 @@ The definition files are read thanks to [build-chain-configuration-reader](https
 - and then from this project folder execute `npm link @kie/build-chain-configuration-reader`
 
 ## Github limitations
-
-### workflow-file-name
-
-You are probably wondering why the input field `workflow-file-name` even exists. Why don't we take the filename directly from the job and keep the same name for all the flow files in the chain?. Well, we can in case the `name` is not defined in the flow, then the file name information can be taken from `GITHUB_WORKFLOW` environment variable but in case the name is set, `GITHUB_WORKFLOW` becomes the name and there's no other way to get filename from the tool.
-This is a github action limitation already reported as a suggestion to provide file name from the flow triggering the job.
 
 ### inputs usage in runs.image from action.yml
 

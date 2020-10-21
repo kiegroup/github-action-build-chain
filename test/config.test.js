@@ -2,9 +2,6 @@ const { createConfig } = require("../src/lib/config");
 jest.mock("../src/lib/util/action-utils", () => ({
   getDefinitionFile: () => {
     return "definition-file.yaml";
-  },
-  getMatrixVariables: () => {
-    return { key1: "value1", key2: "value2" };
   }
 }));
 
@@ -55,11 +52,7 @@ test("createConfig", async () => {
       groupProject: "kiegroup/github-action-build-chain",
       workflowName: "build chain name",
       inputs: {
-        definitionFile: "definition-file.yaml",
-        matrixVariables: {
-          key1: "value1",
-          key2: "value2"
-        }
+        definitionFile: "definition-file.yaml"
       }
     },
     rootFolder: "folder"

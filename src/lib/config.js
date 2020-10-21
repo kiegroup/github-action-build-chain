@@ -1,16 +1,12 @@
 const { ClientError, logger } = require("./common");
-const {
-  getDefinitionFile,
-  getMatrixVariables
-} = require("./util/action-utils");
+const { getDefinitionFile } = require("./util/action-utils");
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 
 function getInputs() {
   return {
-    definitionFile: getDefinitionFile(),
-    matrixVariables: getMatrixVariables()
+    definitionFile: getDefinitionFile()
   };
 }
 

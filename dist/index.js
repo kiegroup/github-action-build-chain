@@ -1216,7 +1216,7 @@ async function checkoutProject(context, node, currentTargetBranch) {
   }
   if (checkoutInfo.merge) {
     logger.info(
-      `[${node.repo.group}/${node.project}] Merging ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      `[${node.project}] Merging ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
     );
     try {
       await clone(
@@ -1283,7 +1283,7 @@ async function getCheckoutInfo(
     sourceGroup
   );
   logger.info(
-    `[${targetGroup}/${targetProject}] Getting checkout Info for. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
+    `[${targetGroup}/${targetProject}] Getting checkout Info. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
       mapping
         ? "source:" + mapping.source + " target:" + mapping.target
         : "not defined"

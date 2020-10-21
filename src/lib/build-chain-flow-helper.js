@@ -197,8 +197,21 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
   }
 }
 
+/**
+ * it returns back the placeholders in case the URL is defined with `${}` expressions
+ * @param {Object} context @see {@link ./config.js}
+ */
+function getUrlPlaceHolders(context) {
+  return {
+    GROUP: context.config.github.sourceGroup,
+    PROJECT_NAME: context.config.github.project,
+    BRANCH: context.config.github.sourceBranch
+  };
+}
+
 module.exports = {
   checkoutDefinitionTree,
   getCheckoutInfo,
-  getDir
+  getDir,
+  getUrlPlaceHolders
 };

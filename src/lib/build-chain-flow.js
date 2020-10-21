@@ -1,4 +1,8 @@
-const { checkoutDefinitionTree, getDir } = require("./build-chain-flow-helper");
+const {
+  checkoutDefinitionTree,
+  getDir,
+  getUrlPlaceHolders
+} = require("./build-chain-flow-helper");
 const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
 
 const { printCheckoutInformation } = require("./summary");
@@ -16,12 +20,13 @@ async function start(context) {
   );
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
-    context.config.github.repository
+    context.config.github.repository,
+    getUrlPlaceHolders(context)
   );
   logger.info(
     `Tree for project ${context.config.github.repository} loaded from ${
       context.config.github.inputs.definitionFile
-    }. Result: ${definitionTree.map(node => node.project)}`
+    }. Dependencies: ${definitionTree.dependencies.map(node => node.project)}`
   );
   const nodeChain = await checkoutDefinitionTree(context, definitionTree);
   core.endGroup();

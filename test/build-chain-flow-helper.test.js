@@ -1,6 +1,7 @@
 const {
   getCheckoutInfo,
-  checkoutDefinitionTree
+  checkoutDefinitionTree,
+  getUrlPlaceHolders
 } = require("../src/lib/build-chain-flow-helper");
 jest.mock("../src/lib/git");
 const {
@@ -903,4 +904,25 @@ test("checkoutDefinitionTree with mapping", async () => {
     targetBranch: "7.x",
     merge: true
   });
+});
+
+test("getUrlPlaceHolders", () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "groupx",
+        project: "projectx",
+        sourceBranch: "branchx"
+      }
+    }
+  };
+
+  // Act
+  const result = getUrlPlaceHolders(context);
+
+  // Assert
+  expect(result.GROUP).toBe("groupx");
+  expect(result.PROJECT_NAME).toBe("projectx");
+  expect(result.BRANCH).toBe("branchx");
 });

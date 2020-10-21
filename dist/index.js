@@ -1366,10 +1366,23 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
   }
 }
 
+/**
+ * it returns back the placeholders in case the URL is defined with `${}` expressions
+ * @param {Object} context @see {@link ./config.js}
+ */
+function getUrlPlaceHolders(context) {
+  return {
+    GROUP: context.config.github.sourceGroup,
+    PROJECT_NAME: context.config.github.project,
+    BRANCH: context.config.github.sourceBranch
+  };
+}
+
 module.exports = {
   checkoutDefinitionTree,
   getCheckoutInfo,
-  getDir
+  getDir,
+  getUrlPlaceHolders
 };
 
 
@@ -2059,9 +2072,10 @@ const { validateNode } = __webpack_require__(492);
  * It will return back the definition tree plus dependencies as an object.
  *
  * @param {string} file - The definition file. It can be a URL or a in the filesystem.
+ * @param {Object} urlPlaceHolders the url place holders to replace url. This is needed in case either the definition file or the dependencies file are loaded from a URL
  */
-async function getTree(file) {
-  const definition = await readDefinitionFile(file);
+async function getTree(file, urlPlaceHolders = {}) {
+  const definition = await readDefinitionFile(file, urlPlaceHolders);
   return dependencyListToTree(definition.dependencies, definition);
 }
 
@@ -2070,9 +2084,14 @@ async function getTree(file) {
  *
  * @param {string} file - The definition file. It can be a URL or a in the filesystem.
  * @param {string} project - The project name to look for.
+ * @param {Object} urlPlaceHolders the url place holders to replace url. This is needed in case either the definition file or the dependencies file are loaded from a URL
  */
-async function getTreeForProject(file, project) {
-  return lookForProject(await getTree(file), project, undefined);
+async function getTreeForProject(file, project, urlPlaceHolders = {}) {
+  return lookForProject(
+    await getTree(file, urlPlaceHolders),
+    project,
+    undefined
+  );
 }
 
 /**
@@ -22881,10 +22900,8 @@ exports.createGZipFileInBuffer = createGZipFileInBuffer;
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const buildChainFlow = __webpack_require__(653);
-const { logger } = __webpack_require__(79);
 
 async function executeGitHubAction(context) {
-  logger.info("Executing action", __dirname);
   await buildChainFlow.start(context);
 }
 
@@ -22897,7 +22914,11 @@ module.exports = { executeGitHubAction };
 /* 653 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-const { checkoutDefinitionTree, getDir } = __webpack_require__(57);
+const {
+  checkoutDefinitionTree,
+  getDir,
+  getUrlPlaceHolders
+} = __webpack_require__(57);
 const { getTreeForProject } = __webpack_require__(702);
 
 const { printCheckoutInformation } = __webpack_require__(656);
@@ -22915,12 +22936,13 @@ async function start(context) {
   );
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
-    context.config.github.repository
+    context.config.github.repository,
+    getUrlPlaceHolders(context)
   );
   logger.info(
     `Tree for project ${context.config.github.repository} loaded from ${
       context.config.github.inputs.definitionFile
-    }. Result: ${definitionTree.map(node => node.project)}`
+    }. Dependencies: ${definitionTree.dependencies.map(node => node.project)}`
   );
   const nodeChain = await checkoutDefinitionTree(context, definitionTree);
   core.endGroup();
@@ -25180,7 +25202,7 @@ exports.SearchState = SearchState;
 /* 731 */
 /***/ (function(module) {
 
-module.exports = {"name":"build-chain-action","version":"0.0.1","description":"GitHub action to define action chains","main":"src/lib/api.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":true,"bin":{"build-chain-action":"./bin/build-chain.js"},"scripts":{"test":"jest","it":"node it/it.js","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@kie/build-chain-configuration-reader":"0.0.1","@octokit/rest":"^17.6.0","argparse":"^1.0.7","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","dotenv":"^8.2.0","eslint":"^7.10.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
+module.exports = {"name":"build-chain-action","version":"0.0.1","description":"GitHub action to define action chains","main":"src/lib/api.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":true,"bin":{"build-chain-action":"./bin/build-chain.js"},"scripts":{"test":"jest","it":"node it/it.js","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@kie/build-chain-configuration-reader":"^0.0.2","@octokit/rest":"^17.6.0","argparse":"^1.0.7","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","dotenv":"^8.2.0","eslint":"^7.10.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
 
 /***/ }),
 /* 732 */,

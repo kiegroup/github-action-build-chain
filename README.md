@@ -630,23 +630,27 @@ In case you want to build it for a different openjdk version you just specify a 
 docker build --build-arg OPENJDK_VERSION=11 .
 ```
 
-## Testing
+## Execution
 
-### Unit testing
-
-- **TEST_GITHUB_TOKEN** env variable is needed.
-
-### Integration testing
-
-In order to execute integration testing you just run `env GITHUB_TOKEN=%TOKEN% URL=%GITHUB_EVENT_URL% workflow-file-name=%WORKFLOW_FILE_NAME% GITHUB_JOB='%GITHUB_JOB%' yarn it` where:
+It is possible to execute build-chain flow anywhere you want (just remember your machine would need to meet requirements to execute commands). In order to execute it locally (wherever) you just run `env GITHUB_TOKEN=%TOKEN% URL=%GITHUB_EVENT_URL% definition-file=%DEFINITION_FILE% matrix-variables='%MATRIX_VARIABLES%' yarn it` where:
 
 - %TOKEN%: is your personal token, like `1e2ca1ac1252121d83fbe69ab3c4dd92bcb1ae32`.
 - %GITHUB_EVENT_URL%: the url to your event to test, like `https://github.com/kiegroup/kogito-images/pull/220`.
-- %WORKFLOW_FILE_NAME%: the workflow file name located in `.github/workflows` folder, like `build_images.yml`.
-- %GITHUB_JOB%: the job id from the `%WORKFLOW_FILE_NAME%` to execute.
+- %DEFINITION_FILE%: The workflow definition file path, it can be a path in the filesystem or a URL to the file.
 
 So the final command would look like
-`env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40 URL=https://github.com/kiegroup/lienzo-core/pull/3 workflow-file-name=pull_request.yml GITHUB_JOB='build-chain-openjdk8' yarn it`.
+`env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40 URL=https://github.com/kiegroup/lienzo-core/pull/3 definition-file=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml yarn it` or `npm run it` in case you prefer to use npm.
+
+## Development
+
+### build-chain-configuration-reader dependency
+
+The definition files are read thanks to [build-chain-configuration-reader](https://github.com/kiegroup/build-chain-configuration-reader) library so in case you want to modify something from there it's easier if you just [npm link](https://docs.npmjs.com/cli/link) it:
+
+- clone repo and browse to the folder
+- `npm/yarn install` it
+- (`sudo`) `npm link`
+- and then from this project folder execute `npm link @kie/build-chain-configuration-reader`
 
 ## Github limitations
 

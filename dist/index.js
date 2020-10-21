@@ -611,7 +611,26 @@ module.exports._enoent = enoent;
 
 /***/ }),
 /* 21 */,
-/* 22 */,
+/* 22 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const http = __webpack_require__(605);
+const https = __webpack_require__(34);
+
+function checkUrlExist(url) {
+  return new Promise(resolve => {
+    (url.startsWith("https://") ? https : http).get(url, response => {
+      resolve(200 === response.statusCode);
+    });
+  });
+}
+
+module.exports = {
+  checkUrlExist
+};
+
+
+/***/ }),
 /* 23 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -1176,8 +1195,10 @@ const {
 } = __webpack_require__(484);
 const { logger } = __webpack_require__(79);
 const {
-  parentChainFromNode
+  parentChainFromNode,
+  treatUrl
 } = __webpack_require__(702);
+const { checkUrlExist } = __webpack_require__(22);
 
 async function checkoutDefinitionTree(context, treeNode) {
   const nodeChain = await parentChainFromNode(treeNode);
@@ -1367,22 +1388,51 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
 }
 
 /**
- * it returns back the placeholders in case the URL is defined with `${}` expressions
- * @param {Object} context @see {@link ./config.js}
+ * it checks what's the proper URL to retrieve definition from in case a URL with ${} expression is defined. It will try sourceGroup/sourceBranch then targetGroup/sourceBranch and then targetGroup/targetBranch in this order.
+ * @param {Object} context the context information
+ * @param {Object} definitionFile the definition file path or URL
  */
-function getUrlPlaceHolders(context) {
-  return {
-    GROUP: context.config.github.sourceGroup,
-    PROJECT_NAME: context.config.github.project,
-    BRANCH: context.config.github.sourceBranch
-  };
+async function getFinalDefinitionFilePath(context, definitionFile) {
+  if (definitionFile.startsWith("http") && definitionFile.includes("${")) {
+    const sourceGroupAndBranchOption = treatUrl(definitionFile, {
+      GROUP: context.config.github.sourceGroup,
+      PROJECT_NAME: context.config.github.project,
+      BRANCH: context.config.github.sourceBranch
+    });
+    if (!(await checkUrlExist(sourceGroupAndBranchOption))) {
+      const targetGroupSourceBranchOption = treatUrl(definitionFile, {
+        GROUP: context.config.github.group,
+        PROJECT_NAME: context.config.github.project,
+        BRANCH: context.config.github.sourceBranch
+      });
+      if (!(await checkUrlExist(targetGroupSourceBranchOption))) {
+        const targetGroupAndBranchOption = treatUrl(definitionFile, {
+          GROUP: context.config.github.group,
+          PROJECT_NAME: context.config.github.project,
+          BRANCH: context.config.github.targetBranch
+        });
+        if (!(await checkUrlExist(targetGroupAndBranchOption))) {
+          throw new Error(
+            `Definition file ${definitionFile} does not exist for any of these cases: ${sourceGroupAndBranchOption}, ${targetGroupSourceBranchOption} or ${targetGroupAndBranchOption}`
+          );
+        } else {
+          return targetGroupAndBranchOption;
+        }
+      } else {
+        return targetGroupSourceBranchOption;
+      }
+    } else {
+      return sourceGroupAndBranchOption;
+    }
+  }
+  return definitionFile;
 }
 
 module.exports = {
   checkoutDefinitionTree,
   getCheckoutInfo,
   getDir,
-  getUrlPlaceHolders
+  getFinalDefinitionFilePath
 };
 
 
@@ -22913,12 +22963,9 @@ module.exports = { executeGitHubAction };
 const {
   checkoutDefinitionTree,
   getDir,
-  getUrlPlaceHolders
+  getFinalDefinitionFilePath
 } = __webpack_require__(57);
-const {
-  getTreeForProject,
-  treatUrl
-} = __webpack_require__(702);
+const { getTreeForProject } = __webpack_require__(702);
 
 const { printCheckoutInformation } = __webpack_require__(656);
 const { logger } = __webpack_require__(79);
@@ -22933,19 +22980,18 @@ async function start(context) {
   core.startGroup(
     `Checking out ${context.config.github.groupProject} and its dependencies`
   );
-  const placeHolders = getUrlPlaceHolders(context);
+  const definitionFile = await getFinalDefinitionFilePath(
+    context,
+    context.config.github.inputs.definitionFile
+  );
   const definitionTree = await getTreeForProject(
-    context.config.github.inputs.definitionFile,
-    context.config.github.repository,
-    placeHolders
+    definitionFile,
+    context.config.github.repository
   );
   logger.info(
     `Tree for project ${
       context.config.github.repository
-    } loaded from ${treatUrl(
-      context.config.github.inputs.definitionFile,
-      placeHolders
-    )}. Dependencies: ${
+    } loaded from ${definitionFile}. Dependencies: ${
       definitionTree.dependencies
         ? definitionTree.dependencies.map(node => node.project)
         : "no dependencies"

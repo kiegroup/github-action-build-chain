@@ -7,8 +7,10 @@ const {
 } = require("./git");
 const { logger } = require("./common");
 const {
-  parentChainFromNode
+  parentChainFromNode,
+  treatUrl
 } = require("@kie/build-chain-configuration-reader");
+const { checkUrlExist } = require("./util/http");
 
 async function checkoutDefinitionTree(context, treeNode) {
   const nodeChain = await parentChainFromNode(treeNode);
@@ -198,20 +200,49 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
 }
 
 /**
- * it returns back the placeholders in case the URL is defined with `${}` expressions
- * @param {Object} context @see {@link ./config.js}
+ * it checks what's the proper URL to retrieve definition from in case a URL with ${} expression is defined. It will try sourceGroup/sourceBranch then targetGroup/sourceBranch and then targetGroup/targetBranch in this order.
+ * @param {Object} context the context information
+ * @param {Object} definitionFile the definition file path or URL
  */
-function getUrlPlaceHolders(context) {
-  return {
-    GROUP: context.config.github.sourceGroup,
-    PROJECT_NAME: context.config.github.project,
-    BRANCH: context.config.github.sourceBranch
-  };
+async function getFinalDefinitionFilePath(context, definitionFile) {
+  if (definitionFile.startsWith("http") && definitionFile.includes("${")) {
+    const sourceGroupAndBranchOption = treatUrl(definitionFile, {
+      GROUP: context.config.github.sourceGroup,
+      PROJECT_NAME: context.config.github.project,
+      BRANCH: context.config.github.sourceBranch
+    });
+    if (!(await checkUrlExist(sourceGroupAndBranchOption))) {
+      const targetGroupSourceBranchOption = treatUrl(definitionFile, {
+        GROUP: context.config.github.group,
+        PROJECT_NAME: context.config.github.project,
+        BRANCH: context.config.github.sourceBranch
+      });
+      if (!(await checkUrlExist(targetGroupSourceBranchOption))) {
+        const targetGroupAndBranchOption = treatUrl(definitionFile, {
+          GROUP: context.config.github.group,
+          PROJECT_NAME: context.config.github.project,
+          BRANCH: context.config.github.targetBranch
+        });
+        if (!(await checkUrlExist(targetGroupAndBranchOption))) {
+          throw new Error(
+            `Definition file ${definitionFile} does not exist for any of these cases: ${sourceGroupAndBranchOption}, ${targetGroupSourceBranchOption} or ${targetGroupAndBranchOption}`
+          );
+        } else {
+          return targetGroupAndBranchOption;
+        }
+      } else {
+        return targetGroupSourceBranchOption;
+      }
+    } else {
+      return sourceGroupAndBranchOption;
+    }
+  }
+  return definitionFile;
 }
 
 module.exports = {
   checkoutDefinitionTree,
   getCheckoutInfo,
   getDir,
-  getUrlPlaceHolders
+  getFinalDefinitionFilePath
 };

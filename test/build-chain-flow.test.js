@@ -3,7 +3,7 @@ const path = require("path");
 const {
   checkoutDefinitionTree,
   getDir,
-  getUrlPlaceHolders
+  getFinalDefinitionFilePath
 } = require("../src/lib/build-chain-flow-helper");
 jest.mock("../src/lib/build-chain-flow-helper");
 
@@ -66,7 +66,7 @@ test("start no parent dependencies. project triggering the job", async () => {
     }
   };
 
-  getUrlPlaceHolders.mockReturnValueOnce({});
+  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   const buildInfo = {
     "build-command": {
@@ -95,9 +95,8 @@ test("start no parent dependencies. project triggering the job", async () => {
   await start(context);
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
-    "test/resources/build-config/build-config.yaml",
-    project,
-    {}
+    "finalDefinitionFilePath",
+    project
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, definitionTree);
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
@@ -158,7 +157,7 @@ test("start no parent dependencies. 2 projects", async () => {
     }
   };
 
-  getUrlPlaceHolders.mockReturnValueOnce({});
+  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   const buildInfo = {
     "build-command": {
@@ -194,9 +193,8 @@ test("start no parent dependencies. 2 projects", async () => {
   await start(context);
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
-    "test/resources/build-config/build-config.yaml",
-    project,
-    {}
+    "finalDefinitionFilePath",
+    project
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, definitionTree);
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
@@ -272,7 +270,7 @@ test("start no parent dependencies archive artifacts", async () => {
     }
   };
 
-  getUrlPlaceHolders.mockReturnValueOnce({});
+  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   const buildInfo = {
     "build-command": {
@@ -310,9 +308,8 @@ test("start no parent dependencies archive artifacts", async () => {
   await start(context);
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
-    "test/resources/build-config/build-config.yaml",
-    project,
-    {}
+    "finalDefinitionFilePath",
+    project
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, definitionTree);
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
@@ -379,7 +376,7 @@ test("start no parent dependencies archive artifacts. Execute Exception", async 
     }
   };
 
-  getUrlPlaceHolders.mockReturnValueOnce({});
+  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   const buildInfo = {
     "build-command": {
@@ -427,9 +424,8 @@ test("start no parent dependencies archive artifacts. Execute Exception", async 
   }
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
-    "test/resources/build-config/build-config.yaml",
-    project,
-    {}
+    "finalDefinitionFilePath",
+    project
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, definitionTree);
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);

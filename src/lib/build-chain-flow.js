@@ -1,12 +1,9 @@
 const {
   checkoutDefinitionTree,
   getDir,
-  getUrlPlaceHolders
+  getFinalDefinitionFilePath
 } = require("./build-chain-flow-helper");
-const {
-  getTreeForProject,
-  treatUrl
-} = require("@kie/build-chain-configuration-reader");
+const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
 
 const { printCheckoutInformation } = require("./summary");
 const { logger } = require("./common");
@@ -21,19 +18,18 @@ async function start(context) {
   core.startGroup(
     `Checking out ${context.config.github.groupProject} and its dependencies`
   );
-  const placeHolders = getUrlPlaceHolders(context);
+  const definitionFile = await getFinalDefinitionFilePath(
+    context,
+    context.config.github.inputs.definitionFile
+  );
   const definitionTree = await getTreeForProject(
-    context.config.github.inputs.definitionFile,
-    context.config.github.repository,
-    placeHolders
+    definitionFile,
+    context.config.github.repository
   );
   logger.info(
     `Tree for project ${
       context.config.github.repository
-    } loaded from ${treatUrl(
-      context.config.github.inputs.definitionFile,
-      placeHolders
-    )}. Dependencies: ${
+    } loaded from ${definitionFile}. Dependencies: ${
       definitionTree.dependencies
         ? definitionTree.dependencies.map(node => node.project)
         : "no dependencies"

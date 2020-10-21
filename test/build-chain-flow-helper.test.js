@@ -1,7 +1,7 @@
 const {
   getCheckoutInfo,
   checkoutDefinitionTree,
-  getUrlPlaceHolders
+  getFinalDefinitionFilePath
 } = require("../src/lib/build-chain-flow-helper");
 jest.mock("../src/lib/git");
 const {
@@ -14,6 +14,9 @@ const {
 
 const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
 const path = require("path");
+
+const { checkUrlExist } = require("../src/lib/util/http");
+jest.mock("../src/lib/util/http");
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -906,23 +909,154 @@ test("checkoutDefinitionTree with mapping", async () => {
   });
 });
 
-test("getUrlPlaceHolders", () => {
+test("getFinalDefinitionFilePath no url", async () => {
   // Arrange
   const context = {
     config: {
       github: {
-        sourceGroup: "groupx",
+        sourceGroup: "sGroup",
+        group: "tGroup",
         project: "projectx",
-        sourceBranch: "branchx"
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
       }
     }
   };
-
+  const definitionFile = "./definition-file.yaml";
   // Act
-  const result = getUrlPlaceHolders(context);
+  const result = await getFinalDefinitionFilePath(context, definitionFile);
 
   // Assert
-  expect(result.GROUP).toBe("groupx");
-  expect(result.PROJECT_NAME).toBe("projectx");
-  expect(result.BRANCH).toBe("branchx");
+  expect(result).toBe(definitionFile);
+});
+
+test("getFinalDefinitionFilePath url no ${} expression", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  const definitionFile = "http://whateverurl.domain/file.yaml";
+  // Act
+  const result = await getFinalDefinitionFilePath(context, definitionFile);
+
+  // Assert
+  expect(result).toBe(definitionFile);
+});
+
+test("getFinalDefinitionFilePath url. source group and branch ok", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  const definitionFile =
+    "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+  checkUrlExist.mockResolvedValueOnce(true);
+  // Act
+  const result = await getFinalDefinitionFilePath(context, definitionFile);
+
+  // Assert
+  expect(checkUrlExist).toHaveBeenCalledTimes(1);
+  expect(result).toBe(
+    "http://whateverurl.domain/sGroup/projectx/sBranch/file.yaml"
+  );
+});
+
+test("getFinalDefinitionFilePath url. target group and source branch ok", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  const definitionFile =
+    "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+  checkUrlExist.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+  // Act
+  const result = await getFinalDefinitionFilePath(context, definitionFile);
+
+  // Assert
+  expect(checkUrlExist).toHaveBeenCalledTimes(2);
+  expect(result).toBe(
+    "http://whateverurl.domain/tGroup/projectx/sBranch/file.yaml"
+  );
+});
+
+test("getFinalDefinitionFilePath url. target group and branch ok", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  const definitionFile =
+    "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+  checkUrlExist
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(true);
+  // Act
+  const result = await getFinalDefinitionFilePath(context, definitionFile);
+
+  // Assert
+  expect(checkUrlExist).toHaveBeenCalledTimes(3);
+  expect(result).toBe(
+    "http://whateverurl.domain/tGroup/projectx/tBranch/file.yaml"
+  );
+});
+
+test("getFinalDefinitionFilePath url. error", async () => {
+  // Arrange
+  const context = {
+    config: {
+      github: {
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  const definitionFile =
+    "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+  checkUrlExist
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(false)
+    .mockResolvedValueOnce(false);
+  // Act
+  try {
+    await getFinalDefinitionFilePath(context, definitionFile);
+  } catch (ex) {
+    expect(ex.message).toBe(
+      "Definition file http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml does not exist for any of these cases: http://whateverurl.domain/sGroup/projectx/sBranch/file.yaml, http://whateverurl.domain/tGroup/projectx/sBranch/file.yaml or http://whateverurl.domain/tGroup/projectx/tBranch/file.yaml"
+    );
+  }
 });

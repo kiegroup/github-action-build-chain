@@ -22941,7 +22941,7 @@ async function start(context) {
   );
   logger.info(
     `Tree for project ${context.config.github.repository} loaded from ${
-      context.config.github.inputs.definitionFile
+      definitionTree.sourceFile
     }. Dependencies: ${definitionTree.dependencies.map(node => node.project)}`
   );
   const nodeChain = await checkoutDefinitionTree(context, definitionTree);
@@ -25810,12 +25810,14 @@ async function readDefinitionFile(file, urlPlaceHolders = {}) {
  * @param {Object} urlPlaceHolders the url place holders to replace url
  */
 async function readDefinitionFileFromFile(filePath, urlPlaceHolders) {
-  let defintionFileContent = fs.readFileSync(filePath, "utf8");
-  return loadYaml(
+  const defintionFileContent = fs.readFileSync(filePath, "utf8");
+  const yamlObject = loadYaml(
     readYaml(defintionFileContent),
     filePath.substring(0, filePath.lastIndexOf("/")),
     urlPlaceHolders
   );
+  yamlObject.sourceFile = filePath;
+  return yamlObject;
 }
 
 /**
@@ -25834,12 +25836,15 @@ async function readDefinitionFileFromUrl(url, urlPlaceHolders) {
   ) {
     const dependenciesContent = await getUrlContent(
       `${treatedUrl.substring(0, treatedUrl.lastIndexOf("/"))}/${
-        definitionYaml.dependencies
+      definitionYaml.dependencies
       }`
     );
     fs.writeFileSync(definitionYaml.dependencies, dependenciesContent);
   }
-  return loadYaml(definitionYaml, "./", urlPlaceHolders);
+  const yamlObject = loadYaml(definitionYaml, "./", urlPlaceHolders);
+  yamlObject.sourceFile = treatedUrl;
+  console.log("sourcefile", yamlObject.sourceFile);
+  return yamlObject;
 }
 
 /**
@@ -25855,12 +25860,12 @@ async function loadYaml(definitionYaml, definitionFileFolder, urlPlaceHolders) {
       "http"
     )
       ? await getUrlContent(
-          treatUrl(definitionYaml.dependencies, urlPlaceHolders)
-        )
+        treatUrl(definitionYaml.dependencies, urlPlaceHolders)
+      )
       : fs.readFileSync(
-          `${definitionFileFolder}/${definitionYaml.dependencies}`,
-          "utf8"
-        );
+        `${definitionFileFolder}/${definitionYaml.dependencies}`,
+        "utf8"
+      );
     const dependenciesYaml = readYaml(dependenciesFileContent);
     validateDependencies(dependenciesYaml);
     definitionYaml.dependencies = dependenciesYaml.dependencies;

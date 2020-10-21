@@ -25,7 +25,7 @@ async function start(context) {
   );
   logger.info(
     `Tree for project ${context.config.github.repository} loaded from ${
-      context.config.github.inputs.definitionFile
+      definitionTree.sourceFile
     }. Dependencies: ${definitionTree.dependencies.map(node => node.project)}`
   );
   const nodeChain = await checkoutDefinitionTree(context, definitionTree);

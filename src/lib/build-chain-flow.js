@@ -33,7 +33,11 @@ async function start(context) {
     } loaded from ${treatUrl(
       context.config.github.inputs.definitionFile,
       placeHolders
-    )}. Dependencies: ${definitionTree.dependencies.map(node => node.project)}`
+    )}. Dependencies: ${
+      definitionTree.dependencies
+        ? definitionTree.dependencies.map(node => node.project)
+        : "no dependencies"
+    }`
   );
   const nodeChain = await checkoutDefinitionTree(context, definitionTree);
   core.endGroup();

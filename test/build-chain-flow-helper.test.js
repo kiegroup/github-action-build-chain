@@ -11,7 +11,7 @@ const {
   getForkedProject: getForkedProjectMock
 } = require("../src/lib/git");
 
-const { getTreeForProject } = require("build-chain-configuration-reader");
+const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
 const path = require("path");
 
 afterEach(() => {

@@ -1,5 +1,5 @@
 const { checkoutDefinitionTree, getDir } = require("./build-chain-flow-helper");
-const { getTreeForProject } = require("build-chain-configuration-reader");
+const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
 
 const { printCheckoutInformation } = require("./summary");
 const { logger } = require("./common");

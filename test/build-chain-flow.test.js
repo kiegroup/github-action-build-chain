@@ -22,8 +22,8 @@ jest.mock("@actions/core");
 const { printCheckoutInformation } = require("../src/lib/summary");
 jest.mock("../src/lib/summary");
 
-const { getTreeForProject } = require("build-chain-configuration-reader");
-jest.mock("build-chain-configuration-reader");
+const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
+jest.mock("@kie/build-chain-configuration-reader");
 
 afterEach(() => {
   jest.clearAllMocks();

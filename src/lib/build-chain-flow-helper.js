@@ -6,7 +6,9 @@ const {
   getForkedProject
 } = require("./git");
 const { logger } = require("./common");
-const { parentChainFromNode } = require("build-chain-configuration-reader");
+const {
+  parentChainFromNode
+} = require("@kie/build-chain-configuration-reader");
 
 async function checkoutDefinitionTree(context, treeNode) {
   const nodeChain = await parentChainFromNode(treeNode);

@@ -275,6 +275,8 @@ Considering the projects hierarchy:
 
 ![Project hierarchy](/docs/project-hierarchy.png)
 
+You can check how to define build definition files from [Build Chain Configuration Reader documentation](https://github.com/kiegroup/build-chain-configuration-reader)
+
 // TO BE DOCUMENTED
 
 ## Docker build

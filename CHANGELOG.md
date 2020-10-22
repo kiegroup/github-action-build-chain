@@ -1,6 +1,14 @@
 # Changelog
 
-# V2.0 (next release)
+# V2.1
+
+[Link](https://github.com/kiegroup/github-action-build-chain/releases/tag/v2.1)
+
+## Enhancements:
+
+- @kie/build-chain-configuration-reader dependency upgraded to ^0.0.6
+
+# V2.0
 
 [Link](https://github.com/kiegroup/github-action-build-chain/releases/tag/v2.0)
 

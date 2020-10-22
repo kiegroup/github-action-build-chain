@@ -11383,6 +11383,8 @@ function manipulateArchiveArtifacts(build, project) {
       : "none";
     archiveArtifacts.name = archiveArtifacts.name
       ? archiveArtifacts.name
+      : project.includes("/")
+      ? project.split("/")[1]
       : project;
     archiveArtifacts.paths = treatArchiveArtifactsPath(archiveArtifacts.path);
   }
@@ -17089,6 +17091,10 @@ const assert = __webpack_require__(357);
 const allowedVersions = ["1.0"];
 
 function validateDefinition(definition) {
+  assert(
+    definition,
+    "definition file is empty or couldn't be loaded, please check 'definition-file' input"
+  );
   validateVersion(definition.version, "definition");
 }
 
@@ -23082,7 +23088,14 @@ async function executeBuildCommands(cwd, buildCommands, project) {
       ? buildCommands.filter(c => c)
       : [buildCommands]) {
       core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
-      await execute(cwd, treatCommand(command));
+      const commandTreated = treatCommand(command);
+      try {
+        await execute(cwd, commandTreated);
+      } catch (e) {
+        throw new Error(
+          `[${project}] error executing command '${commandTreated}'`
+        );
+      }
       core.endGroup();
     }
   }
@@ -25259,7 +25272,7 @@ exports.SearchState = SearchState;
 /* 731 */
 /***/ (function(module) {
 
-module.exports = {"name":"build-chain-action","version":"2.0.0","description":"GitHub action to define action chains","main":"src/lib/api.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":true,"bin":{"build-chain-action":"./bin/build-chain.js"},"scripts":{"test":"jest","it":"node it/it.js","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@kie/build-chain-configuration-reader":"^0.0.4","@octokit/rest":"^17.6.0","argparse":"^1.0.7","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","dotenv":"^8.2.0","eslint":"^7.10.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
+module.exports = {"name":"build-chain-action","version":"2.0.1","description":"GitHub action to define action chains","main":"src/lib/api.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":true,"bin":{"build-chain-action":"./bin/build-chain.js"},"scripts":{"test":"jest","it":"node it/it.js","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@kie/build-chain-configuration-reader":"^0.0.6","@octokit/rest":"^17.6.0","argparse":"^1.0.7","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","dotenv":"^8.2.0","eslint":"^7.10.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
 
 /***/ }),
 /* 732 */,

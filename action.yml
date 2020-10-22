@@ -6,6 +6,10 @@ inputs:
   definition-file:
     description: "the file where the build chain is defined. It can a file in the same repository (relative path) or a URL"
     required: true
+  flow-type:
+    description: "the flow to execute, it can be 'pull-request' or 'branch'"
+    default: "pull-request"
+    required: false
 runs:
   using: "node12"
   main: "dist/index.js"

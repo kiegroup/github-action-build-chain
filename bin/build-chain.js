@@ -1,44 +1,25 @@
 #!/usr/bin/env node
 
-const process = require("process");
-
-const fse = require("fs-extra");
-const { ArgumentParser } = require("argparse");
-const { Octokit } = require("@octokit/rest");
-
 const { ClientError, logger } = require("../src/lib/common");
-const { createConfig, createConfigLocally } = require("../src/lib/config");
-const { executeGitHubAction } = require("../src/lib/api");
-
-const pkg = require("../package.json");
+const {
+  executeLocally: pullRequestLocalFlow,
+  executeFromEvent: pullRequestEventFlow
+} = require("./flows/build-chain-pull-request");
+const {
+  isPullRequestFlowType,
+  isBranchFlowType
+} = require("../src/lib/util/action-utils");
+const {
+  createOctokitInstance,
+  getArguments,
+  getProcessEnvVariable,
+  isLocallyExecution,
+  addLocalExecutionVariables
+} = require("../src/lib/util/execution-util");
+require("dotenv").config();
 
 async function main() {
-  const parser = new ArgumentParser({
-    prog: pkg.name,
-    add_help: true,
-    description: pkg.description
-  });
-
-  // parser.add_argument("-h", "--help", {
-  //   action: "version",
-  //   version: pkg.version
-  // });
-  parser.add_argument("-d", "--debug", {
-    action: "store_true",
-    help: "Show debugging output"
-  });
-  parser.add_argument("-url", {
-    metavar: "<url>",
-    nargs: 1,
-    help: "GitHub URL to process instead of environment variables"
-  });
-
-  parser.add_argument("-df", {
-    metavar: "<definition-file>",
-    nargs: 1,
-    help: "Filesystem path or URL to the definition file"
-  });
-  const args = parser.parse_args();
+  const args = getArguments();
 
   if (args.trace) {
     logger.level = "trace";
@@ -46,47 +27,40 @@ async function main() {
     logger.level = "debug";
   }
 
-  const token = env("GITHUB_TOKEN");
-  const octokit = new Octokit({
-    auth: `token ${token}`,
-    userAgent: "kiegroup/github-build-chain-action"
-  });
+  const token = getProcessEnvVariable("GITHUB_TOKEN");
+  const octokit = createOctokitInstance(token);
 
-  let config = undefined;
-  addInputVariableToEnv(args.df[0], "definition-file", true);
-  if (args.url) {
-    config = await createConfigLocally(octokit, args.url[0], process.env);
+  if (isLocallyExecution(args)) {
+    await handleLocalExecution(args, token, octokit);
   } else {
-    const eventPath = env("GITHUB_EVENT_PATH");
-    const eventDataStr = await fse.readFile(eventPath, "utf8");
-    const eventData = JSON.parse(eventDataStr);
-    config = await createConfig(eventData, undefined, process.env);
+    await handleEventExecution(token, octokit);
   }
-
-  const context = { token, octokit, config };
-  await executeGitHubAction(context);
 }
 
-function env(name) {
-  const val = process.env[name];
-  if (!val || !val.length) {
-    throw new ClientError(`environment variable ${name} not set!`);
+async function handleEventExecution(token, octokit) {
+  if (isPullRequestFlowType()) {
+    await pullRequestEventFlow(token, octokit, process.env);
   }
-  return val;
+  if (isBranchFlowType()) {
+    // await pullRequestLocalFlow(token, octokit, process.env);
+  }
 }
 
-/**
- * The idea here is to add every env variable as an INPUT_X variable, this is the way github actions sets variables to the environment, so it's the way to introduce inputs from command line
- * @param {String} inputVariable the input variable name
- * @param {Boolean} mandatory is the input variable mandatory
- */
-function addInputVariableToEnv(value, inputKey, mandatory) {
-  if (value) {
-    process.env[`INPUT_${inputKey.replace(/ /g, "_").toUpperCase()}`] = value;
-  } else if (mandatory) {
-    throw new Error(
-      `Input variable ${inputKey} is mandatory and it's not defined. Please add it following documentation.`
+async function handleLocalExecution(args, token, octokit) {
+  addLocalExecutionVariables({
+    "definition-file": { value: args.df[0], mandatory: true }
+  });
+  if (args.f.includes("pr")) {
+    await pullRequestLocalFlow(
+      token,
+      octokit,
+      process.env,
+      args.folder[0],
+      args.url[0]
     );
+  }
+  if (args.f.includes("branch")) {
+    // await pullRequest(octokit, args.url[0], process.env, args.folder[0]);
   }
 }
 
@@ -101,3 +75,5 @@ if (require.main === module) {
     }
   });
 }
+
+module.exports = { main };

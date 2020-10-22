@@ -1,5 +1,7 @@
-const { createConfig } = require("../src/lib/config");
-jest.mock("../src/lib/util/action-utils", () => ({
+const {
+  createCommonConfig
+} = require("../../../../src/lib/flows/common/config");
+jest.mock("../../../../src/lib/util/action-utils", () => ({
   getDefinitionFile: () => {
     return "definition-file.yaml";
   }
@@ -32,7 +34,7 @@ test("createConfig", async () => {
     }
   };
   // Act
-  const config = await createConfig(envData, "folder", env);
+  const config = await createCommonConfig(envData, "folder", env);
   // Assert
   const expected = {
     github: {

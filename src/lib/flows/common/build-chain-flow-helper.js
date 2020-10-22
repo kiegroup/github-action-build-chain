@@ -4,13 +4,13 @@ const {
   merge: gitMerge,
   hasPullRequest,
   getForkedProject
-} = require("./git");
-const { logger } = require("./common");
+} = require("../../git");
+const { logger } = require("../../common");
 const {
   parentChainFromNode,
   treatUrl
 } = require("@kie/build-chain-configuration-reader");
-const { checkUrlExist } = require("./util/http");
+const { checkUrlExist } = require("../../util/http");
 
 async function checkoutDefinitionTree(context, treeNode) {
   const nodeChain = await parentChainFromNode(treeNode);

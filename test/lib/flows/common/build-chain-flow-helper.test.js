@@ -2,21 +2,21 @@ const {
   getCheckoutInfo,
   checkoutDefinitionTree,
   getFinalDefinitionFilePath
-} = require("../src/lib/build-chain-flow-helper");
-jest.mock("../src/lib/git");
+} = require("../../../../src/lib/flows/common/build-chain-flow-helper");
 const {
   doesBranchExist: doesBranchExistMock,
   clone: cloneMock,
   merge: mergeMock,
   hasPullRequest: hasPullRequestMock,
   getForkedProject: getForkedProjectMock
-} = require("../src/lib/git");
+} = require("../../../../src/lib/git");
+jest.mock("../../../../src/lib/git");
 
 const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
 const path = require("path");
 
-const { checkUrlExist } = require("../src/lib/util/http");
-jest.mock("../src/lib/util/http");
+const { checkUrlExist } = require("../../../../src/lib/util/http");
+jest.mock("../../../../src/lib/util/http");
 
 afterEach(() => {
   jest.clearAllMocks();

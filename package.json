@@ -5,7 +5,7 @@
   "main": "src/lib/api.js",
   "author": "Enrique Mingorance Cano <emingora@redhat.com>",
   "license": "SEE LICENSE IN LICENSE",
-  "private": true,
+  "private": false,
   "bin": {
     "build-chain-action": "./bin/build-chain.js"
   },

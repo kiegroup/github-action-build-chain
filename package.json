@@ -1,5 +1,5 @@
 {
-  "name": "build-chain-action",
+  "name": "@kie/build-chain-action",
   "version": "2.0.1",
   "description": "GitHub action to define action chains",
   "main": "src/lib/api.js",

@@ -419,7 +419,7 @@ test("start no parent dependencies archive artifacts. Execute Exception", async 
     await start(context);
   } catch (ex) {
     expect(ex.message).toBe(
-      "Command executions have failed, please review latest execution Error: error executing command"
+      "Command executions have failed, please review latest execution Error: [kiegroup/lienzo-core] error executing command 'before current command'"
     );
   }
   // Assert

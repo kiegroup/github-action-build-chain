@@ -120,7 +120,14 @@ async function executeBuildCommands(cwd, buildCommands, project) {
       ? buildCommands.filter(c => c)
       : [buildCommands]) {
       core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
-      await execute(cwd, treatCommand(command));
+      const commandTreated = treatCommand(command);
+      try {
+        await execute(cwd, commandTreated);
+      } catch (e) {
+        throw new Error(
+          `[${project}] error executing command '${commandTreated}'`
+        );
+      }
       core.endGroup();
     }
   }

@@ -67,6 +67,7 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
 
 async function getEvent(octokit, eventUrl) {
   let event;
+
   const m = eventUrl.match(GITHUB_URL_REGEXP);
   if (m && m[3] === "pull") {
     logger.debug("Getting PR data...");

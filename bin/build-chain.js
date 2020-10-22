@@ -15,25 +15,30 @@ const pkg = require("../package.json");
 async function main() {
   const parser = new ArgumentParser({
     prog: pkg.name,
-    version: pkg.version,
-    addHelp: true,
+    add_help: true,
     description: pkg.description
   });
-  parser.addArgument(["-t", "--trace"], {
-    action: "storeTrue",
-    help: "Show trace output"
-  });
-  parser.addArgument(["-d", "--debug"], {
-    action: "storeTrue",
+
+  // parser.add_argument("-h", "--help", {
+  //   action: "version",
+  //   version: pkg.version
+  // });
+  parser.add_argument("-d", "--debug", {
+    action: "store_true",
     help: "Show debugging output"
   });
-  parser.addArgument(["url"], {
+  parser.add_argument("-url", {
     metavar: "<url>",
-    nargs: "?",
+    nargs: 1,
     help: "GitHub URL to process instead of environment variables"
   });
 
-  const args = parser.parseArgs();
+  parser.add_argument("-df", {
+    metavar: "<definition-file>",
+    nargs: 1,
+    help: "Filesystem path or URL to the definition file"
+  });
+  const args = parser.parse_args();
 
   if (args.trace) {
     logger.level = "trace";
@@ -48,8 +53,9 @@ async function main() {
   });
 
   let config = undefined;
+  addInputVariableToEnv(args.df[0], "definition-file", true);
   if (args.url) {
-    config = await createConfigLocally(octokit, args.url, process.env);
+    config = await createConfigLocally(octokit, args.url[0], process.env);
   } else {
     const eventPath = env("GITHUB_EVENT_PATH");
     const eventDataStr = await fse.readFile(eventPath, "utf8");
@@ -67,6 +73,21 @@ function env(name) {
     throw new ClientError(`environment variable ${name} not set!`);
   }
   return val;
+}
+
+/**
+ * The idea here is to add every env variable as an INPUT_X variable, this is the way github actions sets variables to the environment, so it's the way to introduce inputs from command line
+ * @param {String} inputVariable the input variable name
+ * @param {Boolean} mandatory is the input variable mandatory
+ */
+function addInputVariableToEnv(value, inputKey, mandatory) {
+  if (value) {
+    process.env[`INPUT_${inputKey.replace(/ /g, "_").toUpperCase()}`] = value;
+  } else if (mandatory) {
+    throw new Error(
+      `Input variable ${inputKey} is mandatory and it's not defined. Please add it following documentation.`
+    );
+  }
 }
 
 if (require.main === module) {

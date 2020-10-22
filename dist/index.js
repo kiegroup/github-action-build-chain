@@ -557,9 +557,3716 @@ module.exports = require("tls");
 /***/ }),
 /* 17 */,
 /* 18 */
-/***/ (function(module) {
+/***/ (function(module, __unusedexports, __webpack_require__) {
 
-module.exports = eval("require")("encoding");
+"use strict";
+// Port of python's argparse module, version 3.9.0:
+// https://github.com/python/cpython/blob/v3.9.0rc1/Lib/argparse.py
+
+
+
+// Copyright (C) 2010-2020 Python Software Foundation.
+// Copyright (C) 2020 argparse.js authors
+
+/*
+ * Command-line parsing library
+ *
+ * This module is an optparse-inspired command-line parsing library that:
+ *
+ *     - handles both optional and positional arguments
+ *     - produces highly informative usage messages
+ *     - supports parsers that dispatch to sub-parsers
+ *
+ * The following is a simple usage example that sums integers from the
+ * command-line and writes the result to a file::
+ *
+ *     parser = argparse.ArgumentParser(
+ *         description='sum the integers at the command line')
+ *     parser.add_argument(
+ *         'integers', metavar='int', nargs='+', type=int,
+ *         help='an integer to be summed')
+ *     parser.add_argument(
+ *         '--log', default=sys.stdout, type=argparse.FileType('w'),
+ *         help='the file where the sum should be written')
+ *     args = parser.parse_args()
+ *     args.log.write('%s' % sum(args.integers))
+ *     args.log.close()
+ *
+ * The module contains the following public classes:
+ *
+ *     - ArgumentParser -- The main entry point for command-line parsing. As the
+ *         example above shows, the add_argument() method is used to populate
+ *         the parser with actions for optional and positional arguments. Then
+ *         the parse_args() method is invoked to convert the args at the
+ *         command-line into an object with attributes.
+ *
+ *     - ArgumentError -- The exception raised by ArgumentParser objects when
+ *         there are errors with the parser's actions. Errors raised while
+ *         parsing the command-line are caught by ArgumentParser and emitted
+ *         as command-line messages.
+ *
+ *     - FileType -- A factory for defining types of files to be created. As the
+ *         example above shows, instances of FileType are typically passed as
+ *         the type= argument of add_argument() calls.
+ *
+ *     - Action -- The base class for parser actions. Typically actions are
+ *         selected by passing strings like 'store_true' or 'append_const' to
+ *         the action= argument of add_argument(). However, for greater
+ *         customization of ArgumentParser actions, subclasses of Action may
+ *         be defined and passed as the action= argument.
+ *
+ *     - HelpFormatter, RawDescriptionHelpFormatter, RawTextHelpFormatter,
+ *         ArgumentDefaultsHelpFormatter -- Formatter classes which
+ *         may be passed as the formatter_class= argument to the
+ *         ArgumentParser constructor. HelpFormatter is the default,
+ *         RawDescriptionHelpFormatter and RawTextHelpFormatter tell the parser
+ *         not to change the formatting for help text, and
+ *         ArgumentDefaultsHelpFormatter adds information about argument defaults
+ *         to the help.
+ *
+ * All other classes in this module are considered implementation details.
+ * (Also note that HelpFormatter and RawDescriptionHelpFormatter are only
+ * considered public as object names -- the API of the formatter objects is
+ * still considered an implementation detail.)
+ */
+
+const SUPPRESS = '==SUPPRESS=='
+
+const OPTIONAL = '?'
+const ZERO_OR_MORE = '*'
+const ONE_OR_MORE = '+'
+const PARSER = 'A...'
+const REMAINDER = '...'
+const _UNRECOGNIZED_ARGS_ATTR = '_unrecognized_args'
+
+
+// ==================================
+// Utility functions used for porting
+// ==================================
+const assert = __webpack_require__(357)
+const util = __webpack_require__(669)
+const fs = __webpack_require__(747)
+const sub = __webpack_require__(458)
+const path = __webpack_require__(622)
+const repr = util.inspect
+
+function get_argv() {
+    // omit first argument (which is assumed to be interpreter - `node`, `coffee`, `ts-node`, etc.)
+    return process.argv.slice(1)
+}
+
+function get_terminal_size() {
+    return {
+        columns: +process.env.COLUMNS || process.stdout.columns || 80
+    }
+}
+
+function hasattr(object, name) {
+    return Object.prototype.hasOwnProperty.call(object, name)
+}
+
+function getattr(object, name, value) {
+    return hasattr(object, name) ? object[name] : value
+}
+
+function setattr(object, name, value) {
+    object[name] = value
+}
+
+function setdefault(object, name, value) {
+    if (!hasattr(object, name)) object[name] = value
+    return object[name]
+}
+
+function delattr(object, name) {
+    delete object[name]
+}
+
+function range(from, to, step=1) {
+    // range(10) is equivalent to range(0, 10)
+    if (arguments.length === 1) [ to, from ] = [ from, 0 ]
+    if (typeof from !== 'number' || typeof to !== 'number' || typeof step !== 'number') {
+        throw new TypeError('argument cannot be interpreted as an integer')
+    }
+    if (step === 0) throw new TypeError('range() arg 3 must not be zero')
+
+    let result = []
+    if (step > 0) {
+        for (let i = from; i < to; i += step) result.push(i)
+    } else {
+        for (let i = from; i > to; i += step) result.push(i)
+    }
+    return result
+}
+
+function splitlines(str, keepends = false) {
+    let result
+    if (!keepends) {
+        result = str.split(/\r\n|[\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029]/)
+    } else {
+        result = []
+        let parts = str.split(/(\r\n|[\n\r\v\f\x1c\x1d\x1e\x85\u2028\u2029])/)
+        for (let i = 0; i < parts.length; i += 2) {
+            result.push(parts[i] + (i + 1 < parts.length ? parts[i + 1] : ''))
+        }
+    }
+    if (!result[result.length - 1]) result.pop()
+    return result
+}
+
+function _string_lstrip(string, prefix_chars) {
+    let idx = 0
+    while (idx < string.length && prefix_chars.includes(string[idx])) idx++
+    return idx ? string.slice(idx) : string
+}
+
+function _string_split(string, sep, maxsplit) {
+    let result = string.split(sep)
+    if (result.length > maxsplit) {
+        result = result.slice(0, maxsplit).concat([ result.slice(maxsplit).join(sep) ])
+    }
+    return result
+}
+
+function _array_equal(array1, array2) {
+    if (array1.length !== array2.length) return false
+    for (let i = 0; i < array1.length; i++) {
+        if (array1[i] !== array2[i]) return false
+    }
+    return true
+}
+
+function _array_remove(array, item) {
+    let idx = array.indexOf(item)
+    if (idx === -1) throw new TypeError(sub('%r not in list', item))
+    array.splice(idx, 1)
+}
+
+// normalize choices to array;
+// this isn't required in python because `in` and `map` operators work with anything,
+// but in js dealing with multiple types here is too clunky
+function _choices_to_array(choices) {
+    if (choices === undefined) {
+        return []
+    } else if (Array.isArray(choices)) {
+        return choices
+    } else if (choices !== null && typeof choices[Symbol.iterator] === 'function') {
+        return Array.from(choices)
+    } else if (typeof choices === 'object' && choices !== null) {
+        return Object.keys(choices)
+    } else {
+        throw new Error(sub('invalid choices value: %r', choices))
+    }
+}
+
+// decorator that allows a class to be called without new
+function _callable(cls) {
+    let result = { // object is needed for inferred class name
+        [cls.name]: function (...args) {
+            let this_class = new.target === result || !new.target
+            return Reflect.construct(cls, args, this_class ? cls : new.target)
+        }
+    }
+    result[cls.name].prototype = cls.prototype
+    // fix default tag for toString, e.g. [object Action] instead of [object Object]
+    cls.prototype[Symbol.toStringTag] = cls.name
+    return result[cls.name]
+}
+
+function _alias(object, from, to) {
+    try {
+        let name = object.constructor.name
+        Object.defineProperty(object, from, {
+            value: util.deprecate(object[to], sub('%s.%s() is renamed to %s.%s()',
+                name, from, name, to)),
+            enumerable: false
+        })
+    } catch {}
+}
+
+// decorator that allows snake_case class methods to be called with camelCase and vice versa
+function _camelcase_alias(_class) {
+    for (let name of Object.getOwnPropertyNames(_class.prototype)) {
+        let camelcase = name.replace(/\w_[a-z]/g, s => s[0] + s[2].toUpperCase())
+        if (camelcase !== name) _alias(_class.prototype, camelcase, name)
+    }
+    return _class
+}
+
+function _to_legacy_name(key) {
+    key = key.replace(/\w_[a-z]/g, s => s[0] + s[2].toUpperCase())
+    if (key === 'default') key = 'defaultValue'
+    if (key === 'const') key = 'constant'
+    return key
+}
+
+function _to_new_name(key) {
+    if (key === 'defaultValue') key = 'default'
+    if (key === 'constant') key = 'const'
+    key = key.replace(/[A-Z]/g, c => '_' + c.toLowerCase())
+    return key
+}
+
+// parse options
+let no_default = Symbol('no_default_value')
+function _parse_opts(args, descriptor) {
+    function get_name() {
+        let stack = new Error().stack.split('\n')
+            .map(x => x.match(/^    at (.*) \(.*\)$/))
+            .filter(Boolean)
+            .map(m => m[1])
+            .map(fn => fn.match(/[^ .]*$/)[0])
+
+        if (stack.length && stack[0] === get_name.name) stack.shift()
+        if (stack.length && stack[0] === _parse_opts.name) stack.shift()
+        return stack.length ? stack[0] : ''
+    }
+
+    args = Array.from(args)
+    let kwargs = {}
+    let result = []
+    let last_opt = args.length && args[args.length - 1]
+
+    if (typeof last_opt === 'object' && last_opt !== null && !Array.isArray(last_opt) &&
+        (!last_opt.constructor || last_opt.constructor.name === 'Object')) {
+        kwargs = Object.assign({}, args.pop())
+    }
+
+    // LEGACY (v1 compatibility): camelcase
+    let renames = []
+    for (let key of Object.keys(descriptor)) {
+        let old_name = _to_legacy_name(key)
+        if (old_name !== key && (old_name in kwargs)) {
+            if (key in kwargs) {
+                // default and defaultValue specified at the same time, happens often in old tests
+                //throw new TypeError(sub('%s() got multiple values for argument %r', get_name(), key))
+            } else {
+                kwargs[key] = kwargs[old_name]
+            }
+            renames.push([ old_name, key ])
+            delete kwargs[old_name]
+        }
+    }
+    if (renames.length) {
+        let name = get_name()
+        deprecate('camelcase_' + name, sub('%s(): following options are renamed: %s',
+            name, renames.map(([ a, b ]) => sub('%r -> %r', a, b))))
+    }
+    // end
+
+    let missing_positionals = []
+    let positional_count = args.length
+
+    for (let [ key, def ] of Object.entries(descriptor)) {
+        if (key[0] === '*') {
+            if (key.length > 0 && key[1] === '*') {
+                // LEGACY (v1 compatibility): camelcase
+                let renames = []
+                for (let key of Object.keys(kwargs)) {
+                    let new_name = _to_new_name(key)
+                    if (new_name !== key && (key in kwargs)) {
+                        if (new_name in kwargs) {
+                            // default and defaultValue specified at the same time, happens often in old tests
+                            //throw new TypeError(sub('%s() got multiple values for argument %r', get_name(), new_name))
+                        } else {
+                            kwargs[new_name] = kwargs[key]
+                        }
+                        renames.push([ key, new_name ])
+                        delete kwargs[key]
+                    }
+                }
+                if (renames.length) {
+                    let name = get_name()
+                    deprecate('camelcase_' + name, sub('%s(): following options are renamed: %s',
+                        name, renames.map(([ a, b ]) => sub('%r -> %r', a, b))))
+                }
+                // end
+                result.push(kwargs)
+                kwargs = {}
+            } else {
+                result.push(args)
+                args = []
+            }
+        } else if (key in kwargs && args.length > 0) {
+            throw new TypeError(sub('%s() got multiple values for argument %r', get_name(), key))
+        } else if (key in kwargs) {
+            result.push(kwargs[key])
+            delete kwargs[key]
+        } else if (args.length > 0) {
+            result.push(args.shift())
+        } else if (def !== no_default) {
+            result.push(def)
+        } else {
+            missing_positionals.push(key)
+        }
+    }
+
+    if (Object.keys(kwargs).length) {
+        throw new TypeError(sub('%s() got an unexpected keyword argument %r',
+            get_name(), Object.keys(kwargs)[0]))
+    }
+
+    if (args.length) {
+        let from = Object.entries(descriptor).filter(([ k, v ]) => k[0] !== '*' && v !== no_default).length
+        let to = Object.entries(descriptor).filter(([ k ]) => k[0] !== '*').length
+        throw new TypeError(sub('%s() takes %s positional argument%s but %s %s given',
+            get_name(),
+            from === to ? sub('from %s to %s', from, to) : to,
+            from === to && to === 1 ? '' : 's',
+            positional_count,
+            positional_count === 1 ? 'was' : 'were'))
+    }
+
+    if (missing_positionals.length) {
+        let strs = missing_positionals.map(repr)
+        if (strs.length > 1) strs[strs.length - 1] = 'and ' + strs[strs.length - 1]
+        let str_joined = strs.join(strs.length === 2 ? '' : ', ')
+        throw new TypeError(sub('%s() missing %i required positional argument%s: %s',
+            get_name(), strs.length, strs.length === 1 ? '' : 's', str_joined))
+    }
+
+    return result
+}
+
+let _deprecations = {}
+function deprecate(id, string) {
+    _deprecations[id] = _deprecations[id] || util.deprecate(() => {}, string)
+    _deprecations[id]()
+}
+
+
+// =============================
+// Utility functions and classes
+// =============================
+function _AttributeHolder(cls = Object) {
+    /*
+     *  Abstract base class that provides __repr__.
+     *
+     *  The __repr__ method returns a string in the format::
+     *      ClassName(attr=name, attr=name, ...)
+     *  The attributes are determined either by a class-level attribute,
+     *  '_kwarg_names', or by inspecting the instance __dict__.
+     */
+
+    return class _AttributeHolder extends cls {
+        [util.inspect.custom]() {
+            let type_name = this.constructor.name
+            let arg_strings = []
+            let star_args = {}
+            for (let arg of this._get_args()) {
+                arg_strings.push(repr(arg))
+            }
+            for (let [ name, value ] of this._get_kwargs()) {
+                if (/^[a-z_][a-z0-9_$]*$/i.test(name)) {
+                    arg_strings.push(sub('%s=%r', name, value))
+                } else {
+                    star_args[name] = value
+                }
+            }
+            if (Object.keys(star_args).length) {
+                arg_strings.push(sub('**%s', repr(star_args)))
+            }
+            return sub('%s(%s)', type_name, arg_strings.join(', '))
+        }
+
+        toString() {
+            return this[util.inspect.custom]()
+        }
+
+        _get_kwargs() {
+            return Object.entries(this)
+        }
+
+        _get_args() {
+            return []
+        }
+    }
+}
+
+
+function _copy_items(items) {
+    if (items === undefined) {
+        return []
+    }
+    return items.slice(0)
+}
+
+
+// ===============
+// Formatting Help
+// ===============
+const HelpFormatter = _camelcase_alias(_callable(class HelpFormatter {
+    /*
+     *  Formatter for generating usage messages and argument help strings.
+     *
+     *  Only the name of this class is considered a public API. All the methods
+     *  provided by the class are considered an implementation detail.
+     */
+
+    constructor() {
+        let [
+            prog,
+            indent_increment,
+            max_help_position,
+            width
+        ] = _parse_opts(arguments, {
+            prog: no_default,
+            indent_increment: 2,
+            max_help_position: 24,
+            width: undefined
+        })
+
+        // default setting for width
+        if (width === undefined) {
+            width = get_terminal_size().columns
+            width -= 2
+        }
+
+        this._prog = prog
+        this._indent_increment = indent_increment
+        this._max_help_position = Math.min(max_help_position,
+                                      Math.max(width - 20, indent_increment * 2))
+        this._width = width
+
+        this._current_indent = 0
+        this._level = 0
+        this._action_max_length = 0
+
+        this._root_section = this._Section(this, undefined)
+        this._current_section = this._root_section
+
+        this._whitespace_matcher = /[ \t\n\r\f\v]+/g // equivalent to python /\s+/ with ASCII flag
+        this._long_break_matcher = /\n\n\n+/g
+    }
+
+    // ===============================
+    // Section and indentation methods
+    // ===============================
+    _indent() {
+        this._current_indent += this._indent_increment
+        this._level += 1
+    }
+
+    _dedent() {
+        this._current_indent -= this._indent_increment
+        assert(this._current_indent >= 0, 'Indent decreased below 0.')
+        this._level -= 1
+    }
+
+    _add_item(func, args) {
+        this._current_section.items.push([ func, args ])
+    }
+
+    // ========================
+    // Message building methods
+    // ========================
+    start_section(heading) {
+        this._indent()
+        let section = this._Section(this, this._current_section, heading)
+        this._add_item(section.format_help.bind(section), [])
+        this._current_section = section
+    }
+
+    end_section() {
+        this._current_section = this._current_section.parent
+        this._dedent()
+    }
+
+    add_text(text) {
+        if (text !== SUPPRESS && text !== undefined) {
+            this._add_item(this._format_text.bind(this), [text])
+        }
+    }
+
+    add_usage(usage, actions, groups, prefix = undefined) {
+        if (usage !== SUPPRESS) {
+            let args = [ usage, actions, groups, prefix ]
+            this._add_item(this._format_usage.bind(this), args)
+        }
+    }
+
+    add_argument(action) {
+        if (action.help !== SUPPRESS) {
+
+            // find all invocations
+            let invocations = [this._format_action_invocation(action)]
+            for (let subaction of this._iter_indented_subactions(action)) {
+                invocations.push(this._format_action_invocation(subaction))
+            }
+
+            // update the maximum item length
+            let invocation_length = Math.max(...invocations.map(invocation => invocation.length))
+            let action_length = invocation_length + this._current_indent
+            this._action_max_length = Math.max(this._action_max_length,
+                                               action_length)
+
+            // add the item to the list
+            this._add_item(this._format_action.bind(this), [action])
+        }
+    }
+
+    add_arguments(actions) {
+        for (let action of actions) {
+            this.add_argument(action)
+        }
+    }
+
+    // =======================
+    // Help-formatting methods
+    // =======================
+    format_help() {
+        let help = this._root_section.format_help()
+        if (help) {
+            help = help.replace(this._long_break_matcher, '\n\n')
+            help = help.replace(/^\n+|\n+$/g, '') + '\n'
+        }
+        return help
+    }
+
+    _join_parts(part_strings) {
+        return part_strings.filter(part => part && part !== SUPPRESS).join('')
+    }
+
+    _format_usage(usage, actions, groups, prefix) {
+        if (prefix === undefined) {
+            prefix = 'usage: '
+        }
+
+        // if usage is specified, use that
+        if (usage !== undefined) {
+            usage = sub(usage, { prog: this._prog })
+
+        // if no optionals or positionals are available, usage is just prog
+        } else if (usage === undefined && !actions.length) {
+            usage = sub('%(prog)s', { prog: this._prog })
+
+        // if optionals and positionals are available, calculate usage
+        } else if (usage === undefined) {
+            let prog = sub('%(prog)s', { prog: this._prog })
+
+            // split optionals from positionals
+            let optionals = []
+            let positionals = []
+            for (let action of actions) {
+                if (action.option_strings.length) {
+                    optionals.push(action)
+                } else {
+                    positionals.push(action)
+                }
+            }
+
+            // build full usage string
+            let action_usage = this._format_actions_usage([].concat(optionals).concat(positionals), groups)
+            usage = [ prog, action_usage ].map(String).join(' ')
+
+            // wrap the usage parts if it's too long
+            let text_width = this._width - this._current_indent
+            if (prefix.length + usage.length > text_width) {
+
+                // break usage into wrappable parts
+                let part_regexp = /\(.*?\)+(?=\s|$)|\[.*?\]+(?=\s|$)|\S+/g
+                let opt_usage = this._format_actions_usage(optionals, groups)
+                let pos_usage = this._format_actions_usage(positionals, groups)
+                let opt_parts = opt_usage.match(part_regexp) || []
+                let pos_parts = pos_usage.match(part_regexp) || []
+                assert(opt_parts.join(' ') === opt_usage)
+                assert(pos_parts.join(' ') === pos_usage)
+
+                // helper for wrapping lines
+                let get_lines = (parts, indent, prefix = undefined) => {
+                    let lines = []
+                    let line = []
+                    let line_len
+                    if (prefix !== undefined) {
+                        line_len = prefix.length - 1
+                    } else {
+                        line_len = indent.length - 1
+                    }
+                    for (let part of parts) {
+                        if (line_len + 1 + part.length > text_width && line) {
+                            lines.push(indent + line.join(' '))
+                            line = []
+                            line_len = indent.length - 1
+                        }
+                        line.push(part)
+                        line_len += part.length + 1
+                    }
+                    if (line.length) {
+                        lines.push(indent + line.join(' '))
+                    }
+                    if (prefix !== undefined) {
+                        lines[0] = lines[0].slice(indent.length)
+                    }
+                    return lines
+                }
+
+                let lines
+
+                // if prog is short, follow it with optionals or positionals
+                if (prefix.length + prog.length <= 0.75 * text_width) {
+                    let indent = ' '.repeat(prefix.length + prog.length + 1)
+                    if (opt_parts.length) {
+                        lines = get_lines([prog].concat(opt_parts), indent, prefix)
+                        lines = lines.concat(get_lines(pos_parts, indent))
+                    } else if (pos_parts.length) {
+                        lines = get_lines([prog].concat(pos_parts), indent, prefix)
+                    } else {
+                        lines = [prog]
+                    }
+
+                // if prog is long, put it on its own line
+                } else {
+                    let indent = ' '.repeat(prefix.length)
+                    let parts = [].concat(opt_parts).concat(pos_parts)
+                    lines = get_lines(parts, indent)
+                    if (lines.length > 1) {
+                        lines = []
+                        lines = lines.concat(get_lines(opt_parts, indent))
+                        lines = lines.concat(get_lines(pos_parts, indent))
+                    }
+                    lines = [prog].concat(lines)
+                }
+
+                // join lines into usage
+                usage = lines.join('\n')
+            }
+        }
+
+        // prefix with 'usage:'
+        return sub('%s%s\n\n', prefix, usage)
+    }
+
+    _format_actions_usage(actions, groups) {
+        // find group indices and identify actions in groups
+        let group_actions = new Set()
+        let inserts = {}
+        for (let group of groups) {
+            let start = actions.indexOf(group._group_actions[0])
+            if (start === -1) {
+                continue
+            } else {
+                let end = start + group._group_actions.length
+                if (_array_equal(actions.slice(start, end), group._group_actions)) {
+                    for (let action of group._group_actions) {
+                        group_actions.add(action)
+                    }
+                    if (!group.required) {
+                        if (start in inserts) {
+                            inserts[start] += ' ['
+                        } else {
+                            inserts[start] = '['
+                        }
+                        if (end in inserts) {
+                            inserts[end] += ']'
+                        } else {
+                            inserts[end] = ']'
+                        }
+                    } else {
+                        if (start in inserts) {
+                            inserts[start] += ' ('
+                        } else {
+                            inserts[start] = '('
+                        }
+                        if (end in inserts) {
+                            inserts[end] += ')'
+                        } else {
+                            inserts[end] = ')'
+                        }
+                    }
+                    for (let i of range(start + 1, end)) {
+                        inserts[i] = '|'
+                    }
+                }
+            }
+        }
+
+        // collect all actions format strings
+        let parts = []
+        for (let [ i, action ] of Object.entries(actions)) {
+
+            // suppressed arguments are marked with None
+            // remove | separators for suppressed arguments
+            if (action.help === SUPPRESS) {
+                parts.push(undefined)
+                if (inserts[+i] === '|') {
+                    delete inserts[+i]
+                } else if (inserts[+i + 1] === '|') {
+                    delete inserts[+i + 1]
+                }
+
+            // produce all arg strings
+            } else if (!action.option_strings.length) {
+                let default_value = this._get_default_metavar_for_positional(action)
+                let part = this._format_args(action, default_value)
+
+                // if it's in a group, strip the outer []
+                if (group_actions.has(action)) {
+                    if (part[0] === '[' && part[part.length - 1] === ']') {
+                        part = part.slice(1, -1)
+                    }
+                }
+
+                // add the action string to the list
+                parts.push(part)
+
+            // produce the first way to invoke the option in brackets
+            } else {
+                let option_string = action.option_strings[0]
+                let part
+
+                // if the Optional doesn't take a value, format is:
+                //    -s or --long
+                if (action.nargs === 0) {
+                    part = action.format_usage()
+
+                // if the Optional takes a value, format is:
+                //    -s ARGS or --long ARGS
+                } else {
+                    let default_value = this._get_default_metavar_for_optional(action)
+                    let args_string = this._format_args(action, default_value)
+                    part = sub('%s %s', option_string, args_string)
+                }
+
+                // make it look optional if it's not required or in a group
+                if (!action.required && !group_actions.has(action)) {
+                    part = sub('[%s]', part)
+                }
+
+                // add the action string to the list
+                parts.push(part)
+            }
+        }
+
+        // insert things at the necessary indices
+        for (let i of Object.keys(inserts).map(Number).sort((a, b) => b - a)) {
+            parts.splice(+i, 0, inserts[+i])
+        }
+
+        // join all the action items with spaces
+        let text = parts.filter(Boolean).join(' ')
+
+        // clean up separators for mutually exclusive groups
+        text = text.replace(/([\[(]) /g, '$1')
+        text = text.replace(/ ([\])])/g, '$1')
+        text = text.replace(/[\[(] *[\])]/g, '')
+        text = text.replace(/\(([^|]*)\)/g, '$1', text)
+        text = text.trim()
+
+        // return the text
+        return text
+    }
+
+    _format_text(text) {
+        if (text.includes('%(prog)')) {
+            text = sub(text, { prog: this._prog })
+        }
+        let text_width = Math.max(this._width - this._current_indent, 11)
+        let indent = ' '.repeat(this._current_indent)
+        return this._fill_text(text, text_width, indent) + '\n\n'
+    }
+
+    _format_action(action) {
+        // determine the required width and the entry label
+        let help_position = Math.min(this._action_max_length + 2,
+                                     this._max_help_position)
+        let help_width = Math.max(this._width - help_position, 11)
+        let action_width = help_position - this._current_indent - 2
+        let action_header = this._format_action_invocation(action)
+        let indent_first
+
+        // no help; start on same line and add a final newline
+        if (!action.help) {
+            let tup = [ this._current_indent, '', action_header ]
+            action_header = sub('%*s%s\n', ...tup)
+
+        // short action name; start on the same line and pad two spaces
+        } else if (action_header.length <= action_width) {
+            let tup = [ this._current_indent, '', action_width, action_header ]
+            action_header = sub('%*s%-*s  ', ...tup)
+            indent_first = 0
+
+        // long action name; start on the next line
+        } else {
+            let tup = [ this._current_indent, '', action_header ]
+            action_header = sub('%*s%s\n', ...tup)
+            indent_first = help_position
+        }
+
+        // collect the pieces of the action help
+        let parts = [action_header]
+
+        // if there was help for the action, add lines of help text
+        if (action.help) {
+            let help_text = this._expand_help(action)
+            let help_lines = this._split_lines(help_text, help_width)
+            parts.push(sub('%*s%s\n', indent_first, '', help_lines[0]))
+            for (let line of help_lines.slice(1)) {
+                parts.push(sub('%*s%s\n', help_position, '', line))
+            }
+
+        // or add a newline if the description doesn't end with one
+        } else if (!action_header.endsWith('\n')) {
+            parts.push('\n')
+        }
+
+        // if there are any sub-actions, add their help as well
+        for (let subaction of this._iter_indented_subactions(action)) {
+            parts.push(this._format_action(subaction))
+        }
+
+        // return a single string
+        return this._join_parts(parts)
+    }
+
+    _format_action_invocation(action) {
+        if (!action.option_strings.length) {
+            let default_value = this._get_default_metavar_for_positional(action)
+            let metavar = this._metavar_formatter(action, default_value)(1)[0]
+            return metavar
+
+        } else {
+            let parts = []
+
+            // if the Optional doesn't take a value, format is:
+            //    -s, --long
+            if (action.nargs === 0) {
+                parts = parts.concat(action.option_strings)
+
+            // if the Optional takes a value, format is:
+            //    -s ARGS, --long ARGS
+            } else {
+                let default_value = this._get_default_metavar_for_optional(action)
+                let args_string = this._format_args(action, default_value)
+                for (let option_string of action.option_strings) {
+                    parts.push(sub('%s %s', option_string, args_string))
+                }
+            }
+
+            return parts.join(', ')
+        }
+    }
+
+    _metavar_formatter(action, default_metavar) {
+        let result
+        if (action.metavar !== undefined) {
+            result = action.metavar
+        } else if (action.choices !== undefined) {
+            let choice_strs = _choices_to_array(action.choices).map(String)
+            result = sub('{%s}', choice_strs.join(','))
+        } else {
+            result = default_metavar
+        }
+
+        function format(tuple_size) {
+            if (Array.isArray(result)) {
+                return result
+            } else {
+                return Array(tuple_size).fill(result)
+            }
+        }
+        return format
+    }
+
+    _format_args(action, default_metavar) {
+        let get_metavar = this._metavar_formatter(action, default_metavar)
+        let result
+        if (action.nargs === undefined) {
+            result = sub('%s', ...get_metavar(1))
+        } else if (action.nargs === OPTIONAL) {
+            result = sub('[%s]', ...get_metavar(1))
+        } else if (action.nargs === ZERO_OR_MORE) {
+            let metavar = get_metavar(1)
+            if (metavar.length === 2) {
+                result = sub('[%s [%s ...]]', ...metavar)
+            } else {
+                result = sub('[%s ...]', ...metavar)
+            }
+        } else if (action.nargs === ONE_OR_MORE) {
+            result = sub('%s [%s ...]', ...get_metavar(2))
+        } else if (action.nargs === REMAINDER) {
+            result = '...'
+        } else if (action.nargs === PARSER) {
+            result = sub('%s ...', ...get_metavar(1))
+        } else if (action.nargs === SUPPRESS) {
+            result = ''
+        } else {
+            let formats
+            try {
+                formats = range(action.nargs).map(() => '%s')
+            } catch (err) {
+                throw new TypeError('invalid nargs value')
+            }
+            result = sub(formats.join(' '), ...get_metavar(action.nargs))
+        }
+        return result
+    }
+
+    _expand_help(action) {
+        let params = Object.assign({ prog: this._prog }, action)
+        for (let name of Object.keys(params)) {
+            if (params[name] === SUPPRESS) {
+                delete params[name]
+            }
+        }
+        for (let name of Object.keys(params)) {
+            if (params[name] && params[name].name) {
+                params[name] = params[name].name
+            }
+        }
+        if (params.choices !== undefined) {
+            let choices_str = _choices_to_array(params.choices).map(String).join(', ')
+            params.choices = choices_str
+        }
+        // LEGACY (v1 compatibility): camelcase
+        for (let key of Object.keys(params)) {
+            let old_name = _to_legacy_name(key)
+            if (old_name !== key) {
+                params[old_name] = params[key]
+            }
+        }
+        // end
+        return sub(this._get_help_string(action), params)
+    }
+
+    * _iter_indented_subactions(action) {
+        if (typeof action._get_subactions === 'function') {
+            this._indent()
+            yield* action._get_subactions()
+            this._dedent()
+        }
+    }
+
+    _split_lines(text, width) {
+        text = text.replace(this._whitespace_matcher, ' ').trim()
+        // The textwrap module is used only for formatting help.
+        // Delay its import for speeding up the common usage of argparse.
+        let textwrap = __webpack_require__(903)
+        return textwrap.wrap(text, { width })
+    }
+
+    _fill_text(text, width, indent) {
+        text = text.replace(this._whitespace_matcher, ' ').trim()
+        let textwrap = __webpack_require__(903)
+        return textwrap.fill(text, { width,
+                                     initial_indent: indent,
+                                     subsequent_indent: indent })
+    }
+
+    _get_help_string(action) {
+        return action.help
+    }
+
+    _get_default_metavar_for_optional(action) {
+        return action.dest.toUpperCase()
+    }
+
+    _get_default_metavar_for_positional(action) {
+        return action.dest
+    }
+}))
+
+HelpFormatter.prototype._Section = _callable(class _Section {
+
+    constructor(formatter, parent, heading = undefined) {
+        this.formatter = formatter
+        this.parent = parent
+        this.heading = heading
+        this.items = []
+    }
+
+    format_help() {
+        // format the indented section
+        if (this.parent !== undefined) {
+            this.formatter._indent()
+        }
+        let item_help = this.formatter._join_parts(this.items.map(([ func, args ]) => func.apply(null, args)))
+        if (this.parent !== undefined) {
+            this.formatter._dedent()
+        }
+
+        // return nothing if the section was empty
+        if (!item_help) {
+            return ''
+        }
+
+        // add the heading if the section was non-empty
+        let heading
+        if (this.heading !== SUPPRESS && this.heading !== undefined) {
+            let current_indent = this.formatter._current_indent
+            heading = sub('%*s%s:\n', current_indent, '', this.heading)
+        } else {
+            heading = ''
+        }
+
+        // join the section-initial newline, the heading and the help
+        return this.formatter._join_parts(['\n', heading, item_help, '\n'])
+    }
+})
+
+
+const RawDescriptionHelpFormatter = _camelcase_alias(_callable(class RawDescriptionHelpFormatter extends HelpFormatter {
+    /*
+     *  Help message formatter which retains any formatting in descriptions.
+     *
+     *  Only the name of this class is considered a public API. All the methods
+     *  provided by the class are considered an implementation detail.
+     */
+
+    _fill_text(text, width, indent) {
+        return splitlines(text, true).map(line => indent + line).join('')
+    }
+}))
+
+
+const RawTextHelpFormatter = _camelcase_alias(_callable(class RawTextHelpFormatter extends RawDescriptionHelpFormatter {
+    /*
+     *  Help message formatter which retains formatting of all help text.
+     *
+     *  Only the name of this class is considered a public API. All the methods
+     *  provided by the class are considered an implementation detail.
+     */
+
+    _split_lines(text/*, width*/) {
+        return splitlines(text)
+    }
+}))
+
+
+const ArgumentDefaultsHelpFormatter = _camelcase_alias(_callable(class ArgumentDefaultsHelpFormatter extends HelpFormatter {
+    /*
+     *  Help message formatter which adds default values to argument help.
+     *
+     *  Only the name of this class is considered a public API. All the methods
+     *  provided by the class are considered an implementation detail.
+     */
+
+    _get_help_string(action) {
+        let help = action.help
+        // LEGACY (v1 compatibility): additional check for defaultValue needed
+        if (!action.help.includes('%(default)') && !action.help.includes('%(defaultValue)')) {
+            if (action.default !== SUPPRESS) {
+                let defaulting_nargs = [OPTIONAL, ZERO_OR_MORE]
+                if (action.option_strings.length || defaulting_nargs.includes(action.nargs)) {
+                    help += ' (default: %(default)s)'
+                }
+            }
+        }
+        return help
+    }
+}))
+
+
+const MetavarTypeHelpFormatter = _camelcase_alias(_callable(class MetavarTypeHelpFormatter extends HelpFormatter {
+    /*
+     *  Help message formatter which uses the argument 'type' as the default
+     *  metavar value (instead of the argument 'dest')
+     *
+     *  Only the name of this class is considered a public API. All the methods
+     *  provided by the class are considered an implementation detail.
+     */
+
+    _get_default_metavar_for_optional(action) {
+        return typeof action.type === 'function' ? action.type.name : action.type
+    }
+
+    _get_default_metavar_for_positional(action) {
+        return typeof action.type === 'function' ? action.type.name : action.type
+    }
+}))
+
+
+// =====================
+// Options and Arguments
+// =====================
+function _get_action_name(argument) {
+    if (argument === undefined) {
+        return undefined
+    } else if (argument.option_strings.length) {
+        return argument.option_strings.join('/')
+    } else if (![ undefined, SUPPRESS ].includes(argument.metavar)) {
+        return argument.metavar
+    } else if (![ undefined, SUPPRESS ].includes(argument.dest)) {
+        return argument.dest
+    } else {
+        return undefined
+    }
+}
+
+
+const ArgumentError = _callable(class ArgumentError extends Error {
+    /*
+     *  An error from creating or using an argument (optional or positional).
+     *
+     *  The string value of this exception is the message, augmented with
+     *  information about the argument that caused it.
+     */
+
+    constructor(argument, message) {
+        super()
+        this.name = 'ArgumentError'
+        this._argument_name = _get_action_name(argument)
+        this._message = message
+        this.message = this.str()
+    }
+
+    str() {
+        let format
+        if (this._argument_name === undefined) {
+            format = '%(message)s'
+        } else {
+            format = 'argument %(argument_name)s: %(message)s'
+        }
+        return sub(format, { message: this._message,
+                             argument_name: this._argument_name })
+    }
+})
+
+
+const ArgumentTypeError = _callable(class ArgumentTypeError extends Error {
+    /*
+     * An error from trying to convert a command line string to a type.
+     */
+
+    constructor(message) {
+        super(message)
+        this.name = 'ArgumentTypeError'
+    }
+})
+
+
+// ==============
+// Action classes
+// ==============
+const Action = _camelcase_alias(_callable(class Action extends _AttributeHolder(Function) {
+    /*
+     *  Information about how to convert command line strings to Python objects.
+     *
+     *  Action objects are used by an ArgumentParser to represent the information
+     *  needed to parse a single argument from one or more strings from the
+     *  command line. The keyword arguments to the Action constructor are also
+     *  all attributes of Action instances.
+     *
+     *  Keyword Arguments:
+     *
+     *      - option_strings -- A list of command-line option strings which
+     *          should be associated with this action.
+     *
+     *      - dest -- The name of the attribute to hold the created object(s)
+     *
+     *      - nargs -- The number of command-line arguments that should be
+     *          consumed. By default, one argument will be consumed and a single
+     *          value will be produced.  Other values include:
+     *              - N (an integer) consumes N arguments (and produces a list)
+     *              - '?' consumes zero or one arguments
+     *              - '*' consumes zero or more arguments (and produces a list)
+     *              - '+' consumes one or more arguments (and produces a list)
+     *          Note that the difference between the default and nargs=1 is that
+     *          with the default, a single value will be produced, while with
+     *          nargs=1, a list containing a single value will be produced.
+     *
+     *      - const -- The value to be produced if the option is specified and the
+     *          option uses an action that takes no values.
+     *
+     *      - default -- The value to be produced if the option is not specified.
+     *
+     *      - type -- A callable that accepts a single string argument, and
+     *          returns the converted value.  The standard Python types str, int,
+     *          float, and complex are useful examples of such callables.  If None,
+     *          str is used.
+     *
+     *      - choices -- A container of values that should be allowed. If not None,
+     *          after a command-line argument has been converted to the appropriate
+     *          type, an exception will be raised if it is not a member of this
+     *          collection.
+     *
+     *      - required -- True if the action must always be specified at the
+     *          command line. This is only meaningful for optional command-line
+     *          arguments.
+     *
+     *      - help -- The help string describing the argument.
+     *
+     *      - metavar -- The name to be used for the option's argument with the
+     *          help string. If None, the 'dest' value will be used as the name.
+     */
+
+    constructor() {
+        let [
+            option_strings,
+            dest,
+            nargs,
+            const_value,
+            default_value,
+            type,
+            choices,
+            required,
+            help,
+            metavar
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            dest: no_default,
+            nargs: undefined,
+            const: undefined,
+            default: undefined,
+            type: undefined,
+            choices: undefined,
+            required: false,
+            help: undefined,
+            metavar: undefined
+        })
+
+        // when this class is called as a function, redirect it to .call() method of itself
+        super('return arguments.callee.call.apply(arguments.callee, arguments)')
+
+        this.option_strings = option_strings
+        this.dest = dest
+        this.nargs = nargs
+        this.const = const_value
+        this.default = default_value
+        this.type = type
+        this.choices = choices
+        this.required = required
+        this.help = help
+        this.metavar = metavar
+    }
+
+    _get_kwargs() {
+        let names = [
+            'option_strings',
+            'dest',
+            'nargs',
+            'const',
+            'default',
+            'type',
+            'choices',
+            'help',
+            'metavar'
+        ]
+        return names.map(name => [ name, getattr(this, name) ])
+    }
+
+    format_usage() {
+        return this.option_strings[0]
+    }
+
+    call(/*parser, namespace, values, option_string = undefined*/) {
+        throw new Error('.call() not defined')
+    }
+}))
+
+
+const BooleanOptionalAction = _camelcase_alias(_callable(class BooleanOptionalAction extends Action {
+
+    constructor() {
+        let [
+            option_strings,
+            dest,
+            default_value,
+            type,
+            choices,
+            required,
+            help,
+            metavar
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            dest: no_default,
+            default: undefined,
+            type: undefined,
+            choices: undefined,
+            required: false,
+            help: undefined,
+            metavar: undefined
+        })
+
+        let _option_strings = []
+        for (let option_string of option_strings) {
+            _option_strings.push(option_string)
+
+            if (option_string.startsWith('--')) {
+                option_string = '--no-' + option_string.slice(2)
+                _option_strings.push(option_string)
+            }
+        }
+
+        if (help !== undefined && default_value !== undefined) {
+            help += ` (default: ${default_value})`
+        }
+
+        super({
+            option_strings: _option_strings,
+            dest,
+            nargs: 0,
+            default: default_value,
+            type,
+            choices,
+            required,
+            help,
+            metavar
+        })
+    }
+
+    call(parser, namespace, values, option_string = undefined) {
+        if (this.option_strings.includes(option_string)) {
+            setattr(namespace, this.dest, !option_string.startsWith('--no-'))
+        }
+    }
+
+    format_usage() {
+        return this.option_strings.join(' | ')
+    }
+}))
+
+
+const _StoreAction = _callable(class _StoreAction extends Action {
+
+    constructor() {
+        let [
+            option_strings,
+            dest,
+            nargs,
+            const_value,
+            default_value,
+            type,
+            choices,
+            required,
+            help,
+            metavar
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            dest: no_default,
+            nargs: undefined,
+            const: undefined,
+            default: undefined,
+            type: undefined,
+            choices: undefined,
+            required: false,
+            help: undefined,
+            metavar: undefined
+        })
+
+        if (nargs === 0) {
+            throw new TypeError('nargs for store actions must be != 0; if you ' +
+                        'have nothing to store, actions such as store ' +
+                        'true or store const may be more appropriate')
+        }
+        if (const_value !== undefined && nargs !== OPTIONAL) {
+            throw new TypeError(sub('nargs must be %r to supply const', OPTIONAL))
+        }
+        super({
+            option_strings,
+            dest,
+            nargs,
+            const: const_value,
+            default: default_value,
+            type,
+            choices,
+            required,
+            help,
+            metavar
+        })
+    }
+
+    call(parser, namespace, values/*, option_string = undefined*/) {
+        setattr(namespace, this.dest, values)
+    }
+})
+
+
+const _StoreConstAction = _callable(class _StoreConstAction extends Action {
+
+    constructor() {
+        let [
+            option_strings,
+            dest,
+            const_value,
+            default_value,
+            required,
+            help
+            //, metavar
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            dest: no_default,
+            const: no_default,
+            default: undefined,
+            required: false,
+            help: undefined,
+            metavar: undefined
+        })
+
+        super({
+            option_strings,
+            dest,
+            nargs: 0,
+            const: const_value,
+            default: default_value,
+            required,
+            help
+        })
+    }
+
+    call(parser, namespace/*, values, option_string = undefined*/) {
+        setattr(namespace, this.dest, this.const)
+    }
+})
+
+
+const _StoreTrueAction = _callable(class _StoreTrueAction extends _StoreConstAction {
+
+    constructor() {
+        let [
+            option_strings,
+            dest,
+            default_value,
+            required,
+            help
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            dest: no_default,
+            default: false,
+            required: false,
+            help: undefined
+        })
+
+        super({
+            option_strings,
+            dest,
+            const: true,
+            default: default_value,
+            required,
+            help
+        })
+    }
+})
+
+
+const _StoreFalseAction = _callable(class _StoreFalseAction extends _StoreConstAction {
+
+    constructor() {
+        let [
+            option_strings,
+            dest,
+            default_value,
+            required,
+            help
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            dest: no_default,
+            default: true,
+            required: false,
+            help: undefined
+        })
+
+        super({
+            option_strings,
+            dest,
+            const: false,
+            default: default_value,
+            required,
+            help
+        })
+    }
+})
+
+
+const _AppendAction = _callable(class _AppendAction extends Action {
+
+    constructor() {
+        let [
+            option_strings,
+            dest,
+            nargs,
+            const_value,
+            default_value,
+            type,
+            choices,
+            required,
+            help,
+            metavar
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            dest: no_default,
+            nargs: undefined,
+            const: undefined,
+            default: undefined,
+            type: undefined,
+            choices: undefined,
+            required: false,
+            help: undefined,
+            metavar: undefined
+        })
+
+        if (nargs === 0) {
+            throw new TypeError('nargs for append actions must be != 0; if arg ' +
+                        'strings are not supplying the value to append, ' +
+                        'the append const action may be more appropriate')
+        }
+        if (const_value !== undefined && nargs !== OPTIONAL) {
+            throw new TypeError(sub('nargs must be %r to supply const', OPTIONAL))
+        }
+        super({
+            option_strings,
+            dest,
+            nargs,
+            const: const_value,
+            default: default_value,
+            type,
+            choices,
+            required,
+            help,
+            metavar
+        })
+    }
+
+    call(parser, namespace, values/*, option_string = undefined*/) {
+        let items = getattr(namespace, this.dest, undefined)
+        items = _copy_items(items)
+        items.push(values)
+        setattr(namespace, this.dest, items)
+    }
+})
+
+
+const _AppendConstAction = _callable(class _AppendConstAction extends Action {
+
+    constructor() {
+        let [
+            option_strings,
+            dest,
+            const_value,
+            default_value,
+            required,
+            help,
+            metavar
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            dest: no_default,
+            const: no_default,
+            default: undefined,
+            required: false,
+            help: undefined,
+            metavar: undefined
+        })
+
+        super({
+            option_strings,
+            dest,
+            nargs: 0,
+            const: const_value,
+            default: default_value,
+            required,
+            help,
+            metavar
+        })
+    }
+
+    call(parser, namespace/*, values, option_string = undefined*/) {
+        let items = getattr(namespace, this.dest, undefined)
+        items = _copy_items(items)
+        items.push(this.const)
+        setattr(namespace, this.dest, items)
+    }
+})
+
+
+const _CountAction = _callable(class _CountAction extends Action {
+
+    constructor() {
+        let [
+            option_strings,
+            dest,
+            default_value,
+            required,
+            help
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            dest: no_default,
+            default: undefined,
+            required: false,
+            help: undefined
+        })
+
+        super({
+            option_strings,
+            dest,
+            nargs: 0,
+            default: default_value,
+            required,
+            help
+        })
+    }
+
+    call(parser, namespace/*, values, option_string = undefined*/) {
+        let count = getattr(namespace, this.dest, undefined)
+        if (count === undefined) {
+            count = 0
+        }
+        setattr(namespace, this.dest, count + 1)
+    }
+})
+
+
+const _HelpAction = _callable(class _HelpAction extends Action {
+
+    constructor() {
+        let [
+            option_strings,
+            dest,
+            default_value,
+            help
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            dest: SUPPRESS,
+            default: SUPPRESS,
+            help: undefined
+        })
+
+        super({
+            option_strings,
+            dest,
+            default: default_value,
+            nargs: 0,
+            help
+        })
+    }
+
+    call(parser/*, namespace, values, option_string = undefined*/) {
+        parser.print_help()
+        parser.exit()
+    }
+})
+
+
+const _VersionAction = _callable(class _VersionAction extends Action {
+
+    constructor() {
+        let [
+            option_strings,
+            version,
+            dest,
+            default_value,
+            help
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            version: undefined,
+            dest: SUPPRESS,
+            default: SUPPRESS,
+            help: "show program's version number and exit"
+        })
+
+        super({
+            option_strings,
+            dest,
+            default: default_value,
+            nargs: 0,
+            help
+        })
+        this.version = version
+    }
+
+    call(parser/*, namespace, values, option_string = undefined*/) {
+        let version = this.version
+        if (version === undefined) {
+            version = parser.version
+        }
+        let formatter = parser._get_formatter()
+        formatter.add_text(version)
+        parser._print_message(formatter.format_help(), process.stdout)
+        parser.exit()
+    }
+})
+
+
+const _SubParsersAction = _camelcase_alias(_callable(class _SubParsersAction extends Action {
+
+    constructor() {
+        let [
+            option_strings,
+            prog,
+            parser_class,
+            dest,
+            required,
+            help,
+            metavar
+        ] = _parse_opts(arguments, {
+            option_strings: no_default,
+            prog: no_default,
+            parser_class: no_default,
+            dest: SUPPRESS,
+            required: false,
+            help: undefined,
+            metavar: undefined
+        })
+
+        let name_parser_map = {}
+
+        super({
+            option_strings,
+            dest,
+            nargs: PARSER,
+            choices: name_parser_map,
+            required,
+            help,
+            metavar
+        })
+
+        this._prog_prefix = prog
+        this._parser_class = parser_class
+        this._name_parser_map = name_parser_map
+        this._choices_actions = []
+    }
+
+    add_parser() {
+        let [
+            name,
+            kwargs
+        ] = _parse_opts(arguments, {
+            name: no_default,
+            '**kwargs': no_default
+        })
+
+        // set prog from the existing prefix
+        if (kwargs.prog === undefined) {
+            kwargs.prog = sub('%s %s', this._prog_prefix, name)
+        }
+
+        let aliases = getattr(kwargs, 'aliases', [])
+        delete kwargs.aliases
+
+        // create a pseudo-action to hold the choice help
+        if ('help' in kwargs) {
+            let help = kwargs.help
+            delete kwargs.help
+            let choice_action = this._ChoicesPseudoAction(name, aliases, help)
+            this._choices_actions.push(choice_action)
+        }
+
+        // create the parser and add it to the map
+        let parser = new this._parser_class(kwargs)
+        this._name_parser_map[name] = parser
+
+        // make parser available under aliases also
+        for (let alias of aliases) {
+            this._name_parser_map[alias] = parser
+        }
+
+        return parser
+    }
+
+    _get_subactions() {
+        return this._choices_actions
+    }
+
+    call(parser, namespace, values/*, option_string = undefined*/) {
+        let parser_name = values[0]
+        let arg_strings = values.slice(1)
+
+        // set the parser name if requested
+        if (this.dest !== SUPPRESS) {
+            setattr(namespace, this.dest, parser_name)
+        }
+
+        // select the parser
+        if (hasattr(this._name_parser_map, parser_name)) {
+            parser = this._name_parser_map[parser_name]
+        } else {
+            let args = {parser_name,
+                        choices: this._name_parser_map.join(', ')}
+            let msg = sub('unknown parser %(parser_name)r (choices: %(choices)s)', args)
+            throw new ArgumentError(this, msg)
+        }
+
+        // parse all the remaining options into the namespace
+        // store any unrecognized options on the object, so that the top
+        // level parser can decide what to do with them
+
+        // In case this subparser defines new defaults, we parse them
+        // in a new namespace object and then update the original
+        // namespace for the relevant parts.
+        let subnamespace
+        [ subnamespace, arg_strings ] = parser.parse_known_args(arg_strings, undefined)
+        for (let [ key, value ] of Object.entries(subnamespace)) {
+            setattr(namespace, key, value)
+        }
+
+        if (arg_strings.length) {
+            setdefault(namespace, _UNRECOGNIZED_ARGS_ATTR, [])
+            getattr(namespace, _UNRECOGNIZED_ARGS_ATTR).push(...arg_strings)
+        }
+    }
+}))
+
+
+_SubParsersAction.prototype._ChoicesPseudoAction = _callable(class _ChoicesPseudoAction extends Action {
+    constructor(name, aliases, help) {
+        let metavar = name, dest = name
+        if (aliases.length) {
+            metavar += sub(' (%s)', aliases.join(', '))
+        }
+        super({ option_strings: [], dest, help, metavar })
+    }
+})
+
+
+const _ExtendAction = _callable(class _ExtendAction extends _AppendAction {
+    call(parser, namespace, values/*, option_string = undefined*/) {
+        let items = getattr(namespace, this.dest, undefined)
+        items = _copy_items(items)
+        items = items.concat(values)
+        setattr(namespace, this.dest, items)
+    }
+})
+
+
+// ==============
+// Type classes
+// ==============
+const FileType = _callable(class FileType extends Function {
+    /*
+     *  Factory for creating file object types
+     *
+     *  Instances of FileType are typically passed as type= arguments to the
+     *  ArgumentParser add_argument() method.
+     *
+     *  Keyword Arguments:
+     *      - mode -- A string indicating how the file is to be opened. Accepts the
+     *          same values as the builtin open() function.
+     *      - bufsize -- The file's desired buffer size. Accepts the same values as
+     *          the builtin open() function.
+     *      - encoding -- The file's encoding. Accepts the same values as the
+     *          builtin open() function.
+     *      - errors -- A string indicating how encoding and decoding errors are to
+     *          be handled. Accepts the same value as the builtin open() function.
+     */
+
+    constructor() {
+        let [
+            flags,
+            encoding,
+            mode,
+            autoClose,
+            emitClose,
+            start,
+            end,
+            highWaterMark,
+            fs
+        ] = _parse_opts(arguments, {
+            flags: 'r',
+            encoding: undefined,
+            mode: undefined, // 0o666
+            autoClose: undefined, // true
+            emitClose: undefined, // false
+            start: undefined, // 0
+            end: undefined, // Infinity
+            highWaterMark: undefined, // 64 * 1024
+            fs: undefined
+        })
+
+        // when this class is called as a function, redirect it to .call() method of itself
+        super('return arguments.callee.call.apply(arguments.callee, arguments)')
+
+        Object.defineProperty(this, 'name', {
+            get() {
+                return sub('FileType(%r)', flags)
+            }
+        })
+        this._flags = flags
+        this._options = {}
+        if (encoding !== undefined) this._options.encoding = encoding
+        if (mode !== undefined) this._options.mode = mode
+        if (autoClose !== undefined) this._options.autoClose = autoClose
+        if (emitClose !== undefined) this._options.emitClose = emitClose
+        if (start !== undefined) this._options.start = start
+        if (end !== undefined) this._options.end = end
+        if (highWaterMark !== undefined) this._options.highWaterMark = highWaterMark
+        if (fs !== undefined) this._options.fs = fs
+    }
+
+    call(string) {
+        // the special argument "-" means sys.std{in,out}
+        if (string === '-') {
+            if (this._flags.includes('r')) {
+                return process.stdin
+            } else if (this._flags.includes('w')) {
+                return process.stdout
+            } else {
+                let msg = sub('argument "-" with mode %r', this._flags)
+                throw new TypeError(msg)
+            }
+        }
+
+        // all other arguments are used as file names
+        let fd
+        try {
+            fd = fs.openSync(string, this._flags, this._options.mode)
+        } catch (e) {
+            let args = { filename: string, error: e.message }
+            let message = "can't open '%(filename)s': %(error)s"
+            throw new ArgumentTypeError(sub(message, args))
+        }
+
+        let options = Object.assign({ fd, flags: this._flags }, this._options)
+        if (this._flags.includes('r')) {
+            return fs.createReadStream(undefined, options)
+        } else if (this._flags.includes('w')) {
+            return fs.createWriteStream(undefined, options)
+        } else {
+            let msg = sub('argument "%s" with mode %r', string, this._flags)
+            throw new TypeError(msg)
+        }
+    }
+
+    [util.inspect.custom]() {
+        let args = [ this._flags ]
+        let kwargs = Object.entries(this._options).map(([ k, v ]) => {
+            if (k === 'mode') v = { value: v, [util.inspect.custom]() { return '0o' + this.value.toString(8) } }
+            return [ k, v ]
+        })
+        let args_str = []
+                .concat(args.filter(arg => arg !== -1).map(repr))
+                .concat(kwargs.filter(([/*kw*/, arg]) => arg !== undefined)
+                    .map(([kw, arg]) => sub('%s=%r', kw, arg)))
+                .join(', ')
+        return sub('%s(%s)', this.constructor.name, args_str)
+    }
+
+    toString() {
+        return this[util.inspect.custom]()
+    }
+})
+
+// ===========================
+// Optional and Positional Parsing
+// ===========================
+const Namespace = _callable(class Namespace extends _AttributeHolder() {
+    /*
+     *  Simple object for storing attributes.
+     *
+     *  Implements equality by attribute names and values, and provides a simple
+     *  string representation.
+     */
+
+    constructor(options = {}) {
+        super()
+        Object.assign(this, options)
+    }
+})
+
+// unset string tag to mimic plain object
+Namespace.prototype[Symbol.toStringTag] = undefined
+
+
+const _ActionsContainer = _camelcase_alias(_callable(class _ActionsContainer {
+
+    constructor() {
+        let [
+            description,
+            prefix_chars,
+            argument_default,
+            conflict_handler
+        ] = _parse_opts(arguments, {
+            description: no_default,
+            prefix_chars: no_default,
+            argument_default: no_default,
+            conflict_handler: no_default
+        })
+
+        this.description = description
+        this.argument_default = argument_default
+        this.prefix_chars = prefix_chars
+        this.conflict_handler = conflict_handler
+
+        // set up registries
+        this._registries = {}
+
+        // register actions
+        this.register('action', undefined, _StoreAction)
+        this.register('action', 'store', _StoreAction)
+        this.register('action', 'store_const', _StoreConstAction)
+        this.register('action', 'store_true', _StoreTrueAction)
+        this.register('action', 'store_false', _StoreFalseAction)
+        this.register('action', 'append', _AppendAction)
+        this.register('action', 'append_const', _AppendConstAction)
+        this.register('action', 'count', _CountAction)
+        this.register('action', 'help', _HelpAction)
+        this.register('action', 'version', _VersionAction)
+        this.register('action', 'parsers', _SubParsersAction)
+        this.register('action', 'extend', _ExtendAction)
+        // LEGACY (v1 compatibility): camelcase variants
+        ;[ 'storeConst', 'storeTrue', 'storeFalse', 'appendConst' ].forEach(old_name => {
+            let new_name = _to_new_name(old_name)
+            this.register('action', old_name, util.deprecate(this._registry_get('action', new_name),
+                sub('{action: "%s"} is renamed to {action: "%s"}', old_name, new_name)))
+        })
+        // end
+
+        // raise an exception if the conflict handler is invalid
+        this._get_handler()
+
+        // action storage
+        this._actions = []
+        this._option_string_actions = {}
+
+        // groups
+        this._action_groups = []
+        this._mutually_exclusive_groups = []
+
+        // defaults storage
+        this._defaults = {}
+
+        // determines whether an "option" looks like a negative number
+        this._negative_number_matcher = /^-\d+$|^-\d*\.\d+$/
+
+        // whether or not there are any optionals that look like negative
+        // numbers -- uses a list so it can be shared and edited
+        this._has_negative_number_optionals = []
+    }
+
+    // ====================
+    // Registration methods
+    // ====================
+    register(registry_name, value, object) {
+        let registry = setdefault(this._registries, registry_name, {})
+        registry[value] = object
+    }
+
+    _registry_get(registry_name, value, default_value = undefined) {
+        return getattr(this._registries[registry_name], value, default_value)
+    }
+
+    // ==================================
+    // Namespace default accessor methods
+    // ==================================
+    set_defaults(kwargs) {
+        Object.assign(this._defaults, kwargs)
+
+        // if these defaults match any existing arguments, replace
+        // the previous default on the object with the new one
+        for (let action of this._actions) {
+            if (action.dest in kwargs) {
+                action.default = kwargs[action.dest]
+            }
+        }
+    }
+
+    get_default(dest) {
+        for (let action of this._actions) {
+            if (action.dest === dest && action.default !== undefined) {
+                return action.default
+            }
+        }
+        return this._defaults[dest]
+    }
+
+
+    // =======================
+    // Adding argument actions
+    // =======================
+    add_argument() {
+        /*
+         *  add_argument(dest, ..., name=value, ...)
+         *  add_argument(option_string, option_string, ..., name=value, ...)
+         */
+        let [
+            args,
+            kwargs
+        ] = _parse_opts(arguments, {
+            '*args': no_default,
+            '**kwargs': no_default
+        })
+        // LEGACY (v1 compatibility), old-style add_argument([ args ], { options })
+        if (args.length === 1 && Array.isArray(args[0])) {
+            args = args[0]
+            deprecate('argument-array',
+                sub('use add_argument(%(args)s, {...}) instead of add_argument([ %(args)s ], { ... })', {
+                    args: args.map(repr).join(', ')
+                }))
+        }
+        // end
+
+        // if no positional args are supplied or only one is supplied and
+        // it doesn't look like an option string, parse a positional
+        // argument
+        let chars = this.prefix_chars
+        if (!args.length || args.length === 1 && !chars.includes(args[0][0])) {
+            if (args.length && 'dest' in kwargs) {
+                throw new TypeError('dest supplied twice for positional argument')
+            }
+            kwargs = this._get_positional_kwargs(...args, kwargs)
+
+        // otherwise, we're adding an optional argument
+        } else {
+            kwargs = this._get_optional_kwargs(...args, kwargs)
+        }
+
+        // if no default was supplied, use the parser-level default
+        if (!('default' in kwargs)) {
+            let dest = kwargs.dest
+            if (dest in this._defaults) {
+                kwargs.default = this._defaults[dest]
+            } else if (this.argument_default !== undefined) {
+                kwargs.default = this.argument_default
+            }
+        }
+
+        // create the action object, and add it to the parser
+        let action_class = this._pop_action_class(kwargs)
+        if (typeof action_class !== 'function') {
+            throw new TypeError(sub('unknown action "%s"', action_class))
+        }
+        // eslint-disable-next-line new-cap
+        let action = new action_class(kwargs)
+
+        // raise an error if the action type is not callable
+        let type_func = this._registry_get('type', action.type, action.type)
+        if (typeof type_func !== 'function') {
+            throw new TypeError(sub('%r is not callable', type_func))
+        }
+
+        if (type_func === FileType) {
+            throw new TypeError(sub('%r is a FileType class object, instance of it' +
+                                    ' must be passed', type_func))
+        }
+
+        // raise an error if the metavar does not match the type
+        if ('_get_formatter' in this) {
+            try {
+                this._get_formatter()._format_args(action, undefined)
+            } catch (err) {
+                // check for 'invalid nargs value' is an artifact of TypeError and ValueError in js being the same
+                if (err instanceof TypeError && err.message !== 'invalid nargs value') {
+                    throw new TypeError('length of metavar tuple does not match nargs')
+                } else {
+                    throw err
+                }
+            }
+        }
+
+        return this._add_action(action)
+    }
+
+    add_argument_group() {
+        let group = _ArgumentGroup(this, ...arguments)
+        this._action_groups.push(group)
+        return group
+    }
+
+    add_mutually_exclusive_group() {
+        // eslint-disable-next-line no-use-before-define
+        let group = _MutuallyExclusiveGroup(this, ...arguments)
+        this._mutually_exclusive_groups.push(group)
+        return group
+    }
+
+    _add_action(action) {
+        // resolve any conflicts
+        this._check_conflict(action)
+
+        // add to actions list
+        this._actions.push(action)
+        action.container = this
+
+        // index the action by any option strings it has
+        for (let option_string of action.option_strings) {
+            this._option_string_actions[option_string] = action
+        }
+
+        // set the flag if any option strings look like negative numbers
+        for (let option_string of action.option_strings) {
+            if (this._negative_number_matcher.test(option_string)) {
+                if (!this._has_negative_number_optionals.length) {
+                    this._has_negative_number_optionals.push(true)
+                }
+            }
+        }
+
+        // return the created action
+        return action
+    }
+
+    _remove_action(action) {
+        _array_remove(this._actions, action)
+    }
+
+    _add_container_actions(container) {
+        // collect groups by titles
+        let title_group_map = {}
+        for (let group of this._action_groups) {
+            if (group.title in title_group_map) {
+                let msg = 'cannot merge actions - two groups are named %r'
+                throw new TypeError(sub(msg, group.title))
+            }
+            title_group_map[group.title] = group
+        }
+
+        // map each action to its group
+        let group_map = new Map()
+        for (let group of container._action_groups) {
+
+            // if a group with the title exists, use that, otherwise
+            // create a new group matching the container's group
+            if (!(group.title in title_group_map)) {
+                title_group_map[group.title] = this.add_argument_group({
+                    title: group.title,
+                    description: group.description,
+                    conflict_handler: group.conflict_handler
+                })
+            }
+
+            // map the actions to their new group
+            for (let action of group._group_actions) {
+                group_map.set(action, title_group_map[group.title])
+            }
+        }
+
+        // add container's mutually exclusive groups
+        // NOTE: if add_mutually_exclusive_group ever gains title= and
+        // description= then this code will need to be expanded as above
+        for (let group of container._mutually_exclusive_groups) {
+            let mutex_group = this.add_mutually_exclusive_group({
+                required: group.required
+            })
+
+            // map the actions to their new mutex group
+            for (let action of group._group_actions) {
+                group_map.set(action, mutex_group)
+            }
+        }
+
+        // add all actions to this container or their group
+        for (let action of container._actions) {
+            group_map.get(action)._add_action(action)
+        }
+    }
+
+    _get_positional_kwargs() {
+        let [
+            dest,
+            kwargs
+        ] = _parse_opts(arguments, {
+            dest: no_default,
+            '**kwargs': no_default
+        })
+
+        // make sure required is not specified
+        if ('required' in kwargs) {
+            let msg = "'required' is an invalid argument for positionals"
+            throw new TypeError(msg)
+        }
+
+        // mark positional arguments as required if at least one is
+        // always required
+        if (![OPTIONAL, ZERO_OR_MORE].includes(kwargs.nargs)) {
+            kwargs.required = true
+        }
+        if (kwargs.nargs === ZERO_OR_MORE && !('default' in kwargs)) {
+            kwargs.required = true
+        }
+
+        // return the keyword arguments with no option strings
+        return Object.assign(kwargs, { dest, option_strings: [] })
+    }
+
+    _get_optional_kwargs() {
+        let [
+            args,
+            kwargs
+        ] = _parse_opts(arguments, {
+            '*args': no_default,
+            '**kwargs': no_default
+        })
+
+        // determine short and long option strings
+        let option_strings = []
+        let long_option_strings = []
+        let option_string
+        for (option_string of args) {
+            // error on strings that don't start with an appropriate prefix
+            if (!this.prefix_chars.includes(option_string[0])) {
+                let args = {option: option_string,
+                            prefix_chars: this.prefix_chars}
+                let msg = 'invalid option string %(option)r: ' +
+                          'must start with a character %(prefix_chars)r'
+                throw new TypeError(sub(msg, args))
+            }
+
+            // strings starting with two prefix characters are long options
+            option_strings.push(option_string)
+            if (option_string.length > 1 && this.prefix_chars.includes(option_string[1])) {
+                long_option_strings.push(option_string)
+            }
+        }
+
+        // infer destination, '--foo-bar' -> 'foo_bar' and '-x' -> 'x'
+        let dest = kwargs.dest
+        delete kwargs.dest
+        if (dest === undefined) {
+            let dest_option_string
+            if (long_option_strings.length) {
+                dest_option_string = long_option_strings[0]
+            } else {
+                dest_option_string = option_strings[0]
+            }
+            dest = _string_lstrip(dest_option_string, this.prefix_chars)
+            if (!dest) {
+                let msg = 'dest= is required for options like %r'
+                throw new TypeError(sub(msg, option_string))
+            }
+            dest = dest.replace(/-/g, '_')
+        }
+
+        // return the updated keyword arguments
+        return Object.assign(kwargs, { dest, option_strings })
+    }
+
+    _pop_action_class(kwargs, default_value = undefined) {
+        let action = getattr(kwargs, 'action', default_value)
+        delete kwargs.action
+        return this._registry_get('action', action, action)
+    }
+
+    _get_handler() {
+        // determine function from conflict handler string
+        let handler_func_name = sub('_handle_conflict_%s', this.conflict_handler)
+        if (typeof this[handler_func_name] === 'function') {
+            return this[handler_func_name]
+        } else {
+            let msg = 'invalid conflict_resolution value: %r'
+            throw new TypeError(sub(msg, this.conflict_handler))
+        }
+    }
+
+    _check_conflict(action) {
+
+        // find all options that conflict with this option
+        let confl_optionals = []
+        for (let option_string of action.option_strings) {
+            if (hasattr(this._option_string_actions, option_string)) {
+                let confl_optional = this._option_string_actions[option_string]
+                confl_optionals.push([ option_string, confl_optional ])
+            }
+        }
+
+        // resolve any conflicts
+        if (confl_optionals.length) {
+            let conflict_handler = this._get_handler()
+            conflict_handler.call(this, action, confl_optionals)
+        }
+    }
+
+    _handle_conflict_error(action, conflicting_actions) {
+        let message = conflicting_actions.length === 1 ?
+            'conflicting option string: %s' :
+            'conflicting option strings: %s'
+        let conflict_string = conflicting_actions.map(([ option_string/*, action*/ ]) => option_string).join(', ')
+        throw new ArgumentError(action, sub(message, conflict_string))
+    }
+
+    _handle_conflict_resolve(action, conflicting_actions) {
+
+        // remove all conflicting options
+        for (let [ option_string, action ] of conflicting_actions) {
+
+            // remove the conflicting option
+            _array_remove(action.option_strings, option_string)
+            delete this._option_string_actions[option_string]
+
+            // if the option now has no option string, remove it from the
+            // container holding it
+            if (!action.option_strings.length) {
+                action.container._remove_action(action)
+            }
+        }
+    }
+}))
+
+
+const _ArgumentGroup = _callable(class _ArgumentGroup extends _ActionsContainer {
+
+    constructor() {
+        let [
+            container,
+            title,
+            description,
+            kwargs
+        ] = _parse_opts(arguments, {
+            container: no_default,
+            title: undefined,
+            description: undefined,
+            '**kwargs': no_default
+        })
+
+        // add any missing keyword arguments by checking the container
+        setdefault(kwargs, 'conflict_handler', container.conflict_handler)
+        setdefault(kwargs, 'prefix_chars', container.prefix_chars)
+        setdefault(kwargs, 'argument_default', container.argument_default)
+        super(Object.assign({ description }, kwargs))
+
+        // group attributes
+        this.title = title
+        this._group_actions = []
+
+        // share most attributes with the container
+        this._registries = container._registries
+        this._actions = container._actions
+        this._option_string_actions = container._option_string_actions
+        this._defaults = container._defaults
+        this._has_negative_number_optionals =
+            container._has_negative_number_optionals
+        this._mutually_exclusive_groups = container._mutually_exclusive_groups
+    }
+
+    _add_action(action) {
+        action = super._add_action(action)
+        this._group_actions.push(action)
+        return action
+    }
+
+    _remove_action(action) {
+        super._remove_action(action)
+        _array_remove(this._group_actions, action)
+    }
+})
+
+
+const _MutuallyExclusiveGroup = _callable(class _MutuallyExclusiveGroup extends _ArgumentGroup {
+
+    constructor() {
+        let [
+            container,
+            required
+        ] = _parse_opts(arguments, {
+            container: no_default,
+            required: false
+        })
+
+        super(container)
+        this.required = required
+        this._container = container
+    }
+
+    _add_action(action) {
+        if (action.required) {
+            let msg = 'mutually exclusive arguments must be optional'
+            throw new TypeError(msg)
+        }
+        action = this._container._add_action(action)
+        this._group_actions.push(action)
+        return action
+    }
+
+    _remove_action(action) {
+        this._container._remove_action(action)
+        _array_remove(this._group_actions, action)
+    }
+})
+
+
+const ArgumentParser = _camelcase_alias(_callable(class ArgumentParser extends _AttributeHolder(_ActionsContainer) {
+    /*
+     *  Object for parsing command line strings into Python objects.
+     *
+     *  Keyword Arguments:
+     *      - prog -- The name of the program (default: sys.argv[0])
+     *      - usage -- A usage message (default: auto-generated from arguments)
+     *      - description -- A description of what the program does
+     *      - epilog -- Text following the argument descriptions
+     *      - parents -- Parsers whose arguments should be copied into this one
+     *      - formatter_class -- HelpFormatter class for printing help messages
+     *      - prefix_chars -- Characters that prefix optional arguments
+     *      - fromfile_prefix_chars -- Characters that prefix files containing
+     *          additional arguments
+     *      - argument_default -- The default value for all arguments
+     *      - conflict_handler -- String indicating how to handle conflicts
+     *      - add_help -- Add a -h/-help option
+     *      - allow_abbrev -- Allow long options to be abbreviated unambiguously
+     *      - exit_on_error -- Determines whether or not ArgumentParser exits with
+     *          error info when an error occurs
+     */
+
+    constructor() {
+        let [
+            prog,
+            usage,
+            description,
+            epilog,
+            parents,
+            formatter_class,
+            prefix_chars,
+            fromfile_prefix_chars,
+            argument_default,
+            conflict_handler,
+            add_help,
+            allow_abbrev,
+            exit_on_error,
+            debug, // LEGACY (v1 compatibility), debug mode
+            version // LEGACY (v1 compatibility), version
+        ] = _parse_opts(arguments, {
+            prog: undefined,
+            usage: undefined,
+            description: undefined,
+            epilog: undefined,
+            parents: [],
+            formatter_class: HelpFormatter,
+            prefix_chars: '-',
+            fromfile_prefix_chars: undefined,
+            argument_default: undefined,
+            conflict_handler: 'error',
+            add_help: true,
+            allow_abbrev: true,
+            exit_on_error: true,
+            debug: undefined, // LEGACY (v1 compatibility), debug mode
+            version: undefined // LEGACY (v1 compatibility), version
+        })
+
+        // LEGACY (v1 compatibility)
+        if (debug !== undefined) {
+            deprecate('debug',
+                'The "debug" argument to ArgumentParser is deprecated. Please ' +
+                'override ArgumentParser.exit function instead.'
+            )
+        }
+
+        if (version !== undefined) {
+            deprecate('version',
+                'The "version" argument to ArgumentParser is deprecated. Please use ' +
+                "add_argument(..., { action: 'version', version: 'N', ... }) instead."
+            )
+        }
+        // end
+
+        super({
+            description,
+            prefix_chars,
+            argument_default,
+            conflict_handler
+        })
+
+        // default setting for prog
+        if (prog === undefined) {
+            prog = path.basename(get_argv()[0] || '')
+        }
+
+        this.prog = prog
+        this.usage = usage
+        this.epilog = epilog
+        this.formatter_class = formatter_class
+        this.fromfile_prefix_chars = fromfile_prefix_chars
+        this.add_help = add_help
+        this.allow_abbrev = allow_abbrev
+        this.exit_on_error = exit_on_error
+        // LEGACY (v1 compatibility), debug mode
+        this.debug = debug
+        // end
+
+        this._positionals = this.add_argument_group('positional arguments')
+        this._optionals = this.add_argument_group('optional arguments')
+        this._subparsers = undefined
+
+        // register types
+        function identity(string) {
+            return string
+        }
+        this.register('type', undefined, identity)
+        this.register('type', null, identity)
+        this.register('type', 'auto', identity)
+        this.register('type', 'int', function (x) {
+            let result = Number(x)
+            if (!Number.isInteger(result)) {
+                throw new TypeError(sub('could not convert string to int: %r', x))
+            }
+            return result
+        })
+        this.register('type', 'float', function (x) {
+            let result = Number(x)
+            if (isNaN(result)) {
+                throw new TypeError(sub('could not convert string to float: %r', x))
+            }
+            return result
+        })
+        this.register('type', 'str', String)
+        // LEGACY (v1 compatibility): custom types
+        this.register('type', 'string',
+            util.deprecate(String, 'use {type:"str"} or {type:String} instead of {type:"string"}'))
+        // end
+
+        // add help argument if necessary
+        // (using explicit default to override global argument_default)
+        let default_prefix = prefix_chars.includes('-') ? '-' : prefix_chars[0]
+        if (this.add_help) {
+            this.add_argument(
+                default_prefix + 'h',
+                default_prefix.repeat(2) + 'help',
+                {
+                    action: 'help',
+                    default: SUPPRESS,
+                    help: 'show this help message and exit'
+                }
+            )
+        }
+        // LEGACY (v1 compatibility), version
+        if (version) {
+            this.add_argument(
+                default_prefix + 'v',
+                default_prefix.repeat(2) + 'version',
+                {
+                    action: 'version',
+                    default: SUPPRESS,
+                    version: this.version,
+                    help: "show program's version number and exit"
+                }
+            )
+        }
+        // end
+
+        // add parent arguments and defaults
+        for (let parent of parents) {
+            this._add_container_actions(parent)
+            Object.assign(this._defaults, parent._defaults)
+        }
+    }
+
+    // =======================
+    // Pretty __repr__ methods
+    // =======================
+    _get_kwargs() {
+        let names = [
+            'prog',
+            'usage',
+            'description',
+            'formatter_class',
+            'conflict_handler',
+            'add_help'
+        ]
+        return names.map(name => [ name, getattr(this, name) ])
+    }
+
+    // ==================================
+    // Optional/Positional adding methods
+    // ==================================
+    add_subparsers() {
+        let [
+            kwargs
+        ] = _parse_opts(arguments, {
+            '**kwargs': no_default
+        })
+
+        if (this._subparsers !== undefined) {
+            this.error('cannot have multiple subparser arguments')
+        }
+
+        // add the parser class to the arguments if it's not present
+        setdefault(kwargs, 'parser_class', this.constructor)
+
+        if ('title' in kwargs || 'description' in kwargs) {
+            let title = getattr(kwargs, 'title', 'subcommands')
+            let description = getattr(kwargs, 'description', undefined)
+            delete kwargs.title
+            delete kwargs.description
+            this._subparsers = this.add_argument_group(title, description)
+        } else {
+            this._subparsers = this._positionals
+        }
+
+        // prog defaults to the usage message of this parser, skipping
+        // optional arguments and with no "usage:" prefix
+        if (kwargs.prog === undefined) {
+            let formatter = this._get_formatter()
+            let positionals = this._get_positional_actions()
+            let groups = this._mutually_exclusive_groups
+            formatter.add_usage(this.usage, positionals, groups, '')
+            kwargs.prog = formatter.format_help().trim()
+        }
+
+        // create the parsers action and add it to the positionals list
+        let parsers_class = this._pop_action_class(kwargs, 'parsers')
+        // eslint-disable-next-line new-cap
+        let action = new parsers_class(Object.assign({ option_strings: [] }, kwargs))
+        this._subparsers._add_action(action)
+
+        // return the created parsers action
+        return action
+    }
+
+    _add_action(action) {
+        if (action.option_strings.length) {
+            this._optionals._add_action(action)
+        } else {
+            this._positionals._add_action(action)
+        }
+        return action
+    }
+
+    _get_optional_actions() {
+        return this._actions.filter(action => action.option_strings.length)
+    }
+
+    _get_positional_actions() {
+        return this._actions.filter(action => !action.option_strings.length)
+    }
+
+    // =====================================
+    // Command line argument parsing methods
+    // =====================================
+    parse_args(args = undefined, namespace = undefined) {
+        let argv
+        [ args, argv ] = this.parse_known_args(args, namespace)
+        if (argv && argv.length > 0) {
+            let msg = 'unrecognized arguments: %s'
+            this.error(sub(msg, argv.join(' ')))
+        }
+        return args
+    }
+
+    parse_known_args(args = undefined, namespace = undefined) {
+        if (args === undefined) {
+            args = get_argv().slice(1)
+        }
+
+        // default Namespace built from parser defaults
+        if (namespace === undefined) {
+            namespace = new Namespace()
+        }
+
+        // add any action defaults that aren't present
+        for (let action of this._actions) {
+            if (action.dest !== SUPPRESS) {
+                if (!hasattr(namespace, action.dest)) {
+                    if (action.default !== SUPPRESS) {
+                        setattr(namespace, action.dest, action.default)
+                    }
+                }
+            }
+        }
+
+        // add any parser defaults that aren't present
+        for (let dest of Object.keys(this._defaults)) {
+            if (!hasattr(namespace, dest)) {
+                setattr(namespace, dest, this._defaults[dest])
+            }
+        }
+
+        // parse the arguments and exit if there are any errors
+        if (this.exit_on_error) {
+            try {
+                [ namespace, args ] = this._parse_known_args(args, namespace)
+            } catch (err) {
+                if (err instanceof ArgumentError) {
+                    this.error(err.message)
+                } else {
+                    throw err
+                }
+            }
+        } else {
+            [ namespace, args ] = this._parse_known_args(args, namespace)
+        }
+
+        if (hasattr(namespace, _UNRECOGNIZED_ARGS_ATTR)) {
+            args = args.concat(getattr(namespace, _UNRECOGNIZED_ARGS_ATTR))
+            delattr(namespace, _UNRECOGNIZED_ARGS_ATTR)
+        }
+
+        return [ namespace, args ]
+    }
+
+    _parse_known_args(arg_strings, namespace) {
+        // replace arg strings that are file references
+        if (this.fromfile_prefix_chars !== undefined) {
+            arg_strings = this._read_args_from_files(arg_strings)
+        }
+
+        // map all mutually exclusive arguments to the other arguments
+        // they can't occur with
+        let action_conflicts = new Map()
+        for (let mutex_group of this._mutually_exclusive_groups) {
+            let group_actions = mutex_group._group_actions
+            for (let [ i, mutex_action ] of Object.entries(mutex_group._group_actions)) {
+                let conflicts = action_conflicts.get(mutex_action) || []
+                conflicts = conflicts.concat(group_actions.slice(0, +i))
+                conflicts = conflicts.concat(group_actions.slice(+i + 1))
+                action_conflicts.set(mutex_action, conflicts)
+            }
+        }
+
+        // find all option indices, and determine the arg_string_pattern
+        // which has an 'O' if there is an option at an index,
+        // an 'A' if there is an argument, or a '-' if there is a '--'
+        let option_string_indices = {}
+        let arg_string_pattern_parts = []
+        let arg_strings_iter = Object.entries(arg_strings)[Symbol.iterator]()
+        for (let [ i, arg_string ] of arg_strings_iter) {
+
+            // all args after -- are non-options
+            if (arg_string === '--') {
+                arg_string_pattern_parts.push('-')
+                for ([ i, arg_string ] of arg_strings_iter) {
+                    arg_string_pattern_parts.push('A')
+                }
+
+            // otherwise, add the arg to the arg strings
+            // and note the index if it was an option
+            } else {
+                let option_tuple = this._parse_optional(arg_string)
+                let pattern
+                if (option_tuple === undefined) {
+                    pattern = 'A'
+                } else {
+                    option_string_indices[i] = option_tuple
+                    pattern = 'O'
+                }
+                arg_string_pattern_parts.push(pattern)
+            }
+        }
+
+        // join the pieces together to form the pattern
+        let arg_strings_pattern = arg_string_pattern_parts.join('')
+
+        // converts arg strings to the appropriate and then takes the action
+        let seen_actions = new Set()
+        let seen_non_default_actions = new Set()
+        let extras
+
+        let take_action = (action, argument_strings, option_string = undefined) => {
+            seen_actions.add(action)
+            let argument_values = this._get_values(action, argument_strings)
+
+            // error if this argument is not allowed with other previously
+            // seen arguments, assuming that actions that use the default
+            // value don't really count as "present"
+            if (argument_values !== action.default) {
+                seen_non_default_actions.add(action)
+                for (let conflict_action of action_conflicts.get(action) || []) {
+                    if (seen_non_default_actions.has(conflict_action)) {
+                        let msg = 'not allowed with argument %s'
+                        let action_name = _get_action_name(conflict_action)
+                        throw new ArgumentError(action, sub(msg, action_name))
+                    }
+                }
+            }
+
+            // take the action if we didn't receive a SUPPRESS value
+            // (e.g. from a default)
+            if (argument_values !== SUPPRESS) {
+                action(this, namespace, argument_values, option_string)
+            }
+        }
+
+        // function to convert arg_strings into an optional action
+        let consume_optional = start_index => {
+
+            // get the optional identified at this index
+            let option_tuple = option_string_indices[start_index]
+            let [ action, option_string, explicit_arg ] = option_tuple
+
+            // identify additional optionals in the same arg string
+            // (e.g. -xyz is the same as -x -y -z if no args are required)
+            let action_tuples = []
+            let stop
+            for (;;) {
+
+                // if we found no optional action, skip it
+                if (action === undefined) {
+                    extras.push(arg_strings[start_index])
+                    return start_index + 1
+                }
+
+                // if there is an explicit argument, try to match the
+                // optional's string arguments to only this
+                if (explicit_arg !== undefined) {
+                    let arg_count = this._match_argument(action, 'A')
+
+                    // if the action is a single-dash option and takes no
+                    // arguments, try to parse more single-dash options out
+                    // of the tail of the option string
+                    let chars = this.prefix_chars
+                    if (arg_count === 0 && !chars.includes(option_string[1])) {
+                        action_tuples.push([ action, [], option_string ])
+                        let char = option_string[0]
+                        option_string = char + explicit_arg[0]
+                        let new_explicit_arg = explicit_arg.slice(1) || undefined
+                        let optionals_map = this._option_string_actions
+                        if (hasattr(optionals_map, option_string)) {
+                            action = optionals_map[option_string]
+                            explicit_arg = new_explicit_arg
+                        } else {
+                            let msg = 'ignored explicit argument %r'
+                            throw new ArgumentError(action, sub(msg, explicit_arg))
+                        }
+
+                    // if the action expect exactly one argument, we've
+                    // successfully matched the option; exit the loop
+                    } else if (arg_count === 1) {
+                        stop = start_index + 1
+                        let args = [ explicit_arg ]
+                        action_tuples.push([ action, args, option_string ])
+                        break
+
+                    // error if a double-dash option did not use the
+                    // explicit argument
+                    } else {
+                        let msg = 'ignored explicit argument %r'
+                        throw new ArgumentError(action, sub(msg, explicit_arg))
+                    }
+
+                // if there is no explicit argument, try to match the
+                // optional's string arguments with the following strings
+                // if successful, exit the loop
+                } else {
+                    let start = start_index + 1
+                    let selected_patterns = arg_strings_pattern.slice(start)
+                    let arg_count = this._match_argument(action, selected_patterns)
+                    stop = start + arg_count
+                    let args = arg_strings.slice(start, stop)
+                    action_tuples.push([ action, args, option_string ])
+                    break
+                }
+            }
+
+            // add the Optional to the list and return the index at which
+            // the Optional's string args stopped
+            assert(action_tuples.length)
+            for (let [ action, args, option_string ] of action_tuples) {
+                take_action(action, args, option_string)
+            }
+            return stop
+        }
+
+        // the list of Positionals left to be parsed; this is modified
+        // by consume_positionals()
+        let positionals = this._get_positional_actions()
+
+        // function to convert arg_strings into positional actions
+        let consume_positionals = start_index => {
+            // match as many Positionals as possible
+            let selected_pattern = arg_strings_pattern.slice(start_index)
+            let arg_counts = this._match_arguments_partial(positionals, selected_pattern)
+
+            // slice off the appropriate arg strings for each Positional
+            // and add the Positional and its args to the list
+            for (let i = 0; i < positionals.length && i < arg_counts.length; i++) {
+                let action = positionals[i]
+                let arg_count = arg_counts[i]
+                let args = arg_strings.slice(start_index, start_index + arg_count)
+                start_index += arg_count
+                take_action(action, args)
+            }
+
+            // slice off the Positionals that we just parsed and return the
+            // index at which the Positionals' string args stopped
+            positionals = positionals.slice(arg_counts.length)
+            return start_index
+        }
+
+        // consume Positionals and Optionals alternately, until we have
+        // passed the last option string
+        extras = []
+        let start_index = 0
+        let max_option_string_index = Math.max(-1, ...Object.keys(option_string_indices).map(Number))
+        while (start_index <= max_option_string_index) {
+
+            // consume any Positionals preceding the next option
+            let next_option_string_index = Math.min(
+                // eslint-disable-next-line no-loop-func
+                ...Object.keys(option_string_indices).map(Number).filter(index => index >= start_index)
+            )
+            if (start_index !== next_option_string_index) {
+                let positionals_end_index = consume_positionals(start_index)
+
+                // only try to parse the next optional if we didn't consume
+                // the option string during the positionals parsing
+                if (positionals_end_index > start_index) {
+                    start_index = positionals_end_index
+                    continue
+                } else {
+                    start_index = positionals_end_index
+                }
+            }
+
+            // if we consumed all the positionals we could and we're not
+            // at the index of an option string, there were extra arguments
+            if (!(start_index in option_string_indices)) {
+                let strings = arg_strings.slice(start_index, next_option_string_index)
+                extras = extras.concat(strings)
+                start_index = next_option_string_index
+            }
+
+            // consume the next optional and any arguments for it
+            start_index = consume_optional(start_index)
+        }
+
+        // consume any positionals following the last Optional
+        let stop_index = consume_positionals(start_index)
+
+        // if we didn't consume all the argument strings, there were extras
+        extras = extras.concat(arg_strings.slice(stop_index))
+
+        // make sure all required actions were present and also convert
+        // action defaults which were not given as arguments
+        let required_actions = []
+        for (let action of this._actions) {
+            if (!seen_actions.has(action)) {
+                if (action.required) {
+                    required_actions.push(_get_action_name(action))
+                } else {
+                    // Convert action default now instead of doing it before
+                    // parsing arguments to avoid calling convert functions
+                    // twice (which may fail) if the argument was given, but
+                    // only if it was defined already in the namespace
+                    if (action.default !== undefined &&
+                        typeof action.default === 'string' &&
+                        hasattr(namespace, action.dest) &&
+                        action.default === getattr(namespace, action.dest)) {
+                        setattr(namespace, action.dest,
+                                this._get_value(action, action.default))
+                    }
+                }
+            }
+        }
+
+        if (required_actions.length) {
+            this.error(sub('the following arguments are required: %s',
+                       required_actions.join(', ')))
+        }
+
+        // make sure all required groups had one option present
+        for (let group of this._mutually_exclusive_groups) {
+            if (group.required) {
+                let no_actions_used = true
+                for (let action of group._group_actions) {
+                    if (seen_non_default_actions.has(action)) {
+                        no_actions_used = false
+                        break
+                    }
+                }
+
+                // if no actions were used, report the error
+                if (no_actions_used) {
+                    let names = group._group_actions
+                        .filter(action => action.help !== SUPPRESS)
+                        .map(action => _get_action_name(action))
+                    let msg = 'one of the arguments %s is required'
+                    this.error(sub(msg, names.join(' ')))
+                }
+            }
+        }
+
+        // return the updated namespace and the extra arguments
+        return [ namespace, extras ]
+    }
+
+    _read_args_from_files(arg_strings) {
+        // expand arguments referencing files
+        let new_arg_strings = []
+        for (let arg_string of arg_strings) {
+
+            // for regular arguments, just add them back into the list
+            if (!arg_string || !this.fromfile_prefix_chars.includes(arg_string[0])) {
+                new_arg_strings.push(arg_string)
+
+            // replace arguments referencing files with the file content
+            } else {
+                try {
+                    let args_file = fs.readFileSync(arg_string.slice(1), 'utf8')
+                    let arg_strings = []
+                    for (let arg_line of splitlines(args_file)) {
+                        for (let arg of this.convert_arg_line_to_args(arg_line)) {
+                            arg_strings.push(arg)
+                        }
+                    }
+                    arg_strings = this._read_args_from_files(arg_strings)
+                    new_arg_strings = new_arg_strings.concat(arg_strings)
+                } catch (err) {
+                    this.error(err.message)
+                }
+            }
+        }
+
+        // return the modified argument list
+        return new_arg_strings
+    }
+
+    convert_arg_line_to_args(arg_line) {
+        return [arg_line]
+    }
+
+    _match_argument(action, arg_strings_pattern) {
+        // match the pattern for this action to the arg strings
+        let nargs_pattern = this._get_nargs_pattern(action)
+        let match = arg_strings_pattern.match(new RegExp('^' + nargs_pattern))
+
+        // raise an exception if we weren't able to find a match
+        if (match === null) {
+            let nargs_errors = {
+                undefined: 'expected one argument',
+                [OPTIONAL]: 'expected at most one argument',
+                [ONE_OR_MORE]: 'expected at least one argument'
+            }
+            let msg = nargs_errors[action.nargs]
+            if (msg === undefined) {
+                msg = sub(action.nargs === 1 ? 'expected %s argument' : 'expected %s arguments', action.nargs)
+            }
+            throw new ArgumentError(action, msg)
+        }
+
+        // return the number of arguments matched
+        return match[1].length
+    }
+
+    _match_arguments_partial(actions, arg_strings_pattern) {
+        // progressively shorten the actions list by slicing off the
+        // final actions until we find a match
+        let result = []
+        for (let i of range(actions.length, 0, -1)) {
+            let actions_slice = actions.slice(0, i)
+            let pattern = actions_slice.map(action => this._get_nargs_pattern(action)).join('')
+            let match = arg_strings_pattern.match(new RegExp('^' + pattern))
+            if (match !== null) {
+                result = result.concat(match.slice(1).map(string => string.length))
+                break
+            }
+        }
+
+        // return the list of arg string counts
+        return result
+    }
+
+    _parse_optional(arg_string) {
+        // if it's an empty string, it was meant to be a positional
+        if (!arg_string) {
+            return undefined
+        }
+
+        // if it doesn't start with a prefix, it was meant to be positional
+        if (!this.prefix_chars.includes(arg_string[0])) {
+            return undefined
+        }
+
+        // if the option string is present in the parser, return the action
+        if (arg_string in this._option_string_actions) {
+            let action = this._option_string_actions[arg_string]
+            return [ action, arg_string, undefined ]
+        }
+
+        // if it's just a single character, it was meant to be positional
+        if (arg_string.length === 1) {
+            return undefined
+        }
+
+        // if the option string before the "=" is present, return the action
+        if (arg_string.includes('=')) {
+            let [ option_string, explicit_arg ] = _string_split(arg_string, '=', 1)
+            if (option_string in this._option_string_actions) {
+                let action = this._option_string_actions[option_string]
+                return [ action, option_string, explicit_arg ]
+            }
+        }
+
+        // search through all possible prefixes of the option string
+        // and all actions in the parser for possible interpretations
+        let option_tuples = this._get_option_tuples(arg_string)
+
+        // if multiple actions match, the option string was ambiguous
+        if (option_tuples.length > 1) {
+            let options = option_tuples.map(([ /*action*/, option_string/*, explicit_arg*/ ]) => option_string).join(', ')
+            let args = {option: arg_string, matches: options}
+            let msg = 'ambiguous option: %(option)s could match %(matches)s'
+            this.error(sub(msg, args))
+
+        // if exactly one action matched, this segmentation is good,
+        // so return the parsed action
+        } else if (option_tuples.length === 1) {
+            let [ option_tuple ] = option_tuples
+            return option_tuple
+        }
+
+        // if it was not found as an option, but it looks like a negative
+        // number, it was meant to be positional
+        // unless there are negative-number-like options
+        if (this._negative_number_matcher.test(arg_string)) {
+            if (!this._has_negative_number_optionals.length) {
+                return undefined
+            }
+        }
+
+        // if it contains a space, it was meant to be a positional
+        if (arg_string.includes(' ')) {
+            return undefined
+        }
+
+        // it was meant to be an optional but there is no such option
+        // in this parser (though it might be a valid option in a subparser)
+        return [ undefined, arg_string, undefined ]
+    }
+
+    _get_option_tuples(option_string) {
+        let result = []
+
+        // option strings starting with two prefix characters are only
+        // split at the '='
+        let chars = this.prefix_chars
+        if (chars.includes(option_string[0]) && chars.includes(option_string[1])) {
+            if (this.allow_abbrev) {
+                let option_prefix, explicit_arg
+                if (option_string.includes('=')) {
+                    [ option_prefix, explicit_arg ] = _string_split(option_string, '=', 1)
+                } else {
+                    option_prefix = option_string
+                    explicit_arg = undefined
+                }
+                for (let option_string of Object.keys(this._option_string_actions)) {
+                    if (option_string.startsWith(option_prefix)) {
+                        let action = this._option_string_actions[option_string]
+                        let tup = [ action, option_string, explicit_arg ]
+                        result.push(tup)
+                    }
+                }
+            }
+
+        // single character options can be concatenated with their arguments
+        // but multiple character options always have to have their argument
+        // separate
+        } else if (chars.includes(option_string[0]) && !chars.includes(option_string[1])) {
+            let option_prefix = option_string
+            let explicit_arg = undefined
+            let short_option_prefix = option_string.slice(0, 2)
+            let short_explicit_arg = option_string.slice(2)
+
+            for (let option_string of Object.keys(this._option_string_actions)) {
+                if (option_string === short_option_prefix) {
+                    let action = this._option_string_actions[option_string]
+                    let tup = [ action, option_string, short_explicit_arg ]
+                    result.push(tup)
+                } else if (option_string.startsWith(option_prefix)) {
+                    let action = this._option_string_actions[option_string]
+                    let tup = [ action, option_string, explicit_arg ]
+                    result.push(tup)
+                }
+            }
+
+        // shouldn't ever get here
+        } else {
+            this.error(sub('unexpected option string: %s', option_string))
+        }
+
+        // return the collected option tuples
+        return result
+    }
+
+    _get_nargs_pattern(action) {
+        // in all examples below, we have to allow for '--' args
+        // which are represented as '-' in the pattern
+        let nargs = action.nargs
+        let nargs_pattern
+
+        // the default (None) is assumed to be a single argument
+        if (nargs === undefined) {
+            nargs_pattern = '(-*A-*)'
+
+        // allow zero or one arguments
+        } else if (nargs === OPTIONAL) {
+            nargs_pattern = '(-*A?-*)'
+
+        // allow zero or more arguments
+        } else if (nargs === ZERO_OR_MORE) {
+            nargs_pattern = '(-*[A-]*)'
+
+        // allow one or more arguments
+        } else if (nargs === ONE_OR_MORE) {
+            nargs_pattern = '(-*A[A-]*)'
+
+        // allow any number of options or arguments
+        } else if (nargs === REMAINDER) {
+            nargs_pattern = '([-AO]*)'
+
+        // allow one argument followed by any number of options or arguments
+        } else if (nargs === PARSER) {
+            nargs_pattern = '(-*A[-AO]*)'
+
+        // suppress action, like nargs=0
+        } else if (nargs === SUPPRESS) {
+            nargs_pattern = '(-*-*)'
+
+        // all others should be integers
+        } else {
+            nargs_pattern = sub('(-*%s-*)', 'A'.repeat(nargs).split('').join('-*'))
+        }
+
+        // if this is an optional action, -- is not allowed
+        if (action.option_strings.length) {
+            nargs_pattern = nargs_pattern.replace(/-\*/g, '')
+            nargs_pattern = nargs_pattern.replace(/-/g, '')
+        }
+
+        // return the pattern
+        return nargs_pattern
+    }
+
+    // ========================
+    // Alt command line argument parsing, allowing free intermix
+    // ========================
+
+    parse_intermixed_args(args = undefined, namespace = undefined) {
+        let argv
+        [ args, argv ] = this.parse_known_intermixed_args(args, namespace)
+        if (argv.length) {
+            let msg = 'unrecognized arguments: %s'
+            this.error(sub(msg, argv.join(' ')))
+        }
+        return args
+    }
+
+    parse_known_intermixed_args(args = undefined, namespace = undefined) {
+        // returns a namespace and list of extras
+        //
+        // positional can be freely intermixed with optionals.  optionals are
+        // first parsed with all positional arguments deactivated.  The 'extras'
+        // are then parsed.  If the parser definition is incompatible with the
+        // intermixed assumptions (e.g. use of REMAINDER, subparsers) a
+        // TypeError is raised.
+        //
+        // positionals are 'deactivated' by setting nargs and default to
+        // SUPPRESS.  This blocks the addition of that positional to the
+        // namespace
+
+        let extras
+        let positionals = this._get_positional_actions()
+        let a = positionals.filter(action => [ PARSER, REMAINDER ].includes(action.nargs))
+        if (a.length) {
+            throw new TypeError(sub('parse_intermixed_args: positional arg' +
+                                    ' with nargs=%s', a[0].nargs))
+        }
+
+        for (let group of this._mutually_exclusive_groups) {
+            for (let action of group._group_actions) {
+                if (positionals.includes(action)) {
+                    throw new TypeError('parse_intermixed_args: positional in' +
+                                        ' mutuallyExclusiveGroup')
+                }
+            }
+        }
+
+        let save_usage
+        try {
+            save_usage = this.usage
+            let remaining_args
+            try {
+                if (this.usage === undefined) {
+                    // capture the full usage for use in error messages
+                    this.usage = this.format_usage().slice(7)
+                }
+                for (let action of positionals) {
+                    // deactivate positionals
+                    action.save_nargs = action.nargs
+                    // action.nargs = 0
+                    action.nargs = SUPPRESS
+                    action.save_default = action.default
+                    action.default = SUPPRESS
+                }
+                [ namespace, remaining_args ] = this.parse_known_args(args,
+                                                                      namespace)
+                for (let action of positionals) {
+                    // remove the empty positional values from namespace
+                    let attr = getattr(namespace, action.dest)
+                    if (Array.isArray(attr) && attr.length === 0) {
+                        // eslint-disable-next-line no-console
+                        console.warn(sub('Do not expect %s in %s', action.dest, namespace))
+                        delattr(namespace, action.dest)
+                    }
+                }
+            } finally {
+                // restore nargs and usage before exiting
+                for (let action of positionals) {
+                    action.nargs = action.save_nargs
+                    action.default = action.save_default
+                }
+            }
+            let optionals = this._get_optional_actions()
+            try {
+                // parse positionals.  optionals aren't normally required, but
+                // they could be, so make sure they aren't.
+                for (let action of optionals) {
+                    action.save_required = action.required
+                    action.required = false
+                }
+                for (let group of this._mutually_exclusive_groups) {
+                    group.save_required = group.required
+                    group.required = false
+                }
+                [ namespace, extras ] = this.parse_known_args(remaining_args,
+                                                              namespace)
+            } finally {
+                // restore parser values before exiting
+                for (let action of optionals) {
+                    action.required = action.save_required
+                }
+                for (let group of this._mutually_exclusive_groups) {
+                    group.required = group.save_required
+                }
+            }
+        } finally {
+            this.usage = save_usage
+        }
+        return [ namespace, extras ]
+    }
+
+    // ========================
+    // Value conversion methods
+    // ========================
+    _get_values(action, arg_strings) {
+        // for everything but PARSER, REMAINDER args, strip out first '--'
+        if (![PARSER, REMAINDER].includes(action.nargs)) {
+            try {
+                _array_remove(arg_strings, '--')
+            } catch (err) {}
+        }
+
+        let value
+        // optional argument produces a default when not present
+        if (!arg_strings.length && action.nargs === OPTIONAL) {
+            if (action.option_strings.length) {
+                value = action.const
+            } else {
+                value = action.default
+            }
+            if (typeof value === 'string') {
+                value = this._get_value(action, value)
+                this._check_value(action, value)
+            }
+
+        // when nargs='*' on a positional, if there were no command-line
+        // args, use the default if it is anything other than None
+        } else if (!arg_strings.length && action.nargs === ZERO_OR_MORE &&
+              !action.option_strings.length) {
+            if (action.default !== undefined) {
+                value = action.default
+            } else {
+                value = arg_strings
+            }
+            this._check_value(action, value)
+
+        // single argument or optional argument produces a single value
+        } else if (arg_strings.length === 1 && [undefined, OPTIONAL].includes(action.nargs)) {
+            let arg_string = arg_strings[0]
+            value = this._get_value(action, arg_string)
+            this._check_value(action, value)
+
+        // REMAINDER arguments convert all values, checking none
+        } else if (action.nargs === REMAINDER) {
+            value = arg_strings.map(v => this._get_value(action, v))
+
+        // PARSER arguments convert all values, but check only the first
+        } else if (action.nargs === PARSER) {
+            value = arg_strings.map(v => this._get_value(action, v))
+            this._check_value(action, value[0])
+
+        // SUPPRESS argument does not put anything in the namespace
+        } else if (action.nargs === SUPPRESS) {
+            value = SUPPRESS
+
+        // all other types of nargs produce a list
+        } else {
+            value = arg_strings.map(v => this._get_value(action, v))
+            for (let v of value) {
+                this._check_value(action, v)
+            }
+        }
+
+        // return the converted value
+        return value
+    }
+
+    _get_value(action, arg_string) {
+        let type_func = this._registry_get('type', action.type, action.type)
+        if (typeof type_func !== 'function') {
+            let msg = '%r is not callable'
+            throw new ArgumentError(action, sub(msg, type_func))
+        }
+
+        // convert the value to the appropriate type
+        let result
+        try {
+            try {
+                result = type_func(arg_string)
+            } catch (err) {
+                // Dear TC39, why would you ever consider making es6 classes not callable?
+                // We had one universal interface, [[Call]], which worked for anything
+                // (with familiar this-instanceof guard for classes). Now we have two.
+                if (err instanceof TypeError &&
+                    /Class constructor .* cannot be invoked without 'new'/.test(err.message)) {
+                    // eslint-disable-next-line new-cap
+                    result = new type_func(arg_string)
+                } else {
+                    throw err
+                }
+            }
+
+        } catch (err) {
+            // ArgumentTypeErrors indicate errors
+            if (err instanceof ArgumentTypeError) {
+                //let name = getattr(action.type, 'name', repr(action.type))
+                let msg = err.message
+                throw new ArgumentError(action, msg)
+
+            // TypeErrors or ValueErrors also indicate errors
+            } else if (err instanceof TypeError) {
+                let name = getattr(action.type, 'name', repr(action.type))
+                let args = {type: name, value: arg_string}
+                let msg = 'invalid %(type)s value: %(value)r'
+                throw new ArgumentError(action, sub(msg, args))
+            } else {
+                throw err
+            }
+        }
+
+        // return the converted value
+        return result
+    }
+
+    _check_value(action, value) {
+        // converted value must be one of the choices (if specified)
+        if (action.choices !== undefined && !_choices_to_array(action.choices).includes(value)) {
+            let args = {value,
+                        choices: _choices_to_array(action.choices).map(repr).join(', ')}
+            let msg = 'invalid choice: %(value)r (choose from %(choices)s)'
+            throw new ArgumentError(action, sub(msg, args))
+        }
+    }
+
+    // =======================
+    // Help-formatting methods
+    // =======================
+    format_usage() {
+        let formatter = this._get_formatter()
+        formatter.add_usage(this.usage, this._actions,
+                            this._mutually_exclusive_groups)
+        return formatter.format_help()
+    }
+
+    format_help() {
+        let formatter = this._get_formatter()
+
+        // usage
+        formatter.add_usage(this.usage, this._actions,
+                            this._mutually_exclusive_groups)
+
+        // description
+        formatter.add_text(this.description)
+
+        // positionals, optionals and user-defined groups
+        for (let action_group of this._action_groups) {
+            formatter.start_section(action_group.title)
+            formatter.add_text(action_group.description)
+            formatter.add_arguments(action_group._group_actions)
+            formatter.end_section()
+        }
+
+        // epilog
+        formatter.add_text(this.epilog)
+
+        // determine help from format above
+        return formatter.format_help()
+    }
+
+    _get_formatter() {
+        // eslint-disable-next-line new-cap
+        return new this.formatter_class({ prog: this.prog })
+    }
+
+    // =====================
+    // Help-printing methods
+    // =====================
+    print_usage(file = undefined) {
+        if (file === undefined) file = process.stdout
+        this._print_message(this.format_usage(), file)
+    }
+
+    print_help(file = undefined) {
+        if (file === undefined) file = process.stdout
+        this._print_message(this.format_help(), file)
+    }
+
+    _print_message(message, file = undefined) {
+        if (message) {
+            if (file === undefined) file = process.stderr
+            file.write(message)
+        }
+    }
+
+    // ===============
+    // Exiting methods
+    // ===============
+    exit(status = 0, message = undefined) {
+        if (message) {
+            this._print_message(message, process.stderr)
+        }
+        process.exit(status)
+    }
+
+    error(message) {
+        /*
+         *  error(message: string)
+         *
+         *  Prints a usage message incorporating the message to stderr and
+         *  exits.
+         *
+         *  If you override this in a subclass, it should not return -- it
+         *  should either exit or raise an exception.
+         */
+
+        // LEGACY (v1 compatibility), debug mode
+        if (this.debug === true) throw new Error(message)
+        // end
+        this.print_usage(process.stderr)
+        let args = {prog: this.prog, message: message}
+        this.exit(2, sub('%(prog)s: error: %(message)s\n', args))
+    }
+}))
+
+
+module.exports = {
+    ArgumentParser,
+    ArgumentError,
+    ArgumentTypeError,
+    BooleanOptionalAction,
+    FileType,
+    HelpFormatter,
+    ArgumentDefaultsHelpFormatter,
+    RawDescriptionHelpFormatter,
+    RawTextHelpFormatter,
+    MetavarTypeHelpFormatter,
+    Namespace,
+    Action,
+    ONE_OR_MORE,
+    OPTIONAL,
+    PARSER,
+    REMAINDER,
+    SUPPRESS,
+    ZERO_OR_MORE
+}
+
+// LEGACY (v1 compatibility), Const alias
+Object.defineProperty(module.exports, 'Const', {
+    get() {
+        let result = {}
+        Object.entries({ ONE_OR_MORE, OPTIONAL, PARSER, REMAINDER, SUPPRESS, ZERO_OR_MORE }).forEach(([ n, v ]) => {
+            Object.defineProperty(result, n, {
+                get() {
+                    deprecate(n, sub('use argparse.%s instead of argparse.Const.%s', n, n))
+                    return v
+                }
+            })
+        })
+        Object.entries({ _UNRECOGNIZED_ARGS_ATTR }).forEach(([ n, v ]) => {
+            Object.defineProperty(result, n, {
+                get() {
+                    deprecate(n, sub('argparse.Const.%s is an internal symbol and will no longer be available', n))
+                    return v
+                }
+            })
+        })
+        return result
+    },
+    enumerable: false
+})
+// end
 
 
 /***/ }),
@@ -920,34 +4627,7 @@ module.exports = new Type('tag:yaml.org,2002:int', {
 
 
 /***/ }),
-/* 45 */
-/***/ (function(module) {
-
-"use strict";
-//
-// Constants
-//
-
-
-
-module.exports.EOL = '\n';
-
-module.exports.SUPPRESS = '==SUPPRESS==';
-
-module.exports.OPTIONAL = '?';
-
-module.exports.ZERO_OR_MORE = '*';
-
-module.exports.ONE_OR_MORE = '+';
-
-module.exports.PARSER = 'A...';
-
-module.exports.REMAINDER = '...';
-
-module.exports._UNRECOGNIZED_ARGS_ATTR = '_unrecognized_args';
-
-
-/***/ }),
+/* 45 */,
 /* 46 */,
 /* 47 */,
 /* 48 */,
@@ -1197,7 +4877,7 @@ const { logger } = __webpack_require__(79);
 const {
   parentChainFromNode,
   treatUrl
-} = __webpack_require__(702);
+} = __webpack_require__(352);
 const { checkUrlExist } = __webpack_require__(22);
 
 async function checkoutDefinitionTree(context, treeNode) {
@@ -1438,187 +5118,13 @@ module.exports = {
 
 /***/ }),
 /* 58 */,
-/* 59 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-
-var util    = __webpack_require__(669);
-
-// Constants
-var c = __webpack_require__(45);
-
-var $$ = __webpack_require__(255);
-var HelpFormatter = __webpack_require__(532);
-
-/**
- * new RawDescriptionHelpFormatter(options)
- * new ArgumentParser({formatterClass: argparse.RawDescriptionHelpFormatter, ...})
- *
- * Help message formatter which adds default values to argument help.
- *
- * Only the name of this class is considered a public API. All the methods
- * provided by the class are considered an implementation detail.
- **/
-
-function ArgumentDefaultsHelpFormatter(options) {
-  HelpFormatter.call(this, options);
-}
-
-util.inherits(ArgumentDefaultsHelpFormatter, HelpFormatter);
-
-ArgumentDefaultsHelpFormatter.prototype._getHelpString = function (action) {
-  var help = action.help;
-  if (action.help.indexOf('%(defaultValue)s') === -1) {
-    if (action.defaultValue !== c.SUPPRESS) {
-      var defaulting_nargs = [ c.OPTIONAL, c.ZERO_OR_MORE ];
-      if (action.isOptional() || (defaulting_nargs.indexOf(action.nargs) >= 0)) {
-        help += ' (default: %(defaultValue)s)';
-      }
-    }
-  }
-  return help;
-};
-
-module.exports.ArgumentDefaultsHelpFormatter = ArgumentDefaultsHelpFormatter;
-
-/**
- * new RawDescriptionHelpFormatter(options)
- * new ArgumentParser({formatterClass: argparse.RawDescriptionHelpFormatter, ...})
- *
- * Help message formatter which retains any formatting in descriptions.
- *
- * Only the name of this class is considered a public API. All the methods
- * provided by the class are considered an implementation detail.
- **/
-
-function RawDescriptionHelpFormatter(options) {
-  HelpFormatter.call(this, options);
-}
-
-util.inherits(RawDescriptionHelpFormatter, HelpFormatter);
-
-RawDescriptionHelpFormatter.prototype._fillText = function (text, width, indent) {
-  var lines = text.split('\n');
-  lines = lines.map(function (line) {
-    return $$.trimEnd(indent + line);
-  });
-  return lines.join('\n');
-};
-module.exports.RawDescriptionHelpFormatter = RawDescriptionHelpFormatter;
-
-/**
- * new RawTextHelpFormatter(options)
- * new ArgumentParser({formatterClass: argparse.RawTextHelpFormatter, ...})
- *
- * Help message formatter which retains formatting of all help text.
- *
- * Only the name of this class is considered a public API. All the methods
- * provided by the class are considered an implementation detail.
- **/
-
-function RawTextHelpFormatter(options) {
-  RawDescriptionHelpFormatter.call(this, options);
-}
-
-util.inherits(RawTextHelpFormatter, RawDescriptionHelpFormatter);
-
-RawTextHelpFormatter.prototype._splitLines = function (text) {
-  return text.split('\n');
-};
-
-module.exports.RawTextHelpFormatter = RawTextHelpFormatter;
-
-
-/***/ }),
+/* 59 */,
 /* 60 */,
 /* 61 */,
 /* 62 */,
 /* 63 */,
 /* 64 */,
-/* 65 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/** internal
- * class ArgumentGroup
- *
- * Group arguments.
- * By default, ArgumentParser groups command-line arguments
- * into “positional arguments” and “optional arguments”
- * when displaying help messages. When there is a better
- * conceptual grouping of arguments than this default one,
- * appropriate groups can be created using the addArgumentGroup() method
- *
- * This class inherited from [[ArgumentContainer]]
- **/
-
-
-var util = __webpack_require__(669);
-
-var ActionContainer = __webpack_require__(614);
-
-
-/**
- * new ArgumentGroup(container, options)
- * - container (object): main container
- * - options (object): hash of group options
- *
- * #### options
- * - **prefixChars**  group name prefix
- * - **argumentDefault**  default argument value
- * - **title**  group title
- * - **description** group description
- *
- **/
-var ArgumentGroup = module.exports = function ArgumentGroup(container, options) {
-
-  options = options || {};
-
-  // add any missing keyword arguments by checking the container
-  options.conflictHandler = (options.conflictHandler || container.conflictHandler);
-  options.prefixChars = (options.prefixChars || container.prefixChars);
-  options.argumentDefault = (options.argumentDefault || container.argumentDefault);
-
-  ActionContainer.call(this, options);
-
-  // group attributes
-  this.title = options.title;
-  this._groupActions = [];
-
-  // share most attributes with the container
-  this._container = container;
-  this._registries = container._registries;
-  this._actions = container._actions;
-  this._optionStringActions = container._optionStringActions;
-  this._defaults = container._defaults;
-  this._hasNegativeNumberOptionals = container._hasNegativeNumberOptionals;
-  this._mutuallyExclusiveGroups = container._mutuallyExclusiveGroups;
-};
-util.inherits(ArgumentGroup, ActionContainer);
-
-
-ArgumentGroup.prototype._addAction = function (action) {
-  // Parent add action
-  action = ActionContainer.prototype._addAction.call(this, action);
-  this._groupActions.push(action);
-  return action;
-};
-
-
-ArgumentGroup.prototype._removeAction = function (action) {
-  // Parent remove action
-  ActionContainer.prototype._removeAction.call(this, action);
-  var actionIndex = this._groupActions.indexOf(action);
-  if (actionIndex >= 0) {
-    this._groupActions.splice(actionIndex, 1);
-  }
-};
-
-
-
-/***/ }),
+/* 65 */,
 /* 66 */,
 /* 67 */,
 /* 68 */,
@@ -2834,7 +6340,7 @@ var rp = __webpack_require__(302)
 var minimatch = __webpack_require__(571)
 var Minimatch = minimatch.Minimatch
 var inherits = __webpack_require__(689)
-var EE = __webpack_require__(759).EventEmitter
+var EE = __webpack_require__(614).EventEmitter
 var path = __webpack_require__(622)
 var assert = __webpack_require__(357)
 var isAbsolute = __webpack_require__(681)
@@ -3772,7 +7278,7 @@ var net = __webpack_require__(631);
 var tls = __webpack_require__(16);
 var http = __webpack_require__(605);
 var https = __webpack_require__(34);
-var events = __webpack_require__(759);
+var events = __webpack_require__(614);
 var assert = __webpack_require__(357);
 var util = __webpack_require__(669);
 
@@ -4167,6 +7673,7 @@ async function createConfigLocally(octokit, eventUrl, env = {}) {
 
 async function getEvent(octokit, eventUrl) {
   let event;
+
   const m = eventUrl.match(GITHUB_URL_REGEXP);
   if (m && m[3] === "pull") {
     logger.debug("Getting PR data...");
@@ -4392,7 +7899,7 @@ module.exports = jsonFile
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const core_1 = __webpack_require__(393);
+const core_1 = __webpack_require__(470);
 /**
  * Status Reporter that displays information about the progress/status of an artifact that is being uploaded or downloaded
  *
@@ -4669,35 +8176,27 @@ function checkMode (stat, options) {
 /* 209 */,
 /* 210 */,
 /* 211 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports) {
 
 "use strict";
-/*:nodoc:*
- * class ActionStoreTrue
- *
- * This action store the values True respectively.
- * This isspecial cases of 'storeConst'
- *
- * This class inherited from [[Action]]
- **/
 
 
-var util = __webpack_require__(669);
+Object.defineProperty(exports, '__esModule', { value: true });
 
-var ActionStoreConstant = __webpack_require__(267);
+function getUserAgent() {
+  if (typeof navigator === "object" && "userAgent" in navigator) {
+    return navigator.userAgent;
+  }
 
-/*:nodoc:*
- * new ActionStoreTrue(options)
- * - options (object): options hash see [[Action.new]]
- *
- **/
-var ActionStoreTrue = module.exports = function ActionStoreTrue(options) {
-  options = options || {};
-  options.constant = true;
-  options.defaultValue = options.defaultValue !== null ? options.defaultValue : false;
-  ActionStoreConstant.call(this, options);
-};
-util.inherits(ActionStoreTrue, ActionStoreConstant);
+  if (typeof process === "object" && "version" in process) {
+    return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
+  }
+
+  return "<environment undetectable>";
+}
+
+exports.getUserAgent = getUserAgent;
+//# sourceMappingURL=index.js.map
 
 
 /***/ }),
@@ -5672,70 +9171,7 @@ function patch (fs) {
 /* 252 */,
 /* 253 */,
 /* 254 */,
-/* 255 */
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-
-exports.repeat = function (str, num) {
-  var result = '';
-  for (var i = 0; i < num; i++) { result += str; }
-  return result;
-};
-
-exports.arrayEqual = function (a, b) {
-  if (a.length !== b.length) { return false; }
-  for (var i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) { return false; }
-  }
-  return true;
-};
-
-exports.trimChars = function (str, chars) {
-  var start = 0;
-  var end = str.length - 1;
-  while (chars.indexOf(str.charAt(start)) >= 0) { start++; }
-  while (chars.indexOf(str.charAt(end)) >= 0) { end--; }
-  return str.slice(start, end + 1);
-};
-
-exports.capitalize = function (str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
-exports.arrayUnion = function () {
-  var result = [];
-  for (var i = 0, values = {}; i < arguments.length; i++) {
-    var arr = arguments[i];
-    for (var j = 0; j < arr.length; j++) {
-      if (!values[arr[j]]) {
-        values[arr[j]] = true;
-        result.push(arr[j]);
-      }
-    }
-  }
-  return result;
-};
-
-function has(obj, key) {
-  return Object.prototype.hasOwnProperty.call(obj, key);
-}
-
-exports.has = has;
-
-exports.extend = function (dest, src) {
-  for (var i in src) {
-    if (has(src, i)) { dest[i] = src[i]; }
-  }
-};
-
-exports.trimEnd = function (str) {
-  return str.replace(/\s+$/g, '');
-};
-
-
-/***/ }),
+/* 255 */,
 /* 256 */,
 /* 257 */,
 /* 258 */,
@@ -5750,7 +9186,7 @@ var assert = __webpack_require__(357)
 var signals = __webpack_require__(654)
 var isWin = /^win/i.test(process.platform)
 
-var EE = __webpack_require__(759)
+var EE = __webpack_require__(614)
 /* istanbul ignore if */
 if (typeof EE !== 'function') {
   EE = EE.EventEmitter
@@ -5915,56 +9351,7 @@ function processEmit (ev, arg) {
 /* 264 */,
 /* 265 */,
 /* 266 */,
-/* 267 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/*:nodoc:*
- * class ActionStoreConstant
- *
- * This action stores the value specified by the const keyword argument.
- * (Note that the const keyword argument defaults to the rather unhelpful null.)
- * The 'store_const' action is most commonly used with optional
- * arguments that specify some sort of flag.
- *
- * This class inherited from [[Action]]
- **/
-
-
-var util = __webpack_require__(669);
-
-var Action = __webpack_require__(380);
-
-/*:nodoc:*
- * new ActionStoreConstant(options)
- * - options (object): options hash see [[Action.new]]
- *
- **/
-var ActionStoreConstant = module.exports = function ActionStoreConstant(options) {
-  options = options || {};
-  options.nargs = 0;
-  if (typeof options.constant === 'undefined') {
-    throw new Error('constant option is required for storeAction');
-  }
-  Action.call(this, options);
-};
-util.inherits(ActionStoreConstant, Action);
-
-/*:nodoc:*
- * ActionStoreConstant#call(parser, namespace, values, optionString) -> Void
- * - parser (ArgumentParser): current parser
- * - namespace (Namespace): namespace for output data
- * - values (Array): parsed values
- * - optionString (Array): input option string(not parsed)
- *
- * Call the action. Save result in namespace object
- **/
-ActionStoreConstant.prototype.call = function (parser, namespace) {
-  namespace.set(this.dest, this.constant);
-};
-
-
-/***/ }),
+/* 267 */,
 /* 268 */,
 /* 269 */,
 /* 270 */,
@@ -7497,67 +10884,7 @@ exports.create = create;
 //# sourceMappingURL=glob.js.map
 
 /***/ }),
-/* 282 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/** internal
- * class MutuallyExclusiveGroup
- *
- * Group arguments.
- * By default, ArgumentParser groups command-line arguments
- * into “positional arguments” and “optional arguments”
- * when displaying help messages. When there is a better
- * conceptual grouping of arguments than this default one,
- * appropriate groups can be created using the addArgumentGroup() method
- *
- * This class inherited from [[ArgumentContainer]]
- **/
-
-
-var util = __webpack_require__(669);
-
-var ArgumentGroup = __webpack_require__(65);
-
-/**
- * new MutuallyExclusiveGroup(container, options)
- * - container (object): main container
- * - options (object): options.required -> true/false
- *
- * `required` could be an argument itself, but making it a property of
- * the options argument is more consistent with the JS adaptation of the Python)
- **/
-var MutuallyExclusiveGroup = module.exports = function MutuallyExclusiveGroup(container, options) {
-  var required;
-  options = options || {};
-  required = options.required || false;
-  ArgumentGroup.call(this, container);
-  this.required = required;
-
-};
-util.inherits(MutuallyExclusiveGroup, ArgumentGroup);
-
-
-MutuallyExclusiveGroup.prototype._addAction = function (action) {
-  var msg;
-  if (action.required) {
-    msg = 'mutually exclusive arguments must be optional';
-    throw new Error(msg);
-  }
-  action = this._container._addAction(action);
-  this._groupActions.push(action);
-  return action;
-};
-
-
-MutuallyExclusiveGroup.prototype._removeAction = function (action) {
-  this._container._removeAction(action);
-  this._groupActions.remove(action);
-};
-
-
-
-/***/ }),
+/* 282 */,
 /* 283 */,
 /* 284 */
 /***/ (function(module) {
@@ -7627,117 +10954,8 @@ function range(a, b, str) {
 /***/ }),
 /* 285 */,
 /* 286 */,
-/* 287 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-
-
-var format  = __webpack_require__(669).format;
-
-
-var ERR_CODE = 'ARGError';
-
-/*:nodoc:*
- * argumentError(argument, message) -> TypeError
- * - argument (Object): action with broken argument
- * - message (String): error message
- *
- * Error format helper. An error from creating or using an argument
- * (optional or positional). The string value of this exception
- * is the message, augmented with information
- * about the argument that caused it.
- *
- * #####Example
- *
- *      var argumentErrorHelper = require('./argument/error');
- *      if (conflictOptionals.length > 0) {
- *        throw argumentErrorHelper(
- *          action,
- *          format('Conflicting option string(s): %s', conflictOptionals.join(', '))
- *        );
- *      }
- *
- **/
-module.exports = function (argument, message) {
-  var argumentName = null;
-  var errMessage;
-  var err;
-
-  if (argument.getName) {
-    argumentName = argument.getName();
-  } else {
-    argumentName = '' + argument;
-  }
-
-  if (!argumentName) {
-    errMessage = message;
-  } else {
-    errMessage = format('argument "%s": %s', argumentName, message);
-  }
-
-  err = new TypeError(errMessage);
-  err.code = ERR_CODE;
-  return err;
-};
-
-
-/***/ }),
-/* 288 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/*:nodoc:*
- * class ActionAppendConstant
- *
- * This stores a list, and appends the value specified by
- * the const keyword argument to the list.
- * (Note that the const keyword argument defaults to null.)
- * The 'appendConst' action is typically useful when multiple
- * arguments need to store constants to the same list.
- *
- * This class inherited from [[Action]]
- **/
-
-
-
-var util = __webpack_require__(669);
-
-var Action = __webpack_require__(380);
-
-/*:nodoc:*
- * new ActionAppendConstant(options)
- * - options (object): options hash see [[Action.new]]
- *
- **/
-var ActionAppendConstant = module.exports = function ActionAppendConstant(options) {
-  options = options || {};
-  options.nargs = 0;
-  if (typeof options.constant === 'undefined') {
-    throw new Error('constant option is required for appendAction');
-  }
-  Action.call(this, options);
-};
-util.inherits(ActionAppendConstant, Action);
-
-/*:nodoc:*
- * ActionAppendConstant#call(parser, namespace, values, optionString) -> Void
- * - parser (ArgumentParser): current parser
- * - namespace (Namespace): namespace for output data
- * - values (Array): parsed values
- * - optionString (Array): input option string(not parsed)
- *
- * Call the action. Save result in namespace object
- **/
-ActionAppendConstant.prototype.call = function (parser, namespace) {
-  var items = [].concat(namespace[this.dest] || []);
-  items.push(this.constant);
-  namespace.set(this.dest, items);
-};
-
-
-/***/ }),
+/* 287 */,
+/* 288 */,
 /* 289 */,
 /* 290 */,
 /* 291 */,
@@ -7780,7 +10998,7 @@ var __asyncGenerator = (this && this.__asyncGenerator) || function (thisArg, _ar
     function settle(f, v) { if (f(v), q.shift(), q.length) resume(q[0][0], q[0][1]); }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const core = __webpack_require__(393);
+const core = __webpack_require__(470);
 const fs = __webpack_require__(747);
 const globOptionsHelper = __webpack_require__(601);
 const path = __webpack_require__(622);
@@ -8709,56 +11927,17 @@ exports.Path = Path;
 /* 352 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-"use strict";
-/*:nodoc:*
- * class ActionStore
- *
- * This action just stores the argument’s value. This is the default action.
- *
- * This class inherited from [[Action]]
- *
- **/
+const { getTree, getTreeForProject } = __webpack_require__(101);
+const { readDefinitionFile } = __webpack_require__(799);
+const { parentChainFromNode } = __webpack_require__(636);
+const { treatUrl } = __webpack_require__(824);
 
-
-var util = __webpack_require__(669);
-
-var Action = __webpack_require__(380);
-
-// Constants
-var c = __webpack_require__(45);
-
-
-/*:nodoc:*
- * new ActionStore(options)
- * - options (object): options hash see [[Action.new]]
- *
- **/
-var ActionStore = module.exports = function ActionStore(options) {
-  options = options || {};
-  if (this.nargs <= 0) {
-    throw new Error('nargs for store actions must be > 0; if you ' +
-        'have nothing to store, actions such as store ' +
-        'true or store const may be more appropriate');
-
-  }
-  if (typeof this.constant !== 'undefined' && this.nargs !== c.OPTIONAL) {
-    throw new Error('nargs must be OPTIONAL to supply const');
-  }
-  Action.call(this, options);
-};
-util.inherits(ActionStore, Action);
-
-/*:nodoc:*
- * ActionStore#call(parser, namespace, values, optionString) -> Void
- * - parser (ArgumentParser): current parser
- * - namespace (Namespace): namespace for output data
- * - values (Array): parsed values
- * - optionString (Array): input option string(not parsed)
- *
- * Call the action. Save result in namespace object
- **/
-ActionStore.prototype.call = function (parser, namespace, values) {
-  namespace.set(this.dest, values);
+module.exports = {
+  getTree,
+  getTreeForProject,
+  readDefinitionFile,
+  parentChainFromNode,
+  treatUrl
 };
 
 
@@ -8828,12 +12007,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const core = __importStar(__webpack_require__(393));
+const core = __importStar(__webpack_require__(470));
 const upload_specification_1 = __webpack_require__(590);
 const upload_http_client_1 = __webpack_require__(888);
 const utils_1 = __webpack_require__(870);
 const download_http_client_1 = __webpack_require__(855);
-const download_specification_1 = __webpack_require__(828);
+const download_specification_1 = __webpack_require__(532);
 const config_variables_1 = __webpack_require__(401);
 const path_1 = __webpack_require__(622);
 class DefaultArtifactClient {
@@ -9017,220 +12196,9 @@ module.exports = require("crypto");
 /* 375 */,
 /* 376 */,
 /* 377 */,
-/* 378 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/*:nodoc:*
- * class ActionAppend
- *
- * This action stores a list, and appends each argument value to the list.
- * This is useful to allow an option to be specified multiple times.
- * This class inherided from [[Action]]
- *
- **/
-
-
-
-var util = __webpack_require__(669);
-
-var Action = __webpack_require__(380);
-
-// Constants
-var c = __webpack_require__(45);
-
-/*:nodoc:*
- * new ActionAppend(options)
- * - options (object): options hash see [[Action.new]]
- *
- * Note: options.nargs should be optional for constants
- * and more then zero for other
- **/
-var ActionAppend = module.exports = function ActionAppend(options) {
-  options = options || {};
-  if (this.nargs <= 0) {
-    throw new Error('nargs for append actions must be > 0; if arg ' +
-        'strings are not supplying the value to append, ' +
-        'the append const action may be more appropriate');
-  }
-  if (!!this.constant && this.nargs !== c.OPTIONAL) {
-    throw new Error('nargs must be OPTIONAL to supply const');
-  }
-  Action.call(this, options);
-};
-util.inherits(ActionAppend, Action);
-
-/*:nodoc:*
- * ActionAppend#call(parser, namespace, values, optionString) -> Void
- * - parser (ArgumentParser): current parser
- * - namespace (Namespace): namespace for output data
- * - values (Array): parsed values
- * - optionString (Array): input option string(not parsed)
- *
- * Call the action. Save result in namespace object
- **/
-ActionAppend.prototype.call = function (parser, namespace, values) {
-  var items = (namespace[this.dest] || []).slice();
-  items.push(values);
-  namespace.set(this.dest, items);
-};
-
-
-/***/ }),
+/* 378 */,
 /* 379 */,
-/* 380 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/**
- * class Action
- *
- * Base class for all actions
- * Do not call in your code, use this class only for inherits your own action
- *
- * Information about how to convert command line strings to Javascript objects.
- * Action objects are used by an ArgumentParser to represent the information
- * needed to parse a single argument from one or more strings from the command
- * line. The keyword arguments to the Action constructor are also all attributes
- * of Action instances.
- *
- * ##### Allowed keywords:
- *
- * - `store`
- * - `storeConstant`
- * - `storeTrue`
- * - `storeFalse`
- * - `append`
- * - `appendConstant`
- * - `count`
- * - `help`
- * - `version`
- *
- * Information about action options see [[Action.new]]
- *
- * See also [original guide](http://docs.python.org/dev/library/argparse.html#action)
- *
- **/
-
-
-
-
-// Constants
-var c = __webpack_require__(45);
-
-
-/**
- * new Action(options)
- *
- * Base class for all actions. Used only for inherits
- *
- *
- * ##### Options:
- *
- * - `optionStrings`  A list of command-line option strings for the action.
- * - `dest`  Attribute to hold the created object(s)
- * - `nargs`  The number of command-line arguments that should be consumed.
- * By default, one argument will be consumed and a single value will be
- * produced.
- * - `constant`  Default value for an action with no value.
- * - `defaultValue`  The value to be produced if the option is not specified.
- * - `type`  Cast to 'string'|'int'|'float'|'complex'|function (string). If
- * None, 'string'.
- * - `choices`  The choices available.
- * - `required`  True if the action must always be specified at the command
- * line.
- * - `help`  The help describing the argument.
- * - `metavar`  The name to be used for the option's argument with the help
- * string. If None, the 'dest' value will be used as the name.
- *
- * ##### nargs supported values:
- *
- * - `N` (an integer) consumes N arguments (and produces a list)
- * - `?`  consumes zero or one arguments
- * - `*` consumes zero or more arguments (and produces a list)
- * - `+` consumes one or more arguments (and produces a list)
- *
- * Note: that the difference between the default and nargs=1 is that with the
- * default, a single value will be produced, while with nargs=1, a list
- * containing a single value will be produced.
- **/
-var Action = module.exports = function Action(options) {
-  options = options || {};
-  this.optionStrings = options.optionStrings || [];
-  this.dest = options.dest;
-  this.nargs = typeof options.nargs !== 'undefined' ? options.nargs : null;
-  this.constant = typeof options.constant !== 'undefined' ? options.constant : null;
-  this.defaultValue = options.defaultValue;
-  this.type = typeof options.type !== 'undefined' ? options.type : null;
-  this.choices = typeof options.choices !== 'undefined' ? options.choices : null;
-  this.required = typeof options.required !== 'undefined' ? options.required : false;
-  this.help = typeof options.help !== 'undefined' ? options.help : null;
-  this.metavar = typeof options.metavar !== 'undefined' ? options.metavar : null;
-
-  if (!(this.optionStrings instanceof Array)) {
-    throw new Error('optionStrings should be an array');
-  }
-  if (typeof this.required !== 'undefined' && typeof this.required !== 'boolean') {
-    throw new Error('required should be a boolean');
-  }
-};
-
-/**
- * Action#getName -> String
- *
- * Tells action name
- **/
-Action.prototype.getName = function () {
-  if (this.optionStrings.length > 0) {
-    return this.optionStrings.join('/');
-  } else if (this.metavar !== null && this.metavar !== c.SUPPRESS) {
-    return this.metavar;
-  } else if (typeof this.dest !== 'undefined' && this.dest !== c.SUPPRESS) {
-    return this.dest;
-  }
-  return null;
-};
-
-/**
- * Action#isOptional -> Boolean
- *
- * Return true if optional
- **/
-Action.prototype.isOptional = function () {
-  return !this.isPositional();
-};
-
-/**
- * Action#isPositional -> Boolean
- *
- * Return true if positional
- **/
-Action.prototype.isPositional = function () {
-  return (this.optionStrings.length === 0);
-};
-
-/**
- * Action#call(parser, namespace, values, optionString) -> Void
- * - parser (ArgumentParser): current parser
- * - namespace (Namespace): namespace for output data
- * - values (Array): parsed values
- * - optionString (Array): input option string(not parsed)
- *
- * Call the action. Should be implemented in inherited classes
- *
- * ##### Example
- *
- *      ActionCount.prototype.call = function (parser, namespace, values, optionString) {
- *        namespace.set(this.dest, (namespace[this.dest] || 0) + 1);
- *      };
- *
- **/
-Action.prototype.call = function () {
-  throw new Error('.call() not defined');// Not Implemented error
-};
-
-
-/***/ }),
+/* 380 */,
 /* 381 */,
 /* 382 */,
 /* 383 */
@@ -9240,7 +12208,7 @@ Action.prototype.call = function () {
 const process = __webpack_require__(765);
 
 const fse = __webpack_require__(226);
-const { ArgumentParser } = __webpack_require__(470);
+const { ArgumentParser } = __webpack_require__(18);
 const { Octokit } = __webpack_require__(889);
 
 const { ClientError, logger } = __webpack_require__(79);
@@ -9252,25 +12220,30 @@ const pkg = __webpack_require__(731);
 async function main() {
   const parser = new ArgumentParser({
     prog: pkg.name,
-    version: pkg.version,
-    addHelp: true,
+    add_help: true,
     description: pkg.description
   });
-  parser.addArgument(["-t", "--trace"], {
-    action: "storeTrue",
-    help: "Show trace output"
-  });
-  parser.addArgument(["-d", "--debug"], {
-    action: "storeTrue",
+
+  // parser.add_argument("-h", "--help", {
+  //   action: "version",
+  //   version: pkg.version
+  // });
+  parser.add_argument("-d", "--debug", {
+    action: "store_true",
     help: "Show debugging output"
   });
-  parser.addArgument(["url"], {
+  parser.add_argument("-url", {
     metavar: "<url>",
-    nargs: "?",
+    nargs: 1,
     help: "GitHub URL to process instead of environment variables"
   });
 
-  const args = parser.parseArgs();
+  parser.add_argument("-df", {
+    metavar: "<definition-file>",
+    nargs: 1,
+    help: "Filesystem path or URL to the definition file"
+  });
+  const args = parser.parse_args();
 
   if (args.trace) {
     logger.level = "trace";
@@ -9285,8 +12258,9 @@ async function main() {
   });
 
   let config = undefined;
+  addInputVariableToEnv(args.df[0], "definition-file", true);
   if (args.url) {
-    config = await createConfigLocally(octokit, args.url, process.env);
+    config = await createConfigLocally(octokit, args.url[0], process.env);
   } else {
     const eventPath = env("GITHUB_EVENT_PATH");
     const eventDataStr = await fse.readFile(eventPath, "utf8");
@@ -9304,6 +12278,21 @@ function env(name) {
     throw new ClientError(`environment variable ${name} not set!`);
   }
   return val;
+}
+
+/**
+ * The idea here is to add every env variable as an INPUT_X variable, this is the way github actions sets variables to the environment, so it's the way to introduce inputs from command line
+ * @param {String} inputVariable the input variable name
+ * @param {Boolean} mandatory is the input variable mandatory
+ */
+function addInputVariableToEnv(value, inputKey, mandatory) {
+  if (value) {
+    process.env[`INPUT_${inputKey.replace(/ /g, "_").toUpperCase()}`] = value;
+  } else if (mandatory) {
+    throw new Error(
+      `Input variable ${inputKey} is mandatory and it's not defined. Please add it following documentation.`
+    );
+  }
 }
 
 if (require.main === require.cache[eval('__filename')]) {
@@ -9796,281 +12785,14 @@ module.exports = readShebang;
 /***/ }),
 /* 390 */,
 /* 391 */,
-/* 392 */
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-function getUserAgent() {
-  if (typeof navigator === "object" && "userAgent" in navigator) {
-    return navigator.userAgent;
-  }
-
-  if (typeof process === "object" && "version" in process) {
-    return `Node.js/${process.version.substr(1)} (${process.platform}; ${process.arch})`;
-  }
-
-  return "<environment undetectable>";
-}
-
-exports.getUserAgent = getUserAgent;
-//# sourceMappingURL=index.js.map
-
-
-/***/ }),
-/* 393 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const command_1 = __webpack_require__(431);
-const file_command_1 = __webpack_require__(102);
-const utils_1 = __webpack_require__(82);
-const os = __importStar(__webpack_require__(87));
-const path = __importStar(__webpack_require__(622));
-/**
- * The code to exit an action
- */
-var ExitCode;
-(function (ExitCode) {
-    /**
-     * A code indicating that the action was successful
-     */
-    ExitCode[ExitCode["Success"] = 0] = "Success";
-    /**
-     * A code indicating that the action was a failure
-     */
-    ExitCode[ExitCode["Failure"] = 1] = "Failure";
-})(ExitCode = exports.ExitCode || (exports.ExitCode = {}));
-//-----------------------------------------------------------------------
-// Variables
-//-----------------------------------------------------------------------
-/**
- * Sets env variable for this action and future actions in the job
- * @param name the name of the variable to set
- * @param val the value of the variable. Non-string values will be converted to a string via JSON.stringify
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function exportVariable(name, val) {
-    const convertedVal = utils_1.toCommandValue(val);
-    process.env[name] = convertedVal;
-    const filePath = process.env['GITHUB_ENV'] || '';
-    if (filePath) {
-        const delimiter = '_GitHubActionsFileCommandDelimeter_';
-        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
-        file_command_1.issueCommand('ENV', commandValue);
-    }
-    else {
-        command_1.issueCommand('set-env', { name }, convertedVal);
-    }
-}
-exports.exportVariable = exportVariable;
-/**
- * Registers a secret which will get masked from logs
- * @param secret value of the secret
- */
-function setSecret(secret) {
-    command_1.issueCommand('add-mask', {}, secret);
-}
-exports.setSecret = setSecret;
-/**
- * Prepends inputPath to the PATH (for this action and future actions)
- * @param inputPath
- */
-function addPath(inputPath) {
-    const filePath = process.env['GITHUB_PATH'] || '';
-    if (filePath) {
-        file_command_1.issueCommand('PATH', inputPath);
-    }
-    else {
-        command_1.issueCommand('add-path', {}, inputPath);
-    }
-    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
-}
-exports.addPath = addPath;
-/**
- * Gets the value of an input.  The value is also trimmed.
- *
- * @param     name     name of the input to get
- * @param     options  optional. See InputOptions.
- * @returns   string
- */
-function getInput(name, options) {
-    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || '';
-    if (options && options.required && !val) {
-        throw new Error(`Input required and not supplied: ${name}`);
-    }
-    return val.trim();
-}
-exports.getInput = getInput;
-/**
- * Sets the value of an output.
- *
- * @param     name     name of the output to set
- * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function setOutput(name, value) {
-    command_1.issueCommand('set-output', { name }, value);
-}
-exports.setOutput = setOutput;
-/**
- * Enables or disables the echoing of commands into stdout for the rest of the step.
- * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
- *
- */
-function setCommandEcho(enabled) {
-    command_1.issue('echo', enabled ? 'on' : 'off');
-}
-exports.setCommandEcho = setCommandEcho;
-//-----------------------------------------------------------------------
-// Results
-//-----------------------------------------------------------------------
-/**
- * Sets the action status to failed.
- * When the action exits it will be with an exit code of 1
- * @param message add error issue message
- */
-function setFailed(message) {
-    process.exitCode = ExitCode.Failure;
-    error(message);
-}
-exports.setFailed = setFailed;
-//-----------------------------------------------------------------------
-// Logging Commands
-//-----------------------------------------------------------------------
-/**
- * Gets whether Actions Step Debug is on or not
- */
-function isDebug() {
-    return process.env['RUNNER_DEBUG'] === '1';
-}
-exports.isDebug = isDebug;
-/**
- * Writes debug message to user log
- * @param message debug message
- */
-function debug(message) {
-    command_1.issueCommand('debug', {}, message);
-}
-exports.debug = debug;
-/**
- * Adds an error issue
- * @param message error issue message. Errors will be converted to string via toString()
- */
-function error(message) {
-    command_1.issue('error', message instanceof Error ? message.toString() : message);
-}
-exports.error = error;
-/**
- * Adds an warning issue
- * @param message warning issue message. Errors will be converted to string via toString()
- */
-function warning(message) {
-    command_1.issue('warning', message instanceof Error ? message.toString() : message);
-}
-exports.warning = warning;
-/**
- * Writes info to log with console.log.
- * @param message info message
- */
-function info(message) {
-    process.stdout.write(message + os.EOL);
-}
-exports.info = info;
-/**
- * Begin an output group.
- *
- * Output until the next `groupEnd` will be foldable in this group
- *
- * @param name The name of the output group
- */
-function startGroup(name) {
-    command_1.issue('group', name);
-}
-exports.startGroup = startGroup;
-/**
- * End an output group.
- */
-function endGroup() {
-    command_1.issue('endgroup');
-}
-exports.endGroup = endGroup;
-/**
- * Wrap an asynchronous function call in a group.
- *
- * Returns the same type as the function itself.
- *
- * @param name The name of the group
- * @param fn The function to wrap in the group
- */
-function group(name, fn) {
-    return __awaiter(this, void 0, void 0, function* () {
-        startGroup(name);
-        let result;
-        try {
-            result = yield fn();
-        }
-        finally {
-            endGroup();
-        }
-        return result;
-    });
-}
-exports.group = group;
-//-----------------------------------------------------------------------
-// Wrapper action state
-//-----------------------------------------------------------------------
-/**
- * Saves state for current action, the state can only be retrieved by this action's post job execution.
- *
- * @param     name     name of the state to store
- * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function saveState(name, value) {
-    command_1.issueCommand('save-state', { name }, value);
-}
-exports.saveState = saveState;
-/**
- * Gets the value of an state set by this action's main execution.
- *
- * @param     name     name of the state to get
- * @returns   string
- */
-function getState(name) {
-    return process.env[`STATE_${name}`] || '';
-}
-exports.getState = getState;
-//# sourceMappingURL=core.js.map
-
-/***/ }),
+/* 392 */,
+/* 393 */,
 /* 394 */,
 /* 395 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const { create } = __webpack_require__(214);
-const core = __webpack_require__(393);
+const core = __webpack_require__(470);
 const noFileOptions = __webpack_require__(787);
 const { findFilesToUpload } = __webpack_require__(84);
 const { logger } = __webpack_require__(79);
@@ -11611,1171 +14333,40 @@ exports.Octokit = Octokit;
 /* 450 */,
 /* 451 */,
 /* 452 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const utils_1 = __webpack_require__(870);
 /**
- * class ArgumentParser
- *
- * Object for parsing command line strings into js objects.
- *
- * Inherited from [[ActionContainer]]
- **/
-
-
-var util    = __webpack_require__(669);
-var format  = __webpack_require__(669).format;
-var Path    = __webpack_require__(622);
-var sprintf = __webpack_require__(552).sprintf;
-
-// Constants
-var c = __webpack_require__(45);
-
-var $$ = __webpack_require__(255);
-
-var ActionContainer = __webpack_require__(614);
-
-// Errors
-var argumentErrorHelper = __webpack_require__(287);
-
-var HelpFormatter = __webpack_require__(532);
-
-var Namespace = __webpack_require__(515);
-
-
-/**
- * new ArgumentParser(options)
- *
- * Create a new ArgumentParser object.
- *
- * ##### Options:
- * - `prog`  The name of the program (default: Path.basename(process.argv[1]))
- * - `usage`  A usage message (default: auto-generated from arguments)
- * - `description`  A description of what the program does
- * - `epilog`  Text following the argument descriptions
- * - `parents`  Parsers whose arguments should be copied into this one
- * - `formatterClass`  HelpFormatter class for printing help messages
- * - `prefixChars`  Characters that prefix optional arguments
- * - `fromfilePrefixChars` Characters that prefix files containing additional arguments
- * - `argumentDefault`  The default value for all arguments
- * - `addHelp`  Add a -h/-help option
- * - `conflictHandler`  Specifies how to handle conflicting argument names
- * - `debug`  Enable debug mode. Argument errors throw exception in
- *   debug mode and process.exit in normal. Used for development and
- *   testing (default: false)
- *
- * See also [original guide][1]
- *
- * [1]:http://docs.python.org/dev/library/argparse.html#argumentparser-objects
- **/
-function ArgumentParser(options) {
-  if (!(this instanceof ArgumentParser)) {
-    return new ArgumentParser(options);
-  }
-  var self = this;
-  options = options || {};
-
-  options.description = (options.description || null);
-  options.argumentDefault = (options.argumentDefault || null);
-  options.prefixChars = (options.prefixChars || '-');
-  options.conflictHandler = (options.conflictHandler || 'error');
-  ActionContainer.call(this, options);
-
-  options.addHelp = typeof options.addHelp === 'undefined' || !!options.addHelp;
-  options.parents = options.parents || [];
-  // default program name
-  options.prog = (options.prog || Path.basename(process.argv[1]));
-  this.prog = options.prog;
-  this.usage = options.usage;
-  this.epilog = options.epilog;
-  this.version = options.version;
-
-  this.debug = (options.debug === true);
-
-  this.formatterClass = (options.formatterClass || HelpFormatter);
-  this.fromfilePrefixChars = options.fromfilePrefixChars || null;
-  this._positionals = this.addArgumentGroup({ title: 'Positional arguments' });
-  this._optionals = this.addArgumentGroup({ title: 'Optional arguments' });
-  this._subparsers = null;
-
-  // register types
-  function FUNCTION_IDENTITY(o) {
-    return o;
-  }
-  this.register('type', 'auto', FUNCTION_IDENTITY);
-  this.register('type', null, FUNCTION_IDENTITY);
-  this.register('type', 'int', function (x) {
-    var result = parseInt(x, 10);
-    if (isNaN(result)) {
-      throw new Error(x + ' is not a valid integer.');
-    }
-    return result;
-  });
-  this.register('type', 'float', function (x) {
-    var result = parseFloat(x);
-    if (isNaN(result)) {
-      throw new Error(x + ' is not a valid float.');
-    }
-    return result;
-  });
-  this.register('type', 'string', function (x) {
-    return '' + x;
-  });
-
-  // add help and version arguments if necessary
-  var defaultPrefix = (this.prefixChars.indexOf('-') > -1) ? '-' : this.prefixChars[0];
-  if (options.addHelp) {
-    this.addArgument(
-      [ defaultPrefix + 'h', defaultPrefix + defaultPrefix + 'help' ],
-      {
-        action: 'help',
-        defaultValue: c.SUPPRESS,
-        help: 'Show this help message and exit.'
-      }
-    );
-  }
-  if (typeof this.version !== 'undefined') {
-    this.addArgument(
-      [ defaultPrefix + 'v', defaultPrefix + defaultPrefix + 'version' ],
-      {
-        action: 'version',
-        version: this.version,
-        defaultValue: c.SUPPRESS,
-        help: "Show program's version number and exit."
-      }
-    );
-  }
-
-  // add parent arguments and defaults
-  options.parents.forEach(function (parent) {
-    self._addContainerActions(parent);
-    if (typeof parent._defaults !== 'undefined') {
-      for (var defaultKey in parent._defaults) {
-        if (parent._defaults.hasOwnProperty(defaultKey)) {
-          self._defaults[defaultKey] = parent._defaults[defaultKey];
+ * Used for managing http clients during either upload or download
+ */
+class HttpManager {
+    constructor(clientCount, userAgent) {
+        if (clientCount < 1) {
+            throw new Error('There must be at least one client');
         }
-      }
+        this.userAgent = userAgent;
+        this.clients = new Array(clientCount).fill(utils_1.createHttpClient(userAgent));
     }
-  });
+    getClient(index) {
+        return this.clients[index];
+    }
+    // client disposal is necessary if a keep-alive connection is used to properly close the connection
+    // for more information see: https://github.com/actions/http-client/blob/04e5ad73cd3fd1f5610a32116b0759eddf6570d2/index.ts#L292
+    disposeAndReplaceClient(index) {
+        this.clients[index].dispose();
+        this.clients[index] = utils_1.createHttpClient(this.userAgent);
+    }
+    disposeAndReplaceAllClients() {
+        for (const [index] of this.clients.entries()) {
+            this.disposeAndReplaceClient(index);
+        }
+    }
 }
-
-util.inherits(ArgumentParser, ActionContainer);
-
-/**
- * ArgumentParser#addSubparsers(options) -> [[ActionSubparsers]]
- * - options (object): hash of options see [[ActionSubparsers.new]]
- *
- * See also [subcommands][1]
- *
- * [1]:http://docs.python.org/dev/library/argparse.html#sub-commands
- **/
-ArgumentParser.prototype.addSubparsers = function (options) {
-  if (this._subparsers) {
-    this.error('Cannot have multiple subparser arguments.');
-  }
-
-  options = options || {};
-  options.debug = (this.debug === true);
-  options.optionStrings = [];
-  options.parserClass = (options.parserClass || ArgumentParser);
-
-
-  if (!!options.title || !!options.description) {
-
-    this._subparsers = this.addArgumentGroup({
-      title: (options.title || 'subcommands'),
-      description: options.description
-    });
-    delete options.title;
-    delete options.description;
-
-  } else {
-    this._subparsers = this._positionals;
-  }
-
-  // prog defaults to the usage message of this parser, skipping
-  // optional arguments and with no "usage:" prefix
-  if (!options.prog) {
-    var formatter = this._getFormatter();
-    var positionals = this._getPositionalActions();
-    var groups = this._mutuallyExclusiveGroups;
-    formatter.addUsage(this.usage, positionals, groups, '');
-    options.prog = formatter.formatHelp().trim();
-  }
-
-  // create the parsers action and add it to the positionals list
-  var ParsersClass = this._popActionClass(options, 'parsers');
-  var action = new ParsersClass(options);
-  this._subparsers._addAction(action);
-
-  // return the created parsers action
-  return action;
-};
-
-ArgumentParser.prototype._addAction = function (action) {
-  if (action.isOptional()) {
-    this._optionals._addAction(action);
-  } else {
-    this._positionals._addAction(action);
-  }
-  return action;
-};
-
-ArgumentParser.prototype._getOptionalActions = function () {
-  return this._actions.filter(function (action) {
-    return action.isOptional();
-  });
-};
-
-ArgumentParser.prototype._getPositionalActions = function () {
-  return this._actions.filter(function (action) {
-    return action.isPositional();
-  });
-};
-
-
-/**
- * ArgumentParser#parseArgs(args, namespace) -> Namespace|Object
- * - args (array): input elements
- * - namespace (Namespace|Object): result object
- *
- * Parsed args and throws error if some arguments are not recognized
- *
- * See also [original guide][1]
- *
- * [1]:http://docs.python.org/dev/library/argparse.html#the-parse-args-method
- **/
-ArgumentParser.prototype.parseArgs = function (args, namespace) {
-  var argv;
-  var result = this.parseKnownArgs(args, namespace);
-
-  args = result[0];
-  argv = result[1];
-  if (argv && argv.length > 0) {
-    this.error(
-      format('Unrecognized arguments: %s.', argv.join(' '))
-    );
-  }
-  return args;
-};
-
-/**
- * ArgumentParser#parseKnownArgs(args, namespace) -> array
- * - args (array): input options
- * - namespace (Namespace|Object): result object
- *
- * Parse known arguments and return tuple of result object
- * and unknown args
- *
- * See also [original guide][1]
- *
- * [1]:http://docs.python.org/dev/library/argparse.html#partial-parsing
- **/
-ArgumentParser.prototype.parseKnownArgs = function (args, namespace) {
-  var self = this;
-
-  // args default to the system args
-  args = args || process.argv.slice(2);
-
-  // default Namespace built from parser defaults
-  namespace = namespace || new Namespace();
-
-  self._actions.forEach(function (action) {
-    if (action.dest !== c.SUPPRESS) {
-      if (!$$.has(namespace, action.dest)) {
-        if (action.defaultValue !== c.SUPPRESS) {
-          var defaultValue = action.defaultValue;
-          if (typeof action.defaultValue === 'string') {
-            defaultValue = self._getValue(action, defaultValue);
-          }
-          namespace[action.dest] = defaultValue;
-        }
-      }
-    }
-  });
-
-  Object.keys(self._defaults).forEach(function (dest) {
-    namespace[dest] = self._defaults[dest];
-  });
-
-  // parse the arguments and exit if there are any errors
-  try {
-    var res = this._parseKnownArgs(args, namespace);
-
-    namespace = res[0];
-    args = res[1];
-    if ($$.has(namespace, c._UNRECOGNIZED_ARGS_ATTR)) {
-      args = $$.arrayUnion(args, namespace[c._UNRECOGNIZED_ARGS_ATTR]);
-      delete namespace[c._UNRECOGNIZED_ARGS_ATTR];
-    }
-    return [ namespace, args ];
-  } catch (e) {
-    this.error(e);
-  }
-};
-
-ArgumentParser.prototype._parseKnownArgs = function (argStrings, namespace) {
-  var self = this;
-
-  var extras = [];
-
-  // replace arg strings that are file references
-  if (this.fromfilePrefixChars !== null) {
-    argStrings = this._readArgsFromFiles(argStrings);
-  }
-  // map all mutually exclusive arguments to the other arguments
-  // they can't occur with
-  // Python has 'conflicts = action_conflicts.setdefault(mutex_action, [])'
-  // though I can't conceive of a way in which an action could be a member
-  // of two different mutually exclusive groups.
-
-  function actionHash(action) {
-    // some sort of hashable key for this action
-    // action itself cannot be a key in actionConflicts
-    // I think getName() (join of optionStrings) is unique enough
-    return action.getName();
-  }
-
-  var conflicts, key;
-  var actionConflicts = {};
-
-  this._mutuallyExclusiveGroups.forEach(function (mutexGroup) {
-    mutexGroup._groupActions.forEach(function (mutexAction, i, groupActions) {
-      key = actionHash(mutexAction);
-      if (!$$.has(actionConflicts, key)) {
-        actionConflicts[key] = [];
-      }
-      conflicts = actionConflicts[key];
-      conflicts.push.apply(conflicts, groupActions.slice(0, i));
-      conflicts.push.apply(conflicts, groupActions.slice(i + 1));
-    });
-  });
-
-  // find all option indices, and determine the arg_string_pattern
-  // which has an 'O' if there is an option at an index,
-  // an 'A' if there is an argument, or a '-' if there is a '--'
-  var optionStringIndices = {};
-
-  var argStringPatternParts = [];
-
-  argStrings.forEach(function (argString, argStringIndex) {
-    if (argString === '--') {
-      argStringPatternParts.push('-');
-      while (argStringIndex < argStrings.length) {
-        argStringPatternParts.push('A');
-        argStringIndex++;
-      }
-    } else {
-      // otherwise, add the arg to the arg strings
-      // and note the index if it was an option
-      var pattern;
-      var optionTuple = self._parseOptional(argString);
-      if (!optionTuple) {
-        pattern = 'A';
-      } else {
-        optionStringIndices[argStringIndex] = optionTuple;
-        pattern = 'O';
-      }
-      argStringPatternParts.push(pattern);
-    }
-  });
-  var argStringsPattern = argStringPatternParts.join('');
-
-  var seenActions = [];
-  var seenNonDefaultActions = [];
-
-
-  function takeAction(action, argumentStrings, optionString) {
-    seenActions.push(action);
-    var argumentValues = self._getValues(action, argumentStrings);
-
-    // error if this argument is not allowed with other previously
-    // seen arguments, assuming that actions that use the default
-    // value don't really count as "present"
-    if (argumentValues !== action.defaultValue) {
-      seenNonDefaultActions.push(action);
-      if (actionConflicts[actionHash(action)]) {
-        actionConflicts[actionHash(action)].forEach(function (actionConflict) {
-          if (seenNonDefaultActions.indexOf(actionConflict) >= 0) {
-            throw argumentErrorHelper(
-              action,
-              format('Not allowed with argument "%s".', actionConflict.getName())
-            );
-          }
-        });
-      }
-    }
-
-    if (argumentValues !== c.SUPPRESS) {
-      action.call(self, namespace, argumentValues, optionString);
-    }
-  }
-
-  function consumeOptional(startIndex) {
-    // get the optional identified at this index
-    var optionTuple = optionStringIndices[startIndex];
-    var action = optionTuple[0];
-    var optionString = optionTuple[1];
-    var explicitArg = optionTuple[2];
-
-    // identify additional optionals in the same arg string
-    // (e.g. -xyz is the same as -x -y -z if no args are required)
-    var actionTuples = [];
-
-    var args, argCount, start, stop;
-
-    for (;;) {
-      if (!action) {
-        extras.push(argStrings[startIndex]);
-        return startIndex + 1;
-      }
-      if (explicitArg) {
-        argCount = self._matchArgument(action, 'A');
-
-        // if the action is a single-dash option and takes no
-        // arguments, try to parse more single-dash options out
-        // of the tail of the option string
-        var chars = self.prefixChars;
-        if (argCount === 0 && chars.indexOf(optionString[1]) < 0) {
-          actionTuples.push([ action, [], optionString ]);
-          optionString = optionString[0] + explicitArg[0];
-          var newExplicitArg = explicitArg.slice(1) || null;
-          var optionalsMap = self._optionStringActions;
-
-          if (Object.keys(optionalsMap).indexOf(optionString) >= 0) {
-            action = optionalsMap[optionString];
-            explicitArg = newExplicitArg;
-          } else {
-            throw argumentErrorHelper(action, sprintf('ignored explicit argument %r', explicitArg));
-          }
-        } else if (argCount === 1) {
-          // if the action expect exactly one argument, we've
-          // successfully matched the option; exit the loop
-          stop = startIndex + 1;
-          args = [ explicitArg ];
-          actionTuples.push([ action, args, optionString ]);
-          break;
-        } else {
-          // error if a double-dash option did not use the
-          // explicit argument
-          throw argumentErrorHelper(action, sprintf('ignored explicit argument %r', explicitArg));
-        }
-      } else {
-        // if there is no explicit argument, try to match the
-        // optional's string arguments with the following strings
-        // if successful, exit the loop
-
-        start = startIndex + 1;
-        var selectedPatterns = argStringsPattern.substr(start);
-
-        argCount = self._matchArgument(action, selectedPatterns);
-        stop = start + argCount;
-
-
-        args = argStrings.slice(start, stop);
-
-        actionTuples.push([ action, args, optionString ]);
-        break;
-      }
-
-    }
-
-    // add the Optional to the list and return the index at which
-    // the Optional's string args stopped
-    if (actionTuples.length < 1) {
-      throw new Error('length should be > 0');
-    }
-    for (var i = 0; i < actionTuples.length; i++) {
-      takeAction.apply(self, actionTuples[i]);
-    }
-    return stop;
-  }
-
-  // the list of Positionals left to be parsed; this is modified
-  // by consume_positionals()
-  var positionals = self._getPositionalActions();
-
-  function consumePositionals(startIndex) {
-    // match as many Positionals as possible
-    var selectedPattern = argStringsPattern.substr(startIndex);
-    var argCounts = self._matchArgumentsPartial(positionals, selectedPattern);
-
-    // slice off the appropriate arg strings for each Positional
-    // and add the Positional and its args to the list
-    for (var i = 0; i < positionals.length; i++) {
-      var action = positionals[i];
-      var argCount = argCounts[i];
-      if (typeof argCount === 'undefined') {
-        continue;
-      }
-      var args = argStrings.slice(startIndex, startIndex + argCount);
-
-      startIndex += argCount;
-      takeAction(action, args);
-    }
-
-    // slice off the Positionals that we just parsed and return the
-    // index at which the Positionals' string args stopped
-    positionals = positionals.slice(argCounts.length);
-    return startIndex;
-  }
-
-  // consume Positionals and Optionals alternately, until we have
-  // passed the last option string
-  var startIndex = 0;
-  var position;
-
-  var maxOptionStringIndex = -1;
-
-  Object.keys(optionStringIndices).forEach(function (position) {
-    maxOptionStringIndex = Math.max(maxOptionStringIndex, parseInt(position, 10));
-  });
-
-  var positionalsEndIndex, nextOptionStringIndex;
-
-  while (startIndex <= maxOptionStringIndex) {
-    // consume any Positionals preceding the next option
-    nextOptionStringIndex = null;
-    for (position in optionStringIndices) {
-      if (!optionStringIndices.hasOwnProperty(position)) { continue; }
-
-      position = parseInt(position, 10);
-      if (position >= startIndex) {
-        if (nextOptionStringIndex !== null) {
-          nextOptionStringIndex = Math.min(nextOptionStringIndex, position);
-        } else {
-          nextOptionStringIndex = position;
-        }
-      }
-    }
-
-    if (startIndex !== nextOptionStringIndex) {
-      positionalsEndIndex = consumePositionals(startIndex);
-      // only try to parse the next optional if we didn't consume
-      // the option string during the positionals parsing
-      if (positionalsEndIndex > startIndex) {
-        startIndex = positionalsEndIndex;
-        continue;
-      } else {
-        startIndex = positionalsEndIndex;
-      }
-    }
-
-    // if we consumed all the positionals we could and we're not
-    // at the index of an option string, there were extra arguments
-    if (!optionStringIndices[startIndex]) {
-      var strings = argStrings.slice(startIndex, nextOptionStringIndex);
-      extras = extras.concat(strings);
-      startIndex = nextOptionStringIndex;
-    }
-    // consume the next optional and any arguments for it
-    startIndex = consumeOptional(startIndex);
-  }
-
-  // consume any positionals following the last Optional
-  var stopIndex = consumePositionals(startIndex);
-
-  // if we didn't consume all the argument strings, there were extras
-  extras = extras.concat(argStrings.slice(stopIndex));
-
-  // if we didn't use all the Positional objects, there were too few
-  // arg strings supplied.
-  if (positionals.length > 0) {
-    self.error('too few arguments');
-  }
-
-  // make sure all required actions were present
-  self._actions.forEach(function (action) {
-    if (action.required) {
-      if (seenActions.indexOf(action) < 0) {
-        self.error(format('Argument "%s" is required', action.getName()));
-      }
-    }
-  });
-
-  // make sure all required groups have one option present
-  var actionUsed = false;
-  self._mutuallyExclusiveGroups.forEach(function (group) {
-    if (group.required) {
-      actionUsed = group._groupActions.some(function (action) {
-        return seenNonDefaultActions.indexOf(action) !== -1;
-      });
-
-      // if no actions were used, report the error
-      if (!actionUsed) {
-        var names = [];
-        group._groupActions.forEach(function (action) {
-          if (action.help !== c.SUPPRESS) {
-            names.push(action.getName());
-          }
-        });
-        names = names.join(' ');
-        var msg = 'one of the arguments ' + names + ' is required';
-        self.error(msg);
-      }
-    }
-  });
-
-  // return the updated namespace and the extra arguments
-  return [ namespace, extras ];
-};
-
-ArgumentParser.prototype._readArgsFromFiles = function (argStrings) {
-  // expand arguments referencing files
-  var self = this;
-  var fs = __webpack_require__(747);
-  var newArgStrings = [];
-  argStrings.forEach(function (argString) {
-    if (self.fromfilePrefixChars.indexOf(argString[0]) < 0) {
-      // for regular arguments, just add them back into the list
-      newArgStrings.push(argString);
-    } else {
-      // replace arguments referencing files with the file content
-      try {
-        var argstrs = [];
-        var filename = argString.slice(1);
-        var content = fs.readFileSync(filename, 'utf8');
-        content = content.trim().split('\n');
-        content.forEach(function (argLine) {
-          self.convertArgLineToArgs(argLine).forEach(function (arg) {
-            argstrs.push(arg);
-          });
-          argstrs = self._readArgsFromFiles(argstrs);
-        });
-        newArgStrings.push.apply(newArgStrings, argstrs);
-      } catch (error) {
-        return self.error(error.message);
-      }
-    }
-  });
-  return newArgStrings;
-};
-
-ArgumentParser.prototype.convertArgLineToArgs = function (argLine) {
-  return [ argLine ];
-};
-
-ArgumentParser.prototype._matchArgument = function (action, regexpArgStrings) {
-
-  // match the pattern for this action to the arg strings
-  var regexpNargs = new RegExp('^' + this._getNargsPattern(action));
-  var matches = regexpArgStrings.match(regexpNargs);
-  var message;
-
-  // throw an exception if we weren't able to find a match
-  if (!matches) {
-    switch (action.nargs) {
-      /*eslint-disable no-undefined*/
-      case undefined:
-      case null:
-        message = 'Expected one argument.';
-        break;
-      case c.OPTIONAL:
-        message = 'Expected at most one argument.';
-        break;
-      case c.ONE_OR_MORE:
-        message = 'Expected at least one argument.';
-        break;
-      default:
-        message = 'Expected %s argument(s)';
-    }
-
-    throw argumentErrorHelper(
-      action,
-      format(message, action.nargs)
-    );
-  }
-  // return the number of arguments matched
-  return matches[1].length;
-};
-
-ArgumentParser.prototype._matchArgumentsPartial = function (actions, regexpArgStrings) {
-  // progressively shorten the actions list by slicing off the
-  // final actions until we find a match
-  var self = this;
-  var result = [];
-  var actionSlice, pattern, matches;
-  var i, j;
-
-  function getLength(string) {
-    return string.length;
-  }
-
-  for (i = actions.length; i > 0; i--) {
-    pattern = '';
-    actionSlice = actions.slice(0, i);
-    for (j = 0; j < actionSlice.length; j++) {
-      pattern += self._getNargsPattern(actionSlice[j]);
-    }
-
-    pattern = new RegExp('^' + pattern);
-    matches = regexpArgStrings.match(pattern);
-
-    if (matches && matches.length > 0) {
-      // need only groups
-      matches = matches.splice(1);
-      result = result.concat(matches.map(getLength));
-      break;
-    }
-  }
-
-  // return the list of arg string counts
-  return result;
-};
-
-ArgumentParser.prototype._parseOptional = function (argString) {
-  var action, optionString, argExplicit, optionTuples;
-
-  // if it's an empty string, it was meant to be a positional
-  if (!argString) {
-    return null;
-  }
-
-  // if it doesn't start with a prefix, it was meant to be positional
-  if (this.prefixChars.indexOf(argString[0]) < 0) {
-    return null;
-  }
-
-  // if the option string is present in the parser, return the action
-  if (this._optionStringActions[argString]) {
-    return [ this._optionStringActions[argString], argString, null ];
-  }
-
-  // if it's just a single character, it was meant to be positional
-  if (argString.length === 1) {
-    return null;
-  }
-
-  // if the option string before the "=" is present, return the action
-  if (argString.indexOf('=') >= 0) {
-    optionString = argString.split('=', 1)[0];
-    argExplicit = argString.slice(optionString.length + 1);
-
-    if (this._optionStringActions[optionString]) {
-      action = this._optionStringActions[optionString];
-      return [ action, optionString, argExplicit ];
-    }
-  }
-
-  // search through all possible prefixes of the option string
-  // and all actions in the parser for possible interpretations
-  optionTuples = this._getOptionTuples(argString);
-
-  // if multiple actions match, the option string was ambiguous
-  if (optionTuples.length > 1) {
-    var optionStrings = optionTuples.map(function (optionTuple) {
-      return optionTuple[1];
-    });
-    this.error(format(
-          'Ambiguous option: "%s" could match %s.',
-          argString, optionStrings.join(', ')
-    ));
-  // if exactly one action matched, this segmentation is good,
-  // so return the parsed action
-  } else if (optionTuples.length === 1) {
-    return optionTuples[0];
-  }
-
-  // if it was not found as an option, but it looks like a negative
-  // number, it was meant to be positional
-  // unless there are negative-number-like options
-  if (argString.match(this._regexpNegativeNumber)) {
-    if (!this._hasNegativeNumberOptionals.some(Boolean)) {
-      return null;
-    }
-  }
-  // if it contains a space, it was meant to be a positional
-  if (argString.search(' ') >= 0) {
-    return null;
-  }
-
-  // it was meant to be an optional but there is no such option
-  // in this parser (though it might be a valid option in a subparser)
-  return [ null, argString, null ];
-};
-
-ArgumentParser.prototype._getOptionTuples = function (optionString) {
-  var result = [];
-  var chars = this.prefixChars;
-  var optionPrefix;
-  var argExplicit;
-  var action;
-  var actionOptionString;
-
-  // option strings starting with two prefix characters are only split at
-  // the '='
-  if (chars.indexOf(optionString[0]) >= 0 && chars.indexOf(optionString[1]) >= 0) {
-    if (optionString.indexOf('=') >= 0) {
-      var optionStringSplit = optionString.split('=', 1);
-
-      optionPrefix = optionStringSplit[0];
-      argExplicit = optionStringSplit[1];
-    } else {
-      optionPrefix = optionString;
-      argExplicit = null;
-    }
-
-    for (actionOptionString in this._optionStringActions) {
-      if (actionOptionString.substr(0, optionPrefix.length) === optionPrefix) {
-        action = this._optionStringActions[actionOptionString];
-        result.push([ action, actionOptionString, argExplicit ]);
-      }
-    }
-
-  // single character options can be concatenated with their arguments
-  // but multiple character options always have to have their argument
-  // separate
-  } else if (chars.indexOf(optionString[0]) >= 0 && chars.indexOf(optionString[1]) < 0) {
-    optionPrefix = optionString;
-    argExplicit = null;
-    var optionPrefixShort = optionString.substr(0, 2);
-    var argExplicitShort = optionString.substr(2);
-
-    for (actionOptionString in this._optionStringActions) {
-      if (!$$.has(this._optionStringActions, actionOptionString)) continue;
-
-      action = this._optionStringActions[actionOptionString];
-      if (actionOptionString === optionPrefixShort) {
-        result.push([ action, actionOptionString, argExplicitShort ]);
-      } else if (actionOptionString.substr(0, optionPrefix.length) === optionPrefix) {
-        result.push([ action, actionOptionString, argExplicit ]);
-      }
-    }
-
-  // shouldn't ever get here
-  } else {
-    throw new Error(format('Unexpected option string: %s.', optionString));
-  }
-  // return the collected option tuples
-  return result;
-};
-
-ArgumentParser.prototype._getNargsPattern = function (action) {
-  // in all examples below, we have to allow for '--' args
-  // which are represented as '-' in the pattern
-  var regexpNargs;
-
-  switch (action.nargs) {
-    // the default (null) is assumed to be a single argument
-    case undefined:
-    case null:
-      regexpNargs = '(-*A-*)';
-      break;
-    // allow zero or more arguments
-    case c.OPTIONAL:
-      regexpNargs = '(-*A?-*)';
-      break;
-    // allow zero or more arguments
-    case c.ZERO_OR_MORE:
-      regexpNargs = '(-*[A-]*)';
-      break;
-    // allow one or more arguments
-    case c.ONE_OR_MORE:
-      regexpNargs = '(-*A[A-]*)';
-      break;
-    // allow any number of options or arguments
-    case c.REMAINDER:
-      regexpNargs = '([-AO]*)';
-      break;
-    // allow one argument followed by any number of options or arguments
-    case c.PARSER:
-      regexpNargs = '(-*A[-AO]*)';
-      break;
-    // all others should be integers
-    default:
-      regexpNargs = '(-*' + $$.repeat('-*A', action.nargs) + '-*)';
-  }
-
-  // if this is an optional action, -- is not allowed
-  if (action.isOptional()) {
-    regexpNargs = regexpNargs.replace(/-\*/g, '');
-    regexpNargs = regexpNargs.replace(/-/g, '');
-  }
-
-  // return the pattern
-  return regexpNargs;
-};
-
-//
-// Value conversion methods
-//
-
-ArgumentParser.prototype._getValues = function (action, argStrings) {
-  var self = this;
-
-  // for everything but PARSER args, strip out '--'
-  if (action.nargs !== c.PARSER && action.nargs !== c.REMAINDER) {
-    argStrings = argStrings.filter(function (arrayElement) {
-      return arrayElement !== '--';
-    });
-  }
-
-  var value, argString;
-
-  // optional argument produces a default when not present
-  if (argStrings.length === 0 && action.nargs === c.OPTIONAL) {
-
-    value = (action.isOptional()) ? action.constant : action.defaultValue;
-
-    if (typeof (value) === 'string') {
-      value = this._getValue(action, value);
-      this._checkValue(action, value);
-    }
-
-  // when nargs='*' on a positional, if there were no command-line
-  // args, use the default if it is anything other than None
-  } else if (argStrings.length === 0 && action.nargs === c.ZERO_OR_MORE &&
-    action.optionStrings.length === 0) {
-
-    value = (action.defaultValue || argStrings);
-    this._checkValue(action, value);
-
-  // single argument or optional argument produces a single value
-  } else if (argStrings.length === 1 &&
-        (!action.nargs || action.nargs === c.OPTIONAL)) {
-
-    argString = argStrings[0];
-    value = this._getValue(action, argString);
-    this._checkValue(action, value);
-
-  // REMAINDER arguments convert all values, checking none
-  } else if (action.nargs === c.REMAINDER) {
-    value = argStrings.map(function (v) {
-      return self._getValue(action, v);
-    });
-
-  // PARSER arguments convert all values, but check only the first
-  } else if (action.nargs === c.PARSER) {
-    value = argStrings.map(function (v) {
-      return self._getValue(action, v);
-    });
-    this._checkValue(action, value[0]);
-
-  // all other types of nargs produce a list
-  } else {
-    value = argStrings.map(function (v) {
-      return self._getValue(action, v);
-    });
-    value.forEach(function (v) {
-      self._checkValue(action, v);
-    });
-  }
-
-  // return the converted value
-  return value;
-};
-
-ArgumentParser.prototype._getValue = function (action, argString) {
-  var result;
-
-  var typeFunction = this._registryGet('type', action.type, action.type);
-  if (typeof typeFunction !== 'function') {
-    var message = format('%s is not callable', typeFunction);
-    throw argumentErrorHelper(action, message);
-  }
-
-  // convert the value to the appropriate type
-  try {
-    result = typeFunction(argString);
-
-    // ArgumentTypeErrors indicate errors
-    // If action.type is not a registered string, it is a function
-    // Try to deduce its name for inclusion in the error message
-    // Failing that, include the error message it raised.
-  } catch (e) {
-    var name = null;
-    if (typeof action.type === 'string') {
-      name = action.type;
-    } else {
-      name = action.type.name || action.type.displayName || '<function>';
-    }
-    var msg = format('Invalid %s value: %s', name, argString);
-    if (name === '<function>') { msg += '\n' + e.message; }
-    throw argumentErrorHelper(action, msg);
-  }
-  // return the converted value
-  return result;
-};
-
-ArgumentParser.prototype._checkValue = function (action, value) {
-  // converted value must be one of the choices (if specified)
-  var choices = action.choices;
-  if (choices) {
-    // choise for argument can by array or string
-    if ((typeof choices === 'string' || Array.isArray(choices)) &&
-        choices.indexOf(value) !== -1) {
-      return;
-    }
-    // choise for subparsers can by only hash
-    if (typeof choices === 'object' && !Array.isArray(choices) && choices[value]) {
-      return;
-    }
-
-    if (typeof choices === 'string') {
-      choices = choices.split('').join(', ');
-    } else if (Array.isArray(choices)) {
-      choices =  choices.join(', ');
-    } else {
-      choices =  Object.keys(choices).join(', ');
-    }
-    var message = format('Invalid choice: %s (choose from [%s])', value, choices);
-    throw argumentErrorHelper(action, message);
-  }
-};
-
-//
-// Help formatting methods
-//
-
-/**
- * ArgumentParser#formatUsage -> string
- *
- * Return usage string
- *
- * See also [original guide][1]
- *
- * [1]:http://docs.python.org/dev/library/argparse.html#printing-help
- **/
-ArgumentParser.prototype.formatUsage = function () {
-  var formatter = this._getFormatter();
-  formatter.addUsage(this.usage, this._actions, this._mutuallyExclusiveGroups);
-  return formatter.formatHelp();
-};
-
-/**
- * ArgumentParser#formatHelp -> string
- *
- * Return help
- *
- * See also [original guide][1]
- *
- * [1]:http://docs.python.org/dev/library/argparse.html#printing-help
- **/
-ArgumentParser.prototype.formatHelp = function () {
-  var formatter = this._getFormatter();
-
-  // usage
-  formatter.addUsage(this.usage, this._actions, this._mutuallyExclusiveGroups);
-
-  // description
-  formatter.addText(this.description);
-
-  // positionals, optionals and user-defined groups
-  this._actionGroups.forEach(function (actionGroup) {
-    formatter.startSection(actionGroup.title);
-    formatter.addText(actionGroup.description);
-    formatter.addArguments(actionGroup._groupActions);
-    formatter.endSection();
-  });
-
-  // epilog
-  formatter.addText(this.epilog);
-
-  // determine help from format above
-  return formatter.formatHelp();
-};
-
-ArgumentParser.prototype._getFormatter = function () {
-  var FormatterClass = this.formatterClass;
-  var formatter = new FormatterClass({ prog: this.prog });
-  return formatter;
-};
-
-//
-//  Print functions
-//
-
-/**
- * ArgumentParser#printUsage() -> Void
- *
- * Print usage
- *
- * See also [original guide][1]
- *
- * [1]:http://docs.python.org/dev/library/argparse.html#printing-help
- **/
-ArgumentParser.prototype.printUsage = function () {
-  this._printMessage(this.formatUsage());
-};
-
-/**
- * ArgumentParser#printHelp() -> Void
- *
- * Print help
- *
- * See also [original guide][1]
- *
- * [1]:http://docs.python.org/dev/library/argparse.html#printing-help
- **/
-ArgumentParser.prototype.printHelp = function () {
-  this._printMessage(this.formatHelp());
-};
-
-ArgumentParser.prototype._printMessage = function (message, stream) {
-  if (!stream) {
-    stream = process.stdout;
-  }
-  if (message) {
-    stream.write('' + message);
-  }
-};
-
-//
-//  Exit functions
-//
-
-/**
- * ArgumentParser#exit(status=0, message) -> Void
- * - status (int): exit status
- * - message (string): message
- *
- * Print message in stderr/stdout and exit program
- **/
-ArgumentParser.prototype.exit = function (status, message) {
-  if (message) {
-    if (status === 0) {
-      this._printMessage(message);
-    } else {
-      this._printMessage(message, process.stderr);
-    }
-  }
-
-  process.exit(status);
-};
-
-/**
- * ArgumentParser#error(message) -> Void
- * - err (Error|string): message
- *
- * Error method Prints a usage message incorporating the message to stderr and
- * exits. If you override this in a subclass,
- * it should not return -- it should
- * either exit or throw an exception.
- *
- **/
-ArgumentParser.prototype.error = function (err) {
-  var message;
-  if (err instanceof Error) {
-    if (this.debug === true) {
-      throw err;
-    }
-    message = err.message;
-  } else {
-    message = err;
-  }
-  var msg = format('%s: error: %s', this.prog, message) + c.EOL;
-
-  if (this.debug === true) {
-    throw new Error(msg);
-  }
-
-  this.printUsage(process.stderr);
-
-  return this.exit(2, msg);
-};
-
-module.exports = ArgumentParser;
-
+exports.HttpManager = HttpManager;
+//# sourceMappingURL=http-manager.js.map
 
 /***/ }),
 /* 453 */
@@ -13031,7 +14622,7 @@ FetchError.prototype.name = 'FetchError';
 
 let convert;
 try {
-	convert = __webpack_require__(18).convert;
+	convert = __webpack_require__(545).convert;
 } catch (e) {}
 
 const INTERNALS = Symbol('Body internals');
@@ -16175,7 +17766,80 @@ module.exports.safeLoad    = safeLoad;
 
 
 /***/ }),
-/* 458 */,
+/* 458 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+"use strict";
+// Limited implementation of python % string operator, supports only %s and %r for now
+// (other formats are not used here, but may appear in custom templates)
+
+
+
+const { inspect } = __webpack_require__(669)
+
+
+module.exports = function sub(pattern, ...values) {
+    let regex = /%(?:(%)|(-)?(\*)?(?:\((\w+)\))?([A-Za-z]))/g
+
+    let result = pattern.replace(regex, function (_, is_literal, is_left_align, is_padded, name, format) {
+        if (is_literal) return '%'
+
+        let padded_count = 0
+        if (is_padded) {
+            if (values.length === 0) throw new TypeError('not enough arguments for format string')
+            padded_count = values.shift()
+            if (!Number.isInteger(padded_count)) throw new TypeError('* wants int')
+        }
+
+        let str
+        if (name !== undefined) {
+            let dict = values[0]
+            if (typeof dict !== 'object' || dict === null) throw new TypeError('format requires a mapping')
+            if (!(name in dict)) throw new TypeError(`no such key: '${name}'`)
+            str = dict[name]
+        } else {
+            if (values.length === 0) throw new TypeError('not enough arguments for format string')
+            str = values.shift()
+        }
+
+        switch (format) {
+            case 's':
+                str = String(str)
+                break
+            case 'r':
+                str = inspect(str)
+                break
+            case 'd':
+            case 'i':
+                if (typeof str !== 'number') {
+                    throw new TypeError(`%${format} format: a number is required, not ${typeof str}`)
+                }
+                str = String(str.toFixed(0))
+                break
+            default:
+                throw new TypeError(`unsupported format character '${format}'`)
+        }
+
+        if (padded_count > 0) {
+            return is_left_align ? str.padEnd(padded_count) : str.padStart(padded_count)
+        } else {
+            return str
+        }
+    })
+
+    if (values.length) {
+        if (values.length === 1 && typeof values[0] === 'object' && values[0] !== null) {
+            // mapping
+        } else {
+            throw new TypeError('not all arguments converted during string formatting')
+        }
+    }
+
+    return result
+}
+
+
+/***/ }),
 /* 459 */,
 /* 460 */,
 /* 461 */,
@@ -16317,13 +17981,247 @@ module.exports = {
 
 /***/ }),
 /* 470 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
-
-module.exports = __webpack_require__(600);
-
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const command_1 = __webpack_require__(431);
+const file_command_1 = __webpack_require__(102);
+const utils_1 = __webpack_require__(82);
+const os = __importStar(__webpack_require__(87));
+const path = __importStar(__webpack_require__(622));
+/**
+ * The code to exit an action
+ */
+var ExitCode;
+(function (ExitCode) {
+    /**
+     * A code indicating that the action was successful
+     */
+    ExitCode[ExitCode["Success"] = 0] = "Success";
+    /**
+     * A code indicating that the action was a failure
+     */
+    ExitCode[ExitCode["Failure"] = 1] = "Failure";
+})(ExitCode = exports.ExitCode || (exports.ExitCode = {}));
+//-----------------------------------------------------------------------
+// Variables
+//-----------------------------------------------------------------------
+/**
+ * Sets env variable for this action and future actions in the job
+ * @param name the name of the variable to set
+ * @param val the value of the variable. Non-string values will be converted to a string via JSON.stringify
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function exportVariable(name, val) {
+    const convertedVal = utils_1.toCommandValue(val);
+    process.env[name] = convertedVal;
+    const filePath = process.env['GITHUB_ENV'] || '';
+    if (filePath) {
+        const delimiter = '_GitHubActionsFileCommandDelimeter_';
+        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
+        file_command_1.issueCommand('ENV', commandValue);
+    }
+    else {
+        command_1.issueCommand('set-env', { name }, convertedVal);
+    }
+}
+exports.exportVariable = exportVariable;
+/**
+ * Registers a secret which will get masked from logs
+ * @param secret value of the secret
+ */
+function setSecret(secret) {
+    command_1.issueCommand('add-mask', {}, secret);
+}
+exports.setSecret = setSecret;
+/**
+ * Prepends inputPath to the PATH (for this action and future actions)
+ * @param inputPath
+ */
+function addPath(inputPath) {
+    const filePath = process.env['GITHUB_PATH'] || '';
+    if (filePath) {
+        file_command_1.issueCommand('PATH', inputPath);
+    }
+    else {
+        command_1.issueCommand('add-path', {}, inputPath);
+    }
+    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
+}
+exports.addPath = addPath;
+/**
+ * Gets the value of an input.  The value is also trimmed.
+ *
+ * @param     name     name of the input to get
+ * @param     options  optional. See InputOptions.
+ * @returns   string
+ */
+function getInput(name, options) {
+    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || '';
+    if (options && options.required && !val) {
+        throw new Error(`Input required and not supplied: ${name}`);
+    }
+    return val.trim();
+}
+exports.getInput = getInput;
+/**
+ * Sets the value of an output.
+ *
+ * @param     name     name of the output to set
+ * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function setOutput(name, value) {
+    command_1.issueCommand('set-output', { name }, value);
+}
+exports.setOutput = setOutput;
+/**
+ * Enables or disables the echoing of commands into stdout for the rest of the step.
+ * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
+ *
+ */
+function setCommandEcho(enabled) {
+    command_1.issue('echo', enabled ? 'on' : 'off');
+}
+exports.setCommandEcho = setCommandEcho;
+//-----------------------------------------------------------------------
+// Results
+//-----------------------------------------------------------------------
+/**
+ * Sets the action status to failed.
+ * When the action exits it will be with an exit code of 1
+ * @param message add error issue message
+ */
+function setFailed(message) {
+    process.exitCode = ExitCode.Failure;
+    error(message);
+}
+exports.setFailed = setFailed;
+//-----------------------------------------------------------------------
+// Logging Commands
+//-----------------------------------------------------------------------
+/**
+ * Gets whether Actions Step Debug is on or not
+ */
+function isDebug() {
+    return process.env['RUNNER_DEBUG'] === '1';
+}
+exports.isDebug = isDebug;
+/**
+ * Writes debug message to user log
+ * @param message debug message
+ */
+function debug(message) {
+    command_1.issueCommand('debug', {}, message);
+}
+exports.debug = debug;
+/**
+ * Adds an error issue
+ * @param message error issue message. Errors will be converted to string via toString()
+ */
+function error(message) {
+    command_1.issue('error', message instanceof Error ? message.toString() : message);
+}
+exports.error = error;
+/**
+ * Adds an warning issue
+ * @param message warning issue message. Errors will be converted to string via toString()
+ */
+function warning(message) {
+    command_1.issue('warning', message instanceof Error ? message.toString() : message);
+}
+exports.warning = warning;
+/**
+ * Writes info to log with console.log.
+ * @param message info message
+ */
+function info(message) {
+    process.stdout.write(message + os.EOL);
+}
+exports.info = info;
+/**
+ * Begin an output group.
+ *
+ * Output until the next `groupEnd` will be foldable in this group
+ *
+ * @param name The name of the output group
+ */
+function startGroup(name) {
+    command_1.issue('group', name);
+}
+exports.startGroup = startGroup;
+/**
+ * End an output group.
+ */
+function endGroup() {
+    command_1.issue('endgroup');
+}
+exports.endGroup = endGroup;
+/**
+ * Wrap an asynchronous function call in a group.
+ *
+ * Returns the same type as the function itself.
+ *
+ * @param name The name of the group
+ * @param fn The function to wrap in the group
+ */
+function group(name, fn) {
+    return __awaiter(this, void 0, void 0, function* () {
+        startGroup(name);
+        let result;
+        try {
+            result = yield fn();
+        }
+        finally {
+            endGroup();
+        }
+        return result;
+    });
+}
+exports.group = group;
+//-----------------------------------------------------------------------
+// Wrapper action state
+//-----------------------------------------------------------------------
+/**
+ * Saves state for current action, the state can only be retrieved by this action's post job execution.
+ *
+ * @param     name     name of the state to store
+ * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function saveState(name, value) {
+    command_1.issueCommand('save-state', { name }, value);
+}
+exports.saveState = saveState;
+/**
+ * Gets the value of an state set by this action's main execution.
+ *
+ * @param     name     name of the state to get
+ * @returns   string
+ */
+function getState(name) {
+    return process.env[`STATE_${name}`] || '';
+}
+exports.getState = getState;
+//# sourceMappingURL=core.js.map
 
 /***/ }),
 /* 471 */,
@@ -17394,89 +19292,7 @@ function addHook (state, kind, name, hook) {
 /* 512 */,
 /* 513 */,
 /* 514 */,
-/* 515 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/**
- * class Namespace
- *
- * Simple object for storing attributes. Implements equality by attribute names
- * and values, and provides a simple string representation.
- *
- * See also [original guide][1]
- *
- * [1]:http://docs.python.org/dev/library/argparse.html#the-namespace-object
- **/
-
-
-var $$ = __webpack_require__(255);
-
-/**
- * new Namespace(options)
- * - options(object): predefined propertis for result object
- *
- **/
-var Namespace = module.exports = function Namespace(options) {
-  $$.extend(this, options);
-};
-
-/**
- * Namespace#isset(key) -> Boolean
- * - key (string|number): property name
- *
- * Tells whenever `namespace` contains given `key` or not.
- **/
-Namespace.prototype.isset = function (key) {
-  return $$.has(this, key);
-};
-
-/**
- * Namespace#set(key, value) -> self
- * -key (string|number|object): propery name
- * -value (mixed): new property value
- *
- * Set the property named key with value.
- * If key object then set all key properties to namespace object
- **/
-Namespace.prototype.set = function (key, value) {
-  if (typeof (key) === 'object') {
-    $$.extend(this, key);
-  } else {
-    this[key] = value;
-  }
-  return this;
-};
-
-/**
- * Namespace#get(key, defaultValue) -> mixed
- * - key (string|number): property name
- * - defaultValue (mixed): default value
- *
- * Return the property key or defaulValue if not set
- **/
-Namespace.prototype.get = function (key, defaultValue) {
-  return !this[key] ? defaultValue : this[key];
-};
-
-/**
- * Namespace#unset(key, defaultValue) -> mixed
- * - key (string|number): property name
- * - defaultValue (mixed): default value
- *
- * Return data[key](and delete it) or defaultValue
- **/
-Namespace.prototype.unset = function (key, defaultValue) {
-  var value = this[key];
-  if (value !== null) {
-    delete this[key];
-    return value;
-  }
-  return defaultValue;
-};
-
-
-/***/ }),
+/* 515 */,
 /* 516 */,
 /* 517 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -17602,805 +19418,70 @@ module.exports.Collection = Hook.Collection
 /* 530 */,
 /* 531 */,
 /* 532 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
+
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const path = __importStar(__webpack_require__(622));
 /**
- * class HelpFormatter
- *
- * Formatter for generating usage messages and argument help strings. Only the
- * name of this class is considered a public API. All the methods provided by
- * the class are considered an implementation detail.
- *
- * Do not call in your code, use this class only for inherits your own forvatter
- *
- * ToDo add [additonal formatters][1]
- *
- * [1]:http://docs.python.org/dev/library/argparse.html#formatter-class
- **/
-
-
-var sprintf = __webpack_require__(552).sprintf;
-
-// Constants
-var c = __webpack_require__(45);
-
-var $$ = __webpack_require__(255);
-
-
-/*:nodoc:* internal
- * new Support(parent, heding)
- * - parent (object): parent section
- * - heading (string): header string
- *
- **/
-function Section(parent, heading) {
-  this._parent = parent;
-  this._heading = heading;
-  this._items = [];
+ * Creates a specification for a set of files that will be downloaded
+ * @param artifactName the name of the artifact
+ * @param artifactEntries a set of container entries that describe that files that make up an artifact
+ * @param downloadPath the path where the artifact will be downloaded to
+ * @param includeRootDirectory specifies if there should be an extra directory (denoted by the artifact name) where the artifact files should be downloaded to
+ */
+function getDownloadSpecification(artifactName, artifactEntries, downloadPath, includeRootDirectory) {
+    // use a set for the directory paths so that there are no duplicates
+    const directories = new Set();
+    const specifications = {
+        rootDownloadLocation: includeRootDirectory
+            ? path.join(downloadPath, artifactName)
+            : downloadPath,
+        directoryStructure: [],
+        emptyFilesToCreate: [],
+        filesToDownload: []
+    };
+    for (const entry of artifactEntries) {
+        // Ignore artifacts in the container that don't begin with the same name
+        if (entry.path.startsWith(`${artifactName}/`) ||
+            entry.path.startsWith(`${artifactName}\\`)) {
+            // normalize all separators to the local OS
+            const normalizedPathEntry = path.normalize(entry.path);
+            // entry.path always starts with the artifact name, if includeRootDirectory is false, remove the name from the beginning of the path
+            const filePath = path.join(downloadPath, includeRootDirectory
+                ? normalizedPathEntry
+                : normalizedPathEntry.replace(artifactName, ''));
+            // Case insensitive folder structure maintained in the backend, not every folder is created so the 'folder'
+            // itemType cannot be relied upon. The file must be used to determine the directory structure
+            if (entry.itemType === 'file') {
+                // Get the directories that we need to create from the filePath for each individual file
+                directories.add(path.dirname(filePath));
+                if (entry.fileLength === 0) {
+                    // An empty file was uploaded, create the empty files locally so that no extra http calls are made
+                    specifications.emptyFilesToCreate.push(filePath);
+                }
+                else {
+                    specifications.filesToDownload.push({
+                        sourceLocation: entry.contentLocation,
+                        targetPath: filePath
+                    });
+                }
+            }
+        }
+    }
+    specifications.directoryStructure = Array.from(directories);
+    return specifications;
 }
-
-/*:nodoc:* internal
- * Section#addItem(callback) -> Void
- * - callback (array): tuple with function and args
- *
- * Add function for single element
- **/
-Section.prototype.addItem = function (callback) {
-  this._items.push(callback);
-};
-
-/*:nodoc:* internal
- * Section#formatHelp(formatter) -> string
- * - formatter (HelpFormatter): current formatter
- *
- * Form help section string
- *
- **/
-Section.prototype.formatHelp = function (formatter) {
-  var itemHelp, heading;
-
-  // format the indented section
-  if (this._parent) {
-    formatter._indent();
-  }
-
-  itemHelp = this._items.map(function (item) {
-    var obj, func, args;
-
-    obj = formatter;
-    func = item[0];
-    args = item[1];
-    return func.apply(obj, args);
-  });
-  itemHelp = formatter._joinParts(itemHelp);
-
-  if (this._parent) {
-    formatter._dedent();
-  }
-
-  // return nothing if the section was empty
-  if (!itemHelp) {
-    return '';
-  }
-
-  // add the heading if the section was non-empty
-  heading = '';
-  if (this._heading && this._heading !== c.SUPPRESS) {
-    var currentIndent = formatter.currentIndent;
-    heading = $$.repeat(' ', currentIndent) + this._heading + ':' + c.EOL;
-  }
-
-  // join the section-initialize newline, the heading and the help
-  return formatter._joinParts([ c.EOL, heading, itemHelp, c.EOL ]);
-};
-
-/**
- * new HelpFormatter(options)
- *
- * #### Options:
- * - `prog`: program name
- * - `indentIncriment`: indent step, default value 2
- * - `maxHelpPosition`: max help position, default value = 24
- * - `width`: line width
- *
- **/
-var HelpFormatter = module.exports = function HelpFormatter(options) {
-  options = options || {};
-
-  this._prog = options.prog;
-
-  this._maxHelpPosition = options.maxHelpPosition || 24;
-  this._width = (options.width || ((process.env.COLUMNS || 80) - 2));
-
-  this._currentIndent = 0;
-  this._indentIncriment = options.indentIncriment || 2;
-  this._level = 0;
-  this._actionMaxLength = 0;
-
-  this._rootSection = new Section(null);
-  this._currentSection = this._rootSection;
-
-  this._whitespaceMatcher = new RegExp('\\s+', 'g');
-  this._longBreakMatcher = new RegExp(c.EOL + c.EOL + c.EOL + '+', 'g');
-};
-
-HelpFormatter.prototype._indent = function () {
-  this._currentIndent += this._indentIncriment;
-  this._level += 1;
-};
-
-HelpFormatter.prototype._dedent = function () {
-  this._currentIndent -= this._indentIncriment;
-  this._level -= 1;
-  if (this._currentIndent < 0) {
-    throw new Error('Indent decreased below 0.');
-  }
-};
-
-HelpFormatter.prototype._addItem = function (func, args) {
-  this._currentSection.addItem([ func, args ]);
-};
-
-//
-// Message building methods
-//
-
-/**
- * HelpFormatter#startSection(heading) -> Void
- * - heading (string): header string
- *
- * Start new help section
- *
- * See alse [code example][1]
- *
- * ##### Example
- *
- *      formatter.startSection(actionGroup.title);
- *      formatter.addText(actionGroup.description);
- *      formatter.addArguments(actionGroup._groupActions);
- *      formatter.endSection();
- *
- **/
-HelpFormatter.prototype.startSection = function (heading) {
-  this._indent();
-  var section = new Section(this._currentSection, heading);
-  var func = section.formatHelp.bind(section);
-  this._addItem(func, [ this ]);
-  this._currentSection = section;
-};
-
-/**
- * HelpFormatter#endSection -> Void
- *
- * End help section
- *
- * ##### Example
- *
- *      formatter.startSection(actionGroup.title);
- *      formatter.addText(actionGroup.description);
- *      formatter.addArguments(actionGroup._groupActions);
- *      formatter.endSection();
- **/
-HelpFormatter.prototype.endSection = function () {
-  this._currentSection = this._currentSection._parent;
-  this._dedent();
-};
-
-/**
- * HelpFormatter#addText(text) -> Void
- * - text (string): plain text
- *
- * Add plain text into current section
- *
- * ##### Example
- *
- *      formatter.startSection(actionGroup.title);
- *      formatter.addText(actionGroup.description);
- *      formatter.addArguments(actionGroup._groupActions);
- *      formatter.endSection();
- *
- **/
-HelpFormatter.prototype.addText = function (text) {
-  if (text && text !== c.SUPPRESS) {
-    this._addItem(this._formatText, [ text ]);
-  }
-};
-
-/**
- * HelpFormatter#addUsage(usage, actions, groups, prefix) -> Void
- * - usage (string): usage text
- * - actions (array): actions list
- * - groups (array): groups list
- * - prefix (string): usage prefix
- *
- * Add usage data into current section
- *
- * ##### Example
- *
- *      formatter.addUsage(this.usage, this._actions, []);
- *      return formatter.formatHelp();
- *
- **/
-HelpFormatter.prototype.addUsage = function (usage, actions, groups, prefix) {
-  if (usage !== c.SUPPRESS) {
-    this._addItem(this._formatUsage, [ usage, actions, groups, prefix ]);
-  }
-};
-
-/**
- * HelpFormatter#addArgument(action) -> Void
- * - action (object): action
- *
- * Add argument into current section
- *
- * Single variant of [[HelpFormatter#addArguments]]
- **/
-HelpFormatter.prototype.addArgument = function (action) {
-  if (action.help !== c.SUPPRESS) {
-    var self = this;
-
-    // find all invocations
-    var invocations = [ this._formatActionInvocation(action) ];
-    var invocationLength = invocations[0].length;
-
-    var actionLength;
-
-    if (action._getSubactions) {
-      this._indent();
-      action._getSubactions().forEach(function (subaction) {
-
-        var invocationNew = self._formatActionInvocation(subaction);
-        invocations.push(invocationNew);
-        invocationLength = Math.max(invocationLength, invocationNew.length);
-
-      });
-      this._dedent();
-    }
-
-    // update the maximum item length
-    actionLength = invocationLength + this._currentIndent;
-    this._actionMaxLength = Math.max(this._actionMaxLength, actionLength);
-
-    // add the item to the list
-    this._addItem(this._formatAction, [ action ]);
-  }
-};
-
-/**
- * HelpFormatter#addArguments(actions) -> Void
- * - actions (array): actions list
- *
- * Mass add arguments into current section
- *
- * ##### Example
- *
- *      formatter.startSection(actionGroup.title);
- *      formatter.addText(actionGroup.description);
- *      formatter.addArguments(actionGroup._groupActions);
- *      formatter.endSection();
- *
- **/
-HelpFormatter.prototype.addArguments = function (actions) {
-  var self = this;
-  actions.forEach(function (action) {
-    self.addArgument(action);
-  });
-};
-
-//
-// Help-formatting methods
-//
-
-/**
- * HelpFormatter#formatHelp -> string
- *
- * Format help
- *
- * ##### Example
- *
- *      formatter.addText(this.epilog);
- *      return formatter.formatHelp();
- *
- **/
-HelpFormatter.prototype.formatHelp = function () {
-  var help = this._rootSection.formatHelp(this);
-  if (help) {
-    help = help.replace(this._longBreakMatcher, c.EOL + c.EOL);
-    help = $$.trimChars(help, c.EOL) + c.EOL;
-  }
-  return help;
-};
-
-HelpFormatter.prototype._joinParts = function (partStrings) {
-  return partStrings.filter(function (part) {
-    return (part && part !== c.SUPPRESS);
-  }).join('');
-};
-
-HelpFormatter.prototype._formatUsage = function (usage, actions, groups, prefix) {
-  if (!prefix && typeof prefix !== 'string') {
-    prefix = 'usage: ';
-  }
-
-  actions = actions || [];
-  groups = groups || [];
-
-
-  // if usage is specified, use that
-  if (usage) {
-    usage = sprintf(usage, { prog: this._prog });
-
-    // if no optionals or positionals are available, usage is just prog
-  } else if (!usage && actions.length === 0) {
-    usage = this._prog;
-
-    // if optionals and positionals are available, calculate usage
-  } else if (!usage) {
-    var prog = this._prog;
-    var optionals = [];
-    var positionals = [];
-    var actionUsage;
-    var textWidth;
-
-    // split optionals from positionals
-    actions.forEach(function (action) {
-      if (action.isOptional()) {
-        optionals.push(action);
-      } else {
-        positionals.push(action);
-      }
-    });
-
-    // build full usage string
-    actionUsage = this._formatActionsUsage([].concat(optionals, positionals), groups);
-    usage = [ prog, actionUsage ].join(' ');
-
-    // wrap the usage parts if it's too long
-    textWidth = this._width - this._currentIndent;
-    if ((prefix.length + usage.length) > textWidth) {
-
-      // break usage into wrappable parts
-      var regexpPart = new RegExp('\\(.*?\\)+|\\[.*?\\]+|\\S+', 'g');
-      var optionalUsage = this._formatActionsUsage(optionals, groups);
-      var positionalUsage = this._formatActionsUsage(positionals, groups);
-
-
-      var optionalParts = optionalUsage.match(regexpPart);
-      var positionalParts = positionalUsage.match(regexpPart) || [];
-
-      if (optionalParts.join(' ') !== optionalUsage) {
-        throw new Error('assert "optionalParts.join(\' \') === optionalUsage"');
-      }
-      if (positionalParts.join(' ') !== positionalUsage) {
-        throw new Error('assert "positionalParts.join(\' \') === positionalUsage"');
-      }
-
-      // helper for wrapping lines
-      /*eslint-disable func-style*/ // node 0.10 compat
-      var _getLines = function (parts, indent, prefix) {
-        var lines = [];
-        var line = [];
-
-        var lineLength = prefix ? prefix.length - 1 : indent.length - 1;
-
-        parts.forEach(function (part) {
-          if (lineLength + 1 + part.length > textWidth) {
-            lines.push(indent + line.join(' '));
-            line = [];
-            lineLength = indent.length - 1;
-          }
-          line.push(part);
-          lineLength += part.length + 1;
-        });
-
-        if (line) {
-          lines.push(indent + line.join(' '));
-        }
-        if (prefix) {
-          lines[0] = lines[0].substr(indent.length);
-        }
-        return lines;
-      };
-
-      var lines, indent, parts;
-      // if prog is short, follow it with optionals or positionals
-      if (prefix.length + prog.length <= 0.75 * textWidth) {
-        indent = $$.repeat(' ', (prefix.length + prog.length + 1));
-        if (optionalParts) {
-          lines = [].concat(
-            _getLines([ prog ].concat(optionalParts), indent, prefix),
-            _getLines(positionalParts, indent)
-          );
-        } else if (positionalParts) {
-          lines = _getLines([ prog ].concat(positionalParts), indent, prefix);
-        } else {
-          lines = [ prog ];
-        }
-
-        // if prog is long, put it on its own line
-      } else {
-        indent = $$.repeat(' ', prefix.length);
-        parts = optionalParts.concat(positionalParts);
-        lines = _getLines(parts, indent);
-        if (lines.length > 1) {
-          lines = [].concat(
-            _getLines(optionalParts, indent),
-            _getLines(positionalParts, indent)
-          );
-        }
-        lines = [ prog ].concat(lines);
-      }
-      // join lines into usage
-      usage = lines.join(c.EOL);
-    }
-  }
-
-  // prefix with 'usage:'
-  return prefix + usage + c.EOL + c.EOL;
-};
-
-HelpFormatter.prototype._formatActionsUsage = function (actions, groups) {
-  // find group indices and identify actions in groups
-  var groupActions = [];
-  var inserts = [];
-  var self = this;
-
-  groups.forEach(function (group) {
-    var end;
-    var i;
-
-    var start = actions.indexOf(group._groupActions[0]);
-    if (start >= 0) {
-      end = start + group._groupActions.length;
-
-      //if (actions.slice(start, end) === group._groupActions) {
-      if ($$.arrayEqual(actions.slice(start, end), group._groupActions)) {
-        group._groupActions.forEach(function (action) {
-          groupActions.push(action);
-        });
-
-        if (!group.required) {
-          if (inserts[start]) {
-            inserts[start] += ' [';
-          } else {
-            inserts[start] = '[';
-          }
-          inserts[end] = ']';
-        } else {
-          if (inserts[start]) {
-            inserts[start] += ' (';
-          } else {
-            inserts[start] = '(';
-          }
-          inserts[end] = ')';
-        }
-        for (i = start + 1; i < end; i += 1) {
-          inserts[i] = '|';
-        }
-      }
-    }
-  });
-
-  // collect all actions format strings
-  var parts = [];
-
-  actions.forEach(function (action, actionIndex) {
-    var part;
-    var optionString;
-    var argsDefault;
-    var argsString;
-
-    // suppressed arguments are marked with None
-    // remove | separators for suppressed arguments
-    if (action.help === c.SUPPRESS) {
-      parts.push(null);
-      if (inserts[actionIndex] === '|') {
-        inserts.splice(actionIndex, actionIndex);
-      } else if (inserts[actionIndex + 1] === '|') {
-        inserts.splice(actionIndex + 1, actionIndex + 1);
-      }
-
-      // produce all arg strings
-    } else if (!action.isOptional()) {
-      part = self._formatArgs(action, action.dest);
-
-      // if it's in a group, strip the outer []
-      if (groupActions.indexOf(action) >= 0) {
-        if (part[0] === '[' && part[part.length - 1] === ']') {
-          part = part.slice(1, -1);
-        }
-      }
-      // add the action string to the list
-      parts.push(part);
-
-    // produce the first way to invoke the option in brackets
-    } else {
-      optionString = action.optionStrings[0];
-
-      // if the Optional doesn't take a value, format is: -s or --long
-      if (action.nargs === 0) {
-        part = '' + optionString;
-
-      // if the Optional takes a value, format is: -s ARGS or --long ARGS
-      } else {
-        argsDefault = action.dest.toUpperCase();
-        argsString = self._formatArgs(action, argsDefault);
-        part = optionString + ' ' + argsString;
-      }
-      // make it look optional if it's not required or in a group
-      if (!action.required && groupActions.indexOf(action) < 0) {
-        part = '[' + part + ']';
-      }
-      // add the action string to the list
-      parts.push(part);
-    }
-  });
-
-  // insert things at the necessary indices
-  for (var i = inserts.length - 1; i >= 0; --i) {
-    if (inserts[i] !== null) {
-      parts.splice(i, 0, inserts[i]);
-    }
-  }
-
-  // join all the action items with spaces
-  var text = parts.filter(function (part) {
-    return !!part;
-  }).join(' ');
-
-  // clean up separators for mutually exclusive groups
-  text = text.replace(/([\[(]) /g, '$1'); // remove spaces
-  text = text.replace(/ ([\])])/g, '$1');
-  text = text.replace(/\[ *\]/g, ''); // remove empty groups
-  text = text.replace(/\( *\)/g, '');
-  text = text.replace(/\(([^|]*)\)/g, '$1'); // remove () from single action groups
-
-  text = text.trim();
-
-  // return the text
-  return text;
-};
-
-HelpFormatter.prototype._formatText = function (text) {
-  text = sprintf(text, { prog: this._prog });
-  var textWidth = this._width - this._currentIndent;
-  var indentIncriment = $$.repeat(' ', this._currentIndent);
-  return this._fillText(text, textWidth, indentIncriment) + c.EOL + c.EOL;
-};
-
-HelpFormatter.prototype._formatAction = function (action) {
-  var self = this;
-
-  var helpText;
-  var helpLines;
-  var parts;
-  var indentFirst;
-
-  // determine the required width and the entry label
-  var helpPosition = Math.min(this._actionMaxLength + 2, this._maxHelpPosition);
-  var helpWidth = this._width - helpPosition;
-  var actionWidth = helpPosition - this._currentIndent - 2;
-  var actionHeader = this._formatActionInvocation(action);
-
-  // no help; start on same line and add a final newline
-  if (!action.help) {
-    actionHeader = $$.repeat(' ', this._currentIndent) + actionHeader + c.EOL;
-
-  // short action name; start on the same line and pad two spaces
-  } else if (actionHeader.length <= actionWidth) {
-    actionHeader = $$.repeat(' ', this._currentIndent) +
-        actionHeader +
-        '  ' +
-        $$.repeat(' ', actionWidth - actionHeader.length);
-    indentFirst = 0;
-
-  // long action name; start on the next line
-  } else {
-    actionHeader = $$.repeat(' ', this._currentIndent) + actionHeader + c.EOL;
-    indentFirst = helpPosition;
-  }
-
-  // collect the pieces of the action help
-  parts = [ actionHeader ];
-
-  // if there was help for the action, add lines of help text
-  if (action.help) {
-    helpText = this._expandHelp(action);
-    helpLines = this._splitLines(helpText, helpWidth);
-    parts.push($$.repeat(' ', indentFirst) + helpLines[0] + c.EOL);
-    helpLines.slice(1).forEach(function (line) {
-      parts.push($$.repeat(' ', helpPosition) + line + c.EOL);
-    });
-
-  // or add a newline if the description doesn't end with one
-  } else if (actionHeader.charAt(actionHeader.length - 1) !== c.EOL) {
-    parts.push(c.EOL);
-  }
-  // if there are any sub-actions, add their help as well
-  if (action._getSubactions) {
-    this._indent();
-    action._getSubactions().forEach(function (subaction) {
-      parts.push(self._formatAction(subaction));
-    });
-    this._dedent();
-  }
-  // return a single string
-  return this._joinParts(parts);
-};
-
-HelpFormatter.prototype._formatActionInvocation = function (action) {
-  if (!action.isOptional()) {
-    var format_func = this._metavarFormatter(action, action.dest);
-    var metavars = format_func(1);
-    return metavars[0];
-  }
-
-  var parts = [];
-  var argsDefault;
-  var argsString;
-
-  // if the Optional doesn't take a value, format is: -s, --long
-  if (action.nargs === 0) {
-    parts = parts.concat(action.optionStrings);
-
-  // if the Optional takes a value, format is: -s ARGS, --long ARGS
-  } else {
-    argsDefault = action.dest.toUpperCase();
-    argsString = this._formatArgs(action, argsDefault);
-    action.optionStrings.forEach(function (optionString) {
-      parts.push(optionString + ' ' + argsString);
-    });
-  }
-  return parts.join(', ');
-};
-
-HelpFormatter.prototype._metavarFormatter = function (action, metavarDefault) {
-  var result;
-
-  if (action.metavar || action.metavar === '') {
-    result = action.metavar;
-  } else if (action.choices) {
-    var choices = action.choices;
-
-    if (typeof choices === 'string') {
-      choices = choices.split('').join(', ');
-    } else if (Array.isArray(choices)) {
-      choices = choices.join(',');
-    } else {
-      choices = Object.keys(choices).join(',');
-    }
-    result = '{' + choices + '}';
-  } else {
-    result = metavarDefault;
-  }
-
-  return function (size) {
-    if (Array.isArray(result)) {
-      return result;
-    }
-
-    var metavars = [];
-    for (var i = 0; i < size; i += 1) {
-      metavars.push(result);
-    }
-    return metavars;
-  };
-};
-
-HelpFormatter.prototype._formatArgs = function (action, metavarDefault) {
-  var result;
-  var metavars;
-
-  var buildMetavar = this._metavarFormatter(action, metavarDefault);
-
-  switch (action.nargs) {
-    /*eslint-disable no-undefined*/
-    case undefined:
-    case null:
-      metavars = buildMetavar(1);
-      result = '' + metavars[0];
-      break;
-    case c.OPTIONAL:
-      metavars = buildMetavar(1);
-      result = '[' + metavars[0] + ']';
-      break;
-    case c.ZERO_OR_MORE:
-      metavars = buildMetavar(2);
-      result = '[' + metavars[0] + ' [' + metavars[1] + ' ...]]';
-      break;
-    case c.ONE_OR_MORE:
-      metavars = buildMetavar(2);
-      result = '' + metavars[0] + ' [' + metavars[1] + ' ...]';
-      break;
-    case c.REMAINDER:
-      result = '...';
-      break;
-    case c.PARSER:
-      metavars = buildMetavar(1);
-      result = metavars[0] + ' ...';
-      break;
-    default:
-      metavars = buildMetavar(action.nargs);
-      result = metavars.join(' ');
-  }
-  return result;
-};
-
-HelpFormatter.prototype._expandHelp = function (action) {
-  var params = { prog: this._prog };
-
-  Object.keys(action).forEach(function (actionProperty) {
-    var actionValue = action[actionProperty];
-
-    if (actionValue !== c.SUPPRESS) {
-      params[actionProperty] = actionValue;
-    }
-  });
-
-  if (params.choices) {
-    if (typeof params.choices === 'string') {
-      params.choices = params.choices.split('').join(', ');
-    } else if (Array.isArray(params.choices)) {
-      params.choices = params.choices.join(', ');
-    } else {
-      params.choices = Object.keys(params.choices).join(', ');
-    }
-  }
-
-  return sprintf(this._getHelpString(action), params);
-};
-
-HelpFormatter.prototype._splitLines = function (text, width) {
-  var lines = [];
-  var delimiters = [ ' ', '.', ',', '!', '?' ];
-  var re = new RegExp('[' + delimiters.join('') + '][^' + delimiters.join('') + ']*$');
-
-  text = text.replace(/[\n\|\t]/g, ' ');
-
-  text = text.trim();
-  text = text.replace(this._whitespaceMatcher, ' ');
-
-  // Wraps the single paragraph in text (a string) so every line
-  // is at most width characters long.
-  text.split(c.EOL).forEach(function (line) {
-    if (width >= line.length) {
-      lines.push(line);
-      return;
-    }
-
-    var wrapStart = 0;
-    var wrapEnd = width;
-    var delimiterIndex = 0;
-    while (wrapEnd <= line.length) {
-      if (wrapEnd !== line.length && delimiters.indexOf(line[wrapEnd] < -1)) {
-        delimiterIndex = (re.exec(line.substring(wrapStart, wrapEnd)) || {}).index;
-        wrapEnd = wrapStart + delimiterIndex + 1;
-      }
-      lines.push(line.substring(wrapStart, wrapEnd));
-      wrapStart = wrapEnd;
-      wrapEnd += width;
-    }
-    if (wrapStart < line.length) {
-      lines.push(line.substring(wrapStart, wrapEnd));
-    }
-  });
-
-  return lines;
-};
-
-HelpFormatter.prototype._fillText = function (text, width, indent) {
-  var lines = this._splitLines(text, width);
-  lines = lines.map(function (line) {
-    return indent + line;
-  });
-  return lines.join(c.EOL);
-};
-
-HelpFormatter.prototype._getHelpString = function (action) {
-  return action.help;
-};
-
+exports.getDownloadSpecification = getDownloadSpecification;
+//# sourceMappingURL=download-specification.js.map
 
 /***/ }),
 /* 533 */,
@@ -18956,215 +20037,20 @@ exports.HttpClient = HttpClient;
 /* 542 */,
 /* 543 */,
 /* 544 */,
-/* 545 */,
+/* 545 */
+/***/ (function(module) {
+
+module.exports = eval("require")("encoding");
+
+
+/***/ }),
 /* 546 */,
 /* 547 */,
 /* 548 */,
 /* 549 */,
 /* 550 */,
 /* 551 */,
-/* 552 */
-/***/ (function(__unusedmodule, exports) {
-
-(function(window) {
-    var re = {
-        not_string: /[^s]/,
-        number: /[diefg]/,
-        json: /[j]/,
-        not_json: /[^j]/,
-        text: /^[^\x25]+/,
-        modulo: /^\x25{2}/,
-        placeholder: /^\x25(?:([1-9]\d*)\$|\(([^\)]+)\))?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-gijosuxX])/,
-        key: /^([a-z_][a-z_\d]*)/i,
-        key_access: /^\.([a-z_][a-z_\d]*)/i,
-        index_access: /^\[(\d+)\]/,
-        sign: /^[\+\-]/
-    }
-
-    function sprintf() {
-        var key = arguments[0], cache = sprintf.cache
-        if (!(cache[key] && cache.hasOwnProperty(key))) {
-            cache[key] = sprintf.parse(key)
-        }
-        return sprintf.format.call(null, cache[key], arguments)
-    }
-
-    sprintf.format = function(parse_tree, argv) {
-        var cursor = 1, tree_length = parse_tree.length, node_type = "", arg, output = [], i, k, match, pad, pad_character, pad_length, is_positive = true, sign = ""
-        for (i = 0; i < tree_length; i++) {
-            node_type = get_type(parse_tree[i])
-            if (node_type === "string") {
-                output[output.length] = parse_tree[i]
-            }
-            else if (node_type === "array") {
-                match = parse_tree[i] // convenience purposes only
-                if (match[2]) { // keyword argument
-                    arg = argv[cursor]
-                    for (k = 0; k < match[2].length; k++) {
-                        if (!arg.hasOwnProperty(match[2][k])) {
-                            throw new Error(sprintf("[sprintf] property '%s' does not exist", match[2][k]))
-                        }
-                        arg = arg[match[2][k]]
-                    }
-                }
-                else if (match[1]) { // positional argument (explicit)
-                    arg = argv[match[1]]
-                }
-                else { // positional argument (implicit)
-                    arg = argv[cursor++]
-                }
-
-                if (get_type(arg) == "function") {
-                    arg = arg()
-                }
-
-                if (re.not_string.test(match[8]) && re.not_json.test(match[8]) && (get_type(arg) != "number" && isNaN(arg))) {
-                    throw new TypeError(sprintf("[sprintf] expecting number but found %s", get_type(arg)))
-                }
-
-                if (re.number.test(match[8])) {
-                    is_positive = arg >= 0
-                }
-
-                switch (match[8]) {
-                    case "b":
-                        arg = arg.toString(2)
-                    break
-                    case "c":
-                        arg = String.fromCharCode(arg)
-                    break
-                    case "d":
-                    case "i":
-                        arg = parseInt(arg, 10)
-                    break
-                    case "j":
-                        arg = JSON.stringify(arg, null, match[6] ? parseInt(match[6]) : 0)
-                    break
-                    case "e":
-                        arg = match[7] ? arg.toExponential(match[7]) : arg.toExponential()
-                    break
-                    case "f":
-                        arg = match[7] ? parseFloat(arg).toFixed(match[7]) : parseFloat(arg)
-                    break
-                    case "g":
-                        arg = match[7] ? parseFloat(arg).toPrecision(match[7]) : parseFloat(arg)
-                    break
-                    case "o":
-                        arg = arg.toString(8)
-                    break
-                    case "s":
-                        arg = ((arg = String(arg)) && match[7] ? arg.substring(0, match[7]) : arg)
-                    break
-                    case "u":
-                        arg = arg >>> 0
-                    break
-                    case "x":
-                        arg = arg.toString(16)
-                    break
-                    case "X":
-                        arg = arg.toString(16).toUpperCase()
-                    break
-                }
-                if (re.json.test(match[8])) {
-                    output[output.length] = arg
-                }
-                else {
-                    if (re.number.test(match[8]) && (!is_positive || match[3])) {
-                        sign = is_positive ? "+" : "-"
-                        arg = arg.toString().replace(re.sign, "")
-                    }
-                    else {
-                        sign = ""
-                    }
-                    pad_character = match[4] ? match[4] === "0" ? "0" : match[4].charAt(1) : " "
-                    pad_length = match[6] - (sign + arg).length
-                    pad = match[6] ? (pad_length > 0 ? str_repeat(pad_character, pad_length) : "") : ""
-                    output[output.length] = match[5] ? sign + arg + pad : (pad_character === "0" ? sign + pad + arg : pad + sign + arg)
-                }
-            }
-        }
-        return output.join("")
-    }
-
-    sprintf.cache = {}
-
-    sprintf.parse = function(fmt) {
-        var _fmt = fmt, match = [], parse_tree = [], arg_names = 0
-        while (_fmt) {
-            if ((match = re.text.exec(_fmt)) !== null) {
-                parse_tree[parse_tree.length] = match[0]
-            }
-            else if ((match = re.modulo.exec(_fmt)) !== null) {
-                parse_tree[parse_tree.length] = "%"
-            }
-            else if ((match = re.placeholder.exec(_fmt)) !== null) {
-                if (match[2]) {
-                    arg_names |= 1
-                    var field_list = [], replacement_field = match[2], field_match = []
-                    if ((field_match = re.key.exec(replacement_field)) !== null) {
-                        field_list[field_list.length] = field_match[1]
-                        while ((replacement_field = replacement_field.substring(field_match[0].length)) !== "") {
-                            if ((field_match = re.key_access.exec(replacement_field)) !== null) {
-                                field_list[field_list.length] = field_match[1]
-                            }
-                            else if ((field_match = re.index_access.exec(replacement_field)) !== null) {
-                                field_list[field_list.length] = field_match[1]
-                            }
-                            else {
-                                throw new SyntaxError("[sprintf] failed to parse named argument key")
-                            }
-                        }
-                    }
-                    else {
-                        throw new SyntaxError("[sprintf] failed to parse named argument key")
-                    }
-                    match[2] = field_list
-                }
-                else {
-                    arg_names |= 2
-                }
-                if (arg_names === 3) {
-                    throw new Error("[sprintf] mixing positional and named placeholders is not (yet) supported")
-                }
-                parse_tree[parse_tree.length] = match
-            }
-            else {
-                throw new SyntaxError("[sprintf] unexpected placeholder")
-            }
-            _fmt = _fmt.substring(match[0].length)
-        }
-        return parse_tree
-    }
-
-    var vsprintf = function(fmt, argv, _argv) {
-        _argv = (argv || []).slice(0)
-        _argv.splice(0, 0, fmt)
-        return sprintf.apply(null, _argv)
-    }
-
-    /**
-     * helpers
-     */
-    function get_type(variable) {
-        return Object.prototype.toString.call(variable).slice(8, -1).toLowerCase()
-    }
-
-    function str_repeat(input, multiplier) {
-        return Array(multiplier + 1).join(input)
-    }
-
-    /**
-     * export to either browser or node.js
-     */
-    if (true) {
-        exports.sprintf = sprintf
-        exports.vsprintf = vsprintf
-    }
-    else {}
-})(typeof window === "undefined" ? this : window);
-
-
-/***/ }),
+/* 552 */,
 /* 553 */,
 /* 554 */,
 /* 555 */,
@@ -20806,7 +21692,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(__webpack_require__(747));
-const core_1 = __webpack_require__(393);
+const core_1 = __webpack_require__(470);
 const path_1 = __webpack_require__(622);
 const utils_1 = __webpack_require__(870);
 /**
@@ -21603,34 +22489,14 @@ function retry () {
 
 /***/ }),
 /* 599 */,
-/* 600 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-
-module.exports.ArgumentParser = __webpack_require__(452);
-module.exports.Namespace = __webpack_require__(515);
-module.exports.Action = __webpack_require__(380);
-module.exports.HelpFormatter = __webpack_require__(532);
-module.exports.Const = __webpack_require__(45);
-
-module.exports.ArgumentDefaultsHelpFormatter =
-  __webpack_require__(59).ArgumentDefaultsHelpFormatter;
-module.exports.RawDescriptionHelpFormatter =
-  __webpack_require__(59).RawDescriptionHelpFormatter;
-module.exports.RawTextHelpFormatter =
-  __webpack_require__(59).RawTextHelpFormatter;
-
-
-/***/ }),
+/* 600 */,
 /* 601 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-const core = __webpack_require__(393);
+const core = __webpack_require__(470);
 /**
  * Returns a copy with defaults filled in.
  */
@@ -21727,492 +22593,9 @@ module.exports = new Schema({
 /* 612 */,
 /* 613 */,
 /* 614 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(module) {
 
-"use strict";
-/** internal
- * class ActionContainer
- *
- * Action container. Parent for [[ArgumentParser]] and [[ArgumentGroup]]
- **/
-
-
-
-var format = __webpack_require__(669).format;
-
-// Constants
-var c = __webpack_require__(45);
-
-var $$ = __webpack_require__(255);
-
-//Actions
-var ActionHelp = __webpack_require__(834);
-var ActionAppend = __webpack_require__(378);
-var ActionAppendConstant = __webpack_require__(288);
-var ActionCount = __webpack_require__(927);
-var ActionStore = __webpack_require__(352);
-var ActionStoreConstant = __webpack_require__(267);
-var ActionStoreTrue = __webpack_require__(211);
-var ActionStoreFalse = __webpack_require__(963);
-var ActionVersion = __webpack_require__(987);
-var ActionSubparsers = __webpack_require__(983);
-
-// Errors
-var argumentErrorHelper = __webpack_require__(287);
-
-/**
- * new ActionContainer(options)
- *
- * Action container. Parent for [[ArgumentParser]] and [[ArgumentGroup]]
- *
- * ##### Options:
- *
- * - `description` -- A description of what the program does
- * - `prefixChars`  -- Characters that prefix optional arguments
- * - `argumentDefault`  -- The default value for all arguments
- * - `conflictHandler` -- The conflict handler to use for duplicate arguments
- **/
-var ActionContainer = module.exports = function ActionContainer(options) {
-  options = options || {};
-
-  this.description = options.description;
-  this.argumentDefault = options.argumentDefault;
-  this.prefixChars = options.prefixChars || '';
-  this.conflictHandler = options.conflictHandler;
-
-  // set up registries
-  this._registries = {};
-
-  // register actions
-  this.register('action', null, ActionStore);
-  this.register('action', 'store', ActionStore);
-  this.register('action', 'storeConst', ActionStoreConstant);
-  this.register('action', 'storeTrue', ActionStoreTrue);
-  this.register('action', 'storeFalse', ActionStoreFalse);
-  this.register('action', 'append', ActionAppend);
-  this.register('action', 'appendConst', ActionAppendConstant);
-  this.register('action', 'count', ActionCount);
-  this.register('action', 'help', ActionHelp);
-  this.register('action', 'version', ActionVersion);
-  this.register('action', 'parsers', ActionSubparsers);
-
-  // raise an exception if the conflict handler is invalid
-  this._getHandler();
-
-  // action storage
-  this._actions = [];
-  this._optionStringActions = {};
-
-  // groups
-  this._actionGroups = [];
-  this._mutuallyExclusiveGroups = [];
-
-  // defaults storage
-  this._defaults = {};
-
-  // determines whether an "option" looks like a negative number
-  // -1, -1.5 -5e+4
-  this._regexpNegativeNumber = new RegExp('^[-]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$');
-
-  // whether or not there are any optionals that look like negative
-  // numbers -- uses a list so it can be shared and edited
-  this._hasNegativeNumberOptionals = [];
-};
-
-// Groups must be required, then ActionContainer already defined
-var ArgumentGroup = __webpack_require__(65);
-var MutuallyExclusiveGroup = __webpack_require__(282);
-
-//
-// Registration methods
-//
-
-/**
- * ActionContainer#register(registryName, value, object) -> Void
- * - registryName (String) : object type action|type
- * - value (string) : keyword
- * - object (Object|Function) : handler
- *
- *  Register handlers
- **/
-ActionContainer.prototype.register = function (registryName, value, object) {
-  this._registries[registryName] = this._registries[registryName] || {};
-  this._registries[registryName][value] = object;
-};
-
-ActionContainer.prototype._registryGet = function (registryName, value, defaultValue) {
-  if (arguments.length < 3) {
-    defaultValue = null;
-  }
-  return this._registries[registryName][value] || defaultValue;
-};
-
-//
-// Namespace default accessor methods
-//
-
-/**
- * ActionContainer#setDefaults(options) -> Void
- * - options (object):hash of options see [[Action.new]]
- *
- * Set defaults
- **/
-ActionContainer.prototype.setDefaults = function (options) {
-  options = options || {};
-  for (var property in options) {
-    if ($$.has(options, property)) {
-      this._defaults[property] = options[property];
-    }
-  }
-
-  // if these defaults match any existing arguments, replace the previous
-  // default on the object with the new one
-  this._actions.forEach(function (action) {
-    if ($$.has(options, action.dest)) {
-      action.defaultValue = options[action.dest];
-    }
-  });
-};
-
-/**
- * ActionContainer#getDefault(dest) -> Mixed
- * - dest (string): action destination
- *
- * Return action default value
- **/
-ActionContainer.prototype.getDefault = function (dest) {
-  var result = $$.has(this._defaults, dest) ? this._defaults[dest] : null;
-
-  this._actions.forEach(function (action) {
-    if (action.dest === dest && $$.has(action, 'defaultValue')) {
-      result = action.defaultValue;
-    }
-  });
-
-  return result;
-};
-//
-// Adding argument actions
-//
-
-/**
- * ActionContainer#addArgument(args, options) -> Object
- * - args (String|Array): argument key, or array of argument keys
- * - options (Object): action objects see [[Action.new]]
- *
- * #### Examples
- * - addArgument([ '-f', '--foo' ], { action: 'store', defaultValue: 1, ... })
- * - addArgument([ 'bar' ], { action: 'store', nargs: 1, ... })
- * - addArgument('--baz', { action: 'store', nargs: 1, ... })
- **/
-ActionContainer.prototype.addArgument = function (args, options) {
-  args = args;
-  options = options || {};
-
-  if (typeof args === 'string') {
-    args = [ args ];
-  }
-  if (!Array.isArray(args)) {
-    throw new TypeError('addArgument first argument should be a string or an array');
-  }
-  if (typeof options !== 'object' || Array.isArray(options)) {
-    throw new TypeError('addArgument second argument should be a hash');
-  }
-
-  // if no positional args are supplied or only one is supplied and
-  // it doesn't look like an option string, parse a positional argument
-  if (!args || args.length === 1 && this.prefixChars.indexOf(args[0][0]) < 0) {
-    if (args && !!options.dest) {
-      throw new Error('dest supplied twice for positional argument');
-    }
-    options = this._getPositional(args, options);
-
-    // otherwise, we're adding an optional argument
-  } else {
-    options = this._getOptional(args, options);
-  }
-
-  // if no default was supplied, use the parser-level default
-  if (typeof options.defaultValue === 'undefined') {
-    var dest = options.dest;
-    if ($$.has(this._defaults, dest)) {
-      options.defaultValue = this._defaults[dest];
-    } else if (typeof this.argumentDefault !== 'undefined') {
-      options.defaultValue = this.argumentDefault;
-    }
-  }
-
-  // create the action object, and add it to the parser
-  var ActionClass = this._popActionClass(options);
-  if (typeof ActionClass !== 'function') {
-    throw new Error(format('Unknown action "%s".', ActionClass));
-  }
-  var action = new ActionClass(options);
-
-  // throw an error if the action type is not callable
-  var typeFunction = this._registryGet('type', action.type, action.type);
-  if (typeof typeFunction !== 'function') {
-    throw new Error(format('"%s" is not callable', typeFunction));
-  }
-
-  return this._addAction(action);
-};
-
-/**
- * ActionContainer#addArgumentGroup(options) -> ArgumentGroup
- * - options (Object): hash of options see [[ArgumentGroup.new]]
- *
- * Create new arguments groups
- **/
-ActionContainer.prototype.addArgumentGroup = function (options) {
-  var group = new ArgumentGroup(this, options);
-  this._actionGroups.push(group);
-  return group;
-};
-
-/**
- * ActionContainer#addMutuallyExclusiveGroup(options) -> ArgumentGroup
- * - options (Object): {required: false}
- *
- * Create new mutual exclusive groups
- **/
-ActionContainer.prototype.addMutuallyExclusiveGroup = function (options) {
-  var group = new MutuallyExclusiveGroup(this, options);
-  this._mutuallyExclusiveGroups.push(group);
-  return group;
-};
-
-ActionContainer.prototype._addAction = function (action) {
-  var self = this;
-
-  // resolve any conflicts
-  this._checkConflict(action);
-
-  // add to actions list
-  this._actions.push(action);
-  action.container = this;
-
-  // index the action by any option strings it has
-  action.optionStrings.forEach(function (optionString) {
-    self._optionStringActions[optionString] = action;
-  });
-
-  // set the flag if any option strings look like negative numbers
-  action.optionStrings.forEach(function (optionString) {
-    if (optionString.match(self._regexpNegativeNumber)) {
-      if (!self._hasNegativeNumberOptionals.some(Boolean)) {
-        self._hasNegativeNumberOptionals.push(true);
-      }
-    }
-  });
-
-  // return the created action
-  return action;
-};
-
-ActionContainer.prototype._removeAction = function (action) {
-  var actionIndex = this._actions.indexOf(action);
-  if (actionIndex >= 0) {
-    this._actions.splice(actionIndex, 1);
-  }
-};
-
-ActionContainer.prototype._addContainerActions = function (container) {
-  // collect groups by titles
-  var titleGroupMap = {};
-  this._actionGroups.forEach(function (group) {
-    if (titleGroupMap[group.title]) {
-      throw new Error(format('Cannot merge actions - two groups are named "%s".', group.title));
-    }
-    titleGroupMap[group.title] = group;
-  });
-
-  // map each action to its group
-  var groupMap = {};
-  function actionHash(action) {
-    // unique (hopefully?) string suitable as dictionary key
-    return action.getName();
-  }
-  container._actionGroups.forEach(function (group) {
-    // if a group with the title exists, use that, otherwise
-    // create a new group matching the container's group
-    if (!titleGroupMap[group.title]) {
-      titleGroupMap[group.title] = this.addArgumentGroup({
-        title: group.title,
-        description: group.description
-      });
-    }
-
-    // map the actions to their new group
-    group._groupActions.forEach(function (action) {
-      groupMap[actionHash(action)] = titleGroupMap[group.title];
-    });
-  }, this);
-
-  // add container's mutually exclusive groups
-  // NOTE: if add_mutually_exclusive_group ever gains title= and
-  // description= then this code will need to be expanded as above
-  var mutexGroup;
-  container._mutuallyExclusiveGroups.forEach(function (group) {
-    mutexGroup = this.addMutuallyExclusiveGroup({
-      required: group.required
-    });
-    // map the actions to their new mutex group
-    group._groupActions.forEach(function (action) {
-      groupMap[actionHash(action)] = mutexGroup;
-    });
-  }, this);  // forEach takes a 'this' argument
-
-  // add all actions to this container or their group
-  container._actions.forEach(function (action) {
-    var key = actionHash(action);
-    if (groupMap[key]) {
-      groupMap[key]._addAction(action);
-    } else {
-      this._addAction(action);
-    }
-  });
-};
-
-ActionContainer.prototype._getPositional = function (dest, options) {
-  if (Array.isArray(dest)) {
-    dest = dest[0];
-  }
-  // make sure required is not specified
-  if (options.required) {
-    throw new Error('"required" is an invalid argument for positionals.');
-  }
-
-  // mark positional arguments as required if at least one is
-  // always required
-  if (options.nargs !== c.OPTIONAL && options.nargs !== c.ZERO_OR_MORE) {
-    options.required = true;
-  }
-  if (options.nargs === c.ZERO_OR_MORE && typeof options.defaultValue === 'undefined') {
-    options.required = true;
-  }
-
-  // return the keyword arguments with no option strings
-  options.dest = dest;
-  options.optionStrings = [];
-  return options;
-};
-
-ActionContainer.prototype._getOptional = function (args, options) {
-  var prefixChars = this.prefixChars;
-  var optionStrings = [];
-  var optionStringsLong = [];
-
-  // determine short and long option strings
-  args.forEach(function (optionString) {
-    // error on strings that don't start with an appropriate prefix
-    if (prefixChars.indexOf(optionString[0]) < 0) {
-      throw new Error(format('Invalid option string "%s": must start with a "%s".',
-        optionString,
-        prefixChars
-      ));
-    }
-
-    // strings starting with two prefix characters are long options
-    optionStrings.push(optionString);
-    if (optionString.length > 1 && prefixChars.indexOf(optionString[1]) >= 0) {
-      optionStringsLong.push(optionString);
-    }
-  });
-
-  // infer dest, '--foo-bar' -> 'foo_bar' and '-x' -> 'x'
-  var dest = options.dest || null;
-  delete options.dest;
-
-  if (!dest) {
-    var optionStringDest = optionStringsLong.length ? optionStringsLong[0] : optionStrings[0];
-    dest = $$.trimChars(optionStringDest, this.prefixChars);
-
-    if (dest.length === 0) {
-      throw new Error(
-        format('dest= is required for options like "%s"', optionStrings.join(', '))
-      );
-    }
-    dest = dest.replace(/-/g, '_');
-  }
-
-  // return the updated keyword arguments
-  options.dest = dest;
-  options.optionStrings = optionStrings;
-
-  return options;
-};
-
-ActionContainer.prototype._popActionClass = function (options, defaultValue) {
-  defaultValue = defaultValue || null;
-
-  var action = (options.action || defaultValue);
-  delete options.action;
-
-  var actionClass = this._registryGet('action', action, action);
-  return actionClass;
-};
-
-ActionContainer.prototype._getHandler = function () {
-  var handlerString = this.conflictHandler;
-  var handlerFuncName = '_handleConflict' + $$.capitalize(handlerString);
-  var func = this[handlerFuncName];
-  if (typeof func === 'undefined') {
-    var msg = 'invalid conflict resolution value: ' + handlerString;
-    throw new Error(msg);
-  } else {
-    return func;
-  }
-};
-
-ActionContainer.prototype._checkConflict = function (action) {
-  var optionStringActions = this._optionStringActions;
-  var conflictOptionals = [];
-
-  // find all options that conflict with this option
-  // collect pairs, the string, and an existing action that it conflicts with
-  action.optionStrings.forEach(function (optionString) {
-    var conflOptional = optionStringActions[optionString];
-    if (typeof conflOptional !== 'undefined') {
-      conflictOptionals.push([ optionString, conflOptional ]);
-    }
-  });
-
-  if (conflictOptionals.length > 0) {
-    var conflictHandler = this._getHandler();
-    conflictHandler.call(this, action, conflictOptionals);
-  }
-};
-
-ActionContainer.prototype._handleConflictError = function (action, conflOptionals) {
-  var conflicts = conflOptionals.map(function (pair) { return pair[0]; });
-  conflicts = conflicts.join(', ');
-  throw argumentErrorHelper(
-    action,
-    format('Conflicting option string(s): %s', conflicts)
-  );
-};
-
-ActionContainer.prototype._handleConflictResolve = function (action, conflOptionals) {
-  // remove all conflicting options
-  var self = this;
-  conflOptionals.forEach(function (pair) {
-    var optionString = pair[0];
-    var conflictingAction = pair[1];
-    // remove the conflicting option string
-    var i = conflictingAction.optionStrings.indexOf(optionString);
-    if (i >= 0) {
-      conflictingAction.optionStrings.splice(i, 1);
-    }
-    delete self._optionStringActions[optionString];
-    // if the option now has no option string, remove it from the
-    // container holding it
-    if (conflictingAction.optionStrings.length === 0) {
-      conflictingAction.container._removeAction(conflictingAction);
-    }
-  });
-};
-
+module.exports = require("events");
 
 /***/ }),
 /* 615 */
@@ -22333,43 +22716,7 @@ module.exports = require("path");
 
 /***/ }),
 /* 623 */,
-/* 624 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = __webpack_require__(870);
-/**
- * Used for managing http clients during either upload or download
- */
-class HttpManager {
-    constructor(clientCount, userAgent) {
-        if (clientCount < 1) {
-            throw new Error('There must be at least one client');
-        }
-        this.userAgent = userAgent;
-        this.clients = new Array(clientCount).fill(utils_1.createHttpClient(userAgent));
-    }
-    getClient(index) {
-        return this.clients[index];
-    }
-    // client disposal is necessary if a keep-alive connection is used to properly close the connection
-    // for more information see: https://github.com/actions/http-client/blob/04e5ad73cd3fd1f5610a32116b0759eddf6570d2/index.ts#L292
-    disposeAndReplaceClient(index) {
-        this.clients[index].dispose();
-        this.clients[index] = utils_1.createHttpClient(this.userAgent);
-    }
-    disposeAndReplaceAllClients() {
-        for (const [index] of this.clients.entries()) {
-            this.disposeAndReplaceClient(index);
-        }
-    }
-}
-exports.HttpManager = HttpManager;
-//# sourceMappingURL=http-manager.js.map
-
-/***/ }),
+/* 624 */,
 /* 625 */,
 /* 626 */,
 /* 627 */,
@@ -22971,13 +23318,13 @@ const {
   getDir,
   getFinalDefinitionFilePath
 } = __webpack_require__(57);
-const { getTreeForProject } = __webpack_require__(702);
+const { getTreeForProject } = __webpack_require__(352);
 
 const { printCheckoutInformation } = __webpack_require__(656);
 const { logger } = __webpack_require__(79);
 const { execute } = __webpack_require__(81);
 const { treatCommand } = __webpack_require__(52);
-const core = __webpack_require__(393);
+const core = __webpack_require__(470);
 const {
   archiveArtifacts
 } = __webpack_require__(503);
@@ -24496,7 +24843,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const os = __importStar(__webpack_require__(87));
-const events = __importStar(__webpack_require__(759));
+const events = __importStar(__webpack_require__(614));
 const child = __importStar(__webpack_require__(129));
 const path = __importStar(__webpack_require__(622));
 const io = __importStar(__webpack_require__(1));
@@ -25173,24 +25520,7 @@ module.exports = (promise, onFinally) => {
 /* 699 */,
 /* 700 */,
 /* 701 */,
-/* 702 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const { getTree, getTreeForProject } = __webpack_require__(101);
-const { readDefinitionFile } = __webpack_require__(799);
-const { parentChainFromNode } = __webpack_require__(636);
-const { treatUrl } = __webpack_require__(824);
-
-module.exports = {
-  getTree,
-  getTreeForProject,
-  readDefinitionFile,
-  parentChainFromNode,
-  treatUrl
-};
-
-
-/***/ }),
+/* 702 */,
 /* 703 */,
 /* 704 */,
 /* 705 */,
@@ -25272,7 +25602,7 @@ exports.SearchState = SearchState;
 /* 731 */
 /***/ (function(module) {
 
-module.exports = {"name":"@kie/build-chain-action","version":"2.0.1","description":"GitHub action to define action chains","main":"src/lib/api.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":false,"bin":{"build-chain-action":"./bin/build-chain.js"},"scripts":{"test":"jest","it":"node it/it.js","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@kie/build-chain-configuration-reader":"^0.0.6","@octokit/rest":"^17.6.0","argparse":"^1.0.7","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","dotenv":"^8.2.0","eslint":"^7.10.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
+module.exports = {"name":"@kie/build-chain-action","version":"2.1.0","description":"GitHub action to define action chains","main":"src/lib/api.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":false,"bin":{"build-chain-action":"./bin/build-chain.js"},"scripts":{"test":"jest","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@kie/build-chain-configuration-reader":"^0.0.6","@octokit/rest":"^17.6.0","argparse":"^2.0.1","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","dotenv":"^8.2.0","eslint":"^7.10.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
 
 /***/ }),
 /* 732 */,
@@ -25553,7 +25883,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var endpoint = __webpack_require__(385);
-var universalUserAgent = __webpack_require__(392);
+var universalUserAgent = __webpack_require__(211);
 var isPlainObject = __webpack_require__(588);
 var nodeFetch = _interopDefault(__webpack_require__(454));
 var requestError = __webpack_require__(463);
@@ -25702,12 +26032,7 @@ exports.request = request;
 /* 756 */,
 /* 757 */,
 /* 758 */,
-/* 759 */
-/***/ (function(module) {
-
-module.exports = require("events");
-
-/***/ }),
+/* 759 */,
 /* 760 */,
 /* 761 */
 /***/ (function(module) {
@@ -26325,73 +26650,7 @@ module.exports = { treatUrl };
 /* 825 */,
 /* 826 */,
 /* 827 */,
-/* 828 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const path = __importStar(__webpack_require__(622));
-/**
- * Creates a specification for a set of files that will be downloaded
- * @param artifactName the name of the artifact
- * @param artifactEntries a set of container entries that describe that files that make up an artifact
- * @param downloadPath the path where the artifact will be downloaded to
- * @param includeRootDirectory specifies if there should be an extra directory (denoted by the artifact name) where the artifact files should be downloaded to
- */
-function getDownloadSpecification(artifactName, artifactEntries, downloadPath, includeRootDirectory) {
-    // use a set for the directory paths so that there are no duplicates
-    const directories = new Set();
-    const specifications = {
-        rootDownloadLocation: includeRootDirectory
-            ? path.join(downloadPath, artifactName)
-            : downloadPath,
-        directoryStructure: [],
-        emptyFilesToCreate: [],
-        filesToDownload: []
-    };
-    for (const entry of artifactEntries) {
-        // Ignore artifacts in the container that don't begin with the same name
-        if (entry.path.startsWith(`${artifactName}/`) ||
-            entry.path.startsWith(`${artifactName}\\`)) {
-            // normalize all separators to the local OS
-            const normalizedPathEntry = path.normalize(entry.path);
-            // entry.path always starts with the artifact name, if includeRootDirectory is false, remove the name from the beginning of the path
-            const filePath = path.join(downloadPath, includeRootDirectory
-                ? normalizedPathEntry
-                : normalizedPathEntry.replace(artifactName, ''));
-            // Case insensitive folder structure maintained in the backend, not every folder is created so the 'folder'
-            // itemType cannot be relied upon. The file must be used to determine the directory structure
-            if (entry.itemType === 'file') {
-                // Get the directories that we need to create from the filePath for each individual file
-                directories.add(path.dirname(filePath));
-                if (entry.fileLength === 0) {
-                    // An empty file was uploaded, create the empty files locally so that no extra http calls are made
-                    specifications.emptyFilesToCreate.push(filePath);
-                }
-                else {
-                    specifications.filesToDownload.push({
-                        sourceLocation: entry.contentLocation,
-                        targetPath: filePath
-                    });
-                }
-            }
-        }
-    }
-    specifications.directoryStructure = Array.from(directories);
-    return specifications;
-}
-exports.getDownloadSpecification = getDownloadSpecification;
-//# sourceMappingURL=download-specification.js.map
-
-/***/ }),
+/* 828 */,
 /* 829 */,
 /* 830 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -26431,60 +26690,7 @@ module.exports = new Schema({
 /* 831 */,
 /* 832 */,
 /* 833 */,
-/* 834 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/*:nodoc:*
- * class ActionHelp
- *
- * Support action for printing help
- * This class inherided from [[Action]]
- **/
-
-
-var util = __webpack_require__(669);
-
-var Action = __webpack_require__(380);
-
-// Constants
-var c  = __webpack_require__(45);
-
-/*:nodoc:*
- * new ActionHelp(options)
- * - options (object): options hash see [[Action.new]]
- *
- **/
-var ActionHelp = module.exports = function ActionHelp(options) {
-  options = options || {};
-  if (options.defaultValue !== null) {
-    options.defaultValue = options.defaultValue;
-  } else {
-    options.defaultValue = c.SUPPRESS;
-  }
-  options.dest = (options.dest !== null ? options.dest : c.SUPPRESS);
-  options.nargs = 0;
-  Action.call(this, options);
-
-};
-util.inherits(ActionHelp, Action);
-
-/*:nodoc:*
- * ActionHelp#call(parser, namespace, values, optionString)
- * - parser (ArgumentParser): current parser
- * - namespace (Namespace): namespace for output data
- * - values (Array): parsed values
- * - optionString (Array): input option string(not parsed)
- *
- * Print help and exit
- **/
-ActionHelp.prototype.call = function (parser) {
-  parser.printHelp();
-  parser.exit();
-};
-
-
-/***/ }),
+/* 834 */,
 /* 835 */
 /***/ (function(module) {
 
@@ -28563,13 +28769,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(__webpack_require__(747));
-const core = __importStar(__webpack_require__(393));
+const core = __importStar(__webpack_require__(470));
 const zlib = __importStar(__webpack_require__(761));
 const utils_1 = __webpack_require__(870);
 const url_1 = __webpack_require__(835);
 const status_reporter_1 = __webpack_require__(176);
 const perf_hooks_1 = __webpack_require__(630);
-const http_manager_1 = __webpack_require__(624);
+const http_manager_1 = __webpack_require__(452);
 const config_variables_1 = __webpack_require__(401);
 class DownloadHttpClient {
     constructor() {
@@ -28996,7 +29202,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const core_1 = __webpack_require__(393);
+const core_1 = __webpack_require__(470);
 const fs_1 = __webpack_require__(747);
 const http_client_1 = __webpack_require__(539);
 const auth_1 = __webpack_require__(336);
@@ -29414,7 +29620,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const fs = __importStar(__webpack_require__(747));
-const core = __importStar(__webpack_require__(393));
+const core = __importStar(__webpack_require__(470));
 const tmp = __importStar(__webpack_require__(875));
 const stream = __importStar(__webpack_require__(413));
 const utils_1 = __webpack_require__(870);
@@ -29423,7 +29629,7 @@ const util_1 = __webpack_require__(669);
 const url_1 = __webpack_require__(835);
 const perf_hooks_1 = __webpack_require__(630);
 const status_reporter_1 = __webpack_require__(176);
-const http_manager_1 = __webpack_require__(624);
+const http_manager_1 = __webpack_require__(452);
 const upload_gzip_1 = __webpack_require__(647);
 const stat = util_1.promisify(fs.stat);
 class UploadHttpClient {
@@ -30005,7 +30211,453 @@ module.exports = {
 /***/ }),
 /* 901 */,
 /* 902 */,
-/* 903 */,
+/* 903 */
+/***/ (function(module) {
+
+"use strict";
+// Partial port of python's argparse module, version 3.9.0 (only wrap and fill functions):
+// https://github.com/python/cpython/blob/v3.9.0b4/Lib/textwrap.py
+
+
+
+/*
+ * Text wrapping and filling.
+ */
+
+// Copyright (C) 1999-2001 Gregory P. Ward.
+// Copyright (C) 2002, 2003 Python Software Foundation.
+// Copyright (C) 2020 argparse.js authors
+// Originally written by Greg Ward <gward@python.net>
+
+// Hardcode the recognized whitespace characters to the US-ASCII
+// whitespace characters.  The main reason for doing this is that
+// some Unicode spaces (like \u00a0) are non-breaking whitespaces.
+//
+// This less funky little regex just split on recognized spaces. E.g.
+//   "Hello there -- you goof-ball, use the -b option!"
+// splits into
+//   Hello/ /there/ /--/ /you/ /goof-ball,/ /use/ /the/ /-b/ /option!/
+const wordsep_simple_re = /([\t\n\x0b\x0c\r ]+)/
+
+class TextWrapper {
+    /*
+     *  Object for wrapping/filling text.  The public interface consists of
+     *  the wrap() and fill() methods; the other methods are just there for
+     *  subclasses to override in order to tweak the default behaviour.
+     *  If you want to completely replace the main wrapping algorithm,
+     *  you'll probably have to override _wrap_chunks().
+     *
+     *  Several instance attributes control various aspects of wrapping:
+     *    width (default: 70)
+     *      the maximum width of wrapped lines (unless break_long_words
+     *      is false)
+     *    initial_indent (default: "")
+     *      string that will be prepended to the first line of wrapped
+     *      output.  Counts towards the line's width.
+     *    subsequent_indent (default: "")
+     *      string that will be prepended to all lines save the first
+     *      of wrapped output; also counts towards each line's width.
+     *    expand_tabs (default: true)
+     *      Expand tabs in input text to spaces before further processing.
+     *      Each tab will become 0 .. 'tabsize' spaces, depending on its position
+     *      in its line.  If false, each tab is treated as a single character.
+     *    tabsize (default: 8)
+     *      Expand tabs in input text to 0 .. 'tabsize' spaces, unless
+     *      'expand_tabs' is false.
+     *    replace_whitespace (default: true)
+     *      Replace all whitespace characters in the input text by spaces
+     *      after tab expansion.  Note that if expand_tabs is false and
+     *      replace_whitespace is true, every tab will be converted to a
+     *      single space!
+     *    fix_sentence_endings (default: false)
+     *      Ensure that sentence-ending punctuation is always followed
+     *      by two spaces.  Off by default because the algorithm is
+     *      (unavoidably) imperfect.
+     *    break_long_words (default: true)
+     *      Break words longer than 'width'.  If false, those words will not
+     *      be broken, and some lines might be longer than 'width'.
+     *    break_on_hyphens (default: true)
+     *      Allow breaking hyphenated words. If true, wrapping will occur
+     *      preferably on whitespaces and right after hyphens part of
+     *      compound words.
+     *    drop_whitespace (default: true)
+     *      Drop leading and trailing whitespace from lines.
+     *    max_lines (default: None)
+     *      Truncate wrapped lines.
+     *    placeholder (default: ' [...]')
+     *      Append to the last line of truncated text.
+     */
+
+    constructor(options = {}) {
+        let {
+            width = 70,
+            initial_indent = '',
+            subsequent_indent = '',
+            expand_tabs = true,
+            replace_whitespace = true,
+            fix_sentence_endings = false,
+            break_long_words = true,
+            drop_whitespace = true,
+            break_on_hyphens = true,
+            tabsize = 8,
+            max_lines = undefined,
+            placeholder=' [...]'
+        } = options
+
+        this.width = width
+        this.initial_indent = initial_indent
+        this.subsequent_indent = subsequent_indent
+        this.expand_tabs = expand_tabs
+        this.replace_whitespace = replace_whitespace
+        this.fix_sentence_endings = fix_sentence_endings
+        this.break_long_words = break_long_words
+        this.drop_whitespace = drop_whitespace
+        this.break_on_hyphens = break_on_hyphens
+        this.tabsize = tabsize
+        this.max_lines = max_lines
+        this.placeholder = placeholder
+    }
+
+
+    // -- Private methods -----------------------------------------------
+    // (possibly useful for subclasses to override)
+
+    _munge_whitespace(text) {
+        /*
+         *  _munge_whitespace(text : string) -> string
+         *
+         *  Munge whitespace in text: expand tabs and convert all other
+         *  whitespace characters to spaces.  Eg. " foo\\tbar\\n\\nbaz"
+         *  becomes " foo    bar  baz".
+         */
+        if (this.expand_tabs) {
+            text = text.replace(/\t/g, ' '.repeat(this.tabsize)) // not strictly correct in js
+        }
+        if (this.replace_whitespace) {
+            text = text.replace(/[\t\n\x0b\x0c\r]/g, ' ')
+        }
+        return text
+    }
+
+    _split(text) {
+        /*
+         *  _split(text : string) -> [string]
+         *
+         *  Split the text to wrap into indivisible chunks.  Chunks are
+         *  not quite the same as words; see _wrap_chunks() for full
+         *  details.  As an example, the text
+         *    Look, goof-ball -- use the -b option!
+         *  breaks into the following chunks:
+         *    'Look,', ' ', 'goof-', 'ball', ' ', '--', ' ',
+         *    'use', ' ', 'the', ' ', '-b', ' ', 'option!'
+         *  if break_on_hyphens is True, or in:
+         *    'Look,', ' ', 'goof-ball', ' ', '--', ' ',
+         *    'use', ' ', 'the', ' ', '-b', ' ', option!'
+         *  otherwise.
+         */
+        let chunks = text.split(wordsep_simple_re)
+        chunks = chunks.filter(Boolean)
+        return chunks
+    }
+
+    _handle_long_word(reversed_chunks, cur_line, cur_len, width) {
+        /*
+         *  _handle_long_word(chunks : [string],
+         *                    cur_line : [string],
+         *                    cur_len : int, width : int)
+         *
+         *  Handle a chunk of text (most likely a word, not whitespace) that
+         *  is too long to fit in any line.
+         */
+        // Figure out when indent is larger than the specified width, and make
+        // sure at least one character is stripped off on every pass
+        let space_left
+        if (width < 1) {
+            space_left = 1
+        } else {
+            space_left = width - cur_len
+        }
+
+        // If we're allowed to break long words, then do so: put as much
+        // of the next chunk onto the current line as will fit.
+        if (this.break_long_words) {
+            cur_line.push(reversed_chunks[reversed_chunks.length - 1].slice(0, space_left))
+            reversed_chunks[reversed_chunks.length - 1] = reversed_chunks[reversed_chunks.length - 1].slice(space_left)
+
+        // Otherwise, we have to preserve the long word intact.  Only add
+        // it to the current line if there's nothing already there --
+        // that minimizes how much we violate the width constraint.
+        } else if (!cur_line) {
+            cur_line.push(...reversed_chunks.pop())
+        }
+
+        // If we're not allowed to break long words, and there's already
+        // text on the current line, do nothing.  Next time through the
+        // main loop of _wrap_chunks(), we'll wind up here again, but
+        // cur_len will be zero, so the next line will be entirely
+        // devoted to the long word that we can't handle right now.
+    }
+
+    _wrap_chunks(chunks) {
+        /*
+         *  _wrap_chunks(chunks : [string]) -> [string]
+         *
+         *  Wrap a sequence of text chunks and return a list of lines of
+         *  length 'self.width' or less.  (If 'break_long_words' is false,
+         *  some lines may be longer than this.)  Chunks correspond roughly
+         *  to words and the whitespace between them: each chunk is
+         *  indivisible (modulo 'break_long_words'), but a line break can
+         *  come between any two chunks.  Chunks should not have internal
+         *  whitespace; ie. a chunk is either all whitespace or a "word".
+         *  Whitespace chunks will be removed from the beginning and end of
+         *  lines, but apart from that whitespace is preserved.
+         */
+        let lines = []
+        let indent
+        if (this.width <= 0) {
+            throw Error(`invalid width ${this.width} (must be > 0)`)
+        }
+        if (this.max_lines !== undefined) {
+            if (this.max_lines > 1) {
+                indent = this.subsequent_indent
+            } else {
+                indent = this.initial_indent
+            }
+            if (indent.length + this.placeholder.trimStart().length > this.width) {
+                throw Error('placeholder too large for max width')
+            }
+        }
+
+        // Arrange in reverse order so items can be efficiently popped
+        // from a stack of chucks.
+        chunks = chunks.reverse()
+
+        while (chunks.length > 0) {
+
+            // Start the list of chunks that will make up the current line.
+            // cur_len is just the length of all the chunks in cur_line.
+            let cur_line = []
+            let cur_len = 0
+
+            // Figure out which static string will prefix this line.
+            let indent
+            if (lines) {
+                indent = this.subsequent_indent
+            } else {
+                indent = this.initial_indent
+            }
+
+            // Maximum width for this line.
+            let width = this.width - indent.length
+
+            // First chunk on line is whitespace -- drop it, unless this
+            // is the very beginning of the text (ie. no lines started yet).
+            if (this.drop_whitespace && chunks[chunks.length - 1].trim() === '' && lines.length > 0) {
+                chunks.pop()
+            }
+
+            while (chunks.length > 0) {
+                let l = chunks[chunks.length - 1].length
+
+                // Can at least squeeze this chunk onto the current line.
+                if (cur_len + l <= width) {
+                    cur_line.push(chunks.pop())
+                    cur_len += l
+
+                // Nope, this line is full.
+                } else {
+                    break
+                }
+            }
+
+            // The current line is full, and the next chunk is too big to
+            // fit on *any* line (not just this one).
+            if (chunks.length && chunks[chunks.length - 1].length > width) {
+                this._handle_long_word(chunks, cur_line, cur_len, width)
+                cur_len = cur_line.map(l => l.length).reduce((a, b) => a + b, 0)
+            }
+
+            // If the last chunk on this line is all whitespace, drop it.
+            if (this.drop_whitespace && cur_line.length > 0 && cur_line[cur_line.length - 1].trim() === '') {
+                cur_len -= cur_line[cur_line.length - 1].length
+                cur_line.pop()
+            }
+
+            if (cur_line) {
+                if (this.max_lines === undefined ||
+                    lines.length + 1 < this.max_lines ||
+                    (chunks.length === 0 ||
+                     this.drop_whitespace &&
+                     chunks.length === 1 &&
+                     !chunks[0].trim()) && cur_len <= width) {
+                    // Convert current line back to a string and store it in
+                    // list of all lines (return value).
+                    lines.push(indent + cur_line.join(''))
+                } else {
+                    let had_break = false
+                    while (cur_line) {
+                        if (cur_line[cur_line.length - 1].trim() &&
+                            cur_len + this.placeholder.length <= width) {
+                            cur_line.push(this.placeholder)
+                            lines.push(indent + cur_line.join(''))
+                            had_break = true
+                            break
+                        }
+                        cur_len -= cur_line[-1].length
+                        cur_line.pop()
+                    }
+                    if (!had_break) {
+                        if (lines) {
+                            let prev_line = lines[lines.length - 1].trimEnd()
+                            if (prev_line.length + this.placeholder.length <=
+                                    this.width) {
+                                lines[lines.length - 1] = prev_line + this.placeholder
+                                break
+                            }
+                        }
+                        lines.push(indent + this.placeholder.lstrip())
+                    }
+                    break
+                }
+            }
+        }
+
+        return lines
+    }
+
+    _split_chunks(text) {
+        text = this._munge_whitespace(text)
+        return this._split(text)
+    }
+
+    // -- Public interface ----------------------------------------------
+
+    wrap(text) {
+        /*
+         *  wrap(text : string) -> [string]
+         *
+         *  Reformat the single paragraph in 'text' so it fits in lines of
+         *  no more than 'self.width' columns, and return a list of wrapped
+         *  lines.  Tabs in 'text' are expanded with string.expandtabs(),
+         *  and all other whitespace characters (including newline) are
+         *  converted to space.
+         */
+        let chunks = this._split_chunks(text)
+        // not implemented in js
+        //if (this.fix_sentence_endings) {
+        //    this._fix_sentence_endings(chunks)
+        //}
+        return this._wrap_chunks(chunks)
+    }
+
+    fill(text) {
+        /*
+         *  fill(text : string) -> string
+         *
+         *  Reformat the single paragraph in 'text' to fit in lines of no
+         *  more than 'self.width' columns, and return a new string
+         *  containing the entire wrapped paragraph.
+         */
+        return this.wrap(text).join('\n')
+    }
+}
+
+
+// -- Convenience interface ---------------------------------------------
+
+function wrap(text, options = {}) {
+    /*
+     *  Wrap a single paragraph of text, returning a list of wrapped lines.
+     *
+     *  Reformat the single paragraph in 'text' so it fits in lines of no
+     *  more than 'width' columns, and return a list of wrapped lines.  By
+     *  default, tabs in 'text' are expanded with string.expandtabs(), and
+     *  all other whitespace characters (including newline) are converted to
+     *  space.  See TextWrapper class for available keyword args to customize
+     *  wrapping behaviour.
+     */
+    let { width = 70, ...kwargs } = options
+    let w = new TextWrapper(Object.assign({ width }, kwargs))
+    return w.wrap(text)
+}
+
+function fill(text, options = {}) {
+    /*
+     *  Fill a single paragraph of text, returning a new string.
+     *
+     *  Reformat the single paragraph in 'text' to fit in lines of no more
+     *  than 'width' columns, and return a new string containing the entire
+     *  wrapped paragraph.  As with wrap(), tabs are expanded and other
+     *  whitespace characters converted to space.  See TextWrapper class for
+     *  available keyword args to customize wrapping behaviour.
+     */
+    let { width = 70, ...kwargs } = options
+    let w = new TextWrapper(Object.assign({ width }, kwargs))
+    return w.fill(text)
+}
+
+// -- Loosely related functionality -------------------------------------
+
+let _whitespace_only_re = /^[ \t]+$/mg
+let _leading_whitespace_re = /(^[ \t]*)(?:[^ \t\n])/mg
+
+function dedent(text) {
+    /*
+     *  Remove any common leading whitespace from every line in `text`.
+     *
+     *  This can be used to make triple-quoted strings line up with the left
+     *  edge of the display, while still presenting them in the source code
+     *  in indented form.
+     *
+     *  Note that tabs and spaces are both treated as whitespace, but they
+     *  are not equal: the lines "  hello" and "\\thello" are
+     *  considered to have no common leading whitespace.
+     *
+     *  Entirely blank lines are normalized to a newline character.
+     */
+    // Look for the longest leading string of spaces and tabs common to
+    // all lines.
+    let margin = undefined
+    text = text.replace(_whitespace_only_re, '')
+    let indents = text.match(_leading_whitespace_re) || []
+    for (let indent of indents) {
+        indent = indent.slice(0, -1)
+
+        if (margin === undefined) {
+            margin = indent
+
+        // Current line more deeply indented than previous winner:
+        // no change (previous winner is still on top).
+        } else if (indent.startsWith(margin)) {
+            // pass
+
+        // Current line consistent with and no deeper than previous winner:
+        // it's the new winner.
+        } else if (margin.startsWith(indent)) {
+            margin = indent
+
+        // Find the largest common whitespace between current line and previous
+        // winner.
+        } else {
+            for (let i = 0; i < margin.length && i < indent.length; i++) {
+                if (margin[i] !== indent[i]) {
+                    margin = margin.slice(0, i)
+                    break
+                }
+            }
+        }
+    }
+
+    if (margin) {
+        text = text.replace(new RegExp('^' + margin, 'mg'), '')
+    }
+    return text
+}
+
+module.exports = { wrap, fill, dedent }
+
+
+/***/ }),
 /* 904 */,
 /* 905 */,
 /* 906 */,
@@ -30486,53 +31138,7 @@ exports.Pattern = Pattern;
 /* 924 */,
 /* 925 */,
 /* 926 */,
-/* 927 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/*:nodoc:*
- * class ActionCount
- *
- * This counts the number of times a keyword argument occurs.
- * For example, this is useful for increasing verbosity levels
- *
- * This class inherided from [[Action]]
- *
- **/
-
-
-var util = __webpack_require__(669);
-
-var Action = __webpack_require__(380);
-
-/*:nodoc:*
- * new ActionCount(options)
- * - options (object): options hash see [[Action.new]]
- *
- **/
-var ActionCount = module.exports = function ActionCount(options) {
-  options = options || {};
-  options.nargs = 0;
-
-  Action.call(this, options);
-};
-util.inherits(ActionCount, Action);
-
-/*:nodoc:*
- * ActionCount#call(parser, namespace, values, optionString) -> Void
- * - parser (ArgumentParser): current parser
- * - namespace (Namespace): namespace for output data
- * - values (Array): parsed values
- * - optionString (Array): input option string(not parsed)
- *
- * Call the action. Save result in namespace object
- **/
-ActionCount.prototype.call = function (parser, namespace) {
-  namespace.set(this.dest, (namespace[this.dest] || 0) + 1);
-};
-
-
-/***/ }),
+/* 927 */,
 /* 928 */,
 /* 929 */,
 /* 930 */
@@ -30646,7 +31252,7 @@ module.exports = {
 /* 933 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
-const core = __webpack_require__(393);
+const core = __webpack_require__(470);
 
 function getDefinitionFile() {
   return core.getInput("definition-file");
@@ -31271,40 +31877,7 @@ module.exports = {
 /* 960 */,
 /* 961 */,
 /* 962 */,
-/* 963 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/*:nodoc:*
- * class ActionStoreFalse
- *
- * This action store the values False respectively.
- * This is special cases of 'storeConst'
- *
- * This class inherited from [[Action]]
- **/
-
-
-
-var util = __webpack_require__(669);
-
-var ActionStoreConstant = __webpack_require__(267);
-
-/*:nodoc:*
- * new ActionStoreFalse(options)
- * - options (object): hash of options see [[Action.new]]
- *
- **/
-var ActionStoreFalse = module.exports = function ActionStoreFalse(options) {
-  options = options || {};
-  options.constant = false;
-  options.defaultValue = options.defaultValue !== null ? options.defaultValue : true;
-  ActionStoreConstant.call(this, options);
-};
-util.inherits(ActionStoreFalse, ActionStoreConstant);
-
-
-/***/ }),
+/* 963 */,
 /* 964 */,
 /* 965 */,
 /* 966 */
@@ -31657,162 +32230,7 @@ module.exports = {
 
 /***/ }),
 /* 982 */,
-/* 983 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/** internal
- * class ActionSubparsers
- *
- * Support the creation of such sub-commands with the addSubparsers()
- *
- * This class inherited from [[Action]]
- **/
-
-
-var util    = __webpack_require__(669);
-var format  = __webpack_require__(669).format;
-
-
-var Action = __webpack_require__(380);
-
-// Constants
-var c = __webpack_require__(45);
-
-// Errors
-var argumentErrorHelper = __webpack_require__(287);
-
-
-/*:nodoc:*
- * new ChoicesPseudoAction(name, help)
- *
- * Create pseudo action for correct help text
- *
- **/
-function ChoicesPseudoAction(name, help) {
-  var options = {
-    optionStrings: [],
-    dest: name,
-    help: help
-  };
-
-  Action.call(this, options);
-}
-
-util.inherits(ChoicesPseudoAction, Action);
-
-/**
- * new ActionSubparsers(options)
- * - options (object): options hash see [[Action.new]]
- *
- **/
-function ActionSubparsers(options) {
-  options = options || {};
-  options.dest = options.dest || c.SUPPRESS;
-  options.nargs = c.PARSER;
-
-  this.debug = (options.debug === true);
-
-  this._progPrefix = options.prog;
-  this._parserClass = options.parserClass;
-  this._nameParserMap = {};
-  this._choicesActions = [];
-
-  options.choices = this._nameParserMap;
-  Action.call(this, options);
-}
-
-util.inherits(ActionSubparsers, Action);
-
-/*:nodoc:*
- * ActionSubparsers#addParser(name, options) -> ArgumentParser
- * - name (string): sub-command name
- * - options (object): see [[ArgumentParser.new]]
- *
- *  Note:
- *  addParser supports an additional aliases option,
- *  which allows multiple strings to refer to the same subparser.
- *  This example, like svn, aliases co as a shorthand for checkout
- *
- **/
-ActionSubparsers.prototype.addParser = function (name, options) {
-  var parser;
-
-  var self = this;
-
-  options = options || {};
-
-  options.debug = (this.debug === true);
-
-  // set program from the existing prefix
-  if (!options.prog) {
-    options.prog = this._progPrefix + ' ' + name;
-  }
-
-  var aliases = options.aliases || [];
-
-  // create a pseudo-action to hold the choice help
-  if (!!options.help || typeof options.help === 'string') {
-    var help = options.help;
-    delete options.help;
-
-    var choiceAction = new ChoicesPseudoAction(name, help);
-    this._choicesActions.push(choiceAction);
-  }
-
-  // create the parser and add it to the map
-  parser = new this._parserClass(options);
-  this._nameParserMap[name] = parser;
-
-  // make parser available under aliases also
-  aliases.forEach(function (alias) {
-    self._nameParserMap[alias] = parser;
-  });
-
-  return parser;
-};
-
-ActionSubparsers.prototype._getSubactions = function () {
-  return this._choicesActions;
-};
-
-/*:nodoc:*
- * ActionSubparsers#call(parser, namespace, values, optionString) -> Void
- * - parser (ArgumentParser): current parser
- * - namespace (Namespace): namespace for output data
- * - values (Array): parsed values
- * - optionString (Array): input option string(not parsed)
- *
- * Call the action. Parse input aguments
- **/
-ActionSubparsers.prototype.call = function (parser, namespace, values) {
-  var parserName = values[0];
-  var argStrings = values.slice(1);
-
-  // set the parser name if requested
-  if (this.dest !== c.SUPPRESS) {
-    namespace[this.dest] = parserName;
-  }
-
-  // select the parser
-  if (this._nameParserMap[parserName]) {
-    parser = this._nameParserMap[parserName];
-  } else {
-    throw argumentErrorHelper(format(
-      'Unknown parser "%s" (choices: [%s]).',
-        parserName,
-        Object.keys(this._nameParserMap).join(', ')
-    ));
-  }
-
-  // parse all the remaining options into the namespace
-  parser.parseArgs(argStrings, namespace);
-};
-
-module.exports = ActionSubparsers;
-
-
-/***/ }),
+/* 983 */,
 /* 984 */,
 /* 985 */,
 /* 986 */
@@ -31865,60 +32283,7 @@ exports.exec = exec;
 //# sourceMappingURL=exec.js.map
 
 /***/ }),
-/* 987 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-/*:nodoc:*
- * class ActionVersion
- *
- * Support action for printing program version
- * This class inherited from [[Action]]
- **/
-
-
-var util = __webpack_require__(669);
-
-var Action = __webpack_require__(380);
-
-//
-// Constants
-//
-var c = __webpack_require__(45);
-
-/*:nodoc:*
- * new ActionVersion(options)
- * - options (object): options hash see [[Action.new]]
- *
- **/
-var ActionVersion = module.exports = function ActionVersion(options) {
-  options = options || {};
-  options.defaultValue = (options.defaultValue ? options.defaultValue : c.SUPPRESS);
-  options.dest = (options.dest || c.SUPPRESS);
-  options.nargs = 0;
-  this.version = options.version;
-  Action.call(this, options);
-};
-util.inherits(ActionVersion, Action);
-
-/*:nodoc:*
- * ActionVersion#call(parser, namespace, values, optionString) -> Void
- * - parser (ArgumentParser): current parser
- * - namespace (Namespace): namespace for output data
- * - values (Array): parsed values
- * - optionString (Array): input option string(not parsed)
- *
- * Print version and exit
- **/
-ActionVersion.prototype.call = function (parser) {
-  var version = this.version || parser.version;
-  var formatter = parser._getFormatter();
-  formatter.addText(version);
-  parser.exit(0, formatter.formatHelp());
-};
-
-
-/***/ }),
+/* 987 */,
 /* 988 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 

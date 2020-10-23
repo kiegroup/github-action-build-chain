@@ -1,5 +1,6 @@
 const {
   getDefinitionFile,
+  getStartingProject,
   getFlowType,
   isPullRequestFlowType,
   isBranchFlowType
@@ -20,6 +21,19 @@ test("getDefinitionFile", () => {
   );
   // Act
   const result = getDefinitionFile();
+
+  // Assert
+  expect(result).toEqual(expectedResult);
+});
+
+test("getStartingProject", () => {
+  // Arrange
+  const expectedResult = "projectx";
+  getInput.mockImplementationOnce(param =>
+    param === "starting-project" ? expectedResult : undefined
+  );
+  // Act
+  const result = getStartingProject();
 
   // Assert
   expect(result).toEqual(expectedResult);

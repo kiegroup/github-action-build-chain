@@ -1,12 +1,20 @@
 const {
+  checkoutDefinitionTree,
   getFinalDefinitionFilePath
 } = require("./common/build-chain-flow-helper");
 const {
   getTreeForProject,
   getTree
 } = require("@kie/build-chain-configuration-reader");
+const core = require("@actions/core");
+const { logger } = require("../common");
+const { printCheckoutInformation } = require("../summary");
+const {
+  executeBuild,
+  executeBuildSpecificCommand
+} = require("./common/common-helper");
 
-async function start(context) {
+async function start(context, options = {}) {
   core.startGroup(
     `Checking out ${context.config.github.groupProject} and its dependencies`
   );
@@ -31,7 +39,11 @@ async function start(context) {
         : "no dependencies"
     }`
   );
-  const nodeChain = await checkoutDefinitionTree(context, definitionTree);
+  let nodeChain = await checkoutDefinitionTree(
+    context,
+    definitionTree,
+    "branch"
+  );
   core.endGroup();
 
   core.startGroup(`Checkout Summary...`);
@@ -43,19 +55,46 @@ async function start(context) {
   );
   core.endGroup();
 
-  const executionResult = await executeBuild(
-    context.config.rootFolder,
-    nodeChain,
-    context.config.github.repository
-  )
-    .then(() => true)
-    .catch(e => e);
+  if (options.skipExecution) {
+    if (options.projectToStart) {
+      const nodeChainIndex = nodeChain
+        .map(node => node.project)
+        .indexOf(options.projectToStart);
+      if (nodeChainIndex === -1) {
+        throw new Error(
+          `The project to start "${
+            options.projectToStart
+          }" is not defined in ${nodeChain.map(node => node.project)}`
+        );
+      }
+      nodeChain = nodeChain.slice(nodeChainIndex);
+    }
 
-  if (executionResult !== true) {
-    logger.error(executionResult);
-    throw new Error(
-      `Command executions have failed, please review latest execution ${executionResult}`
-    );
+    const executionResult = options.command
+      ? await executeBuildSpecificCommand(
+          context.config.rootFolder,
+          nodeChain,
+          options.command,
+          options.projectToStart
+        )
+          .then(() => true)
+          .catch(e => e)
+      : await executeBuild(
+          context.config.rootFolder,
+          nodeChain,
+          context.config.github.repository
+        )
+          .then(() => true)
+          .catch(e => e);
+
+    if (executionResult !== true) {
+      logger.error(executionResult);
+      throw new Error(
+        `Command executions have failed, please review latest execution ${executionResult}`
+      );
+    }
+  } else {
+    logger.info("Execution has been skipped. Won't execute.");
   }
 }
 

@@ -314,6 +314,44 @@ It's possible to use this tool locally, just follow this steps
 
 either `sudo` and `env GITHUB_TOKEN=...` are optional depending on your local setup.
 
+**Arguments**
+
+- **\*-df**: the definition file, either a path to the filesystem o a URL to it. `-df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml`
+- **-f, -flow** (default: `pr`): The flow to execute. Possible values `pr`, `branch`
+  - **pr**: Executes "pull request" flow. See [Pull Request Flow](#pull-request-flow) and [Pull Request Flow Arguments](#pull-request-flow-arguments) sections
+  - **branch**: Executes "branch" flow. See [Branch Flow](#branch-flow) and [Branch Flow Arguments](#pull-request-flow-arguments) sections
+- **-folder** (default: `build_chain_%TIMESTAMP%`): The folder path to store projects.
+
+#### Pull Request flow Arguments
+
+In case you want to execute pull request flow these are the arguments to use:
+
+- **\*-url**: the event URL. Pull Request URL for instance `-url=https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
+
+Examples:
+
+```
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml -url=https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489
+```
+
+#### Branch flow arguments
+
+In case you want to execute pull request flow these are the arguments to use:
+
+- **\*-p, -project**: The project name to execute flow from. It has to match with one defined in "definition-file". E.g. `-p=kiegroup/drools`
+- **\*-b, -branch**: The branch to get projects. E.g. `-b=master`
+- **-g** (group from project argument): The group to take projects. In case you want to build projects from a different group than the one defined in "definition file". E.g. `-g=Ginxo`
+- **-c, -command**: A command to execute for all the projects, no matter what's defined in "definition file". E.g. `-c="mvn clean"`
+- **--skipExecution**: A command to skip execution, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
+
+Examples:
+
+```
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml -f=branch -p=kiegroup/lienzo-tests -b=master
+
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml -f=branch -p=kiegroup/optaplanner -b=7.x -folder=myfolder
+```
+
 ## Development
 
 ### build-chain-configuration-reader dependency

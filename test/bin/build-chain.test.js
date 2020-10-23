@@ -4,8 +4,8 @@ const {
   getArguments,
   getProcessEnvVariable,
   isLocallyExecution
-} = require("../../src/lib/util/execution-util");
-jest.mock("../../src/lib/util/execution-util");
+} = require("../../bin/bin-utils");
+jest.mock("../../bin/bin-utils");
 const { isPullRequestFlowType } = require("../../src/lib/util/action-utils");
 jest.mock("../../src/lib/util/action-utils");
 

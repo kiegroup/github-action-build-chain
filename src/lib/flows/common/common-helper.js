@@ -13,6 +13,13 @@ async function executeBuild(rootFolder, nodeChain, projectTriggeringJob) {
   }
 }
 
+async function executeBuildSpecificCommand(rootFolder, nodeChain, command) {
+  for await (const node of nodeChain) {
+    const dir = getDir(rootFolder, node.project);
+    await executeBuildCommands(dir, command, node.project);
+  }
+}
+
 async function executeNodeBuildCommands(
   rootFolder,
   node,
@@ -65,4 +72,4 @@ async function executeBuildCommands(cwd, buildCommands, project) {
   }
 }
 
-module.exports = { executeBuild };
+module.exports = { executeBuild, executeBuildSpecificCommand };

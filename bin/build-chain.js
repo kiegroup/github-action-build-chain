@@ -6,6 +6,9 @@ const {
   executeFromEvent: pullRequestEventFlow
 } = require("./flows/build-chain-pull-request");
 const {
+  executeLocally: branchLocalFlow
+} = require("./flows/build-chain-branch");
+const {
   isPullRequestFlowType,
   isBranchFlowType
 } = require("../src/lib/util/action-utils");
@@ -15,8 +18,9 @@ const {
   getProcessEnvVariable,
   isLocallyExecution,
   addLocalExecutionVariables
-} = require("../src/lib/util/execution-util");
+} = require("./bin-utils");
 require("dotenv").config();
+const assert = require("assert");
 
 async function main() {
   const args = getArguments();
@@ -51,6 +55,10 @@ async function handleLocalExecution(args, token, octokit) {
     "definition-file": { value: args.df[0], mandatory: true }
   });
   if (args.f.includes("pr")) {
+    assert(
+      args.url && args.url.length > 0,
+      "URL has not been defined, please define one following instructions"
+    );
     await pullRequestLocalFlow(
       token,
       octokit,
@@ -60,7 +68,31 @@ async function handleLocalExecution(args, token, octokit) {
     );
   }
   if (args.f.includes("branch")) {
-    // await pullRequest(octokit, args.url[0], process.env, args.folder[0]);
+    assert(
+      args.p && args.p.length > 0,
+      "project has not been defined, please define one following instructions"
+    );
+    assert(
+      args.b && args.b.length > 0,
+      "branch has not been defined, please define one following instructions"
+    );
+    addLocalExecutionVariables({
+      "starting-project": { value: args.p[0], mandatory: true }
+    });
+    await branchLocalFlow(
+      token,
+      octokit,
+      process.env,
+      args.folder[0],
+      args.g ? args.g[0] : undefined,
+      args.p[0],
+      args.b[0],
+      {
+        command: args.c ? args.c[0] : undefined,
+        projectToStart: args.ps ? args.ps[0] : undefined,
+        skipExecution: args.skipExecution
+      }
+    );
   }
 }
 

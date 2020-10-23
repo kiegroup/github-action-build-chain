@@ -1,7 +1,7 @@
 const { logger, ClientError } = require("../../src/lib/common");
 const { start } = require("../../src/lib/flows/pull-request-flow");
 const { createCommonConfig } = require("../../src/lib/flows/common/config");
-const { getProcessEnvVariable } = require("../../src/lib/util/execution-util");
+const { getProcessEnvVariable } = require("../bin-utils");
 const fse = require("fs-extra");
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
@@ -11,10 +11,30 @@ const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)
  * Executes pull request flow
  * @param {String} token the token to communicate to github
  * @param {Object} octokit octokit instance
- * @param {Object} config
+ * @param {Object} env proces.env
+ * @param {Object} pullRequestData information from pull request event
+ * @param {String} rootFolder path to store flow data/projects
  * @param {Boolean} isArchiveArtifacts
  */
-async function execute(token, octokit, config, isArchiveArtifacts) {
+async function execute(
+  token,
+  octokit,
+  env,
+  eventData,
+  rootFolder,
+  isArchiveArtifacts
+) {
+  const githubInformation = {
+    sourceGroup: eventData.pull_request.head.repo.full_name.split("/")[0], // forkedGroup
+    author: eventData.pull_request.head.user.login, // Ginxo
+    sourceRepository: eventData.repository
+      ? eventData.repository.name
+      : eventData.pull_request.repo
+      ? eventData.pull_request.repo.full_name
+      : env["GITHUB_REPOSITORY"] // forkedGroup/lienzo-tests
+  };
+
+  const config = await createCommonConfig(githubInformation, rootFolder, env);
   const context = { token, octokit, config };
   await start(context, isArchiveArtifacts);
 }
@@ -31,22 +51,16 @@ async function executeFromEvent(token, octokit, env) {
     "utf8"
   );
   const eventData = JSON.parse(eventDataStr);
-
-  const config = await createCommonConfig(eventData, undefined, env);
-  await execute(
-    token,
-    octokit,
-    config,
-    true
-  );
+  await execute(token, octokit, env, eventData, undefined, true);
 }
 
 /**
  * Prepares execution when this is triggered from command line
  * @param {String} token the token to communicate to github
  * @param {Object} octokit octokit instance
- * @param {String} eventUrl event url
  * @param {Object} env proces.env
+ * @param {String} rootFolder path to store flow data/projects
+ * @param {String} eventUrl event url
  */
 async function executeLocally(token, octokit, env, rootFolder, eventUrl) {
   logger.info(`Executing pull request flow for ${eventUrl} in ${rootFolder}`);
@@ -60,13 +74,7 @@ async function executeLocally(token, octokit, env, rootFolder, eventUrl) {
   env["GITHUB_REPOSITORY"] = eventData.pull_request.base.repo.full_name;
   env["GITHUB_REF"] = eventData.ref;
 
-  const config = await createCommonConfig(eventData, rootFolder, env);
-  await execute(
-    token,
-    octokit,
-    config,
-    false
-  );
+  await execute(token, octokit, env, eventData, rootFolder, false);
 }
 
 async function getEvent(octokit, eventUrl) {

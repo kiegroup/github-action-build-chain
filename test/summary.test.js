@@ -56,6 +56,45 @@ test("printCheckoutInformation", async () => {
   groupz/projectz`);
 });
 
+test("printCheckoutInformation some undefined", async () => {
+  // Arrange
+  const checkoutInfo = {
+    "kiegroup/droolsjbpm-integration": undefined,
+    "kiegroup/lienzo-tests": {
+      project: "lienzo-tests",
+      group: "kiegroup",
+      branch: "branchx",
+      targetGroup: "targetGroupy",
+      targetBranch: "targetBranchy",
+      merge: true
+    },
+    "kiegroup/lienzo-core": {
+      project: "lienzo-core",
+      group: "kiegroup",
+      branch: "branchz",
+      targetGroup: "targetGroupz",
+      targetBranch: "targetBranchz",
+      merge: false
+    }
+  };
+
+  // Act
+  printCheckoutInformation(checkoutInfo);
+
+  // // Assert
+  expect(logger.info).toHaveBeenCalledTimes(8);
+  expect(logger.info).toHaveBeenCalledWith(
+    "kiegroup/droolsjbpm-integration: No checkout information"
+  );
+  expect(logger.info).toHaveBeenCalledWith(
+    "kiegroup/lienzo-tests:branchx. It has Been merged with targetGroupy/lienzo-tests:targetBranchy"
+  );
+  expect(logger.info).toHaveBeenCalledWith("kiegroup/lienzo-core:branchz.");
+  expect(logger.info)
+    .toHaveBeenCalledWith(`Projects taken from branch "branchz":
+  kiegroup/lienzo-core`);
+});
+
 test("printCheckoutInformation empty", async () => {
   // Arrange
   const checkoutInfo = {};

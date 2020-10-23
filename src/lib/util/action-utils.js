@@ -4,6 +4,10 @@ function getDefinitionFile() {
   return core.getInput("definition-file");
 }
 
+function getStartingProject() {
+  return core.getInput("starting-project");
+}
+
 function getFlowType() {
   return core.getInput("flow-type");
 }
@@ -18,6 +22,7 @@ function isBranchFlowType() {
 
 module.exports = {
   getDefinitionFile,
+  getStartingProject,
   getFlowType,
   isPullRequestFlowType,
   isBranchFlowType

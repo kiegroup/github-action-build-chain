@@ -1,5 +1,12 @@
 # Changelog
 
+# V2.2 (next release)
+
+## Enhancements:
+
+- command line ready
+- branch flow added
+
 # V2.1
 
 [Link](https://github.com/kiegroup/github-action-build-chain/releases/tag/v2.1)

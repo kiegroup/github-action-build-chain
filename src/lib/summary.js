@@ -2,7 +2,9 @@ const { logger } = require("./common");
 
 const groupBy = (checkoutInfo, key) => {
   return Object.values(checkoutInfo).reduce((acc, checkInfo) => {
-    (acc[checkInfo[key]] = acc[checkInfo[key]] || []).push(checkInfo);
+    if (checkInfo) {
+      (acc[checkInfo[key]] = acc[checkInfo[key]] || []).push(checkInfo);
+    }
     return acc;
   }, {});
 };
@@ -10,13 +12,15 @@ const groupBy = (checkoutInfo, key) => {
 function printCheckoutInformation(checkoutInfo) {
   if (checkoutInfo && Object.keys(checkoutInfo).length) {
     logger.info("----------------------------------------------");
-    Object.values(checkoutInfo).forEach(checkInfo =>
+    Object.entries(checkoutInfo).forEach(([project, checkInfo]) =>
       logger.info(
-        `${checkInfo.group}/${checkInfo.project}:${checkInfo.branch}.${
-          checkInfo.merge
-            ? ` It has Been merged with ${checkInfo.targetGroup}/${checkInfo.project}:${checkInfo.targetBranch}`
-            : ""
-        }`
+        checkInfo
+          ? `${checkInfo.group}/${checkInfo.project}:${checkInfo.branch}.${
+              checkInfo.merge
+                ? ` It has Been merged with ${checkInfo.targetGroup}/${checkInfo.project}:${checkInfo.targetBranch}`
+                : ""
+            }`
+          : `${project}: No checkout information`
       )
     );
     logger.info("----------------------------------------------");

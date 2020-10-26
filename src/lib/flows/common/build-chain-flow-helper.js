@@ -4,25 +4,31 @@ const {
   merge: gitMerge,
   hasPullRequest,
   getForkedProject
-} = require("./git");
-const { logger } = require("./common");
+} = require("../../git");
+const { logger } = require("../../common");
 const {
   parentChainFromNode,
   treatUrl
 } = require("@kie/build-chain-configuration-reader");
-const { checkUrlExist } = require("./util/http");
+const { checkUrlExist } = require("../../util/http");
+const fs = require("fs");
 
-async function checkoutDefinitionTree(context, treeNode) {
+async function checkoutDefinitionTree(context, treeNode, flow = "pr") {
   const nodeChain = await parentChainFromNode(treeNode);
   let currentTargetBranch = context.config.github.targetBranch;
   for (const node of [...nodeChain].reverse()) {
     try {
-      node.checkoutInfo = await checkoutProject(
-        context,
-        node,
-        currentTargetBranch
-      );
-      currentTargetBranch = node.checkoutInfo.targetBranch;
+      node.checkoutInfo =
+        flow === "pr"
+          ? await checkoutProjectPullRequestFlow(
+              context,
+              node,
+              currentTargetBranch
+            )
+          : await checkoutProjectBranchFlow(context, node, currentTargetBranch);
+      currentTargetBranch = node.checkoutInfo
+        ? node.checkoutInfo.targetBranch
+        : currentTargetBranch;
     } catch (err) {
       logger.error(`Error checking out project ${node.project}`);
       throw err;
@@ -32,59 +38,105 @@ async function checkoutDefinitionTree(context, treeNode) {
   return nodeChain;
 }
 
-async function checkoutProject(context, node, currentTargetBranch) {
+async function checkoutProjectPullRequestFlow(
+  context,
+  node,
+  currentTargetBranch
+) {
   logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
-  const checkoutInfo = await getCheckoutInfo(
-    context,
-    node.repo.group,
-    node.repo.name,
-    currentTargetBranch,
-    node.mapping
-  );
-  if (checkoutInfo == undefined) {
-    const msg = `Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
-    logger.error(msg);
-    throw new Error(msg);
-  }
-  if (checkoutInfo.merge) {
-    logger.info(
-      `[${node.project}] Merging ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+  if (!fs.existsSync(dir)) {
+    const checkoutInfo = await getCheckoutInfo(
+      context,
+      node.repo.group,
+      node.repo.name,
+      currentTargetBranch,
+      node.mapping
     );
-    try {
-      await clone(
-        `${context.config.github.serverUrl}/${node.project}`,
-        dir,
-        checkoutInfo.targetBranch
-      );
-    } catch (err) {
-      logger.error(
-        `Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
-      );
-      throw err;
+
+    if (checkoutInfo == undefined) {
+      const msg = `Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
+      logger.error(msg);
+      throw new Error(msg);
     }
-    try {
-      await gitMerge(
-        dir,
-        checkoutInfo.group,
-        checkoutInfo.project,
-        checkoutInfo.branch
+    if (checkoutInfo.merge) {
+      logger.info(
+        `[${node.project}] Merging ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
       );
-    } catch (err) {
-      logger.error(
-        `Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
-      );
-      throw err;
+      try {
+        await clone(
+          `${context.config.github.serverUrl}/${node.project}`,
+          dir,
+          checkoutInfo.targetBranch
+        );
+      } catch (err) {
+        logger.error(
+          `Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
+        );
+        throw err;
+      }
+      try {
+        await gitMerge(
+          dir,
+          checkoutInfo.group,
+          checkoutInfo.project,
+          checkoutInfo.branch
+        );
+      } catch (err) {
+        logger.error(
+          `Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
+        );
+        throw err;
+      }
+    } else {
+      try {
+        logger.info(
+          `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
+        );
+        await clone(
+          `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
+          dir,
+          checkoutInfo.branch
+        );
+      } catch (err) {
+        logger.error(
+          `Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
+        );
+        throw err;
+      }
     }
+    return checkoutInfo;
   } else {
+    logger.info(`folder ${dir} already exists, nothing to checkout`);
+    return undefined;
+  }
+}
+
+async function checkoutProjectBranchFlow(context, node, currentTargetBranch) {
+  logger.info(`[${node.project}] Checking out project`);
+  const dir = getDir(context.config.rootFolder, node.project);
+  if (!fs.existsSync(dir)) {
+    const checkoutInfo = await getCheckoutInfo(
+      context,
+      node.repo.group,
+      node.repo.name,
+      currentTargetBranch,
+      node.mapping
+    );
+
+    if (checkoutInfo == undefined) {
+      const msg = `Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
+      logger.error(msg);
+      throw new Error(msg);
+    }
     try {
       logger.info(
-        `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
+        `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.targetBranch}'  into '${dir}'`
       );
       await clone(
         `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
         dir,
-        checkoutInfo.branch
+        checkoutInfo.targetBranch
       );
     } catch (err) {
       logger.error(
@@ -92,8 +144,11 @@ async function checkoutProject(context, node, currentTargetBranch) {
       );
       throw err;
     }
+    return checkoutInfo;
+  } else {
+    logger.info(`folder ${dir} already exists, nothing to checkout`);
+    return undefined;
   }
-  return checkoutInfo;
 }
 
 async function getCheckoutInfo(

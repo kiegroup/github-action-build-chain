@@ -1,7 +1,12 @@
-const { createConfig } = require("../src/lib/config");
-jest.mock("../src/lib/util/action-utils", () => ({
+const {
+  createCommonConfig
+} = require("../../../../src/lib/flows/common/config");
+jest.mock("../../../../src/lib/util/action-utils", () => ({
   getDefinitionFile: () => {
     return "definition-file.yaml";
+  },
+  getStartingProject: () => {
+    return "projectX";
   }
 }));
 
@@ -16,23 +21,13 @@ test("createConfig", async () => {
     GITHUB_REPOSITORY: "kiegroup/github-action-build-chain",
     GITHUB_WORKFLOW: "build chain name"
   };
-  const envData = {
-    pull_request: {
-      repo: {
-        full_name: "group/projectx"
-      },
-      head: {
-        repo: {
-          full_name: "group/projectx"
-        },
-        user: {
-          login: "user"
-        }
-      }
-    }
+  const eventData = {
+    sourceGroup: "group",
+    author: "user",
+    sourceRepository: "sourceRepository"
   };
   // Act
-  const config = await createConfig(envData, "folder", env);
+  const config = await createCommonConfig(eventData, "folder", env);
   // Assert
   const expected = {
     github: {
@@ -47,12 +42,13 @@ test("createConfig", async () => {
       targetBranch: "githubBaseRef",
       jobId: "githubJob",
       ref: undefined,
-      sourceRepository: "group/projectx",
+      sourceRepository: "sourceRepository",
       repository: "kiegroup/github-action-build-chain",
       groupProject: "kiegroup/github-action-build-chain",
       workflowName: "build chain name",
       inputs: {
-        definitionFile: "definition-file.yaml"
+        definitionFile: "definition-file.yaml",
+        startingProject: "projectX"
       }
     },
     rootFolder: "folder"

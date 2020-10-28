@@ -7,7 +7,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "private": false,
   "bin": {
-    "build-chain-action": "./bin/build-chain.js"
+    "build-chain-action": "./dist/index.js"
   },
   "scripts": {
     "test": "jest",

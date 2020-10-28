@@ -49,7 +49,7 @@ function getArguments() {
   const parser = new ArgumentParser({
     prog: pkg.name,
     add_help: true,
-    description: pkg.description
+    description: `${pkg.description}. Version: ${pkg.version}`
   });
 
   parser.add_argument("-d", "--debug", {

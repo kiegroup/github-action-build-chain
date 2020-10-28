@@ -1,13 +1,13 @@
 {
   "name": "@kie/build-chain-action",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "GitHub action to define action chains",
   "main": "dist/index.js",
   "author": "Enrique Mingorance Cano <emingora@redhat.com>",
   "license": "SEE LICENSE IN LICENSE",
   "private": false,
   "bin": {
-    "build-chain-action": "./bin/build-chain.js"
+    "build-chain-action": "./dist/index.js"
   },
   "scripts": {
     "test": "jest",

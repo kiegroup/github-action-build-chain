@@ -4,7 +4,7 @@ const {
   createGithubInformationObject,
   getEvent
 } = require("./build-chain-pull-request-helper");
-const { start } = require("../../src/lib/flows/pull-request-flow");
+const { start } = require("../../src/lib/flows/fdb-flow");
 const { createCommonConfig } = require("../../src/lib/flows/common/config");
 const { getProcessEnvVariable } = require("../bin-utils");
 const fse = require("fs-extra");

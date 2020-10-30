@@ -34,6 +34,27 @@ Just defining the **build chain** flow in every project you want to trigger, the
 
 - It will archive artifacts in case `archive-artifacts-path` input is defined.
 
+### Full Downstream flow
+
+- It checks out the current project and reads the workflow information from the YAML file triggering the job.
+
+  - It merges the TARGET_GROUP:PROJECT:TARGET_BRANCH into the SOURCE_GROUP:PROJECT:SOURCE_BRANCH from the pull request triggering the job.
+    > **_Warning:_** It will fail in case it can't be done automatically, properly informing to please resolve conflicts.
+
+- It gets the full downstream project chain based on configuration file.
+- It recursively checks out the rest of the dependant projects defined in `definition-file`.
+
+  - For each parent dependency:
+    - It will look for forked project belonging same github group as the one triggering the job.
+    - It will try to checkout SOURCE_GROUP:PROJECT:SOURCE_BRANCH. In case the it exists and it has a pull request over the TARGET_GROUP:PROJECT:TARGET_BRANCH it will check it out and will merge it with target branch.
+    - If previous checkout fails, it will try the same with TARGET_GROUP:PROJECT:SOURCE_BRANCH this time.
+    - If previous checkout fails, it will checkout TARGET_GROUP:PROJECT:TARGET_BRANCH.
+      > **_Warning:_** It will fail in case it can't be done automatically, properly informing to please resolve conflicts.
+
+- Once all the projects are checked out, it will run as many commands are defined in `before`, `after` or root level properties from `build` section for every parent dependency starting from the highest level of the hierarchy to the lowest one.
+
+- It will archive artifacts in case `archive-artifacts-path` input is defined.
+
 ## How to add it to your project(s)
 
 It is just to add the step (replacing dependencies and commands):
@@ -68,6 +89,11 @@ See [action.yml](action.yml)
   > definition-file: 'https://raw.githubusercontent.com/${GROUP}/droolsjbpm-build-bootstrap/${BRANCH}/.ci/pull-request-config.yaml'
   > definition-file: 'https://raw.githubusercontent.com/${GROUP}/${PROJECT_NAME}/${BRANCH}/.ci/pull-request-config.yaml'
   > ```
+
+- **flow-type** (optional. 'pull-request' by default): The flow you want to execute. Possible values
+
+  - pull-request: executes the pull reques flow
+  - fdb: executes the full downstream flow
 
 ## Archiving Artifacts
 
@@ -295,13 +321,13 @@ docker build --build-arg OPENJDK_VERSION=11 .
 
 ## Execution
 
-It is possible to execute build-chain flow anywhere you want (just remember your machine would need to meet requirements to execute commands). In order to execute it locally (wherever) you just run `env GITHUB_TOKEN=%TOKEN% ./bin/build-chain.js -df=%DEFINITION_FILE% -url=%GITHUB_EVENT_URL%` where:
+It is possible to execute build-chain flow anywhere you want (just remember your machine would need to meet requirements to execute commands). In order to execute it locally (wherever) you just run `env GITHUB_TOKEN=%TOKEN% ./bin/build-chain-cli.js -df=%DEFINITION_FILE% -url=%GITHUB_EVENT_URL%` where:
 
 - %TOKEN%: is your personal token, like `1e2ca1ac1252121d83fbe69ab3c4dd92bcb1ae32`.
 - %GITHUB_EVENT_URL%: the url to your event to test, like `https://github.com/kiegroup/kogito-images/pull/220`.
 - %DEFINITION_FILE%: The workflow definition file path, it can be a path in the filesystem or a URL to the file.
 
-So the final command would look like `env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40 ./bin/build-chain.js -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml -url=https://github.com/kiegroup/lienzo-core/pull/3`.
+So the final command would look like `env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40 ./bin/build-chain-cli.js -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build pr -url=https://github.com/kiegroup/lienzo-core/pull/3`.
 
 ### Local execution
 
@@ -309,7 +335,7 @@ It's possible to use this tool locally, just follow this steps
 
 ```
 (sudo) npm install -g @kie/build-chain-action
-(env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40) build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml -url=https://github.com/kiegroup/lienzo-core/pull/3
+(env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40) build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build pr -url=https://github.com/kiegroup/lienzo-core/pull/3
 ```
 
 either `sudo` and `env GITHUB_TOKEN=...` are optional depending on your local setup.
@@ -317,26 +343,40 @@ either `sudo` and `env GITHUB_TOKEN=...` are optional depending on your local se
 **Arguments**
 
 - **\*-df**: the definition file, either a path to the filesystem o a URL to it. `-df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml`
-- **-f, -flow** (default: `pr`): The flow to execute. Possible values `pr`, `branch`
-  - **pr**: Executes "pull request" flow. See [Pull Request Flow](#pull-request-flow) and [Pull Request Flow Arguments](#pull-request-flow-arguments) sections
-  - **branch**: Executes "branch" flow. See [Branch Flow](#branch-flow) and [Branch Flow Arguments](#pull-request-flow-arguments) sections
+- **actions**: The action to execute. Possible values `build`, `tools`
+  - **build**: See [Build Action](#execution-build-action)
+  - **tools**: See [Tools Action](#execution-tools-action)
 - **-folder** (default: `build_chain_%TIMESTAMP%`): The folder path to store projects.
 
-#### Pull Request flow Arguments
+#### Execution Build Action
 
-In case you want to execute pull request flow these are the arguments to use:
+##### Execution Build Action - Pull Request
+
+**Arguments**:
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url=https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
 
 Examples:
 
 ```
-build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml -url=https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build pr -url=https://github.com/kiegroup/kie-wb-distributions/pull/1068
 ```
 
-#### Branch flow arguments
+##### Execution Build Action - Full Downstream Build
 
-In case you want to execute pull request flow these are the arguments to use:
+**Arguments**:
+
+- **\*-url**: the event URL. Pull Request URL for instance `-url=https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
+
+Examples:
+
+```
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build fdb -url=https://github.com/kiegroup/kie-wb-distributions/pull/1068
+```
+
+##### Execution Build Action - Branch flow arguments
+
+**Arguments**:
 
 - **\*-p, -project**: The project name to execute flow from. It has to match with one defined in "definition-file". E.g. `-p=kiegroup/drools`
 - **\*-b, -branch**: The branch to get projects. E.g. `-b=master`
@@ -347,9 +387,23 @@ In case you want to execute pull request flow these are the arguments to use:
 Examples:
 
 ```
-build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml -f=branch -p=kiegroup/lienzo-tests -b=master
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build branch -url=https://github.com/kiegroup/kie-wb-distributions/pull/1068
 
-build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml -f=branch -p=kiegroup/optaplanner -b=7.x -folder=myfolder
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build branch -p=kiegroup/lienzo-tests -b=master
+
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build branch -p=kiegroup/optaplanner -b=7.x -folder=myfolder
+```
+
+#### Execution Tools Action
+
+Additionally the tool provides several useful tools
+
+##### Execution Tools Action - Project List
+
+Examples:
+
+```
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml tools project-list
 ```
 
 ## Development

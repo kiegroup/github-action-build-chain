@@ -3,7 +3,7 @@ const {
   getStartingProject,
   getFlowType,
   isPullRequestFlowType,
-  isBranchFlowType
+  isFDBFlowType
 } = require("../../../src/lib/util/action-utils");
 
 const { getInput } = require("@actions/core");
@@ -69,7 +69,7 @@ test("isPullRequestFlowType not ok", () => {
   // Arrange
   const expectedResult = false;
   getInput.mockImplementationOnce(param =>
-    param === "flow-type" ? "branch" : undefined
+    param === "flow-type" ? "fdb" : undefined
   );
   // Act
   const result = isPullRequestFlowType();
@@ -78,27 +78,27 @@ test("isPullRequestFlowType not ok", () => {
   expect(result).toEqual(expectedResult);
 });
 
-test("isPullRequestFlowType ok", () => {
+test("isFDBFlowType ok", () => {
   // Arrange
   const expectedResult = true;
   getInput.mockImplementationOnce(param =>
-    param === "flow-type" ? "branch" : undefined
+    param === "flow-type" ? "fdb" : undefined
   );
   // Act
-  const result = isBranchFlowType();
+  const result = isFDBFlowType();
 
   // Assert
   expect(result).toEqual(expectedResult);
 });
 
-test("isPullRequestFlowType not ok", () => {
+test("isFDBFlowType not ok", () => {
   // Arrange
   const expectedResult = false;
   getInput.mockImplementationOnce(param =>
     param === "flow-type" ? "pull-request" : undefined
   );
   // Act
-  const result = isBranchFlowType();
+  const result = isFDBFlowType();
 
   // Assert
   expect(result).toEqual(expectedResult);

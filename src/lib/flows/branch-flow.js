@@ -4,7 +4,8 @@ const {
 } = require("./common/build-chain-flow-helper");
 const {
   getTreeForProject,
-  getTree
+  getTree,
+  parentChainFromNode
 } = require("@kie/build-chain-configuration-reader");
 const core = require("@actions/core");
 const { logger } = require("../common");
@@ -16,7 +17,7 @@ const {
 
 async function start(context, options = {}) {
   core.startGroup(
-    `Checking out ${context.config.github.groupProject} and its dependencies`
+    `[Branch Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
   const definitionFile = await getFinalDefinitionFilePath(
     context,
@@ -30,29 +31,24 @@ async function start(context, options = {}) {
       )
     : getTree(definitionFile);
 
+  let nodeChain = await parentChainFromNode(definitionTree);
+
   logger.info(
     `Tree for project ${
       context.config.github.inputs.startingProject
-    } loaded from ${definitionFile}. Dependencies: ${
-      definitionTree.dependencies
-        ? definitionTree.dependencies.map(node => node.project)
-        : "no dependencies"
-    }`
+    } loaded from ${definitionFile}. Dependencies: ${nodeChain.map(
+      node => "\n" + node.project
+    )}`
   );
-  let nodeChain = await checkoutDefinitionTree(
+  const checkoutInfo = await checkoutDefinitionTree(
     context,
-    definitionTree,
+    [...nodeChain].reverse(),
     "branch"
   );
   core.endGroup();
 
-  core.startGroup(`Checkout Summary...`);
-  printCheckoutInformation(
-    nodeChain.reduce((acc, curr) => {
-      acc[curr.project] = curr.checkoutInfo;
-      return acc;
-    }, {})
-  );
+  core.startGroup(`[Branch Flow] Checkout Summary...`);
+  printCheckoutInformation(checkoutInfo);
   core.endGroup();
 
   if (options.skipExecution) {

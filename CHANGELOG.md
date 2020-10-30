@@ -5,7 +5,10 @@
 ## Enhancements:
 
 - command line ready
-- branch flow added
+- branch flow added for CLI
+- full downstream build flow added either for CLI and github action
+- @kie/build-chain-configuration-reader dependency upgraded to ^0.0.7
+
 
 # V2.1
 

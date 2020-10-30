@@ -8,24 +8,22 @@ const {
 jest.mock("../../../src/lib/flows/common/build-chain-flow-helper");
 
 const {
-  run: runUploadArtifactsMock
-} = require("../../../src/lib/artifacts/upload-artifacts");
-jest.mock("../../../src/lib/artifacts/upload-artifacts");
-
-const {
   archiveArtifacts
 } = require("../../../src/lib/artifacts/build-chain-flow-archive-artifact-helper");
 jest.mock(
   "../../../src/lib/artifacts/build-chain-flow-archive-artifact-helper"
 );
 
-const { execute } = require("../../../src/lib/command/command");
-jest.mock("../../../src/lib/command/command");
+const { executeBuild } = require("../../../src/lib/flows/common/common-helper");
+jest.mock("../../../src/lib/flows/common/common-helper");
 jest.mock("@actions/core");
 const { printCheckoutInformation } = require("../../../src/lib/summary");
 jest.mock("../../../src/lib/summary");
 
-const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
+const {
+  getTreeForProject,
+  parentChainFromNode
+} = require("@kie/build-chain-configuration-reader");
 jest.mock("@kie/build-chain-configuration-reader");
 
 afterEach(() => {
@@ -43,7 +41,7 @@ test("start no parent dependencies. project triggering the job", async () => {
     targetBranch: "targetBranchx",
     merge: true
   };
-  const definitionTree = { dependencies: [] };
+  const definitionTree = {};
   const context = {
     config: {
       github: {
@@ -70,28 +68,13 @@ test("start no parent dependencies. project triggering the job", async () => {
 
   getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
   getTreeForProject.mockResolvedValueOnce(definitionTree);
-  const buildInfo = {
-    "build-command": {
-      current: "current command",
-      upstream: "upstream command",
-      before: {
-        current: "before current command",
-        upstream: "before upstream command"
-      },
-      after: {
-        current: "after current command",
-        upstream: "after upstream command"
-      }
-    }
-  };
-  checkoutDefinitionTree.mockResolvedValueOnce([
-    {
-      project,
-      checkoutInfo,
-      build: buildInfo
-    }
+  parentChainFromNode.mockResolvedValueOnce([
+    { project },
+    { project: "project2" }
   ]);
+  checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
+  executeBuild.mockResolvedValueOnce(true);
 
   // Act
   await start(context, true);
@@ -100,249 +83,30 @@ test("start no parent dependencies. project triggering the job", async () => {
     "finalDefinitionFilePath",
     project
   );
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, definitionTree);
-  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
-  expect(printCheckoutInformation).toHaveBeenCalledWith({
-    "kiegroup/lienzo-core": checkoutInfo
-  });
-
-  expect(getDir).toHaveBeenCalledTimes(1);
-  expect(execute).toHaveBeenCalledTimes(3);
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "current command"
-  );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "before current command"
-  );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "after current command"
-  );
-  expect(runUploadArtifactsMock).toHaveBeenCalledTimes(0);
-});
-
-test("start no parent dependencies. 2 projects", async () => {
-  // Arrange
-  const project = "kiegroup/droolsjbpm-build-bootstrap";
-  const checkoutInfo = {
-    project,
-    group: "groupx",
-    branch: "branchx",
-    targetGroup: "targetGroupx",
-    targetBranch: "targetBranchx",
-    merge: true
-  };
-  const definitionTree = { dependencies: [] };
-  const context = {
-    config: {
-      github: {
-        jobId: "job-id",
-        flowFile: "main.yaml",
-        group: "defaultGroup",
-        project: project,
-        sourceBranch: "sBranch",
-        targetBranch: "tBranch",
-        inputs: {
-          definitionFile: path.join(
-            ".",
-            "test",
-            "resources",
-            "build-config",
-            "build-config.yaml"
-          )
-        },
-        repository: project
-      },
-      rootFolder: "folder"
-    }
-  };
-
-  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
-  getTreeForProject.mockResolvedValueOnce(definitionTree);
-  const buildInfo = {
-    "build-command": {
-      current: "current command",
-      upstream: "upstream command",
-      before: {
-        current: "before current command",
-        upstream: "before upstream command"
-      },
-      after: {
-        current: "after current command",
-        upstream: "after upstream command"
-      }
-    }
-  };
-  checkoutDefinitionTree.mockResolvedValueOnce([
-    {
-      project: "kiegroup/lienzo-core",
-      checkoutInfo,
-      build: buildInfo
-    },
-    {
-      project,
-      checkoutInfo,
-      build: buildInfo
-    }
+  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
+    { project: "project2" },
+    { project }
   ]);
-  getDir
-    .mockReturnValueOnce("kiegroup/lienzo_core")
-    .mockReturnValueOnce("kiegroup/droolsjbpm_build_bootstrap");
 
-  // Act
-  await start(context, true);
-  // Assert
-  expect(getTreeForProject).toHaveBeenCalledWith(
-    "finalDefinitionFilePath",
+  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
+  expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);
+
+  expect(executeBuild).toHaveBeenCalledTimes(1);
+  expect(executeBuild).toHaveBeenCalledWith(
+    "folder",
+    [{ project }, { project: "project2" }],
     project
   );
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, definitionTree);
-  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
-  expect(printCheckoutInformation).toHaveBeenCalledWith({
-    "kiegroup/lienzo-core": checkoutInfo,
-    "kiegroup/droolsjbpm-build-bootstrap": checkoutInfo
-  });
-
-  expect(getDir).toHaveBeenCalledTimes(2);
-
-  expect(execute).toHaveBeenCalledTimes(6);
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "upstream command"
-  );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "before upstream command"
-  );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "after upstream command"
-  );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/droolsjbpm_build_bootstrap",
-    "current command"
-  );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/droolsjbpm_build_bootstrap",
-    "before current command"
-  );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/droolsjbpm_build_bootstrap",
-    "after current command"
-  );
-
-  expect(runUploadArtifactsMock).toHaveBeenCalledTimes(0);
-});
-
-test("start no parent dependencies archive artifacts", async () => {
-  // Arrange
-  const project = "kiegroup/lienzo-core";
-  const checkoutInfo = {
-    project,
-    group: "groupx",
-    branch: "branchx",
-    targetGroup: "targetGroupx",
-    targetBranch: "targetBranchx",
-    merge: true
-  };
-  const definitionTree = { dependencies: [] };
-  const context = {
-    config: {
-      github: {
-        jobId: "job-id",
-        flowFile: "main.yaml",
-        group: "defaultGroup",
-        project,
-        sourceBranch: "sBranch",
-        targetBranch: "tBranch",
-        inputs: {
-          definitionFile: path.join(
-            ".",
-            "test",
-            "resources",
-            "build-config",
-            "build-config.yaml"
-          )
-        },
-        repository: project
-      },
-      rootFolder: "folder"
-    }
-  };
-
-  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
-  getTreeForProject.mockResolvedValueOnce(definitionTree);
-  const buildInfo = {
-    "build-command": {
-      current: "current command",
-      upstream: "upstream command",
-      before: {
-        current: "before current command",
-        upstream: "before upstream command"
-      },
-      after: {
-        current: "after current command",
-        upstream: "after upstream command"
-      }
-    },
-    "archive-artifacts": {
-      paths: [
-        {
-          path: "whateverpath",
-          on: "success"
-        }
-      ],
-      name: "artifact1",
-      dependencies: "none"
-    }
-  };
-  const node = {
-    project,
-    checkoutInfo,
-    build: buildInfo
-  };
-  checkoutDefinitionTree.mockResolvedValueOnce([node]);
-  getDir.mockReturnValueOnce("kiegroup/lienzo_core");
-
-  // Act
-  await start(context, true);
-  // Assert
-  expect(getTreeForProject).toHaveBeenCalledWith(
-    "finalDefinitionFilePath",
-    project
-  );
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, definitionTree);
-  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
-  expect(printCheckoutInformation).toHaveBeenCalledWith({
-    "kiegroup/lienzo-core": checkoutInfo
-  });
-
-  expect(getDir).toHaveBeenCalledTimes(1);
-  expect(execute).toHaveBeenCalledTimes(3);
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "current command"
-  );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "before current command"
-  );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "after current command"
-  );
-
   expect(archiveArtifacts).toHaveBeenCalledTimes(1);
   expect(archiveArtifacts).toHaveBeenCalledWith(
-    node,
-    [node],
+    { project },
+    [{ project }, { project: "project2" }],
     ["success", "always"]
   );
 });
 
-test("start no parent dependencies archive artifacts. isArchiveArtifacts to false", async () => {
+test("start no parent dependencies. project triggering the job. isArchiveArtifacts to false", async () => {
   // Arrange
   const project = "kiegroup/lienzo-core";
   const checkoutInfo = {
@@ -353,7 +117,7 @@ test("start no parent dependencies archive artifacts. isArchiveArtifacts to fals
     targetBranch: "targetBranchx",
     merge: true
   };
-  const definitionTree = { dependencies: [] };
+  const definitionTree = {};
   const context = {
     config: {
       github: {
@@ -380,37 +144,13 @@ test("start no parent dependencies archive artifacts. isArchiveArtifacts to fals
 
   getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
   getTreeForProject.mockResolvedValueOnce(definitionTree);
-  const buildInfo = {
-    "build-command": {
-      current: "current command",
-      upstream: "upstream command",
-      before: {
-        current: "before current command",
-        upstream: "before upstream command"
-      },
-      after: {
-        current: "after current command",
-        upstream: "after upstream command"
-      }
-    },
-    "archive-artifacts": {
-      paths: [
-        {
-          path: "whateverpath",
-          on: "success"
-        }
-      ],
-      name: "artifact1",
-      dependencies: "none"
-    }
-  };
-  const node = {
-    project,
-    checkoutInfo,
-    build: buildInfo
-  };
-  checkoutDefinitionTree.mockResolvedValueOnce([node]);
+  parentChainFromNode.mockResolvedValueOnce([
+    { project },
+    { project: "project2" }
+  ]);
+  checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
+  executeBuild.mockResolvedValueOnce(true);
 
   // Act
   await start(context, false);
@@ -419,31 +159,25 @@ test("start no parent dependencies archive artifacts. isArchiveArtifacts to fals
     "finalDefinitionFilePath",
     project
   );
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, definitionTree);
+  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
+    { project: "project2" },
+    { project }
+  ]);
+
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
-  expect(printCheckoutInformation).toHaveBeenCalledWith({
-    "kiegroup/lienzo-core": checkoutInfo
-  });
+  expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);
 
-  expect(getDir).toHaveBeenCalledTimes(1);
-  expect(execute).toHaveBeenCalledTimes(3);
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "current command"
+  expect(executeBuild).toHaveBeenCalledTimes(1);
+  expect(executeBuild).toHaveBeenCalledWith(
+    "folder",
+    [{ project }, { project: "project2" }],
+    project
   );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "before current command"
-  );
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "after current command"
-  );
-
   expect(archiveArtifacts).toHaveBeenCalledTimes(0);
 });
 
-test("start no parent dependencies archive artifacts. Execute Exception", async () => {
+test("start no parent dependencies. project triggering the job. Execute Exception", async () => {
   // Arrange
   const project = "kiegroup/lienzo-core";
   const checkoutInfo = {
@@ -454,7 +188,7 @@ test("start no parent dependencies archive artifacts. Execute Exception", async 
     targetBranch: "targetBranchx",
     merge: true
   };
-  const definitionTree = { dependencies: [] };
+  const definitionTree = {};
   const context = {
     config: {
       github: {
@@ -481,48 +215,21 @@ test("start no parent dependencies archive artifacts. Execute Exception", async 
 
   getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
   getTreeForProject.mockResolvedValueOnce(definitionTree);
-  const buildInfo = {
-    "build-command": {
-      current: "current command",
-      upstream: "upstream command",
-      before: {
-        current: "before current command",
-        upstream: "before upstream command"
-      },
-      after: {
-        current: "after current command",
-        upstream: "after upstream command"
-      }
-    },
-    "archive-artifacts": {
-      paths: [
-        {
-          path: "whateverpath",
-          on: "success"
-        }
-      ],
-      name: "artifact1",
-      dependencies: "none"
-    }
-  };
-  const node = {
-    project,
-    checkoutInfo,
-    build: buildInfo
-  };
-  checkoutDefinitionTree.mockResolvedValueOnce([node]);
+  parentChainFromNode.mockResolvedValueOnce([
+    { project },
+    { project: "project2" }
+  ]);
+  checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
-
-  execute.mockImplementationOnce(async () => {
+  executeBuild.mockImplementationOnce(async () => {
     throw new Error("error executing command");
   });
-
   // Act
   try {
     await start(context, true);
   } catch (ex) {
     expect(ex.message).toBe(
-      "Command executions have failed, please review latest execution Error: [kiegroup/lienzo-core] error executing command 'before current command'"
+      "Command executions have failed, please review latest execution Error: error executing command"
     );
   }
   // Assert
@@ -530,23 +237,25 @@ test("start no parent dependencies archive artifacts. Execute Exception", async 
     "finalDefinitionFilePath",
     project
   );
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, definitionTree);
+  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
+    { project: "project2" },
+    { project }
+  ]);
+
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
-  expect(printCheckoutInformation).toHaveBeenCalledWith({
-    "kiegroup/lienzo-core": checkoutInfo
-  });
+  expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);
 
-  expect(getDir).toHaveBeenCalledTimes(1);
-  expect(execute).toHaveBeenCalledTimes(1);
-  expect(execute).toHaveBeenCalledWith(
-    "kiegroup/lienzo_core",
-    "before current command"
+  expect(executeBuild).toHaveBeenCalledTimes(1);
+  expect(executeBuild).toHaveBeenCalledWith(
+    "folder",
+    [{ project }, { project: "project2" }],
+    project
   );
-
   expect(archiveArtifacts).toHaveBeenCalledTimes(1);
   expect(archiveArtifacts).toHaveBeenCalledWith(
-    node,
-    [node],
+    { project },
+    [{ project }, { project: "project2" }],
     ["failure", "always"]
   );
 });

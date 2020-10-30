@@ -6,19 +6,16 @@ const {
   getForkedProject
 } = require("../../git");
 const { logger } = require("../../common");
-const {
-  parentChainFromNode,
-  treatUrl
-} = require("@kie/build-chain-configuration-reader");
+const { treatUrl } = require("@kie/build-chain-configuration-reader");
 const { checkUrlExist } = require("../../util/http");
 const fs = require("fs");
 
-async function checkoutDefinitionTree(context, treeNode, flow = "pr") {
-  const nodeChain = await parentChainFromNode(treeNode);
+async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
+  const result = {};
   let currentTargetBranch = context.config.github.targetBranch;
-  for (const node of [...nodeChain].reverse()) {
+  for (const node of nodeChain) {
     try {
-      node.checkoutInfo =
+      const checkoutInfo =
         flow === "pr"
           ? await checkoutProjectPullRequestFlow(
               context,
@@ -26,8 +23,9 @@ async function checkoutDefinitionTree(context, treeNode, flow = "pr") {
               currentTargetBranch
             )
           : await checkoutProjectBranchFlow(context, node, currentTargetBranch);
-      currentTargetBranch = node.checkoutInfo
-        ? node.checkoutInfo.targetBranch
+      result[node.project] = checkoutInfo;
+      currentTargetBranch = checkoutInfo
+        ? checkoutInfo.targetBranch
         : currentTargetBranch;
     } catch (err) {
       logger.error(`Error checking out project ${node.project}`);
@@ -35,7 +33,7 @@ async function checkoutDefinitionTree(context, treeNode, flow = "pr") {
     }
   }
 
-  return nodeChain;
+  return result;
 }
 
 async function checkoutProjectPullRequestFlow(

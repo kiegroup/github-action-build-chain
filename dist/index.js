@@ -528,12 +528,17 @@ const { getDir } = __webpack_require__(330);
 const core = __webpack_require__(470);
 
 async function executeBuild(rootFolder, nodeChain, projectTriggeringJob) {
-  for await (const node of nodeChain) {
-    await executeNodeBuildCommands(
-      rootFolder,
-      node,
-      projectTriggeringJob === node.project
-    );
+  const projectTriggeringJobIndex = nodeChain.findIndex(
+    node => node.project === projectTriggeringJob
+  );
+  for await (const [index, node] of nodeChain.entries()) {
+    const levelType =
+      index < projectTriggeringJobIndex
+        ? "upstream"
+        : index == projectTriggeringJobIndex
+        ? "current"
+        : "downstream";
+    await executeNodeBuildCommands(rootFolder, node, levelType);
   }
 }
 
@@ -544,37 +549,37 @@ async function executeBuildSpecificCommand(rootFolder, nodeChain, command) {
   }
 }
 
-async function executeNodeBuildCommands(
-  rootFolder,
-  node,
-  isProjectTriggeringJob
-) {
+/**
+ *
+ * @param {String} rootFolder the folder path to execute command
+ * @param {Object} node the node to execute
+ * @param {String} levelType an option between upstream, current or downstream
+ */
+async function executeNodeBuildCommands(rootFolder, node, levelType) {
   const dir = getDir(rootFolder, node.project);
   if (node.build["build-command"].before) {
     await executeBuildCommands(
       dir,
-      getCommand(node.build["build-command"].before, isProjectTriggeringJob),
+      getCommand(node.build["build-command"].before, levelType),
       node.project
     );
   }
   await executeBuildCommands(
     dir,
-    getCommand(node.build["build-command"], isProjectTriggeringJob),
+    getCommand(node.build["build-command"], levelType),
     node.project
   );
   if (node.build["build-command"].after) {
     await executeBuildCommands(
       dir,
-      getCommand(node.build["build-command"].after, isProjectTriggeringJob),
+      getCommand(node.build["build-command"].after, levelType),
       node.project
     );
   }
 }
 
-function getCommand(buildCommand, isProjectTriggeringJob) {
-  return isProjectTriggeringJob
-    ? buildCommand.current
-    : buildCommand.upstream || buildCommand.current;
+function getCommand(buildCommand, levelType) {
+  return buildCommand[levelType] || buildCommand.current;
 }
 
 async function executeBuildCommands(cwd, buildCommands, project) {

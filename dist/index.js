@@ -522,6 +522,7 @@ module.exports.addConstructor = deprecated('addConstructor');
 /* 11 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
+const { logger } = __webpack_require__(79);
 const { execute } = __webpack_require__(81);
 const { treatCommand } = __webpack_require__(52);
 const { getDir } = __webpack_require__(330);
@@ -532,13 +533,19 @@ async function executeBuild(rootFolder, nodeChain, projectTriggeringJob) {
     node => node.project === projectTriggeringJob
   );
   for await (const [index, node] of nodeChain.entries()) {
-    const levelType =
-      index < projectTriggeringJobIndex
-        ? "upstream"
-        : index == projectTriggeringJobIndex
-        ? "current"
-        : "downstream";
-    await executeNodeBuildCommands(rootFolder, node, levelType);
+    if (node.build && node.build.skip) {
+      logger.info(
+        `Execution skip for ${node.project}. No command will be executed.`
+      );
+    } else {
+      const levelType =
+        index < projectTriggeringJobIndex
+          ? "upstream"
+          : index == projectTriggeringJobIndex
+          ? "current"
+          : "downstream";
+      await executeNodeBuildCommands(rootFolder, node, levelType);
+    }
   }
 }
 
@@ -12158,9 +12165,10 @@ function manipulateProperties(properties) {
     if (typeof value === "object" && !Array.isArray(value)) {
       propertiesClone[key] = manipulateProperties(propertiesClone[key]);
     } else {
-      propertiesClone[key] = value.includes("\n")
-        ? value.split("\n").filter(e => e)
-        : value;
+      propertiesClone[key] =
+        typeof value === "string" && value.includes("\n")
+          ? value.split("\n").filter(e => e)
+          : value;
     }
   });
   return propertiesClone;

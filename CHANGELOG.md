@@ -9,6 +9,7 @@
 - single flow added either for CLI and github action
 - @kie/build-chain-configuration-reader dependency upgraded to ^0.0.7
 - branch flow added for CLI
+- skip build mechanism
 
 # V2.1
 

@@ -177,6 +177,62 @@ test("executeBuild upstream/downstream commands", async () => {
   );
 });
 
+test("executeBuild skip", async () => {
+  // Arrange
+  const nodeChain = [
+    {
+      project: "a",
+      build: {
+        "build-command": {
+          current: "a command",
+          upstream: "a upstream command",
+          downstream: "a downstream command"
+        }
+      }
+    },
+    {
+      project: "b",
+      build: {
+        "build-command": {
+          current: "b command",
+          upstream: "b upstream command",
+          downstream: "b downstream command"
+        },
+        skip: true
+      }
+    },
+    {
+      project: "c",
+      build: {
+        "build-command": {
+          current: "c command",
+          upstream: "c upstream command",
+          downstream: "c downstream command"
+        },
+        skip: false
+      }
+    }
+  ];
+  getDir.mockReturnValueOnce("a_folder").mockReturnValueOnce("c_folder");
+
+  // Act
+  await executeBuild("folder", nodeChain, "b");
+
+  // Assert
+  expect(treatCommand).toHaveBeenCalledTimes(2);
+  expect(treatCommand).toHaveBeenCalledWith("a upstream command");
+  expect(treatCommand).toHaveBeenCalledWith("c downstream command");
+  expect(execute).toHaveBeenCalledTimes(2);
+  expect(execute).toHaveBeenCalledWith(
+    "a_folder",
+    "a upstream command treated"
+  );
+  expect(execute).toHaveBeenCalledWith(
+    "c_folder",
+    "c downstream command treated"
+  );
+});
+
 test("executeBuildSpecificCommand", async () => {
   // Arrange
   const nodeChain = [

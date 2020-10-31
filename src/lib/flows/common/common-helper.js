@@ -1,3 +1,4 @@
+const { logger } = require("../../common");
 const { execute } = require("../../command/command");
 const { treatCommand } = require("../../command/command-treatment-delegator");
 const { getDir } = require("./build-chain-flow-helper");
@@ -8,13 +9,19 @@ async function executeBuild(rootFolder, nodeChain, projectTriggeringJob) {
     node => node.project === projectTriggeringJob
   );
   for await (const [index, node] of nodeChain.entries()) {
-    const levelType =
-      index < projectTriggeringJobIndex
-        ? "upstream"
-        : index == projectTriggeringJobIndex
-        ? "current"
-        : "downstream";
-    await executeNodeBuildCommands(rootFolder, node, levelType);
+    if (node.build && node.build.skip) {
+      logger.info(
+        `Execution skip for ${node.project}. No command will be executed.`
+      );
+    } else {
+      const levelType =
+        index < projectTriggeringJobIndex
+          ? "upstream"
+          : index == projectTriggeringJobIndex
+          ? "current"
+          : "downstream";
+      await executeNodeBuildCommands(rootFolder, node, levelType);
+    }
   }
 }
 

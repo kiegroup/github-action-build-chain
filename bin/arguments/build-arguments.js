@@ -8,7 +8,8 @@ function getArguments(subParser) {
   });
   pullRequestArguments(buildSubParser);
   branchArguments(buildSubParser);
-  fdbArguments(buildSubParser);
+  fdArguments(buildSubParser);
+  singleArguments(buildSubParser);
 }
 
 function pullRequestArguments(subParser) {
@@ -59,9 +60,21 @@ function branchArguments(subParser) {
   });
 }
 
-function fdbArguments(subParser) {
-  const parser = subParser.add_parser("fdb", {
-    help: "full downstream build flow"
+function fdArguments(subParser) {
+  const parser = subParser.add_parser("fd", {
+    help: "full downstream flow"
+  });
+  parser.add_argument("-url", {
+    metavar: "<URL>",
+    nargs: 1,
+    required: true,
+    help: "GitHub URL to pull request"
+  });
+}
+
+function singleArguments(subParser) {
+  const parser = subParser.add_parser("single", {
+    help: "singe flow. Just the project from the url event is treated."
   });
   parser.add_argument("-url", {
     metavar: "<URL>",

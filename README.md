@@ -41,7 +41,7 @@ Just defining the **build chain** flow in every project you want to trigger, the
   - It merges the TARGET_GROUP:PROJECT:TARGET_BRANCH into the SOURCE_GROUP:PROJECT:SOURCE_BRANCH from the pull request triggering the job.
     > **_Warning:_** It will fail in case it can't be done automatically, properly informing to please resolve conflicts.
 
-- It gets the full downstream project chain based on configuration file.
+- It gets the full downstream project chain (the parents projects plus its children and their dependencies. At the end the whole chain) based on configuration file.
 - It recursively checks out the rest of the dependant projects defined in `definition-file`.
 
   - For each parent dependency:
@@ -52,6 +52,17 @@ Just defining the **build chain** flow in every project you want to trigger, the
       > **_Warning:_** It will fail in case it can't be done automatically, properly informing to please resolve conflicts.
 
 - Once all the projects are checked out, it will run as many commands are defined in `before`, `after` or root level properties from `build` section for every parent dependency starting from the highest level of the hierarchy to the lowest one.
+
+- It will archive artifacts in case `archive-artifacts-path` input is defined.
+
+### Single flow
+
+- It checks out the current project and reads the workflow information from the YAML file triggering the job.
+
+  - It merges the TARGET_GROUP:PROJECT:TARGET_BRANCH into the SOURCE_GROUP:PROJECT:SOURCE_BRANCH from the pull request triggering the job.
+    > **_Warning:_** It will fail in case it can't be done automatically, properly informing to please resolve conflicts.
+
+- Once the project from the event is checked out, it will run as many commands are defined in `before`, `after` or root level properties from `build` section.
 
 - It will archive artifacts in case `archive-artifacts-path` input is defined.
 
@@ -350,6 +361,8 @@ either `sudo` and `env GITHUB_TOKEN=...` are optional depending on your local se
 
 #### Execution Build Action
 
+To choose between `pr`, `fd` or `single`
+
 ##### Execution Build Action - Pull Request
 
 **Arguments**:
@@ -372,6 +385,18 @@ Examples:
 
 ```
 build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build fdb -url=https://github.com/kiegroup/kie-wb-distributions/pull/1068
+```
+
+##### Execution Build Action - Single Build
+
+**Arguments**:
+
+- **\*-url**: the event URL. Pull Request URL for instance `-url=https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
+
+Examples:
+
+```
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build single -url=https://github.com/kiegroup/kie-wb-distributions/pull/1068
 ```
 
 ##### Execution Build Action - Branch flow arguments

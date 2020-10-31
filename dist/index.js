@@ -603,7 +603,78 @@ module.exports = { executeBuild, executeBuildSpecificCommand };
 /* 12 */,
 /* 13 */,
 /* 14 */,
-/* 15 */,
+/* 15 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const { logger } = __webpack_require__(79);
+const {
+  prepareEnv,
+  createGithubInformationObject,
+  getEvent
+} = __webpack_require__(8);
+const { start } = __webpack_require__(754);
+const { createCommonConfig } = __webpack_require__(668);
+const { getProcessEnvVariable } = __webpack_require__(867);
+const fse = __webpack_require__(232);
+
+/**
+ * Executes single flow
+ * @param {String} token the token to communicate to github
+ * @param {Object} octokit octokit instance
+ * @param {Object} env proces.env
+ * @param {Object} pullRequestData information from pull request event
+ * @param {String} rootFolder path to store flow data/projects
+ * @param {Boolean} isArchiveArtifacts
+ */
+async function execute(
+  token,
+  octokit,
+  env,
+  eventData,
+  rootFolder,
+  isArchiveArtifacts
+) {
+  const githubInformation = createGithubInformationObject(eventData, env);
+  const config = await createCommonConfig(githubInformation, rootFolder, env);
+  const context = { token, octokit, config };
+  await start(context, isArchiveArtifacts);
+}
+
+/**
+ * Prepares execution when this is triggered from a github action's event
+ * @param {String} token the token to communicate to github
+ * @param {Object} octokit octokit instance
+ * @param {Object} env proces.env
+ */
+async function executeFromEvent(token, octokit, env) {
+  const eventDataStr = await fse.readFile(
+    getProcessEnvVariable("GITHUB_EVENT_PATH"),
+    "utf8"
+  );
+  const eventData = JSON.parse(eventDataStr);
+  await execute(token, octokit, env, eventData, undefined, true);
+}
+
+/**
+ * Prepares execution when this is triggered from command line
+ * @param {String} token the token to communicate to github
+ * @param {Object} octokit octokit instance
+ * @param {Object} env proces.env
+ * @param {String} rootFolder path to store flow data/projects
+ * @param {String} eventUrl event url
+ */
+async function executeLocally(token, octokit, env, rootFolder, eventUrl) {
+  logger.info(`Executing pull request flow for ${eventUrl} in ${rootFolder}`);
+
+  const eventData = await getEvent(octokit, eventUrl);
+  prepareEnv(env, eventUrl, eventData);
+  await execute(token, octokit, env, eventData, rootFolder, false);
+}
+
+module.exports = { executeLocally, executeFromEvent };
+
+
+/***/ }),
 /* 16 */
 /***/ (function(module) {
 
@@ -2045,10 +2116,16 @@ const { ClientError, logger } = __webpack_require__(79);
 const {
   executeFromEvent: pullRequestEventFlow
 } = __webpack_require__(701);
-const { executeFromEvent: fdbEventFlow } = __webpack_require__(508);
+const {
+  executeFromEvent: fdbEventFlow
+} = __webpack_require__(771);
+const {
+  executeFromEvent: singleEventFlow
+} = __webpack_require__(15);
 const {
   isPullRequestFlowType,
-  isFDBFlowType,
+  isFDFlowType,
+  isSingleFlowType,
   getFlowType
 } = __webpack_require__(933);
 const { createOctokitInstance, getProcessEnvVariable } = __webpack_require__(867);
@@ -2059,8 +2136,10 @@ async function main() {
   const octokit = createOctokitInstance(token);
   if (isPullRequestFlowType()) {
     await pullRequestEventFlow(token, octokit, process.env);
-  } else if (isFDBFlowType()) {
+  } else if (isFDFlowType()) {
     await fdbEventFlow(token, octokit, process.env);
+  } else if (isSingleFlowType()) {
+    await singleEventFlow(token, octokit, process.env);
   } else {
     throw new Error(
       `flow type input value '${getFlowType()}' is not supported. Please check documentation.`
@@ -3481,7 +3560,89 @@ module.exports = require("child_process");
 /* 134 */,
 /* 135 */,
 /* 136 */,
-/* 137 */,
+/* 137 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const {
+  checkoutDefinitionTree,
+  getFinalDefinitionFilePath
+} = __webpack_require__(330);
+const { executeBuild } = __webpack_require__(11);
+const {
+  getOrderedListForProject
+} = __webpack_require__(352);
+
+const { printCheckoutInformation } = __webpack_require__(656);
+const { logger } = __webpack_require__(79);
+const core = __webpack_require__(470);
+const {
+  archiveArtifacts
+} = __webpack_require__(503);
+
+async function start(context, isArchiveArtifacts = true) {
+  core.startGroup(
+    `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
+  );
+  const definitionFile = await getFinalDefinitionFilePath(
+    context,
+    context.config.github.inputs.definitionFile
+  );
+  const nodeChain = await getOrderedListForProject(
+    definitionFile,
+    context.config.github.repository
+  );
+
+  logger.info(
+    `Tree for project ${
+      context.config.github.repository
+    } loaded from ${definitionFile}. Chain: ${nodeChain.map(
+      node => "\n" + node.project
+    )}`
+  );
+  const checkoutInfo = await checkoutDefinitionTree(
+    context,
+    [...nodeChain].reverse()
+  );
+  core.endGroup();
+
+  core.startGroup(`[Full Downstream Flow] Checkout Summary...`);
+  printCheckoutInformation(checkoutInfo);
+  core.endGroup();
+
+  const executionResult = await executeBuild(
+    context.config.rootFolder,
+    nodeChain,
+    context.config.github.repository
+  )
+    .then(() => true)
+    .catch(e => e);
+
+  if (isArchiveArtifacts) {
+    core.startGroup(`[Full Downstream Flow] Archiving artifacts...`);
+    await archiveArtifacts(
+      nodeChain.find(node => node.project === context.config.github.repository),
+      nodeChain,
+      executionResult === true ? ["success", "always"] : ["failure", "always"]
+    );
+    core.endGroup();
+  } else {
+    logger.info("Archive artifact won't be executed");
+  }
+
+  if (executionResult !== true) {
+    logger.error(executionResult);
+    throw new Error(
+      `Command executions have failed, please review latest execution ${executionResult}`
+    );
+  }
+}
+
+module.exports = {
+  start
+};
+
+
+/***/ }),
 /* 138 */,
 /* 139 */,
 /* 140 */,
@@ -17394,78 +17555,7 @@ module.exports = { archiveArtifacts };
 /* 505 */,
 /* 506 */,
 /* 507 */,
-/* 508 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const { logger } = __webpack_require__(79);
-const {
-  prepareEnv,
-  createGithubInformationObject,
-  getEvent
-} = __webpack_require__(8);
-const { start } = __webpack_require__(705);
-const { createCommonConfig } = __webpack_require__(668);
-const { getProcessEnvVariable } = __webpack_require__(867);
-const fse = __webpack_require__(232);
-
-/**
- * Executes pull request flow
- * @param {String} token the token to communicate to github
- * @param {Object} octokit octokit instance
- * @param {Object} env proces.env
- * @param {Object} pullRequestData information from pull request event
- * @param {String} rootFolder path to store flow data/projects
- * @param {Boolean} isArchiveArtifacts
- */
-async function execute(
-  token,
-  octokit,
-  env,
-  eventData,
-  rootFolder,
-  isArchiveArtifacts
-) {
-  const githubInformation = createGithubInformationObject(eventData, env);
-  const config = await createCommonConfig(githubInformation, rootFolder, env);
-  const context = { token, octokit, config };
-  await start(context, isArchiveArtifacts);
-}
-
-/**
- * Prepares execution when this is triggered from a github action's event
- * @param {String} token the token to communicate to github
- * @param {Object} octokit octokit instance
- * @param {Object} env proces.env
- */
-async function executeFromEvent(token, octokit, env) {
-  const eventDataStr = await fse.readFile(
-    getProcessEnvVariable("GITHUB_EVENT_PATH"),
-    "utf8"
-  );
-  const eventData = JSON.parse(eventDataStr);
-  await execute(token, octokit, env, eventData, undefined, true);
-}
-
-/**
- * Prepares execution when this is triggered from command line
- * @param {String} token the token to communicate to github
- * @param {Object} octokit octokit instance
- * @param {Object} env proces.env
- * @param {String} rootFolder path to store flow data/projects
- * @param {String} eventUrl event url
- */
-async function executeLocally(token, octokit, env, rootFolder, eventUrl) {
-  logger.info(`Executing pull request flow for ${eventUrl} in ${rootFolder}`);
-
-  const eventData = await getEvent(octokit, eventUrl);
-  prepareEnv(env, eventUrl, eventData);
-  await execute(token, octokit, env, eventData, rootFolder, false);
-}
-
-module.exports = { executeLocally, executeFromEvent };
-
-
-/***/ }),
+/* 508 */,
 /* 509 */,
 /* 510 */
 /***/ (function(module) {
@@ -23679,89 +23769,7 @@ module.exports = { executeLocally, executeFromEvent };
 /* 702 */,
 /* 703 */,
 /* 704 */,
-/* 705 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const {
-  checkoutDefinitionTree,
-  getFinalDefinitionFilePath
-} = __webpack_require__(330);
-const { executeBuild } = __webpack_require__(11);
-const {
-  getOrderedListForProject
-} = __webpack_require__(352);
-
-const { printCheckoutInformation } = __webpack_require__(656);
-const { logger } = __webpack_require__(79);
-const core = __webpack_require__(470);
-const {
-  archiveArtifacts
-} = __webpack_require__(503);
-
-async function start(context, isArchiveArtifacts = true) {
-  core.startGroup(
-    `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
-  );
-  const definitionFile = await getFinalDefinitionFilePath(
-    context,
-    context.config.github.inputs.definitionFile
-  );
-  const nodeChain = await getOrderedListForProject(
-    definitionFile,
-    context.config.github.repository
-  );
-
-  logger.info(
-    `Tree for project ${
-      context.config.github.repository
-    } loaded from ${definitionFile}. Chain: ${nodeChain.map(
-      node => "\n" + node.project
-    )}`
-  );
-  const checkoutInfo = await checkoutDefinitionTree(
-    context,
-    [...nodeChain].reverse()
-  );
-  core.endGroup();
-
-  core.startGroup(`[Full Downstream Flow] Checkout Summary...`);
-  printCheckoutInformation(checkoutInfo);
-  core.endGroup();
-
-  const executionResult = await executeBuild(
-    context.config.rootFolder,
-    nodeChain,
-    context.config.github.repository
-  )
-    .then(() => true)
-    .catch(e => e);
-
-  if (isArchiveArtifacts) {
-    core.startGroup(`[Full Downstream Flow] Archiving artifacts...`);
-    await archiveArtifacts(
-      nodeChain.find(node => node.project === context.config.github.repository),
-      nodeChain,
-      executionResult === true ? ["success", "always"] : ["failure", "always"]
-    );
-    core.endGroup();
-  } else {
-    logger.info("Archive artifact won't be executed");
-  }
-
-  if (executionResult !== true) {
-    logger.error(executionResult);
-    throw new Error(
-      `Command executions have failed, please review latest execution ${executionResult}`
-    );
-  }
-}
-
-module.exports = {
-  start
-};
-
-
-/***/ }),
+/* 705 */,
 /* 706 */,
 /* 707 */,
 /* 708 */,
@@ -24165,7 +24173,84 @@ exports.request = request;
 
 
 /***/ }),
-/* 754 */,
+/* 754 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const {
+  checkoutDefinitionTree,
+  getFinalDefinitionFilePath
+} = __webpack_require__(330);
+const { executeBuild } = __webpack_require__(11);
+const { getTreeForProject } = __webpack_require__(352);
+const { printCheckoutInformation } = __webpack_require__(656);
+const { logger } = __webpack_require__(79);
+const core = __webpack_require__(470);
+const {
+  archiveArtifacts
+} = __webpack_require__(503);
+
+async function start(context, isArchiveArtifacts = true) {
+  core.startGroup(
+    `[Single Flow] Checking out ${context.config.github.groupProject} and its dependencies`
+  );
+  const definitionFile = await getFinalDefinitionFilePath(
+    context,
+    context.config.github.inputs.definitionFile
+  );
+  const definitionTree = await getTreeForProject(
+    definitionFile,
+    context.config.github.repository
+  );
+  const nodeChain = [definitionTree];
+
+  logger.info(
+    `Single flow for project ${
+      context.config.github.inputs.startingProject
+    } loaded from ${definitionFile}. Nodes: ${nodeChain.map(
+      node => "\n" + node.project
+    )}`
+  );
+  const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
+  core.endGroup();
+
+  core.startGroup(`[Single Flow] Checkout Summary...`);
+  printCheckoutInformation(checkoutInfo);
+  core.endGroup();
+
+  const executionResult = await executeBuild(
+    context.config.rootFolder,
+    nodeChain,
+    context.config.github.repository
+  )
+    .then(() => true)
+    .catch(e => e);
+
+  if (isArchiveArtifacts) {
+    core.startGroup(`[Single Flow] Archiving artifacts...`);
+    await archiveArtifacts(
+      nodeChain.find(node => node.project === context.config.github.repository),
+      nodeChain,
+      executionResult === true ? ["success", "always"] : ["failure", "always"]
+    );
+    core.endGroup();
+  } else {
+    logger.info("Archive artifact won't be executed");
+  }
+
+  if (executionResult !== true) {
+    logger.error(executionResult);
+    throw new Error(
+      `Command executions have failed, please review latest execution ${executionResult}`
+    );
+  }
+}
+
+module.exports = {
+  start
+};
+
+
+/***/ }),
 /* 755 */,
 /* 756 */,
 /* 757 */,
@@ -24235,7 +24320,78 @@ module.exports = function (x) {
 /***/ }),
 /* 769 */,
 /* 770 */,
-/* 771 */,
+/* 771 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const { logger } = __webpack_require__(79);
+const {
+  prepareEnv,
+  createGithubInformationObject,
+  getEvent
+} = __webpack_require__(8);
+const { start } = __webpack_require__(137);
+const { createCommonConfig } = __webpack_require__(668);
+const { getProcessEnvVariable } = __webpack_require__(867);
+const fse = __webpack_require__(232);
+
+/**
+ * Executes full downstream flow
+ * @param {String} token the token to communicate to github
+ * @param {Object} octokit octokit instance
+ * @param {Object} env proces.env
+ * @param {Object} pullRequestData information from pull request event
+ * @param {String} rootFolder path to store flow data/projects
+ * @param {Boolean} isArchiveArtifacts
+ */
+async function execute(
+  token,
+  octokit,
+  env,
+  eventData,
+  rootFolder,
+  isArchiveArtifacts
+) {
+  const githubInformation = createGithubInformationObject(eventData, env);
+  const config = await createCommonConfig(githubInformation, rootFolder, env);
+  const context = { token, octokit, config };
+  await start(context, isArchiveArtifacts);
+}
+
+/**
+ * Prepares execution when this is triggered from a github action's event
+ * @param {String} token the token to communicate to github
+ * @param {Object} octokit octokit instance
+ * @param {Object} env proces.env
+ */
+async function executeFromEvent(token, octokit, env) {
+  const eventDataStr = await fse.readFile(
+    getProcessEnvVariable("GITHUB_EVENT_PATH"),
+    "utf8"
+  );
+  const eventData = JSON.parse(eventDataStr);
+  await execute(token, octokit, env, eventData, undefined, true);
+}
+
+/**
+ * Prepares execution when this is triggered from command line
+ * @param {String} token the token to communicate to github
+ * @param {Object} octokit octokit instance
+ * @param {Object} env proces.env
+ * @param {String} rootFolder path to store flow data/projects
+ * @param {String} eventUrl event url
+ */
+async function executeLocally(token, octokit, env, rootFolder, eventUrl) {
+  logger.info(`Executing pull request flow for ${eventUrl} in ${rootFolder}`);
+
+  const eventData = await getEvent(octokit, eventUrl);
+  prepareEnv(env, eventUrl, eventData);
+  await execute(token, octokit, env, eventData, rootFolder, false);
+}
+
+module.exports = { executeLocally, executeFromEvent };
+
+
+/***/ }),
 /* 772 */,
 /* 773 */,
 /* 774 */
@@ -27576,8 +27732,12 @@ function isPullRequestFlowType() {
   return getFlowType() === "pull-request";
 }
 
-function isFDBFlowType() {
-  return getFlowType() === "fdb";
+function isFDFlowType() {
+  return getFlowType() === "full-downstream";
+}
+
+function isSingleFlowType() {
+  return getFlowType() === "single";
 }
 
 module.exports = {
@@ -27585,7 +27745,8 @@ module.exports = {
   getStartingProject,
   getFlowType,
   isPullRequestFlowType,
-  isFDBFlowType
+  isFDFlowType,
+  isSingleFlowType
 };
 
 

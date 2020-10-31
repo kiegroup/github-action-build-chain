@@ -4,13 +4,13 @@ const {
   createGithubInformationObject,
   getEvent
 } = require("./build-chain-pull-request-helper");
-const { start } = require("../../src/lib/flows/fdb-flow");
+const { start } = require("../../src/lib/flows/single-flow");
 const { createCommonConfig } = require("../../src/lib/flows/common/config");
 const { getProcessEnvVariable } = require("../bin-utils");
 const fse = require("fs-extra");
 
 /**
- * Executes pull request flow
+ * Executes single flow
  * @param {String} token the token to communicate to github
  * @param {Object} octokit octokit instance
  * @param {Object} env proces.env

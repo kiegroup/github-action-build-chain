@@ -6,7 +6,8 @@ const {
 jest.mock("../../bin/bin-utils");
 const {
   isPullRequestFlowType,
-  isFDBFlowType,
+  isFDFlowType,
+  isSingleFlowType,
   getFlowType
 } = require("../../src/lib/util/action-utils");
 jest.mock("../../src/lib/util/action-utils");
@@ -16,9 +17,13 @@ const {
 } = require("../../bin/flows/build-chain-pull-request");
 jest.mock("../../bin/flows/build-chain-pull-request");
 const {
-  executeFromEvent: fdbEventFlow
-} = require("../../bin/flows/build-chain-fdb");
-jest.mock("../../bin/flows/build-chain-fdb");
+  executeFromEvent: fdEventFlow
+} = require("../../bin/flows/build-chain-full-downstream");
+jest.mock("../../bin/flows/build-chain-full-downstream");
+const {
+  executeFromEvent: singleEventFlow
+} = require("../../bin/flows/build-chain-single");
+jest.mock("../../bin/flows/build-chain-single");
 
 require("dotenv").config();
 
@@ -45,21 +50,43 @@ test("buildChain test event pull request", async () => {
   );
 });
 
-test("buildChain test event fdb", async () => {
+test("buildChain test event fd", async () => {
   // Arrange
   const octokitMockInstance = "octokitinstance";
   getProcessEnvVariable.mockReturnValueOnce("githubtoken");
   createOctokitInstance.mockReturnValueOnce(octokitMockInstance);
   isPullRequestFlowType.mockReturnValueOnce(false);
-  isFDBFlowType.mockReturnValueOnce(true);
+  isFDFlowType.mockReturnValueOnce(true);
 
   // Act
   await main();
 
   // Assert
   expect(pullRequestEventFlow).toHaveBeenCalledTimes(0);
-  expect(fdbEventFlow).toHaveBeenCalledTimes(1);
-  expect(fdbEventFlow).toHaveBeenCalledWith(
+  expect(fdEventFlow).toHaveBeenCalledTimes(1);
+  expect(fdEventFlow).toHaveBeenCalledWith(
+    "githubtoken",
+    octokitMockInstance,
+    process.env
+  );
+});
+
+test("buildChain test event single", async () => {
+  // Arrange
+  const octokitMockInstance = "octokitinstance";
+  getProcessEnvVariable.mockReturnValueOnce("githubtoken");
+  createOctokitInstance.mockReturnValueOnce(octokitMockInstance);
+  isPullRequestFlowType.mockReturnValueOnce(false);
+  isFDFlowType.mockReturnValueOnce(false);
+  isSingleFlowType.mockReturnValueOnce(true);
+
+  // Act
+  await main();
+
+  // Assert
+  expect(pullRequestEventFlow).toHaveBeenCalledTimes(0);
+  expect(singleEventFlow).toHaveBeenCalledTimes(1);
+  expect(singleEventFlow).toHaveBeenCalledWith(
     "githubtoken",
     octokitMockInstance,
     process.env
@@ -72,7 +99,8 @@ test("buildChain test event none", async () => {
   getProcessEnvVariable.mockReturnValueOnce("githubtoken");
   createOctokitInstance.mockReturnValueOnce(octokitMockInstance);
   isPullRequestFlowType.mockReturnValueOnce(false);
-  isFDBFlowType.mockReturnValueOnce(false);
+  isFDFlowType.mockReturnValueOnce(false);
+  isSingleFlowType.mockReturnValueOnce(false);
   getFlowType.mockReturnValueOnce("flowtype");
 
   // Act
@@ -86,5 +114,5 @@ test("buildChain test event none", async () => {
 
   // Assert
   expect(pullRequestEventFlow).toHaveBeenCalledTimes(0);
-  expect(fdbEventFlow).toHaveBeenCalledTimes(0);
+  expect(fdEventFlow).toHaveBeenCalledTimes(0);
 });

@@ -1,21 +1,20 @@
 const {
   executeLocally: pullRequestLocalFlow
 } = require("../flows/build-chain-pull-request");
-const { executeLocally: fdbLocalFlow } = require("../flows/build-chain-fdb");
+const {
+  executeLocally: fdLocalFlow
+} = require("../flows/build-chain-full-downstream");
+const {
+  executeLocally: singleLocalFlow
+} = require("../flows/build-chain-single");
 const {
   executeLocally: branchLocalFlow
 } = require("../flows/build-chain-branch");
 
 const { addLocalExecutionVariables } = require("../bin-utils");
 
-const assert = require("assert");
-
 async function execute(args, token, octokit) {
   if (args.build === "pr") {
-    assert(
-      args.url && args.url.length > 0,
-      "URL has not been defined, please define one following instructions"
-    );
     await pullRequestLocalFlow(
       token,
       octokit,
@@ -24,12 +23,11 @@ async function execute(args, token, octokit) {
       args.url[0]
     );
   }
-  if (args.build === "fdb") {
-    assert(
-      args.url && args.url.length > 0,
-      "URL has not been defined, please define one following instructions"
-    );
-    await fdbLocalFlow(
+  if (args.build === "fd") {
+    await fdLocalFlow(token, octokit, process.env, args.folder[0], args.url[0]);
+  }
+  if (args.build === "single") {
+    await singleLocalFlow(
       token,
       octokit,
       process.env,

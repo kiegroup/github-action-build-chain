@@ -3,7 +3,8 @@ const {
   getStartingProject,
   getFlowType,
   isPullRequestFlowType,
-  isBranchFlowType
+  isFDFlowType,
+  isSingleFlowType
 } = require("../../../src/lib/util/action-utils");
 
 const { getInput } = require("@actions/core");
@@ -69,7 +70,7 @@ test("isPullRequestFlowType not ok", () => {
   // Arrange
   const expectedResult = false;
   getInput.mockImplementationOnce(param =>
-    param === "flow-type" ? "branch" : undefined
+    param === "flow-type" ? "full-downstream" : undefined
   );
   // Act
   const result = isPullRequestFlowType();
@@ -78,27 +79,53 @@ test("isPullRequestFlowType not ok", () => {
   expect(result).toEqual(expectedResult);
 });
 
-test("isPullRequestFlowType ok", () => {
+test("isFDFlowType ok", () => {
   // Arrange
   const expectedResult = true;
   getInput.mockImplementationOnce(param =>
-    param === "flow-type" ? "branch" : undefined
+    param === "flow-type" ? "full-downstream" : undefined
   );
   // Act
-  const result = isBranchFlowType();
+  const result = isFDFlowType();
 
   // Assert
   expect(result).toEqual(expectedResult);
 });
 
-test("isPullRequestFlowType not ok", () => {
+test("isFDFlowType not ok", () => {
   // Arrange
   const expectedResult = false;
   getInput.mockImplementationOnce(param =>
     param === "flow-type" ? "pull-request" : undefined
   );
   // Act
-  const result = isBranchFlowType();
+  const result = isFDFlowType();
+
+  // Assert
+  expect(result).toEqual(expectedResult);
+});
+
+test("isSingleFlowType ok", () => {
+  // Arrange
+  const expectedResult = true;
+  getInput.mockImplementationOnce(param =>
+    param === "flow-type" ? "single" : undefined
+  );
+  // Act
+  const result = isSingleFlowType();
+
+  // Assert
+  expect(result).toEqual(expectedResult);
+});
+
+test("isSingleFlowType not ok", () => {
+  // Arrange
+  const expectedResult = false;
+  getInput.mockImplementationOnce(param =>
+    param === "flow-type" ? "pull-request" : undefined
+  );
+  // Act
+  const result = isSingleFlowType();
 
   // Assert
   expect(result).toEqual(expectedResult);

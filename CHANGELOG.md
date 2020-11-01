@@ -1,11 +1,15 @@
 # Changelog
 
-# V2.2 (next release)
+# V2.2
 
 ## Enhancements:
 
 - command line ready
-- branch flow added
+- full downstream flow added either for CLI and github action
+- single flow added either for CLI and github action
+- @kie/build-chain-configuration-reader dependency upgraded to ^0.0.7
+- branch flow added for CLI
+- skip build mechanism
 
 # V2.1
 

@@ -12,9 +12,6 @@ const {
 } = require("../../../../src/lib/git");
 jest.mock("../../../../src/lib/git");
 
-const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
-const path = require("path");
-
 const { checkUrlExist } = require("../../../../src/lib/util/http");
 jest.mock("../../../../src/lib/util/http");
 
@@ -330,11 +327,24 @@ test("getCheckoutInfo. sourceBranch and sourceTarget exist with merge. Mapping n
 
 test("checkoutDefinitionTree", async () => {
   // Arrange
-  const project = "kiegroup/droolsjbpm-build-bootstrap";
-  const definitionTree = await getTreeForProject(
-    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
-    project
-  );
+  const nodeChain = [
+    {
+      project: "kiegroup/lienzo-core",
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "lienzo-core" },
+      build: { "build-command": [] },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/droolsjbpm-build-bootstrap",
+      dependencies: [],
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+      build: { "build-command": [] }
+    }
+  ];
 
   const context = {
     config: {
@@ -355,8 +365,7 @@ test("checkoutDefinitionTree", async () => {
   hasPullRequestMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
   // Act
-  const result = await checkoutDefinitionTree(context, definitionTree);
-
+  const result = await checkoutDefinitionTree(context, nodeChain.reverse());
   // Assert
   expect(mergeMock).toHaveBeenCalledTimes(2);
   expect(mergeMock).toHaveBeenCalledWith(
@@ -384,9 +393,9 @@ test("checkoutDefinitionTree", async () => {
     "tBranch"
   );
 
-  expect(result.length).toBe(2);
-  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
-  expect(result[0].checkoutInfo).toStrictEqual({
+  expect(Object.keys(result).length).toBe(2);
+  expect(Object.keys(result)[1]).toStrictEqual("kiegroup/lienzo-core");
+  expect(Object.values(result)[1]).toStrictEqual({
     project: "lienzo-core-forked",
     group: "sourceGroup",
     branch: "sBranch",
@@ -394,10 +403,10 @@ test("checkoutDefinitionTree", async () => {
     targetBranch: "tBranch",
     merge: true
   });
-  expect(result[1].project).toStrictEqual(
+  expect(Object.keys(result)[0]).toStrictEqual(
     "kiegroup/droolsjbpm-build-bootstrap"
   );
-  expect(result[1].checkoutInfo).toStrictEqual({
+  expect(Object.values(result)[0]).toStrictEqual({
     project: "droolsjbpm-build-bootstrap-forked",
     group: "sourceGroup",
     branch: "sBranch",
@@ -409,11 +418,24 @@ test("checkoutDefinitionTree", async () => {
 
 test("checkoutDefinitionTree has no PR", async () => {
   // Arrange
-  const project = "kiegroup/droolsjbpm-build-bootstrap";
-  const definitionTree = await getTreeForProject(
-    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
-    project
-  );
+  const nodeChain = [
+    {
+      project: "kiegroup/lienzo-core",
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "lienzo-core" },
+      build: { "build-command": [] },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/droolsjbpm-build-bootstrap",
+      dependencies: [],
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+      build: { "build-command": [] }
+    }
+  ];
 
   const context = {
     config: {
@@ -434,7 +456,7 @@ test("checkoutDefinitionTree has no PR", async () => {
   hasPullRequestMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
   // Act
-  const result = await checkoutDefinitionTree(context, definitionTree);
+  const result = await checkoutDefinitionTree(context, nodeChain.reverse());
 
   // Assert
   expect(mergeMock).toHaveBeenCalledTimes(1);
@@ -457,9 +479,9 @@ test("checkoutDefinitionTree has no PR", async () => {
     "sBranch"
   );
 
-  expect(result.length).toBe(2);
-  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
-  expect(result[0].checkoutInfo).toStrictEqual({
+  expect(Object.keys(result).length).toBe(2);
+  expect(Object.keys(result)[1]).toStrictEqual("kiegroup/lienzo-core");
+  expect(Object.values(result)[1]).toStrictEqual({
     project: "lienzo-core-forked",
     group: "sourceGroup",
     branch: "sBranch",
@@ -467,10 +489,10 @@ test("checkoutDefinitionTree has no PR", async () => {
     targetBranch: "tBranch",
     merge: true
   });
-  expect(result[1].project).toStrictEqual(
+  expect(Object.keys(result)[0]).toStrictEqual(
     "kiegroup/droolsjbpm-build-bootstrap"
   );
-  expect(result[1].checkoutInfo).toStrictEqual({
+  expect(Object.values(result)[0]).toStrictEqual({
     project: "droolsjbpm-build-bootstrap-forked",
     group: "sourceGroup",
     branch: "sBranch",
@@ -482,11 +504,24 @@ test("checkoutDefinitionTree has no PR", async () => {
 
 test("checkoutDefinitionTree sBranch does not exists but has PR", async () => {
   // Arrange
-  const project = "kiegroup/droolsjbpm-build-bootstrap";
-  const definitionTree = await getTreeForProject(
-    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
-    project
-  );
+  const nodeChain = [
+    {
+      project: "kiegroup/lienzo-core",
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "lienzo-core" },
+      build: { "build-command": [] },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/droolsjbpm-build-bootstrap",
+      dependencies: [],
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+      build: { "build-command": [] }
+    }
+  ];
 
   const context = {
     config: {
@@ -510,7 +545,7 @@ test("checkoutDefinitionTree sBranch does not exists but has PR", async () => {
   hasPullRequestMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
   // Act
-  const result = await checkoutDefinitionTree(context, definitionTree);
+  const result = await checkoutDefinitionTree(context, nodeChain.reverse());
 
   // Assert
   expect(mergeMock).toHaveBeenCalledTimes(2);
@@ -539,9 +574,9 @@ test("checkoutDefinitionTree sBranch does not exists but has PR", async () => {
     "tBranch"
   );
 
-  expect(result.length).toBe(2);
-  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
-  expect(result[0].checkoutInfo).toStrictEqual({
+  expect(Object.keys(result).length).toBe(2);
+  expect(Object.keys(result)[1]).toStrictEqual("kiegroup/lienzo-core");
+  expect(Object.values(result)[1]).toStrictEqual({
     project: "lienzo-core-forked",
     group: "sourceGroup",
     branch: "sBranch",
@@ -549,10 +584,10 @@ test("checkoutDefinitionTree sBranch does not exists but has PR", async () => {
     targetBranch: "tBranch",
     merge: true
   });
-  expect(result[1].project).toStrictEqual(
+  expect(Object.keys(result)[0]).toStrictEqual(
     "kiegroup/droolsjbpm-build-bootstrap"
   );
-  expect(result[1].checkoutInfo).toStrictEqual({
+  expect(Object.values(result)[0]).toStrictEqual({
     project: "droolsjbpm-build-bootstrap",
     group: "kiegroup",
     branch: "sBranch",
@@ -564,11 +599,24 @@ test("checkoutDefinitionTree sBranch does not exists but has PR", async () => {
 
 test("checkoutDefinitionTree sBranch does not exists but has PR no root Folder", async () => {
   // Arrange
-  const project = "kiegroup/droolsjbpm-build-bootstrap";
-  const definitionTree = await getTreeForProject(
-    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
-    project
-  );
+  const nodeChain = [
+    {
+      project: "kiegroup/lienzo-core",
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "lienzo-core" },
+      build: { "build-command": [] },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/droolsjbpm-build-bootstrap",
+      dependencies: [],
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+      build: { "build-command": [] }
+    }
+  ];
 
   const context = {
     config: {
@@ -592,7 +640,7 @@ test("checkoutDefinitionTree sBranch does not exists but has PR no root Folder",
   hasPullRequestMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
   // Act
-  const result = await checkoutDefinitionTree(context, definitionTree);
+  const result = await checkoutDefinitionTree(context, nodeChain.reverse());
 
   // Assert
   expect(mergeMock).toHaveBeenCalledTimes(2);
@@ -621,9 +669,9 @@ test("checkoutDefinitionTree sBranch does not exists but has PR no root Folder",
     "tBranch"
   );
 
-  expect(result.length).toBe(2);
-  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
-  expect(result[0].checkoutInfo).toStrictEqual({
+  expect(Object.keys(result).length).toBe(2);
+  expect(Object.keys(result)[1]).toStrictEqual("kiegroup/lienzo-core");
+  expect(Object.values(result)[1]).toStrictEqual({
     project: "lienzo-core-forked",
     group: "sourceGroup",
     branch: "sBranch",
@@ -631,10 +679,10 @@ test("checkoutDefinitionTree sBranch does not exists but has PR no root Folder",
     targetBranch: "tBranch",
     merge: true
   });
-  expect(result[1].project).toStrictEqual(
+  expect(Object.keys(result)[0]).toStrictEqual(
     "kiegroup/droolsjbpm-build-bootstrap"
   );
-  expect(result[1].checkoutInfo).toStrictEqual({
+  expect(Object.values(result)[0]).toStrictEqual({
     project: "droolsjbpm-build-bootstrap",
     group: "kiegroup",
     branch: "sBranch",
@@ -646,11 +694,24 @@ test("checkoutDefinitionTree sBranch does not exists but has PR no root Folder",
 
 test("checkoutDefinitionTree sBranch does not exists but has no PR", async () => {
   // Arrange
-  const project = "kiegroup/droolsjbpm-build-bootstrap";
-  const definitionTree = await getTreeForProject(
-    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
-    project
-  );
+  const nodeChain = [
+    {
+      project: "kiegroup/lienzo-core",
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "lienzo-core" },
+      build: { "build-command": [] },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/droolsjbpm-build-bootstrap",
+      dependencies: [],
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+      build: { "build-command": [] }
+    }
+  ];
 
   const context = {
     config: {
@@ -674,7 +735,7 @@ test("checkoutDefinitionTree sBranch does not exists but has no PR", async () =>
   hasPullRequestMock.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
   // Act
-  const result = await checkoutDefinitionTree(context, definitionTree);
+  const result = await checkoutDefinitionTree(context, nodeChain.reverse());
 
   // Assert
   expect(mergeMock).toHaveBeenCalledTimes(1);
@@ -697,9 +758,9 @@ test("checkoutDefinitionTree sBranch does not exists but has no PR", async () =>
     "sBranch"
   );
 
-  expect(result.length).toBe(2);
-  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
-  expect(result[0].checkoutInfo).toStrictEqual({
+  expect(Object.keys(result).length).toBe(2);
+  expect(Object.keys(result)[1]).toStrictEqual("kiegroup/lienzo-core");
+  expect(Object.values(result)[1]).toStrictEqual({
     project: "lienzo-core-forked",
     group: "sourceGroup",
     branch: "sBranch",
@@ -707,10 +768,10 @@ test("checkoutDefinitionTree sBranch does not exists but has no PR", async () =>
     targetBranch: "tBranch",
     merge: true
   });
-  expect(result[1].project).toStrictEqual(
+  expect(Object.keys(result)[0]).toStrictEqual(
     "kiegroup/droolsjbpm-build-bootstrap"
   );
-  expect(result[1].checkoutInfo).toStrictEqual({
+  expect(Object.values(result)[0]).toStrictEqual({
     project: "droolsjbpm-build-bootstrap",
     group: "kiegroup",
     branch: "sBranch",
@@ -722,11 +783,24 @@ test("checkoutDefinitionTree sBranch does not exists but has no PR", async () =>
 
 test("checkoutDefinitionTree sBranch does not exists but tBranch", async () => {
   // Arrange
-  const project = "kiegroup/droolsjbpm-build-bootstrap";
-  const definitionTree = await getTreeForProject(
-    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
-    project
-  );
+  const nodeChain = [
+    {
+      project: "kiegroup/lienzo-core",
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "lienzo-core" },
+      build: { "build-command": [] },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/droolsjbpm-build-bootstrap",
+      dependencies: [],
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+      build: { "build-command": [] }
+    }
+  ];
 
   const context = {
     config: {
@@ -751,7 +825,7 @@ test("checkoutDefinitionTree sBranch does not exists but tBranch", async () => {
   hasPullRequestMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
 
   // Act
-  const result = await checkoutDefinitionTree(context, definitionTree);
+  const result = await checkoutDefinitionTree(context, nodeChain.reverse());
 
   // Assert
   expect(mergeMock).toHaveBeenCalledTimes(1);
@@ -774,9 +848,9 @@ test("checkoutDefinitionTree sBranch does not exists but tBranch", async () => {
     "tBranch"
   );
 
-  expect(result.length).toBe(2);
-  expect(result[0].project).toStrictEqual("kiegroup/lienzo-core");
-  expect(result[0].checkoutInfo).toStrictEqual({
+  expect(Object.keys(result).length).toBe(2);
+  expect(Object.keys(result)[1]).toStrictEqual("kiegroup/lienzo-core");
+  expect(Object.values(result)[1]).toStrictEqual({
     project: "lienzo-core-forked",
     group: "sourceGroup",
     branch: "sBranch",
@@ -784,10 +858,10 @@ test("checkoutDefinitionTree sBranch does not exists but tBranch", async () => {
     targetBranch: "tBranch",
     merge: true
   });
-  expect(result[1].project).toStrictEqual(
+  expect(Object.keys(result)[0]).toStrictEqual(
     "kiegroup/droolsjbpm-build-bootstrap"
   );
-  expect(result[1].checkoutInfo).toStrictEqual({
+  expect(Object.values(result)[0]).toStrictEqual({
     project: "droolsjbpm-build-bootstrap",
     group: "kiegroup",
     branch: "tBranch",
@@ -799,12 +873,48 @@ test("checkoutDefinitionTree sBranch does not exists but tBranch", async () => {
 
 test("checkoutDefinitionTree with mapping", async () => {
   // Arrange
-  const project = "kiegroup/optaplanner";
-  const definitionTree = await getTreeForProject(
-    path.join(".", "test", "resources", "build-config", "build-config.yaml"),
-    project
-  );
-
+  const nodeChain = [
+    {
+      project: "kiegroup/lienzo-core",
+      parents: [],
+      repo: { group: "kiegroup", name: "lienzo-core" },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/droolsjbpm-build-bootstrap",
+      repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/lienzo-tests",
+      repo: { group: "kiegroup", name: "lienzo-tests" },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/kie-soup",
+      repo: { group: "kiegroup", name: "kie-soup" },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/appformer",
+      repo: { group: "kiegroup", name: "appformer" },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/drools",
+      repo: { group: "kiegroup", name: "drools" },
+      mapping: { source: "7.x", target: "master" }
+    },
+    {
+      project: "kiegroup/jbpm",
+      repo: { group: "kiegroup", name: "jbpm" },
+      mapping: { source: "7.x", target: "master" }
+    },
+    {
+      project: "kiegroup/optaplanner",
+      repo: { group: "kiegroup", name: "optaplanner" }
+    }
+  ];
   const context = {
     config: {
       github: {
@@ -846,7 +956,7 @@ test("checkoutDefinitionTree with mapping", async () => {
     .mockResolvedValueOnce(true);
 
   // Act
-  const result = await checkoutDefinitionTree(context, definitionTree);
+  const result = await checkoutDefinitionTree(context, nodeChain.reverse());
 
   // Assert
   expect(mergeMock).toHaveBeenCalledTimes(8);
@@ -897,9 +1007,9 @@ test("checkoutDefinitionTree with mapping", async () => {
     "master"
   );
 
-  expect(result.length).toBe(8);
-  expect(result[7].project).toStrictEqual("kiegroup/optaplanner");
-  expect(result[7].checkoutInfo).toStrictEqual({
+  expect(Object.keys(result).length).toBe(8);
+  expect(Object.keys(result)[0]).toStrictEqual("kiegroup/optaplanner");
+  expect(Object.values(result)[0]).toStrictEqual({
     project: "optaplanner-forked",
     group: "sourceGroup",
     branch: "sBranch",

@@ -4,9 +4,9 @@ const {
 } = require("./common/build-chain-flow-helper");
 const { executeBuild } = require("./common/common-helper");
 const {
-  getTreeForProject,
-  parentChainFromNode
+  getOrderedListForProject
 } = require("@kie/build-chain-configuration-reader");
+
 const { printCheckoutInformation } = require("../summary");
 const { logger } = require("../common");
 const core = require("@actions/core");
@@ -16,22 +16,21 @@ const {
 
 async function start(context, isArchiveArtifacts = true) {
   core.startGroup(
-    `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
+    `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
   const definitionFile = await getFinalDefinitionFilePath(
     context,
     context.config.github.inputs.definitionFile
   );
-  const definitionTree = await getTreeForProject(
+  const nodeChain = await getOrderedListForProject(
     definitionFile,
     context.config.github.repository
   );
-  const nodeChain = await parentChainFromNode(definitionTree);
 
   logger.info(
     `Tree for project ${
-      context.config.github.inputs.startingProject
-    } loaded from ${definitionFile}. Dependencies: ${nodeChain.map(
+      context.config.github.repository
+    } loaded from ${definitionFile}. Chain: ${nodeChain.map(
       node => "\n" + node.project
     )}`
   );
@@ -41,7 +40,7 @@ async function start(context, isArchiveArtifacts = true) {
   );
   core.endGroup();
 
-  core.startGroup(`[Pull Request Flow] Checkout Summary...`);
+  core.startGroup(`[Full Downstream Flow] Checkout Summary...`);
   printCheckoutInformation(checkoutInfo);
   core.endGroup();
 
@@ -54,7 +53,7 @@ async function start(context, isArchiveArtifacts = true) {
     .catch(e => e);
 
   if (isArchiveArtifacts) {
-    core.startGroup(`[Pull Request Flow] Archiving artifacts...`);
+    core.startGroup(`[Full Downstream Flow] Archiving artifacts...`);
     await archiveArtifacts(
       nodeChain.find(node => node.project === context.config.github.repository),
       nodeChain,

@@ -3,10 +3,7 @@ const {
   getFinalDefinitionFilePath
 } = require("./common/build-chain-flow-helper");
 const { executeBuild } = require("./common/common-helper");
-const {
-  getTreeForProject,
-  parentChainFromNode
-} = require("@kie/build-chain-configuration-reader");
+const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
 const { printCheckoutInformation } = require("../summary");
 const { logger } = require("../common");
 const core = require("@actions/core");
@@ -16,7 +13,7 @@ const {
 
 async function start(context, isArchiveArtifacts = true) {
   core.startGroup(
-    `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
+    `[Single Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
   const definitionFile = await getFinalDefinitionFilePath(
     context,
@@ -26,22 +23,19 @@ async function start(context, isArchiveArtifacts = true) {
     definitionFile,
     context.config.github.repository
   );
-  const nodeChain = await parentChainFromNode(definitionTree);
+  const nodeChain = [definitionTree];
 
   logger.info(
-    `Tree for project ${
+    `Single flow for project ${
       context.config.github.inputs.startingProject
-    } loaded from ${definitionFile}. Dependencies: ${nodeChain.map(
+    } loaded from ${definitionFile}. Nodes: ${nodeChain.map(
       node => "\n" + node.project
     )}`
   );
-  const checkoutInfo = await checkoutDefinitionTree(
-    context,
-    [...nodeChain].reverse()
-  );
+  const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
   core.endGroup();
 
-  core.startGroup(`[Pull Request Flow] Checkout Summary...`);
+  core.startGroup(`[Single Flow] Checkout Summary...`);
   printCheckoutInformation(checkoutInfo);
   core.endGroup();
 
@@ -54,7 +48,7 @@ async function start(context, isArchiveArtifacts = true) {
     .catch(e => e);
 
   if (isArchiveArtifacts) {
-    core.startGroup(`[Pull Request Flow] Archiving artifacts...`);
+    core.startGroup(`[Single Flow] Archiving artifacts...`);
     await archiveArtifacts(
       nodeChain.find(node => node.project === context.config.github.repository),
       nodeChain,

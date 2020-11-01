@@ -1,4 +1,4 @@
-const { start } = require("../../../src/lib/flows/pull-request-flow");
+const { start } = require("../../../src/lib/flows/single-flow");
 const path = require("path");
 const {
   checkoutDefinitionTree,
@@ -20,10 +20,7 @@ jest.mock("@actions/core");
 const { printCheckoutInformation } = require("../../../src/lib/summary");
 jest.mock("../../../src/lib/summary");
 
-const {
-  getTreeForProject,
-  parentChainFromNode
-} = require("@kie/build-chain-configuration-reader");
+const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
 jest.mock("@kie/build-chain-configuration-reader");
 
 afterEach(() => {
@@ -41,7 +38,7 @@ test("start no parent dependencies. project triggering the job", async () => {
     targetBranch: "targetBranchx",
     merge: true
   };
-  const definitionTree = {};
+  const definitionTree = { project };
   const context = {
     config: {
       github: {
@@ -68,10 +65,6 @@ test("start no parent dependencies. project triggering the job", async () => {
 
   getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
   getTreeForProject.mockResolvedValueOnce(definitionTree);
-  parentChainFromNode.mockResolvedValueOnce([
-    { project },
-    { project: "project2" }
-  ]);
   checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
   executeBuild.mockResolvedValueOnce(true);
@@ -83,10 +76,8 @@ test("start no parent dependencies. project triggering the job", async () => {
     "finalDefinitionFilePath",
     project
   );
-  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
-    { project: "project2" },
-    { project }
+    definitionTree
   ]);
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
@@ -95,13 +86,13 @@ test("start no parent dependencies. project triggering the job", async () => {
   expect(executeBuild).toHaveBeenCalledTimes(1);
   expect(executeBuild).toHaveBeenCalledWith(
     "folder",
-    [{ project }, { project: "project2" }],
+    [definitionTree],
     project
   );
   expect(archiveArtifacts).toHaveBeenCalledTimes(1);
   expect(archiveArtifacts).toHaveBeenCalledWith(
     { project },
-    [{ project }, { project: "project2" }],
+    [definitionTree],
     ["success", "always"]
   );
 });
@@ -117,7 +108,7 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
     targetBranch: "targetBranchx",
     merge: true
   };
-  const definitionTree = {};
+  const definitionTree = { project };
   const context = {
     config: {
       github: {
@@ -144,10 +135,6 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
 
   getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
   getTreeForProject.mockResolvedValueOnce(definitionTree);
-  parentChainFromNode.mockResolvedValueOnce([
-    { project },
-    { project: "project2" }
-  ]);
   checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
   executeBuild.mockResolvedValueOnce(true);
@@ -159,10 +146,8 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
     "finalDefinitionFilePath",
     project
   );
-  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
-    { project: "project2" },
-    { project }
+    definitionTree
   ]);
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
@@ -171,7 +156,7 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
   expect(executeBuild).toHaveBeenCalledTimes(1);
   expect(executeBuild).toHaveBeenCalledWith(
     "folder",
-    [{ project }, { project: "project2" }],
+    [definitionTree],
     project
   );
   expect(archiveArtifacts).toHaveBeenCalledTimes(0);
@@ -188,7 +173,7 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     targetBranch: "targetBranchx",
     merge: true
   };
-  const definitionTree = {};
+  const definitionTree = { project };
   const context = {
     config: {
       github: {
@@ -215,10 +200,6 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
 
   getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
   getTreeForProject.mockResolvedValueOnce(definitionTree);
-  parentChainFromNode.mockResolvedValueOnce([
-    { project },
-    { project: "project2" }
-  ]);
   checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
   executeBuild.mockImplementationOnce(async () => {
@@ -237,10 +218,8 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     "finalDefinitionFilePath",
     project
   );
-  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
-    { project: "project2" },
-    { project }
+    definitionTree
   ]);
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
@@ -249,13 +228,13 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
   expect(executeBuild).toHaveBeenCalledTimes(1);
   expect(executeBuild).toHaveBeenCalledWith(
     "folder",
-    [{ project }, { project: "project2" }],
+    [definitionTree],
     project
   );
   expect(archiveArtifacts).toHaveBeenCalledTimes(1);
   expect(archiveArtifacts).toHaveBeenCalledWith(
     { project },
-    [{ project }, { project: "project2" }],
+    [definitionTree],
     ["failure", "always"]
   );
 });

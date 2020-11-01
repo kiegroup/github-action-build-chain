@@ -1,4 +1,4 @@
-const { start } = require("../../../src/lib/flows/pull-request-flow");
+const { start } = require("../../../src/lib/flows/full-downstream-flow");
 const path = require("path");
 const {
   checkoutDefinitionTree,
@@ -21,8 +21,7 @@ const { printCheckoutInformation } = require("../../../src/lib/summary");
 jest.mock("../../../src/lib/summary");
 
 const {
-  getTreeForProject,
-  parentChainFromNode
+  getOrderedListForProject
 } = require("@kie/build-chain-configuration-reader");
 jest.mock("@kie/build-chain-configuration-reader");
 
@@ -41,7 +40,6 @@ test("start no parent dependencies. project triggering the job", async () => {
     targetBranch: "targetBranchx",
     merge: true
   };
-  const definitionTree = {};
   const context = {
     config: {
       github: {
@@ -67,8 +65,7 @@ test("start no parent dependencies. project triggering the job", async () => {
   };
 
   getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
-  getTreeForProject.mockResolvedValueOnce(definitionTree);
-  parentChainFromNode.mockResolvedValueOnce([
+  getOrderedListForProject.mockResolvedValueOnce([
     { project },
     { project: "project2" }
   ]);
@@ -79,11 +76,10 @@ test("start no parent dependencies. project triggering the job", async () => {
   // Act
   await start(context, true);
   // Assert
-  expect(getTreeForProject).toHaveBeenCalledWith(
+  expect(getOrderedListForProject).toHaveBeenCalledWith(
     "finalDefinitionFilePath",
     project
   );
-  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
     { project: "project2" },
     { project }
@@ -117,7 +113,6 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
     targetBranch: "targetBranchx",
     merge: true
   };
-  const definitionTree = {};
   const context = {
     config: {
       github: {
@@ -143,8 +138,7 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
   };
 
   getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
-  getTreeForProject.mockResolvedValueOnce(definitionTree);
-  parentChainFromNode.mockResolvedValueOnce([
+  getOrderedListForProject.mockResolvedValueOnce([
     { project },
     { project: "project2" }
   ]);
@@ -155,11 +149,10 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
   // Act
   await start(context, false);
   // Assert
-  expect(getTreeForProject).toHaveBeenCalledWith(
+  expect(getOrderedListForProject).toHaveBeenCalledWith(
     "finalDefinitionFilePath",
     project
   );
-  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
     { project: "project2" },
     { project }
@@ -188,7 +181,6 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     targetBranch: "targetBranchx",
     merge: true
   };
-  const definitionTree = {};
   const context = {
     config: {
       github: {
@@ -214,8 +206,7 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
   };
 
   getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
-  getTreeForProject.mockResolvedValueOnce(definitionTree);
-  parentChainFromNode.mockResolvedValueOnce([
+  getOrderedListForProject.mockResolvedValueOnce([
     { project },
     { project: "project2" }
   ]);
@@ -233,11 +224,10 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     );
   }
   // Assert
-  expect(getTreeForProject).toHaveBeenCalledWith(
+  expect(getOrderedListForProject).toHaveBeenCalledWith(
     "finalDefinitionFilePath",
     project
   );
-  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
     { project: "project2" },
     { project }

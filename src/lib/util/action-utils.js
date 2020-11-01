@@ -16,8 +16,12 @@ function isPullRequestFlowType() {
   return getFlowType() === "pull-request";
 }
 
-function isBranchFlowType() {
-  return getFlowType() === "branch";
+function isFDFlowType() {
+  return getFlowType() === "full-downstream";
+}
+
+function isSingleFlowType() {
+  return getFlowType() === "single";
 }
 
 module.exports = {
@@ -25,5 +29,6 @@ module.exports = {
   getStartingProject,
   getFlowType,
   isPullRequestFlowType,
-  isBranchFlowType
+  isFDFlowType,
+  isSingleFlowType
 };

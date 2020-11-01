@@ -3514,7 +3514,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 
 const assert = __webpack_require__(357);
 
-const allowedVersions = ["1.0"];
+const allowedVersions = ["1.0", "1.1"];
 
 function validateDefinition(definition) {
   assert(
@@ -24605,6 +24605,7 @@ async function readDefinitionFileFromFile(filePath, urlPlaceHolders) {
   return loadYaml(
     readYaml(defintionFileContent),
     filePath.substring(0, filePath.lastIndexOf("/")),
+    defintionFileContent,
     urlPlaceHolders
   );
 }
@@ -24616,47 +24617,92 @@ async function readDefinitionFileFromFile(filePath, urlPlaceHolders) {
  */
 async function readDefinitionFileFromUrl(url, urlPlaceHolders) {
   const treatedUrl = treatUrl(url, urlPlaceHolders);
-  const definitionYaml = readYaml(await getUrlContent(treatedUrl));
-  validateDefinition(definitionYaml);
-  // In case the dependencies are defined as relative path we should download treating definition faile
-  if (
-    !Array.isArray(definitionYaml.dependencies) &&
-    !definitionYaml.dependencies.startsWith("http")
-  ) {
-    const dependenciesContent = await getUrlContent(
-      `${treatedUrl.substring(0, treatedUrl.lastIndexOf("/"))}/${
-        definitionYaml.dependencies
-      }`
-    );
-    fs.writeFileSync(definitionYaml.dependencies, dependenciesContent);
-  }
-  return loadYaml(definitionYaml, "./", urlPlaceHolders);
+  return loadYaml(
+    readYaml(await getUrlContent(treatedUrl)),
+    "./",
+    url,
+    urlPlaceHolders
+  );
 }
 
 /**
  * it loads dependencies content from a external file/url and returns back the yaml object
  * @param {Object} definitionYaml the definition yaml object
  * @param {String} definitionFileFolder the definition folder path
+ * @param {String} containerPath the path or url where the container was loaded
  * @param {Object} urlPlaceHolders the url place holders to replace url
  */
-async function loadYaml(definitionYaml, definitionFileFolder, urlPlaceHolders) {
+async function loadYaml(
+  definitionYaml,
+  definitionFileFolder,
+  containerPath,
+  urlPlaceHolders
+) {
   validateDefinition(definitionYaml);
-  if (!Array.isArray(definitionYaml.dependencies)) {
-    const dependenciesFileContent = definitionYaml.dependencies.startsWith(
-      "http"
-    )
-      ? await getUrlContent(
-          treatUrl(definitionYaml.dependencies, urlPlaceHolders)
-        )
-      : fs.readFileSync(
-          `${definitionFileFolder}/${definitionYaml.dependencies}`,
-          "utf8"
-        );
-    const dependenciesYaml = readYaml(dependenciesFileContent);
-    validateDependencies(dependenciesYaml);
-    definitionYaml.dependencies = dependenciesYaml.dependencies;
-  }
+  definitionYaml.dependencies = await loadDependencies(
+    definitionYaml.dependencies,
+    definitionFileFolder,
+    containerPath,
+    urlPlaceHolders
+  );
   return definitionYaml;
+}
+
+/**
+ *
+ * @param {Array|String} dependencies is the dependencies/extends property of the file, it can be an Array or a file path/URL
+ * @param {*} definitionFileFolder the folder
+ * @param {*} containerPath
+ * @param {*} urlPlaceHolders
+ */
+async function loadDependencies(
+  dependencies,
+  definitionFileFolder,
+  containerPath,
+  urlPlaceHolders
+) {
+  if (dependencies) {
+    if (
+      containerPath.startsWith("http") &&
+      !Array.isArray(dependencies) &&
+      !dependencies.startsWith("http")
+    ) {
+      const treatedUrl = treatUrl(containerPath, urlPlaceHolders);
+      const dependenciesContent = await getUrlContent(
+        `${treatedUrl.substring(
+          0,
+          treatedUrl.lastIndexOf("/")
+        )}/${dependencies}`
+      );
+      fs.writeFileSync(dependencies, dependenciesContent);
+    }
+
+    if (!Array.isArray(dependencies)) {
+      const dependenciesFilePath = `${definitionFileFolder}/${dependencies}`;
+      const dependenciesFileContent = dependencies.startsWith("http")
+        ? await getUrlContent(treatUrl(dependencies, urlPlaceHolders))
+        : fs.readFileSync(dependenciesFilePath, "utf8");
+      const dependenciesYaml = readYaml(dependenciesFileContent);
+      validateDependencies(dependenciesYaml);
+      // Once the dependencies are loaded, the `extends` proporty is concatenated to the current dependencies
+      return dependenciesYaml.dependencies.concat(
+        await loadDependencies(
+          dependenciesYaml.extends,
+          dependenciesFilePath.substring(
+            0,
+            dependenciesFilePath.lastIndexOf("/")
+          ),
+          dependencies,
+          urlPlaceHolders
+        )
+      );
+    } else {
+      // There's no extension for embedded dependencies
+      return dependencies;
+    }
+  } else {
+    return [];
+  }
 }
 
 module.exports = { readDefinitionFile };

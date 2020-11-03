@@ -51,7 +51,7 @@ async function start(context, options = {}) {
   printCheckoutInformation(checkoutInfo);
   core.endGroup();
 
-  if (options.skipExecution) {
+  if (!options.skipExecution) {
     if (options.projectToStart) {
       const nodeChainIndex = nodeChain
         .map(node => node.project)

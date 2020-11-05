@@ -2050,6 +2050,7 @@ function dependencyListToTree(dependencyList, buildConfiguration) {
       },
       ...treatProject(node.project, buildConfiguration)
     };
+
     if (node.dependencies && node.dependencies.length > 0) {
       node.dependencies.forEach(dependency => {
         dependencyList[map[dependency.project].index].children.push({
@@ -9476,21 +9477,20 @@ async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
         logger.info(`[${node.project}] Checked out.`);
         return result;
       } catch (err) {
-        return Promise.reject({ project: node.project, message: err });
+        throw { project: node.project, message: err };
       }
     })
   )
-    .catch(err => {
-      logger.error(
-        `Error checking out project ${err.project}. Error: ${err.message}`
-      );
-    })
-    .then(result =>
-      result.reduce((acc, curr) => {
+    .then(result => {
+      return result.reduce((acc, curr) => {
         acc[curr.project] = curr.checkoutInfo;
         return acc;
-      }, {})
-    );
+      }, {});
+    })
+    .catch(err => {
+      logger.error(`[${err.project}] Error checking it out. ${err.message}`);
+      throw err.message;
+    });
 }
 
 async function checkoutProjectPullRequestFlow(
@@ -24752,14 +24752,17 @@ async function loadDependencies(
     }
 
     if (!Array.isArray(dependencies)) {
-      const dependenciesFilePath = `${definitionFileFolder}/${dependencies}`;
+      const dependenciesFilePath = dependencies.startsWith("http")
+        ? treatUrl(dependencies, urlPlaceHolders)
+        : `${definitionFileFolder}/${dependencies}`;
       const dependenciesFileContent = dependencies.startsWith("http")
-        ? await getUrlContent(treatUrl(dependencies, urlPlaceHolders))
+        ? await getUrlContent(dependenciesFilePath)
         : fs.readFileSync(dependenciesFilePath, "utf8");
       const dependenciesYaml = readYaml(dependenciesFileContent);
+      // console.log(`dependenciesFilePath ${dependenciesFilePath}`, dependenciesYaml, urlPlaceHolders)
       validateDependencies(dependenciesYaml);
       // Once the dependencies are loaded, the `extends` proporty is concatenated to the current dependencies
-      return dependenciesYaml.dependencies.concat(
+      return (
         await loadDependencies(
           dependenciesYaml.extends,
           dependenciesFilePath.substring(
@@ -24769,7 +24772,7 @@ async function loadDependencies(
           dependencies,
           urlPlaceHolders
         )
-      );
+      ).concat(dependenciesYaml.dependencies);
     } else {
       // There's no extension for embedded dependencies
       return dependencies;

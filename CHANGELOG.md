@@ -11,6 +11,7 @@
 - branch flow added for CLI
 - skip build mechanism
 - configuration file version <2.0 is no longer supported
+- checkout mechanism improved
 
 # V2.1
 

@@ -9688,33 +9688,43 @@ const { getNodeTriggeringJob } = __webpack_require__(645);
 const fs = __webpack_require__(747);
 
 async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
-  const result = {};
   const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
-  for (const node of nodeChain) {
-    try {
-      const checkoutInfo =
-        flow === "pr"
-          ? await checkoutProjectPullRequestFlow(
-              context,
-              node,
-              nodeTriggeringTheJob
-            )
-          : await checkoutProjectBranchFlow(
-              context,
-              node,
-              nodeTriggeringTheJob
-            );
-      result[node.project] = checkoutInfo;
-      currentTargetBranch = checkoutInfo
-        ? checkoutInfo.targetBranch
-        : currentTargetBranch;
-    } catch (err) {
-      logger.error(`Error checking out project ${node.project}`);
-      throw err;
-    }
-  }
-
-  return result;
+  return Promise.all(
+    nodeChain.map(async node => {
+      try {
+        const result = Promise.resolve({
+          project: node.project,
+          checkoutInfo:
+            flow === "pr"
+              ? await checkoutProjectPullRequestFlow(
+                  context,
+                  node,
+                  nodeTriggeringTheJob
+                )
+              : await checkoutProjectBranchFlow(
+                  context,
+                  node,
+                  nodeTriggeringTheJob
+                )
+        });
+        logger.info(`[${node.project}] Checked out.`);
+        return result;
+      } catch (err) {
+        return Promise.reject({ project: node.project, message: err });
+      }
+    })
+  )
+    .catch(err => {
+      logger.error(
+        `Error checking out project ${err.project}. Error: ${err.message}`
+      );
+    })
+    .then(result =>
+      result.reduce((acc, curr) => {
+        acc[curr.project] = curr.checkoutInfo;
+        return acc;
+      }, {})
+    );
 }
 
 async function checkoutProjectPullRequestFlow(
@@ -9732,7 +9742,7 @@ async function checkoutProjectPullRequestFlow(
     );
 
     if (checkoutInfo == undefined) {
-      const msg = `Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
+      const msg = `[${node.project}] Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
       logger.error(msg);
       throw new Error(msg);
     }
@@ -9748,7 +9758,7 @@ async function checkoutProjectPullRequestFlow(
         );
       } catch (err) {
         logger.error(
-          `Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
+          `[${node.project}] Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
         );
         throw err;
       }
@@ -9761,14 +9771,14 @@ async function checkoutProjectPullRequestFlow(
         );
       } catch (err) {
         logger.error(
-          `Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
+          `[${node.project}] Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
         );
         throw err;
       }
     } else {
       try {
         logger.info(
-          `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
+          `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
         );
         await clone(
           `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
@@ -9777,14 +9787,16 @@ async function checkoutProjectPullRequestFlow(
         );
       } catch (err) {
         logger.error(
-          `Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
+          `[${node.project}] Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
         );
         throw err;
       }
     }
     return checkoutInfo;
   } else {
-    logger.info(`folder ${dir} already exists, nothing to checkout`);
+    logger.info(
+      `[${node.project}] folder ${dir} already exists, nothing to checkout`
+    );
     return undefined;
   }
 }

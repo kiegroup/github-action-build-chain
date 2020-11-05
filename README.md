@@ -364,6 +364,7 @@ either `sudo` and `env GITHUB_TOKEN=...` are optional depending on your local se
 - **-folder** (default: `build_chain_%TIMESTAMP%`): The folder path to store projects.
 
 #### Execution Build Action
+<<<<<<< HEAD
 
 To choose between `pr`, `fd` or `single`
 
@@ -393,6 +394,44 @@ build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 
 ##### Execution Build Action - Single Build
 
+=======
+
+To choose between `pr`, `fd` or `single`
+
+##### Execution Build Action - Pull Request
+
+>>>>>>> upstream/master
+**Arguments**:
+
+- **\*-url**: the event URL. Pull Request URL for instance `-url=https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
+
+Examples:
+
+```
+<<<<<<< HEAD
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build single -url=https://github.com/kiegroup/kie-wb-distributions/pull/1068
+```
+
+##### Execution Build Action - Branch flow arguments
+
+=======
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build pr -url=https://github.com/kiegroup/kie-wb-distributions/pull/1068
+```
+
+##### Execution Build Action - Full Downstream Build
+
+**Arguments**:
+
+- **\*-url**: the event URL. Pull Request URL for instance `-url=https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
+
+Examples:
+
+```
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build fdb -url=https://github.com/kiegroup/kie-wb-distributions/pull/1068
+```
+
+##### Execution Build Action - Single Build
+
 **Arguments**:
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url=https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
@@ -405,6 +444,7 @@ build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 
 ##### Execution Build Action - Branch flow arguments
 
+>>>>>>> upstream/master
 **Arguments**:
 
 - **\*-p, -project**: The project name to execute flow from. It has to match with one defined in "definition-file". E.g. `-p=kiegroup/drools`
@@ -417,6 +457,7 @@ Examples:
 
 ```
 build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build branch -url=https://github.com/kiegroup/kie-wb-distributions/pull/1068
+<<<<<<< HEAD
 
 build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build branch -p=kiegroup/lienzo-tests -b=master
 
@@ -429,6 +470,20 @@ Additionally the tool provides several useful tools
 
 ##### Execution Tools Action - Project List
 
+=======
+
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build branch -p=kiegroup/lienzo-tests -b=master
+
+build-chain-action -df=https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml build branch -p=kiegroup/optaplanner -b=7.x -folder=myfolder
+```
+
+#### Execution Tools Action
+
+Additionally the tool provides several useful tools
+
+##### Execution Tools Action - Project List
+
+>>>>>>> upstream/master
 Examples:
 
 ```

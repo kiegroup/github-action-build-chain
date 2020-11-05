@@ -34,21 +34,20 @@ async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
         logger.info(`[${node.project}] Checked out.`);
         return result;
       } catch (err) {
-        return Promise.reject({ project: node.project, message: err });
+        throw { project: node.project, message: err };
       }
     })
   )
-    .catch(err => {
-      logger.error(
-        `Error checking out project ${err.project}. Error: ${err.message}`
-      );
-    })
-    .then(result =>
-      result.reduce((acc, curr) => {
+    .then(result => {
+      return result.reduce((acc, curr) => {
         acc[curr.project] = curr.checkoutInfo;
         return acc;
-      }, {})
-    );
+      }, {});
+    })
+    .catch(err => {
+      logger.error(`[${err.project}] Error checking it out. ${err.message}`);
+      throw err.message;
+    });
 }
 
 async function checkoutProjectPullRequestFlow(

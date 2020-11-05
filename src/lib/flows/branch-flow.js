@@ -42,7 +42,7 @@ async function start(context, options = {}) {
   );
   const checkoutInfo = await checkoutDefinitionTree(
     context,
-    [...nodeChain].reverse(),
+    nodeChain,
     "branch"
   );
   core.endGroup();

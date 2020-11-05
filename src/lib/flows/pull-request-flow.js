@@ -30,15 +30,12 @@ async function start(context, isArchiveArtifacts = true) {
 
   logger.info(
     `Tree for project ${
-      context.config.github.inputs.startingProject
+      context.config.github.repository
     } loaded from ${definitionFile}. Dependencies: ${nodeChain.map(
       node => "\n" + node.project
     )}`
   );
-  const checkoutInfo = await checkoutDefinitionTree(
-    context,
-    [...nodeChain].reverse()
-  );
+  const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
   core.endGroup();
 
   core.startGroup(`[Pull Request Flow] Checkout Summary...`);

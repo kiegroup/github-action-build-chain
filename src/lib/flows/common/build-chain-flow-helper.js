@@ -8,52 +8,65 @@ const {
 const { logger } = require("../../common");
 const { treatUrl } = require("@kie/build-chain-configuration-reader");
 const { checkUrlExist } = require("../../util/http");
+const { getNodeTriggeringJob } = require("../../util/chain-util");
 const fs = require("fs");
 
 async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
-  const result = {};
-  let currentTargetBranch = context.config.github.targetBranch;
-  for (const node of nodeChain) {
-    try {
-      const checkoutInfo =
-        flow === "pr"
-          ? await checkoutProjectPullRequestFlow(
-              context,
-              node,
-              currentTargetBranch
-            )
-          : await checkoutProjectBranchFlow(context, node, currentTargetBranch);
-      result[node.project] = checkoutInfo;
-      currentTargetBranch = checkoutInfo
-        ? checkoutInfo.targetBranch
-        : currentTargetBranch;
-    } catch (err) {
-      logger.error(`Error checking out project ${node.project}`);
-      throw err;
-    }
-  }
-
-  return result;
+  const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
+  return Promise.all(
+    nodeChain.map(async node => {
+      try {
+        const result = Promise.resolve({
+          project: node.project,
+          checkoutInfo:
+            flow === "pr"
+              ? await checkoutProjectPullRequestFlow(
+                  context,
+                  node,
+                  nodeTriggeringTheJob
+                )
+              : await checkoutProjectBranchFlow(
+                  context,
+                  node,
+                  nodeTriggeringTheJob
+                )
+        });
+        logger.info(`[${node.project}] Checked out.`);
+        return result;
+      } catch (err) {
+        return Promise.reject({ project: node.project, message: err });
+      }
+    })
+  )
+    .catch(err => {
+      logger.error(
+        `Error checking out project ${err.project}. Error: ${err.message}`
+      );
+    })
+    .then(result =>
+      result.reduce((acc, curr) => {
+        acc[curr.project] = curr.checkoutInfo;
+        return acc;
+      }, {})
+    );
 }
 
 async function checkoutProjectPullRequestFlow(
   context,
   node,
-  currentTargetBranch
+  nodeTriggeringTheJob
 ) {
   logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
   if (!fs.existsSync(dir)) {
     const checkoutInfo = await getCheckoutInfo(
       context,
-      node.repo.group,
-      node.repo.name,
-      currentTargetBranch,
-      node.mapping
+      node,
+      nodeTriggeringTheJob
     );
 
     if (checkoutInfo == undefined) {
-      const msg = `Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
+      const msg = `[${node.project}] Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
       logger.error(msg);
       throw new Error(msg);
     }
@@ -69,7 +82,7 @@ async function checkoutProjectPullRequestFlow(
         );
       } catch (err) {
         logger.error(
-          `Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
+          `[${node.project}] Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
         );
         throw err;
       }
@@ -82,14 +95,14 @@ async function checkoutProjectPullRequestFlow(
         );
       } catch (err) {
         logger.error(
-          `Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
+          `[${node.project}] Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
         );
         throw err;
       }
     } else {
       try {
         logger.info(
-          `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
+          `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
         );
         await clone(
           `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
@@ -98,28 +111,28 @@ async function checkoutProjectPullRequestFlow(
         );
       } catch (err) {
         logger.error(
-          `Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
+          `[${node.project}] Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
         );
         throw err;
       }
     }
     return checkoutInfo;
   } else {
-    logger.info(`folder ${dir} already exists, nothing to checkout`);
+    logger.info(
+      `[${node.project}] folder ${dir} already exists, nothing to checkout`
+    );
     return undefined;
   }
 }
 
-async function checkoutProjectBranchFlow(context, node, currentTargetBranch) {
+async function checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob) {
   logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
   if (!fs.existsSync(dir)) {
     const checkoutInfo = await getCheckoutInfo(
       context,
-      node.repo.group,
-      node.repo.name,
-      currentTargetBranch,
-      node.mapping
+      node,
+      nodeTriggeringTheJob
     );
 
     if (checkoutInfo == undefined) {
@@ -149,19 +162,19 @@ async function checkoutProjectBranchFlow(context, node, currentTargetBranch) {
   }
 }
 
-async function getCheckoutInfo(
-  context,
-  targetGroup,
-  targetProject,
-  currentTargetBranch,
-  mapping
-) {
+async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
+  const mapping = getMapping(
+    nodeTriggeringTheJob.project,
+    nodeTriggeringTheJob.mapping,
+    node.project,
+    node.mapping,
+    context.config.github.targetBranch
+  );
   const sourceGroup = context.config.github.sourceGroup;
   const sourceBranch = context.config.github.sourceBranch;
-  const targetBranch =
-    mapping && mapping.source === currentTargetBranch
-      ? mapping.target
-      : currentTargetBranch;
+  const targetGroup = node.repo.group;
+  const targetProject = node.repo.name;
+  const targetBranch = mapping.target;
   const forkedProjectName = await getForkedProjectName(
     context.octokit,
     targetGroup,
@@ -170,9 +183,9 @@ async function getCheckoutInfo(
   );
   logger.info(
     `[${targetGroup}/${targetProject}] Getting checkout Info. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
-      mapping
+      mapping.source
         ? "source:" + mapping.source + " target:" + mapping.target
-        : "not defined"
+        : "Not defined"
     }`
   );
   return (await doesBranchExist(
@@ -230,6 +243,54 @@ async function getCheckoutInfo(
         merge: false
       }
     : undefined;
+}
+
+/**
+ * it returns back a {source, target} object
+ * @param {String} projectTriggeringTheJob the project name of the project triggering the job
+ * @param {Object} projectTriggeringTheJobMapping the mapping object of the project triggering the job
+ * @param {String} currentProject the project name of the current project
+ * @param {Object} currentProjectMapping the mappinf object of the current project
+ * @param {String} targetBranch the target branch
+ */
+function getMapping(
+  projectTriggeringTheJob,
+  projectTriggeringTheJobMapping,
+  currentProject,
+  currentProjectMapping,
+  targetBranch
+) {
+  // If the current project it the project triggering the job there's no mapping
+  if (currentProject !== projectTriggeringTheJob) {
+    // If the current project has been excluded from the mapping, there's no mapping
+    if (
+      projectTriggeringTheJobMapping &&
+      (projectTriggeringTheJobMapping.exclude
+        ? !projectTriggeringTheJobMapping.exclude.includes(currentProject)
+        : true)
+    ) {
+      // The mapping is either taken from the project mapping or from the default one
+      const mapping = projectTriggeringTheJobMapping.dependencies[
+        currentProject
+      ]
+        ? projectTriggeringTheJobMapping.dependencies[currentProject]
+        : projectTriggeringTheJobMapping.dependencies.default;
+      return { source: mapping.source, target: mapping.target };
+      // If the current project has a mapping and the source matched with the targetBranch then this mapping is taken
+    } else if (
+      currentProjectMapping &&
+      currentProjectMapping.source === targetBranch
+    ) {
+      return {
+        source: currentProjectMapping.source,
+        target: currentProjectMapping.target
+      };
+    } else {
+      return { target: targetBranch };
+    }
+  } else {
+    return { target: targetBranch };
+  }
 }
 
 function getDir(rootFolder, project) {
@@ -297,5 +358,6 @@ module.exports = {
   checkoutDefinitionTree,
   getCheckoutInfo,
   getDir,
-  getFinalDefinitionFilePath
+  getFinalDefinitionFilePath,
+  getMapping
 };

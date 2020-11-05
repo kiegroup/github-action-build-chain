@@ -2017,9 +2017,6 @@ async function getTreeForProject(file, project, urlPlaceHolders = {}) {
 function lookForProject(tree, project) {
   if (tree && tree.length > 0) {
     const leaf = tree.find(leaf => project === leaf.project);
-    if (leaf) {
-      delete leaf.mapping;
-    }
     return leaf
       ? leaf
       : tree
@@ -2056,12 +2053,10 @@ function dependencyListToTree(dependencyList, buildConfiguration) {
     if (node.dependencies && node.dependencies.length > 0) {
       node.dependencies.forEach(dependency => {
         dependencyList[map[dependency.project].index].children.push({
-          ...map[node.project].node,
-          mapping: dependency.mapping
+          ...map[node.project].node
         });
         node.parents.push({
-          ...map[dependency.project].node,
-          mapping: dependency.mapping
+          ...map[dependency.project].node
         });
       });
     } else {
@@ -3514,7 +3509,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 
 const assert = __webpack_require__(357);
 
-const allowedVersions = ["1.0", "1.1"];
+const allowedVersions = ["2.0"];
 
 function validateDefinition(definition) {
   assert(
@@ -3611,10 +3606,7 @@ async function start(context, isArchiveArtifacts = true) {
       node => "\n" + node.project
     )}`
   );
-  const checkoutInfo = await checkoutDefinitionTree(
-    context,
-    [...nodeChain].reverse()
-  );
+  const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
   core.endGroup();
 
   core.startGroup(`[Full Downstream Flow] Checkout Summary...`);
@@ -9458,52 +9450,65 @@ const {
 const { logger } = __webpack_require__(79);
 const { treatUrl } = __webpack_require__(352);
 const { checkUrlExist } = __webpack_require__(22);
+const { getNodeTriggeringJob } = __webpack_require__(645);
 const fs = __webpack_require__(747);
 
 async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
-  const result = {};
-  let currentTargetBranch = context.config.github.targetBranch;
-  for (const node of nodeChain) {
-    try {
-      const checkoutInfo =
-        flow === "pr"
-          ? await checkoutProjectPullRequestFlow(
-              context,
-              node,
-              currentTargetBranch
-            )
-          : await checkoutProjectBranchFlow(context, node, currentTargetBranch);
-      result[node.project] = checkoutInfo;
-      currentTargetBranch = checkoutInfo
-        ? checkoutInfo.targetBranch
-        : currentTargetBranch;
-    } catch (err) {
-      logger.error(`Error checking out project ${node.project}`);
-      throw err;
-    }
-  }
-
-  return result;
+  const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
+  return Promise.all(
+    nodeChain.map(async node => {
+      try {
+        const result = Promise.resolve({
+          project: node.project,
+          checkoutInfo:
+            flow === "pr"
+              ? await checkoutProjectPullRequestFlow(
+                  context,
+                  node,
+                  nodeTriggeringTheJob
+                )
+              : await checkoutProjectBranchFlow(
+                  context,
+                  node,
+                  nodeTriggeringTheJob
+                )
+        });
+        logger.info(`[${node.project}] Checked out.`);
+        return result;
+      } catch (err) {
+        return Promise.reject({ project: node.project, message: err });
+      }
+    })
+  )
+    .catch(err => {
+      logger.error(
+        `Error checking out project ${err.project}. Error: ${err.message}`
+      );
+    })
+    .then(result =>
+      result.reduce((acc, curr) => {
+        acc[curr.project] = curr.checkoutInfo;
+        return acc;
+      }, {})
+    );
 }
 
 async function checkoutProjectPullRequestFlow(
   context,
   node,
-  currentTargetBranch
+  nodeTriggeringTheJob
 ) {
   logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
   if (!fs.existsSync(dir)) {
     const checkoutInfo = await getCheckoutInfo(
       context,
-      node.repo.group,
-      node.repo.name,
-      currentTargetBranch,
-      node.mapping
+      node,
+      nodeTriggeringTheJob
     );
 
     if (checkoutInfo == undefined) {
-      const msg = `Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
+      const msg = `[${node.project}] Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
       logger.error(msg);
       throw new Error(msg);
     }
@@ -9519,7 +9524,7 @@ async function checkoutProjectPullRequestFlow(
         );
       } catch (err) {
         logger.error(
-          `Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
+          `[${node.project}] Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
         );
         throw err;
       }
@@ -9532,14 +9537,14 @@ async function checkoutProjectPullRequestFlow(
         );
       } catch (err) {
         logger.error(
-          `Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
+          `[${node.project}] Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
         );
         throw err;
       }
     } else {
       try {
         logger.info(
-          `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
+          `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
         );
         await clone(
           `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
@@ -9548,28 +9553,28 @@ async function checkoutProjectPullRequestFlow(
         );
       } catch (err) {
         logger.error(
-          `Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
+          `[${node.project}] Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
         );
         throw err;
       }
     }
     return checkoutInfo;
   } else {
-    logger.info(`folder ${dir} already exists, nothing to checkout`);
+    logger.info(
+      `[${node.project}] folder ${dir} already exists, nothing to checkout`
+    );
     return undefined;
   }
 }
 
-async function checkoutProjectBranchFlow(context, node, currentTargetBranch) {
+async function checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob) {
   logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
   if (!fs.existsSync(dir)) {
     const checkoutInfo = await getCheckoutInfo(
       context,
-      node.repo.group,
-      node.repo.name,
-      currentTargetBranch,
-      node.mapping
+      node,
+      nodeTriggeringTheJob
     );
 
     if (checkoutInfo == undefined) {
@@ -9599,19 +9604,19 @@ async function checkoutProjectBranchFlow(context, node, currentTargetBranch) {
   }
 }
 
-async function getCheckoutInfo(
-  context,
-  targetGroup,
-  targetProject,
-  currentTargetBranch,
-  mapping
-) {
+async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
+  const mapping = getMapping(
+    nodeTriggeringTheJob.project,
+    nodeTriggeringTheJob.mapping,
+    node.project,
+    node.mapping,
+    context.config.github.targetBranch
+  );
   const sourceGroup = context.config.github.sourceGroup;
   const sourceBranch = context.config.github.sourceBranch;
-  const targetBranch =
-    mapping && mapping.source === currentTargetBranch
-      ? mapping.target
-      : currentTargetBranch;
+  const targetGroup = node.repo.group;
+  const targetProject = node.repo.name;
+  const targetBranch = mapping.target;
   const forkedProjectName = await getForkedProjectName(
     context.octokit,
     targetGroup,
@@ -9620,9 +9625,9 @@ async function getCheckoutInfo(
   );
   logger.info(
     `[${targetGroup}/${targetProject}] Getting checkout Info. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
-      mapping
+      mapping.source
         ? "source:" + mapping.source + " target:" + mapping.target
-        : "not defined"
+        : "Not defined"
     }`
   );
   return (await doesBranchExist(
@@ -9680,6 +9685,54 @@ async function getCheckoutInfo(
         merge: false
       }
     : undefined;
+}
+
+/**
+ * it returns back a {source, target} object
+ * @param {String} projectTriggeringTheJob the project name of the project triggering the job
+ * @param {Object} projectTriggeringTheJobMapping the mapping object of the project triggering the job
+ * @param {String} currentProject the project name of the current project
+ * @param {Object} currentProjectMapping the mappinf object of the current project
+ * @param {String} targetBranch the target branch
+ */
+function getMapping(
+  projectTriggeringTheJob,
+  projectTriggeringTheJobMapping,
+  currentProject,
+  currentProjectMapping,
+  targetBranch
+) {
+  // If the current project it the project triggering the job there's no mapping
+  if (currentProject !== projectTriggeringTheJob) {
+    // If the current project has been excluded from the mapping, there's no mapping
+    if (
+      projectTriggeringTheJobMapping &&
+      (projectTriggeringTheJobMapping.exclude
+        ? !projectTriggeringTheJobMapping.exclude.includes(currentProject)
+        : true)
+    ) {
+      // The mapping is either taken from the project mapping or from the default one
+      const mapping = projectTriggeringTheJobMapping.dependencies[
+        currentProject
+      ]
+        ? projectTriggeringTheJobMapping.dependencies[currentProject]
+        : projectTriggeringTheJobMapping.dependencies.default;
+      return { source: mapping.source, target: mapping.target };
+      // If the current project has a mapping and the source matched with the targetBranch then this mapping is taken
+    } else if (
+      currentProjectMapping &&
+      currentProjectMapping.source === targetBranch
+    ) {
+      return {
+        source: currentProjectMapping.source,
+        target: currentProjectMapping.target
+      };
+    } else {
+      return { target: targetBranch };
+    }
+  } else {
+    return { target: targetBranch };
+  }
 }
 
 function getDir(rootFolder, project) {
@@ -9747,7 +9800,8 @@ module.exports = {
   checkoutDefinitionTree,
   getCheckoutInfo,
   getDir,
-  getFinalDefinitionFilePath
+  getFinalDefinitionFilePath,
+  getMapping
 };
 
 
@@ -21411,12 +21465,21 @@ function slice (args) {
  * @param {Object} node the node object with its parents and children
  * @param {Array} nodeList the nodeList to fill
  */
-function parentChainFromNode(node, nodeList = []) {
-  if (!nodeList.map(n => n.project).includes(node.project)) {
-    node.parents.forEach(parent => parentChainFromNode(parent, nodeList));
-    nodeList.push(node);
-  }
-  return nodeList;
+function parentChainFromNode(node) {
+  const result = node.parents
+    .reduce((acc, parent) => {
+      acc.push(
+        ...parentChainFromNode(parent)
+          .filter(e => e && !acc.find(a => a.project === e.project))
+          .map(e => {
+            return { ...e };
+          })
+      );
+      return acc;
+    }, [])
+    .filter(e => e);
+  result.push(node);
+  return result;
 }
 
 /**
@@ -21485,7 +21548,21 @@ module.exports = {
 /* 642 */,
 /* 643 */,
 /* 644 */,
-/* 645 */,
+/* 645 */
+/***/ (function(module) {
+
+function getNodeTriggeringJob(context, nodeChain) {
+  return nodeChain.find(
+    e =>
+      e.project === context.config.github.repository ||
+      e.project === context.config.github.project
+  );
+}
+
+module.exports = { getNodeTriggeringJob };
+
+
+/***/ }),
 /* 646 */,
 /* 647 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
@@ -24465,15 +24542,12 @@ async function start(context, isArchiveArtifacts = true) {
 
   logger.info(
     `Tree for project ${
-      context.config.github.inputs.startingProject
+      context.config.github.repository
     } loaded from ${definitionFile}. Dependencies: ${nodeChain.map(
       node => "\n" + node.project
     )}`
   );
-  const checkoutInfo = await checkoutDefinitionTree(
-    context,
-    [...nodeChain].reverse()
-  );
+  const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
   core.endGroup();
 
   core.startGroup(`[Pull Request Flow] Checkout Summary...`);

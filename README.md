@@ -12,6 +12,10 @@ You can check [Usage example](#usage-example).
 
 Just defining the **build chain** flow in every project you want to trigger, the tool will get build information from `dependency-file` input and will execute every command from every project in a single github action.
 
+## Allowed configuration files versions
+
+- 2.0
+
 ## Build Chain Flows
 
 ### Pull request flow

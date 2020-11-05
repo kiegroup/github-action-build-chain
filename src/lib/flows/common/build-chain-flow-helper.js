@@ -8,11 +8,12 @@ const {
 const { logger } = require("../../common");
 const { treatUrl } = require("@kie/build-chain-configuration-reader");
 const { checkUrlExist } = require("../../util/http");
+const { getNodeTriggeringJob } = require("../../util/chain-util");
 const fs = require("fs");
 
 async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
   const result = {};
-  let currentTargetBranch = context.config.github.targetBranch;
+  const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
   for (const node of nodeChain) {
     try {
       const checkoutInfo =
@@ -20,9 +21,13 @@ async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
           ? await checkoutProjectPullRequestFlow(
               context,
               node,
-              currentTargetBranch
+              nodeTriggeringTheJob
             )
-          : await checkoutProjectBranchFlow(context, node, currentTargetBranch);
+          : await checkoutProjectBranchFlow(
+              context,
+              node,
+              nodeTriggeringTheJob
+            );
       result[node.project] = checkoutInfo;
       currentTargetBranch = checkoutInfo
         ? checkoutInfo.targetBranch
@@ -39,17 +44,15 @@ async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
 async function checkoutProjectPullRequestFlow(
   context,
   node,
-  currentTargetBranch
+  nodeTriggeringTheJob
 ) {
   logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
   if (!fs.existsSync(dir)) {
     const checkoutInfo = await getCheckoutInfo(
       context,
-      node.repo.group,
-      node.repo.name,
-      currentTargetBranch,
-      node.mapping
+      node,
+      nodeTriggeringTheJob
     );
 
     if (checkoutInfo == undefined) {
@@ -110,16 +113,14 @@ async function checkoutProjectPullRequestFlow(
   }
 }
 
-async function checkoutProjectBranchFlow(context, node, currentTargetBranch) {
+async function checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob) {
   logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
   if (!fs.existsSync(dir)) {
     const checkoutInfo = await getCheckoutInfo(
       context,
-      node.repo.group,
-      node.repo.name,
-      currentTargetBranch,
-      node.mapping
+      node,
+      nodeTriggeringTheJob
     );
 
     if (checkoutInfo == undefined) {
@@ -149,19 +150,19 @@ async function checkoutProjectBranchFlow(context, node, currentTargetBranch) {
   }
 }
 
-async function getCheckoutInfo(
-  context,
-  targetGroup,
-  targetProject,
-  currentTargetBranch,
-  mapping
-) {
+async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
+  const mapping = getMapping(
+    nodeTriggeringTheJob.project,
+    nodeTriggeringTheJob.mapping,
+    node.project,
+    node.mapping,
+    context.config.github.targetBranch
+  );
   const sourceGroup = context.config.github.sourceGroup;
   const sourceBranch = context.config.github.sourceBranch;
-  const targetBranch =
-    mapping && mapping.source === currentTargetBranch
-      ? mapping.target
-      : currentTargetBranch;
+  const targetGroup = node.repo.group;
+  const targetProject = node.repo.name;
+  const targetBranch = mapping.target;
   const forkedProjectName = await getForkedProjectName(
     context.octokit,
     targetGroup,
@@ -170,9 +171,9 @@ async function getCheckoutInfo(
   );
   logger.info(
     `[${targetGroup}/${targetProject}] Getting checkout Info. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
-      mapping
+      mapping.source
         ? "source:" + mapping.source + " target:" + mapping.target
-        : "not defined"
+        : "Not defined"
     }`
   );
   return (await doesBranchExist(
@@ -230,6 +231,54 @@ async function getCheckoutInfo(
         merge: false
       }
     : undefined;
+}
+
+/**
+ * it returns back a {source, target} object
+ * @param {String} projectTriggeringTheJob the project name of the project triggering the job
+ * @param {Object} projectTriggeringTheJobMapping the mapping object of the project triggering the job
+ * @param {String} currentProject the project name of the current project
+ * @param {Object} currentProjectMapping the mappinf object of the current project
+ * @param {String} targetBranch the target branch
+ */
+function getMapping(
+  projectTriggeringTheJob,
+  projectTriggeringTheJobMapping,
+  currentProject,
+  currentProjectMapping,
+  targetBranch
+) {
+  // If the current project it the project triggering the job there's no mapping
+  if (currentProject !== projectTriggeringTheJob) {
+    // If the current project has been excluded from the mapping, there's no mapping
+    if (
+      projectTriggeringTheJobMapping &&
+      (projectTriggeringTheJobMapping.exclude
+        ? !projectTriggeringTheJobMapping.exclude.includes(currentProject)
+        : true)
+    ) {
+      // The mapping is either taken from the project mapping or from the default one
+      const mapping = projectTriggeringTheJobMapping.dependencies[
+        currentProject
+      ]
+        ? projectTriggeringTheJobMapping.dependencies[currentProject]
+        : projectTriggeringTheJobMapping.dependencies.default;
+      return { source: mapping.source, target: mapping.target };
+      // If the current project has a mapping and the source matched with the targetBranch then this mapping is taken
+    } else if (
+      currentProjectMapping &&
+      currentProjectMapping.source === targetBranch
+    ) {
+      return {
+        source: currentProjectMapping.source,
+        target: currentProjectMapping.target
+      };
+    } else {
+      return { target: targetBranch };
+    }
+  } else {
+    return { target: targetBranch };
+  }
 }
 
 function getDir(rootFolder, project) {
@@ -297,5 +346,6 @@ module.exports = {
   checkoutDefinitionTree,
   getCheckoutInfo,
   getDir,
-  getFinalDefinitionFilePath
+  getFinalDefinitionFilePath,
+  getMapping
 };

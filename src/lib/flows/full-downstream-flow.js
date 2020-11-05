@@ -34,10 +34,7 @@ async function start(context, isArchiveArtifacts = true) {
       node => "\n" + node.project
     )}`
   );
-  const checkoutInfo = await checkoutDefinitionTree(
-    context,
-    [...nodeChain].reverse()
-  );
+  const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
   core.endGroup();
 
   core.startGroup(`[Full Downstream Flow] Checkout Summary...`);

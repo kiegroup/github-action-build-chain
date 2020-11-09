@@ -317,46 +317,52 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
  * @param {Object} context the context information
  * @param {Object} definitionFile the definition file path or URL
  */
-async function getFinalDefinitionFilePath(context, definitionFile) {
+async function getPlaceHolders(context, definitionFile) {
   if (definitionFile.startsWith("http") && definitionFile.includes("${")) {
-    const sourceGroupAndBranchOption = treatUrl(definitionFile, {
+    const placeHolderSource = {
       GROUP: context.config.github.sourceGroup,
       PROJECT_NAME: context.config.github.project,
       BRANCH: context.config.github.sourceBranch
-    });
-    if (!(await checkUrlExist(sourceGroupAndBranchOption))) {
-      const targetGroupSourceBranchOption = treatUrl(definitionFile, {
+    };
+    const sourceUrl = treatUrl(definitionFile, placeHolderSource);
+    if (!(await checkUrlExist(sourceUrl))) {
+      const placeHoldersTargetSource = {
         GROUP: context.config.github.group,
         PROJECT_NAME: context.config.github.project,
         BRANCH: context.config.github.sourceBranch
-      });
-      if (!(await checkUrlExist(targetGroupSourceBranchOption))) {
-        const targetGroupAndBranchOption = treatUrl(definitionFile, {
+      };
+      const targetSourceUrl = treatUrl(
+        definitionFile,
+        placeHoldersTargetSource
+      );
+      if (!(await checkUrlExist(targetSourceUrl))) {
+        const placeHoldersTarget = {
           GROUP: context.config.github.group,
           PROJECT_NAME: context.config.github.project,
           BRANCH: context.config.github.targetBranch
-        });
-        if (!(await checkUrlExist(targetGroupAndBranchOption))) {
+        };
+        const targetUrl = treatUrl(definitionFile, placeHoldersTarget);
+        if (!(await checkUrlExist(targetUrl))) {
           throw new Error(
-            `Definition file ${definitionFile} does not exist for any of these cases: ${sourceGroupAndBranchOption}, ${targetGroupSourceBranchOption} or ${targetGroupAndBranchOption}`
+            `Definition file ${definitionFile} does not exist for any of these cases: ${sourceUrl}, ${targetSourceUrl} or ${targetUrl}`
           );
         } else {
-          return targetGroupAndBranchOption;
+          return placeHoldersTarget;
         }
       } else {
-        return targetGroupSourceBranchOption;
+        return placeHoldersTargetSource;
       }
     } else {
-      return sourceGroupAndBranchOption;
+      return placeHolderSource;
     }
   }
-  return definitionFile;
+  return {};
 }
 
 module.exports = {
   checkoutDefinitionTree,
   getCheckoutInfo,
   getDir,
-  getFinalDefinitionFilePath,
+  getPlaceHolders,
   getMapping
 };

@@ -1,6 +1,6 @@
 const {
   checkoutDefinitionTree,
-  getFinalDefinitionFilePath
+  getPlaceHolders
 } = require("./common/build-chain-flow-helper");
 const { executeBuild } = require("./common/common-helper");
 const {
@@ -18,21 +18,16 @@ async function start(context, isArchiveArtifacts = true) {
   core.startGroup(
     `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
-  const definitionFile = await getFinalDefinitionFilePath(
-    context,
-    context.config.github.inputs.definitionFile
-  );
   const nodeChain = await getOrderedListForProject(
-    definitionFile,
-    context.config.github.repository
+    context.config.github.inputs.definitionFile,
+    context.config.github.repository,
+    await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
 
   logger.info(
     `Tree for project ${
       context.config.github.repository
-    } loaded from ${definitionFile}. Chain: ${nodeChain.map(
-      node => "\n" + node.project
-    )}`
+    }. Chain: ${nodeChain.map(node => "\n" + node.project)}`
   );
   const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
   core.endGroup();

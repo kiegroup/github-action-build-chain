@@ -1,6 +1,6 @@
 const {
   checkoutDefinitionTree,
-  getFinalDefinitionFilePath
+  getPlaceHolders
 } = require("./common/build-chain-flow-helper");
 const { executeBuild } = require("./common/common-helper");
 const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
@@ -15,22 +15,17 @@ async function start(context, isArchiveArtifacts = true) {
   core.startGroup(
     `[Single Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
-  const definitionFile = await getFinalDefinitionFilePath(
-    context,
-    context.config.github.inputs.definitionFile
-  );
   const definitionTree = await getTreeForProject(
-    definitionFile,
-    context.config.github.repository
+    context.config.github.inputs.definitionFile,
+    context.config.github.repository,
+    await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
   const nodeChain = [definitionTree];
 
   logger.info(
     `Single flow for project ${
       context.config.github.inputs.startingProject
-    } loaded from ${definitionFile}. Nodes: ${nodeChain.map(
-      node => "\n" + node.project
-    )}`
+    }. Nodes: ${nodeChain.map(node => "\n" + node.project)}`
   );
   const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
   core.endGroup();

@@ -3,7 +3,7 @@ const path = require("path");
 const {
   checkoutDefinitionTree,
   getDir,
-  getFinalDefinitionFilePath
+  getPlaceHolders
 } = require("../../../src/lib/flows/common/build-chain-flow-helper");
 jest.mock("../../../src/lib/flows/common/build-chain-flow-helper");
 
@@ -66,7 +66,7 @@ test("start no parent dependencies. project triggering the job", async () => {
     }
   };
 
-  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
+  getPlaceHolders.mockResolvedValueOnce({});
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   parentChainFromNode.mockResolvedValueOnce([
     { project },
@@ -80,8 +80,9 @@ test("start no parent dependencies. project triggering the job", async () => {
   await start(context, true);
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
-    "finalDefinitionFilePath",
-    project
+    "test/resources/build-config/build-config.yaml",
+    project,
+    {}
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
@@ -142,7 +143,7 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
     }
   };
 
-  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
+  getPlaceHolders.mockResolvedValueOnce({});
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   parentChainFromNode.mockResolvedValueOnce([
     { project },
@@ -156,8 +157,9 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
   await start(context, false);
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
-    "finalDefinitionFilePath",
-    project
+    "test/resources/build-config/build-config.yaml",
+    project,
+    {}
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
@@ -213,7 +215,7 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     }
   };
 
-  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
+  getPlaceHolders.mockResolvedValueOnce({});
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   parentChainFromNode.mockResolvedValueOnce([
     { project },
@@ -234,8 +236,9 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
   }
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
-    "finalDefinitionFilePath",
-    project
+    "test/resources/build-config/build-config.yaml",
+    project,
+    {}
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [

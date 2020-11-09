@@ -1,6 +1,6 @@
 const {
   checkoutDefinitionTree,
-  getFinalDefinitionFilePath
+  getPlaceHolders
 } = require("./common/build-chain-flow-helper");
 const {
   getTreeForProject,
@@ -19,26 +19,25 @@ async function start(context, options = {}) {
   core.startGroup(
     `[Branch Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
-  const definitionFile = await getFinalDefinitionFilePath(
+  const urlPlaceHolders = await getPlaceHolders(
     context,
     context.config.github.inputs.definitionFile
   );
 
   const definitionTree = context.config.github.inputs.startingProject
     ? await getTreeForProject(
-        definitionFile,
-        context.config.github.inputs.startingProject
+        context.config.github.inputs.definitionFile,
+        context.config.github.inputs.startingProject,
+        urlPlaceHolders
       )
-    : getTree(definitionFile);
+    : getTree(context.config.github.inputs.definitionFile, urlPlaceHolders);
 
   let nodeChain = await parentChainFromNode(definitionTree);
 
   logger.info(
     `Tree for project ${
       context.config.github.inputs.startingProject
-    } loaded from ${definitionFile}. Dependencies: ${nodeChain.map(
-      node => "\n" + node.project
-    )}`
+    }. Dependencies: ${nodeChain.map(node => "\n" + node.project)}`
   );
   const checkoutInfo = await checkoutDefinitionTree(
     context,

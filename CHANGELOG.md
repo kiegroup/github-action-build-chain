@@ -7,7 +7,7 @@
 - command line ready
 - full downstream flow added either for CLI and github action
 - single flow added either for CLI and github action
-- @kie/build-chain-configuration-reader dependency upgraded to ^2.0.0
+- @kie/build-chain-configuration-reader dependency upgraded to ^2.0.2
 - branch flow added for CLI
 - skip build mechanism
 - configuration file version <2.0 is no longer supported

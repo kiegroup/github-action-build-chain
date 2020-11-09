@@ -3,7 +3,7 @@ const path = require("path");
 const {
   checkoutDefinitionTree,
   getDir,
-  getFinalDefinitionFilePath
+  getPlaceHolders
 } = require("../../../src/lib/flows/common/build-chain-flow-helper");
 jest.mock("../../../src/lib/flows/common/build-chain-flow-helper");
 
@@ -63,7 +63,7 @@ test("start no parent dependencies. project triggering the job", async () => {
     }
   };
 
-  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
+  getPlaceHolders.mockResolvedValueOnce({});
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
@@ -73,8 +73,9 @@ test("start no parent dependencies. project triggering the job", async () => {
   await start(context, true);
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
-    "finalDefinitionFilePath",
-    project
+    "test/resources/build-config/build-config.yaml",
+    project,
+    {}
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
     definitionTree
@@ -133,7 +134,7 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
     }
   };
 
-  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
+  getPlaceHolders.mockResolvedValueOnce({});
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
@@ -143,8 +144,9 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
   await start(context, false);
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
-    "finalDefinitionFilePath",
-    project
+    "test/resources/build-config/build-config.yaml",
+    project,
+    {}
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
     definitionTree
@@ -198,7 +200,7 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     }
   };
 
-  getFinalDefinitionFilePath.mockResolvedValueOnce("finalDefinitionFilePath");
+  getPlaceHolders.mockResolvedValueOnce({});
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
@@ -215,8 +217,9 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
   }
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
-    "finalDefinitionFilePath",
-    project
+    "test/resources/build-config/build-config.yaml",
+    project,
+    {}
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
     definitionTree

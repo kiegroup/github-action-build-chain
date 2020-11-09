@@ -1,7 +1,7 @@
 const {
   getCheckoutInfo,
   checkoutDefinitionTree,
-  getFinalDefinitionFilePath,
+  getPlaceHolders,
   getMapping
 } = require("../../../../src/lib/flows/common/build-chain-flow-helper");
 const {
@@ -1248,7 +1248,7 @@ test("checkoutDefinitionTree with mapping project triggering the job", async () 
   });
 });
 
-test("getFinalDefinitionFilePath no url", async () => {
+test("getPlaceHolders no url", async () => {
   // Arrange
   const context = {
     config: {
@@ -1263,13 +1263,13 @@ test("getFinalDefinitionFilePath no url", async () => {
   };
   const definitionFile = "./definition-file.yaml";
   // Act
-  const result = await getFinalDefinitionFilePath(context, definitionFile);
+  const result = await getPlaceHolders(context, definitionFile);
 
   // Assert
-  expect(result).toBe(definitionFile);
+  expect(result).toStrictEqual({});
 });
 
-test("getFinalDefinitionFilePath url no ${} expression", async () => {
+test("getPlaceHolders url no ${} expression", async () => {
   // Arrange
   const context = {
     config: {
@@ -1284,13 +1284,13 @@ test("getFinalDefinitionFilePath url no ${} expression", async () => {
   };
   const definitionFile = "http://whateverurl.domain/file.yaml";
   // Act
-  const result = await getFinalDefinitionFilePath(context, definitionFile);
+  const result = await getPlaceHolders(context, definitionFile);
 
   // Assert
-  expect(result).toBe(definitionFile);
+  expect(result).toStrictEqual({});
 });
 
-test("getFinalDefinitionFilePath url. source group and branch ok", async () => {
+test("getPlaceHolders url. source group and branch ok", async () => {
   // Arrange
   const context = {
     config: {
@@ -1307,16 +1307,18 @@ test("getFinalDefinitionFilePath url. source group and branch ok", async () => {
     "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
   checkUrlExist.mockResolvedValueOnce(true);
   // Act
-  const result = await getFinalDefinitionFilePath(context, definitionFile);
+  const result = await getPlaceHolders(context, definitionFile);
 
   // Assert
   expect(checkUrlExist).toHaveBeenCalledTimes(1);
-  expect(result).toBe(
-    "http://whateverurl.domain/sGroup/projectx/sBranch/file.yaml"
-  );
+  expect(result).toStrictEqual({
+    BRANCH: "sBranch",
+    GROUP: "sGroup",
+    PROJECT_NAME: "projectx"
+  });
 });
 
-test("getFinalDefinitionFilePath url. target group and source branch ok", async () => {
+test("getPlaceHolders url. target group and source branch ok", async () => {
   // Arrange
   const context = {
     config: {
@@ -1333,16 +1335,18 @@ test("getFinalDefinitionFilePath url. target group and source branch ok", async 
     "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
   checkUrlExist.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
   // Act
-  const result = await getFinalDefinitionFilePath(context, definitionFile);
+  const result = await getPlaceHolders(context, definitionFile);
 
   // Assert
   expect(checkUrlExist).toHaveBeenCalledTimes(2);
-  expect(result).toBe(
-    "http://whateverurl.domain/tGroup/projectx/sBranch/file.yaml"
-  );
+  expect(result).toStrictEqual({
+    BRANCH: "sBranch",
+    GROUP: "tGroup",
+    PROJECT_NAME: "projectx"
+  });
 });
 
-test("getFinalDefinitionFilePath url. target group and branch ok", async () => {
+test("getPlaceHolders url. target group and branch ok", async () => {
   // Arrange
   const context = {
     config: {
@@ -1362,16 +1366,18 @@ test("getFinalDefinitionFilePath url. target group and branch ok", async () => {
     .mockResolvedValueOnce(false)
     .mockResolvedValueOnce(true);
   // Act
-  const result = await getFinalDefinitionFilePath(context, definitionFile);
+  const result = await getPlaceHolders(context, definitionFile);
 
   // Assert
   expect(checkUrlExist).toHaveBeenCalledTimes(3);
-  expect(result).toBe(
-    "http://whateverurl.domain/tGroup/projectx/tBranch/file.yaml"
-  );
+  expect(result).toStrictEqual({
+    BRANCH: "tBranch",
+    GROUP: "tGroup",
+    PROJECT_NAME: "projectx"
+  });
 });
 
-test("getFinalDefinitionFilePath url. error", async () => {
+test("getPlaceHolders url. error", async () => {
   // Arrange
   const context = {
     config: {
@@ -1392,7 +1398,7 @@ test("getFinalDefinitionFilePath url. error", async () => {
     .mockResolvedValueOnce(false);
   // Act
   try {
-    await getFinalDefinitionFilePath(context, definitionFile);
+    await getPlaceHolders(context, definitionFile);
   } catch (ex) {
     expect(ex.message).toBe(
       "Definition file http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml does not exist for any of these cases: http://whateverurl.domain/sGroup/projectx/sBranch/file.yaml, http://whateverurl.domain/tGroup/projectx/sBranch/file.yaml or http://whateverurl.domain/tGroup/projectx/tBranch/file.yaml"

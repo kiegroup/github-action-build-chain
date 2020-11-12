@@ -473,7 +473,12 @@ function createRootFolder(rootFolder) {
   createFolder(rootFolder, true);
 }
 
-module.exports = { getEvent, createGithubInformationObject, prepareEnv, createRootFolder };
+module.exports = {
+  getEvent,
+  createGithubInformationObject,
+  prepareEnv,
+  createRootFolder
+};
 
 
 /***/ }),

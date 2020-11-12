@@ -12,7 +12,6 @@ const { readFile } = require("fs-extra");
 jest.mock("fs-extra");
 jest.mock("../../../src/lib/fs-helper");
 
-
 afterEach(() => {
   jest.clearAllMocks();
 });

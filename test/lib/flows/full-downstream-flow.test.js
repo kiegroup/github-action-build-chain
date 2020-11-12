@@ -24,7 +24,6 @@ const {
   getOrderedListForProject
 } = require("@kie/build-chain-configuration-reader");
 jest.mock("@kie/build-chain-configuration-reader");
-jest.mock("../../../src/lib/flows/build-chain-pull-request-helper");
 
 afterEach(() => {
   jest.clearAllMocks();

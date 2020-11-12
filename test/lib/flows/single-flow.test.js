@@ -6,6 +6,7 @@ const {
   getPlaceHolders
 } = require("../../../src/lib/flows/common/build-chain-flow-helper");
 jest.mock("../../../src/lib/flows/common/build-chain-flow-helper");
+jest.mock("../../../src/lib/flows/build-chain-pull-request-helper");
 
 const {
   archiveArtifacts

@@ -295,7 +295,7 @@ function getMapping(
 function getDir(rootFolder, project) {
   const folder =
     rootFolder !== undefined && rootFolder !== "" ? rootFolder : ".";
-  return `${folder}/${project.replace(/ |-/g, "_")}`;
+  return `${folder}/${project.replace(/ |-/g, "_").replace("/", "_")}`;
 }
 
 async function getForkedProjectName(octokit, owner, project, wantedOwner) {

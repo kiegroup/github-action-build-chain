@@ -2,6 +2,7 @@ const { logger } = require("../../src/lib/common");
 const { start } = require("../../src/lib/flows/branch-flow");
 const { createCommonConfig } = require("../../src/lib/flows/common/config");
 const assert = require("assert");
+const { createRootFolder } = require("./build-chain-pull-request-helper");
 
 /**
  * Executes branch flow
@@ -23,6 +24,7 @@ async function execute(
 ) {
   const config = await createCommonConfig(githubInformation, rootFolder, env);
   const context = { token, octokit, config };
+  createRootFolder(context.config.rootFolder);
   await start(context, options);
 }
 

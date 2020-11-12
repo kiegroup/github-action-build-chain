@@ -2,7 +2,8 @@ const { logger } = require("../../src/lib/common");
 const {
   prepareEnv,
   createGithubInformationObject,
-  getEvent
+  getEvent,
+  createRootFolder
 } = require("./build-chain-pull-request-helper");
 const { start } = require("../../src/lib/flows/pull-request-flow");
 const { createCommonConfig } = require("../../src/lib/flows/common/config");
@@ -29,6 +30,7 @@ async function execute(
   const githubInformation = createGithubInformationObject(eventData, env);
   const config = await createCommonConfig(githubInformation, rootFolder, env);
   const context = { token, octokit, config };
+  createRootFolder(context.config.rootFolder);
   await start(context, isArchiveArtifacts);
 }
 

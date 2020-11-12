@@ -1,5 +1,11 @@
 # Changelog
 
+# V2.3
+
+## Enhancements:
+
+- command line ready
+
 # V2.2
 
 ## Enhancements:

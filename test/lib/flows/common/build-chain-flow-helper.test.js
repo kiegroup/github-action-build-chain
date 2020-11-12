@@ -18,6 +18,7 @@ jest.mock("../../../../src/lib/util/chain-util");
 
 const { checkUrlExist } = require("../../../../src/lib/util/http");
 jest.mock("../../../../src/lib/util/http");
+jest.mock("fs");
 
 afterEach(() => {
   jest.clearAllMocks();

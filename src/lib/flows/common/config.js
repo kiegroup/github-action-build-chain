@@ -13,9 +13,11 @@ function getInputs() {
 async function createCommonConfig(eventData, rootFolder, env) {
   async function parseGitHub(eventData, env) {
     return {
-      serverUrl: env["GITHUB_SERVER_URL"]
-        ? env["GITHUB_SERVER_URL"].replace(/\/$/, "")
-        : undefined, // https://github.com
+      serverUrl: getServerUrl(env["GITHUB_SERVER_URL"]), // https://github.com
+      serverUrlWithToken: getServerUrl(
+        env["GITHUB_SERVER_URL"],
+        env["GITHUB_TOKEN"]
+      ), // https://token@github.com
       action: env["GITHUB_ACTION"], // Ginxogithub-action-build-chain
       sourceGroup: eventData.sourceGroup,
       author: eventData.author,
@@ -37,6 +39,15 @@ async function createCommonConfig(eventData, rootFolder, env) {
     github: await parseGitHub(eventData, env),
     rootFolder: rootFolder === undefined ? "" : rootFolder
   };
+}
+
+function getServerUrl(serverUrl, token = undefined) {
+  const result = serverUrl ? serverUrl.replace(/\/$/, "") : undefined;
+  if (result && token) {
+    return result.replace("://", `://${token}@`);
+  } else {
+    return result;
+  }
 }
 
 module.exports = {

@@ -19,7 +19,8 @@ test("createConfig", async () => {
     GITHUB_BASE_REF: "githubBaseRef",
     GITHUB_JOB: "githubJob",
     GITHUB_REPOSITORY: "kiegroup/github-action-build-chain",
-    GITHUB_WORKFLOW: "build chain name"
+    GITHUB_WORKFLOW: "build chain name",
+    GITHUB_TOKEN: "test_token"
   };
   const eventData = {
     sourceGroup: "group",
@@ -33,6 +34,7 @@ test("createConfig", async () => {
     github: {
       action: undefined,
       serverUrl: "http://github.com",
+      serverUrlWithToken: "http://test_token@github.com",
       author: "user",
       actor: "actor",
       sourceGroup: "group",

@@ -75,7 +75,7 @@ async function checkoutProjectPullRequestFlow(
       );
       try {
         await clone(
-          `${context.config.github.serverUrl}/${node.project}`,
+          `${context.config.github.serverUrlWithToken}/${node.project}`,
           dir,
           checkoutInfo.targetBranch
         );
@@ -88,8 +88,7 @@ async function checkoutProjectPullRequestFlow(
       try {
         await gitMerge(
           dir,
-          checkoutInfo.group,
-          checkoutInfo.project,
+          `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
           checkoutInfo.branch
         );
       } catch (err) {
@@ -104,7 +103,7 @@ async function checkoutProjectPullRequestFlow(
           `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
         );
         await clone(
-          `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
+          `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
           dir,
           checkoutInfo.branch
         );
@@ -144,7 +143,7 @@ async function checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob) {
         `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.targetBranch}'  into '${dir}'`
       );
       await clone(
-        `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
+        `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
         dir,
         checkoutInfo.targetBranch
       );

@@ -395,6 +395,7 @@ test("checkoutDefinitionTree", async () => {
     config: {
       github: {
         serverUrl: "URL",
+        serverUrlWithToken: "URL_with_token",
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
@@ -416,25 +417,23 @@ test("checkoutDefinitionTree", async () => {
   expect(mergeMock).toHaveBeenCalledTimes(2);
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_lienzo_core",
-    "sourceGroup",
-    "lienzo-core-forked",
+    "URL_with_token/sourceGroup/lienzo-core-forked",
     "sBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_droolsjbpm_build_bootstrap",
-    "sourceGroup",
-    "droolsjbpm-build-bootstrap-forked",
+    "URL_with_token/sourceGroup/droolsjbpm-build-bootstrap-forked",
     "sBranch"
   );
 
   expect(cloneMock).toHaveBeenCalledTimes(2);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/lienzo-core",
+    "URL_with_token/kiegroup/lienzo-core",
     "folder/kiegroup_lienzo_core",
     "tBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/droolsjbpm-build-bootstrap",
+    "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
     "folder/kiegroup_droolsjbpm_build_bootstrap",
     "tBranch"
   );
@@ -487,6 +486,7 @@ test("checkoutDefinitionTree has no PR", async () => {
     config: {
       github: {
         serverUrl: "URL",
+        serverUrlWithToken: "URL_with_token",
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
@@ -509,19 +509,18 @@ test("checkoutDefinitionTree has no PR", async () => {
   expect(mergeMock).toHaveBeenCalledTimes(1);
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_lienzo_core",
-    "sourceGroup",
-    "lienzo-core-forked",
+    "URL_with_token/sourceGroup/lienzo-core-forked",
     "sBranch"
   );
 
   expect(cloneMock).toHaveBeenCalledTimes(2);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/lienzo-core",
+    "URL_with_token/kiegroup/lienzo-core",
     "folder/kiegroup_lienzo_core",
     "tBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/sourceGroup/droolsjbpm-build-bootstrap-forked",
+    "URL_with_token/sourceGroup/droolsjbpm-build-bootstrap-forked",
     "folder/kiegroup_droolsjbpm_build_bootstrap",
     "sBranch"
   );
@@ -574,6 +573,7 @@ test("checkoutDefinitionTree sBranch does not exists but has PR", async () => {
     config: {
       github: {
         serverUrl: "URL",
+        serverUrlWithToken: "URL_with_token",
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
@@ -599,25 +599,23 @@ test("checkoutDefinitionTree sBranch does not exists but has PR", async () => {
   expect(mergeMock).toHaveBeenCalledTimes(2);
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_lienzo_core",
-    "sourceGroup",
-    "lienzo-core-forked",
+    "URL_with_token/sourceGroup/lienzo-core-forked",
     "sBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_droolsjbpm_build_bootstrap",
-    "kiegroup",
-    "droolsjbpm-build-bootstrap",
+    "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
     "sBranch"
   );
 
   expect(cloneMock).toHaveBeenCalledTimes(2);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/lienzo-core",
+    "URL_with_token/kiegroup/lienzo-core",
     "folder/kiegroup_lienzo_core",
     "tBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/droolsjbpm-build-bootstrap",
+    "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
     "folder/kiegroup_droolsjbpm_build_bootstrap",
     "tBranch"
   );
@@ -670,6 +668,7 @@ test("checkoutDefinitionTree sBranch does not exists but has PR no root Folder",
     config: {
       github: {
         serverUrl: "URL",
+        serverUrlWithToken: "URL_with_token",
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
@@ -695,25 +694,23 @@ test("checkoutDefinitionTree sBranch does not exists but has PR no root Folder",
   expect(mergeMock).toHaveBeenCalledTimes(2);
   expect(mergeMock).toHaveBeenCalledWith(
     "./kiegroup_lienzo_core",
-    "sourceGroup",
-    "lienzo-core-forked",
+    "URL_with_token/sourceGroup/lienzo-core-forked",
     "sBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "./kiegroup_droolsjbpm_build_bootstrap",
-    "kiegroup",
-    "droolsjbpm-build-bootstrap",
+    "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
     "sBranch"
   );
 
   expect(cloneMock).toHaveBeenCalledTimes(2);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/lienzo-core",
+    "URL_with_token/kiegroup/lienzo-core",
     "./kiegroup_lienzo_core",
     "tBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/droolsjbpm-build-bootstrap",
+    "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
     "./kiegroup_droolsjbpm_build_bootstrap",
     "tBranch"
   );
@@ -766,6 +763,7 @@ test("checkoutDefinitionTree sBranch does not exists but has no PR", async () =>
     config: {
       github: {
         serverUrl: "URL",
+        serverUrlWithToken: "URL_with_token",
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
@@ -791,19 +789,18 @@ test("checkoutDefinitionTree sBranch does not exists but has no PR", async () =>
   expect(mergeMock).toHaveBeenCalledTimes(1);
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_lienzo_core",
-    "sourceGroup",
-    "lienzo-core-forked",
+    "URL_with_token/sourceGroup/lienzo-core-forked",
     "sBranch"
   );
 
   expect(cloneMock).toHaveBeenCalledTimes(2);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/lienzo-core",
+    "URL_with_token/kiegroup/lienzo-core",
     "folder/kiegroup_lienzo_core",
     "tBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/droolsjbpm-build-bootstrap",
+    "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
     "folder/kiegroup_droolsjbpm_build_bootstrap",
     "sBranch"
   );
@@ -856,6 +853,7 @@ test("checkoutDefinitionTree sBranch does not exists but tBranch", async () => {
     config: {
       github: {
         serverUrl: "URL",
+        serverUrlWithToken: "URL_with_token",
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
@@ -882,19 +880,18 @@ test("checkoutDefinitionTree sBranch does not exists but tBranch", async () => {
   expect(mergeMock).toHaveBeenCalledTimes(1);
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_lienzo_core",
-    "sourceGroup",
-    "lienzo-core-forked",
+    "URL_with_token/sourceGroup/lienzo-core-forked",
     "sBranch"
   );
 
   expect(cloneMock).toHaveBeenCalledTimes(2);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/lienzo-core",
+    "URL_with_token/kiegroup/lienzo-core",
     "folder/kiegroup_lienzo_core",
     "tBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/droolsjbpm-build-bootstrap",
+    "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
     "folder/kiegroup_droolsjbpm_build_bootstrap",
     "tBranch"
   );
@@ -984,6 +981,7 @@ test("checkoutDefinitionTree with mapping project NOT triggering the job", async
     config: {
       github: {
         serverUrl: "URL",
+        serverUrlWithToken: "URL_with_token",
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
@@ -1027,47 +1025,43 @@ test("checkoutDefinitionTree with mapping project NOT triggering the job", async
   expect(mergeMock).toHaveBeenCalledTimes(8);
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_optaplanner",
-    "sourceGroup",
-    "optaplanner-forked",
+    "URL_with_token/sourceGroup/optaplanner-forked",
     "sBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_jbpm",
-    "sourceGroup",
-    "jbpm-forked",
+    "URL_with_token/sourceGroup/jbpm-forked",
     "sBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_drools",
-    "sourceGroup",
-    "drools-forked",
+    "URL_with_token/sourceGroup/drools-forked",
     "sBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_lienzo_core",
-    "sourceGroup",
-    "lienzo-core-forked",
+    "URL_with_token/sourceGroup/lienzo-core-forked",
     "sBranch"
   );
 
   expect(cloneMock).toHaveBeenCalledTimes(8);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/optaplanner",
+    "URL_with_token/kiegroup/optaplanner",
     "folder/kiegroup_optaplanner",
     "7.x"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/jbpm",
+    "URL_with_token/kiegroup/jbpm",
     "folder/kiegroup_jbpm",
     "master"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/drools",
+    "URL_with_token/kiegroup/drools",
     "folder/kiegroup_drools",
     "master"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/lienzo-core",
+    "URL_with_token/kiegroup/lienzo-core",
     "folder/kiegroup_lienzo_core",
     "master"
   );
@@ -1146,6 +1140,7 @@ test("checkoutDefinitionTree with mapping project triggering the job", async () 
     config: {
       github: {
         serverUrl: "URL",
+        serverUrlWithToken: "URL_with_token",
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
@@ -1191,47 +1186,43 @@ test("checkoutDefinitionTree with mapping project triggering the job", async () 
   expect(mergeMock).toHaveBeenCalledTimes(8);
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_optaplanner",
-    "sourceGroup",
-    "optaplanner-forked",
+    "URL_with_token/sourceGroup/optaplanner-forked",
     "sBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_jbpm",
-    "sourceGroup",
-    "jbpm-forked",
+    "URL_with_token/sourceGroup/jbpm-forked",
     "sBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_drools",
-    "sourceGroup",
-    "drools-forked",
+    "URL_with_token/sourceGroup/drools-forked",
     "sBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
     "folder/kiegroup_lienzo_core",
-    "sourceGroup",
-    "lienzo-core-forked",
+    "URL_with_token/sourceGroup/lienzo-core-forked",
     "sBranch"
   );
 
   expect(cloneMock).toHaveBeenCalledTimes(8);
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/optaplanner",
+    "URL_with_token/kiegroup/optaplanner",
     "folder/kiegroup_optaplanner",
     "7.x"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/jbpm",
+    "URL_with_token/kiegroup/jbpm",
     "folder/kiegroup_jbpm",
     "master"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/drools",
+    "URL_with_token/kiegroup/drools",
     "folder/kiegroup_drools",
     "master"
   );
   expect(cloneMock).toHaveBeenCalledWith(
-    "URL/kiegroup/lienzo-core",
+    "URL_with_token/kiegroup/lienzo-core",
     "folder/kiegroup_lienzo_core",
     "master"
   );

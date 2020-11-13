@@ -5,6 +5,7 @@
 ## Enhancements:
 
 - command line ready
+- token added to git commands to avoid private repositories problem from CLI execution
 
 # V2.2
 

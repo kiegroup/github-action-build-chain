@@ -8484,7 +8484,7 @@ async function checkoutProjectPullRequestFlow(
       );
       try {
         await clone(
-          `${context.config.github.serverUrl}/${node.project}`,
+          `${context.config.github.serverUrlWithToken}/${node.project}`,
           dir,
           checkoutInfo.targetBranch
         );
@@ -8497,8 +8497,7 @@ async function checkoutProjectPullRequestFlow(
       try {
         await gitMerge(
           dir,
-          checkoutInfo.group,
-          checkoutInfo.project,
+          `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
           checkoutInfo.branch
         );
       } catch (err) {
@@ -8513,7 +8512,7 @@ async function checkoutProjectPullRequestFlow(
           `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
         );
         await clone(
-          `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
+          `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
           dir,
           checkoutInfo.branch
         );
@@ -8553,7 +8552,7 @@ async function checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob) {
         `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.targetBranch}'  into '${dir}'`
       );
       await clone(
-        `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
+        `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
         dir,
         checkoutInfo.targetBranch
       );
@@ -17552,13 +17551,8 @@ async function mergeCommits(dir, ref) {
     .filter(commit => commit.length > 1);
 }
 
-async function merge(dir, group, repositoryName, branch) {
-  return await git(
-    dir,
-    "pull",
-    `https://github.com/${group}/${repositoryName}`,
-    branch
-  );
+async function merge(dir, repositoryUrl, branch) {
+  return await git(dir, "pull", repositoryUrl, branch);
 }
 
 async function head(dir) {
@@ -22282,9 +22276,11 @@ function getInputs() {
 async function createCommonConfig(eventData, rootFolder, env) {
   async function parseGitHub(eventData, env) {
     return {
-      serverUrl: env["GITHUB_SERVER_URL"]
-        ? env["GITHUB_SERVER_URL"].replace(/\/$/, "")
-        : undefined, // https://github.com
+      serverUrl: getServerUrl(env["GITHUB_SERVER_URL"]), // https://github.com
+      serverUrlWithToken: getServerUrl(
+        env["GITHUB_SERVER_URL"],
+        env["GITHUB_TOKEN"]
+      ), // https://token@github.com
       action: env["GITHUB_ACTION"], // Ginxogithub-action-build-chain
       sourceGroup: eventData.sourceGroup,
       author: eventData.author,
@@ -22306,6 +22302,15 @@ async function createCommonConfig(eventData, rootFolder, env) {
     github: await parseGitHub(eventData, env),
     rootFolder: rootFolder === undefined ? "" : rootFolder
   };
+}
+
+function getServerUrl(serverUrl, token = undefined) {
+  const result = serverUrl ? serverUrl.replace(/\/$/, "") : undefined;
+  if (result && token) {
+    return result.replace("://", `://${token}@`);
+  } else {
+    return result;
+  }
 }
 
 module.exports = {

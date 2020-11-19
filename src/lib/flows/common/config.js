@@ -3,6 +3,8 @@ const {
   getStartingProject
 } = require("../../util/action-utils");
 
+const { logger } = require("../../common");
+
 function getInputs() {
   return {
     definitionFile: getDefinitionFile(),
@@ -35,6 +37,7 @@ async function createCommonConfig(eventData, rootFolder, env) {
       inputs: getInputs()
     };
   }
+  logger.info("ENV", env);
   return {
     github: await parseGitHub(eventData, env),
     rootFolder: rootFolder === undefined ? "" : rootFolder

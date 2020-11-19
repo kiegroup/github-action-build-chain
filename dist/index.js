@@ -22207,6 +22207,8 @@ const {
   getStartingProject
 } = __webpack_require__(933);
 
+const { logger } = __webpack_require__(79);
+
 function getInputs() {
   return {
     definitionFile: getDefinitionFile(),
@@ -22239,6 +22241,7 @@ async function createCommonConfig(eventData, rootFolder, env) {
       inputs: getInputs()
     };
   }
+  logger.info("ENV", env);
   return {
     github: await parseGitHub(eventData, env),
     rootFolder: rootFolder === undefined ? "" : rootFolder

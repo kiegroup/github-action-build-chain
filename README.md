@@ -283,6 +283,28 @@ In the top right corner of a workflow run, once the run is over, if you used thi
 
 There is a trashcan icon that can be used to delete the artifact. This icon will only appear for users who have write permissions to the repository.
 
+## How to clone project in more than one folder
+
+It is possible to clone project in more than one folder specifying `clone` field. For example:
+
+```
+  - project: kiegroup/appformer
+    clone:
+      - appformer-integration-test
+      - folderx/appformer-unit-test
+```
+
+will clone the `kiegroup/appformer` in the `ROOT_FOLDER/PROJECT_FOLDER` and additionally will clone the project folder to `ROOT_FOLDER/PROJECT_FOLDER/appformer-integration-test` and `ROOT_FOLDER/PROJECT_FOLDER/folderx/appformer-unit-test`
+
+Another example would be:
+
+```
+  - project: group/projectx
+    clone: another-folder
+```
+
+will clone the `group/projectx` in the `ROOT_FOLDER/PROJECT_FOLDER` and additionally will clone the project folder to `ROOT_FOLDER/PROJECT_FOLDER/another-folder`
+
 # Limitations
 
 ### Zipped Artifact Downloads

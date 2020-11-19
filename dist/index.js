@@ -25566,6 +25566,7 @@ module.exports = { treatUrl };
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const fse = __webpack_require__(226);
+const { logger } = __webpack_require__(79);
 
 function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
   if (destinationFolders) {
@@ -25574,6 +25575,7 @@ function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
       : destinationFolders
     ).map(destFolder => {
       const destinationFolder = `${rootFolder}/${destFolder}`;
+      logger.info(`Copying ${sourceFolder} to ${destinationFolder}`);
       try {
         fse.copySync(sourceFolder, destinationFolder);
       } catch (err) {
@@ -25594,6 +25596,7 @@ function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
 
 function moveFolder(sourceFolder, destinationFolder) {
   try {
+    logger.info(`Moving ${sourceFolder} to ${destinationFolder}`);
     fse.moveSync(sourceFolder, destinationFolder);
   } catch (err) {
     throw new Error(

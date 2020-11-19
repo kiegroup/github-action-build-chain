@@ -1,4 +1,5 @@
 const fse = require("fs-extra");
+const { logger } = require("../common");
 
 function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
   if (destinationFolders) {
@@ -7,6 +8,7 @@ function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
       : destinationFolders
     ).map(destFolder => {
       const destinationFolder = `${rootFolder}/${destFolder}`;
+      logger.info(`Copying ${sourceFolder} to ${destinationFolder}`);
       try {
         fse.copySync(sourceFolder, destinationFolder);
       } catch (err) {
@@ -27,6 +29,7 @@ function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
 
 function moveFolder(sourceFolder, destinationFolder) {
   try {
+    logger.info(`Moving ${sourceFolder} to ${destinationFolder}`);
     fse.moveSync(sourceFolder, destinationFolder);
   } catch (err) {
     throw new Error(

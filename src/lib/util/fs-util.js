@@ -1,4 +1,5 @@
 const fse = require("fs-extra");
+const path = require("path");
 
 function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
   if (destinationFolders) {
@@ -6,7 +7,7 @@ function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
       ? [destinationFolders]
       : destinationFolders
     ).map(destFolder => {
-      const destinationFolder = `${rootFolder}/${destFolder}`;
+      const destinationFolder = path.join(rootFolder, destFolder);
       try {
         fse.copySync(sourceFolder, destinationFolder);
       } catch (err) {
@@ -17,7 +18,7 @@ function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
       return { original: destFolder, to: destinationFolder };
     });
     return clonedFolders.map(clonedFolder => {
-      const destinationFolder = `${sourceFolder}/${clonedFolder.original}`;
+      const destinationFolder = path.join(sourceFolder, clonedFolder.original);
       moveFolder(clonedFolder.to, destinationFolder);
       return destinationFolder;
     });

@@ -1,5 +1,4 @@
 const { logger, ClientError } = require("../../src/lib/common");
-const { createFolder } = require("../../src/lib/fs-helper");
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
@@ -60,13 +59,4 @@ async function getEvent(octokit, eventUrl) {
   return event;
 }
 
-function createRootFolder(rootFolder) {
-  createFolder(rootFolder, true);
-}
-
-module.exports = {
-  getEvent,
-  createGithubInformationObject,
-  prepareEnv,
-  createRootFolder
-};
+module.exports = { getEvent, createGithubInformationObject, prepareEnv };

@@ -10,7 +10,6 @@ const { getProcessEnvVariable } = require("../../../bin/bin-utils");
 jest.mock("../../../bin/bin-utils");
 const { readFile } = require("fs-extra");
 jest.mock("fs-extra");
-jest.mock("../../../src/lib/fs-helper");
 
 afterEach(() => {
   jest.clearAllMocks();

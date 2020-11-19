@@ -8787,6 +8787,12 @@ async function getPlaceHolders(context, definitionFile) {
   return {};
 }
 
+/**
+ * It will clone project folder as many times as `node.build.clone` specifies
+ *
+ * @param {String} rootFolder the folder where the build chain is storing the information
+ * @param {Object} node the node to clone
+ */
 function cloneNode(rootFolder, node) {
   if (node.build && node.build.clone) {
     const sourceFolder = getDir(rootFolder, node.project);

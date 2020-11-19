@@ -9,7 +9,6 @@ const { logger } = require("../../common");
 const { treatUrl } = require("@kie/build-chain-configuration-reader");
 const { checkUrlExist } = require("../../util/http");
 const { getNodeTriggeringJob } = require("../../util/chain-util");
-const { copyNodeFolder } = require("../../util/fs-util");
 const fs = require("fs");
 
 async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
@@ -390,11 +389,12 @@ function cloneNode(rootFolder, node) {
     logger.info(
       `[${node.project}] Clonning folder ${sourceFolder} into ${node.build.clone}`
     );
-    const clonedFolders = copyNodeFolder(
-      rootFolder,
-      sourceFolder,
-      node.build.clone
-    );
+    // const clonedFolders = copyNodeFolder(
+    //   rootFolder,
+    //   sourceFolder,
+    //   node.build.clone
+    // );
+    const clonedFolders = undefined
     logger.info(
       `[${node.project}] Clonned folder ${sourceFolder} into ${clonedFolders}`
     );

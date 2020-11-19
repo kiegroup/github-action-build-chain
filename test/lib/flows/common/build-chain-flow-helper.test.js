@@ -16,6 +16,9 @@ jest.mock("../../../../src/lib/git");
 const { getNodeTriggeringJob } = require("../../../../src/lib/util/chain-util");
 jest.mock("../../../../src/lib/util/chain-util");
 
+const { copyNodeFolder } = require("../../../../src/lib/util/fs-util");
+jest.mock("../../../../src/lib/util/fs-util");
+
 const { checkUrlExist } = require("../../../../src/lib/util/http");
 jest.mock("../../../../src/lib/util/http");
 
@@ -1237,6 +1240,58 @@ test("checkoutDefinitionTree with mapping project triggering the job", async () 
     targetBranch: "7.x",
     merge: true
   });
+});
+
+test("checkoutDefinitionTree with clone", async () => {
+  // Arrange
+  const nodeChain = [
+    {
+      project: "kiegroup/lienzo-core",
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "lienzo-core" },
+      build: { "build-command": [], clone: "other-folder" },
+      mapping: undefined
+    },
+    {
+      project: "kiegroup/droolsjbpm-build-bootstrap",
+      dependencies: [],
+      children: [],
+      parents: [],
+      repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+      build: { "build-command": [] }
+    }
+  ];
+
+  const context = {
+    config: {
+      github: {
+        serverUrl: "URL",
+        serverUrlWithToken: "URL_with_token",
+        sourceGroup: "sourceGroup",
+        author: "author",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      },
+      rootFolder: "folder"
+    }
+  };
+  getForkedProjectMock
+    .mockResolvedValueOnce({ name: "lienzo-core-forked" })
+    .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" });
+  doesBranchExistMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+  hasPullRequestMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+  getNodeTriggeringJob.mockReturnValueOnce(nodeChain[0]);
+
+  // Act
+  await checkoutDefinitionTree(context, nodeChain);
+  // Assert
+  expect(copyNodeFolder).toHaveBeenCalledTimes(1);
+  expect(copyNodeFolder).toHaveBeenCalledWith(
+    "folder",
+    "folder/kiegroup_lienzo_core",
+    "other-folder"
+  );
 });
 
 test("getPlaceHolders no url", async () => {

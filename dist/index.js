@@ -22208,8 +22208,6 @@ const {
   getStartingProject
 } = __webpack_require__(933);
 
-const { logger } = __webpack_require__(79);
-
 function getInputs() {
   return {
     definitionFile: getDefinitionFile(),
@@ -22242,7 +22240,6 @@ async function createCommonConfig(eventData, rootFolder, env) {
       inputs: getInputs()
     };
   }
-  logger.info("ENV", env);
   return {
     github: await parseGitHub(eventData, env),
     rootFolder: rootFolder === undefined ? env["GITHUB_WORKSPACE"] : rootFolder
@@ -25570,7 +25567,6 @@ module.exports = { treatUrl };
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const fse = __webpack_require__(226);
-const { logger } = __webpack_require__(79);
 const path = __webpack_require__(622);
 
 function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
@@ -25580,7 +25576,6 @@ function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
       : destinationFolders
     ).map(destFolder => {
       const destinationFolder = path.join(rootFolder, destFolder);
-      logger.info(`Copying ${sourceFolder} to ${destinationFolder}`);
       try {
         fse.copySync(sourceFolder, destinationFolder);
       } catch (err) {
@@ -25601,7 +25596,6 @@ function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
 
 function moveFolder(sourceFolder, destinationFolder) {
   try {
-    logger.info(`Moving ${sourceFolder} to ${destinationFolder}`);
     fse.moveSync(sourceFolder, destinationFolder);
   } catch (err) {
     throw new Error(

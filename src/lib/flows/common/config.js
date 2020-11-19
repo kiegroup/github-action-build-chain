@@ -40,7 +40,7 @@ async function createCommonConfig(eventData, rootFolder, env) {
   logger.info("ENV", env);
   return {
     github: await parseGitHub(eventData, env),
-    rootFolder: rootFolder === undefined ? "" : rootFolder
+    rootFolder: rootFolder === undefined ? env["GITHUB_WORKSPACE"] : rootFolder
   };
 }
 

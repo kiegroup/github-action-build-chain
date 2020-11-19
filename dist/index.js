@@ -8418,7 +8418,6 @@ const { logger } = __webpack_require__(79);
 const { treatUrl } = __webpack_require__(702);
 const { checkUrlExist } = __webpack_require__(22);
 const { getNodeTriggeringJob } = __webpack_require__(645);
-const { copyNodeFolder } = __webpack_require__(828);
 const fs = __webpack_require__(747);
 
 async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
@@ -8479,69 +8478,58 @@ async function checkoutProjectPullRequestFlow(
       logger.error(msg);
       throw new Error(msg);
     }
-    await checkoutNode(context, node, checkoutInfo, dir);
+    if (checkoutInfo.merge) {
+      logger.info(
+        `[${node.project}] Merging ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      );
+      try {
+        await clone(
+          `${context.config.github.serverUrl}/${node.project}`,
+          dir,
+          checkoutInfo.targetBranch
+        );
+      } catch (err) {
+        logger.error(
+          `[${node.project}] Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
+        );
+        throw err;
+      }
+      try {
+        await gitMerge(
+          dir,
+          checkoutInfo.group,
+          checkoutInfo.project,
+          checkoutInfo.branch
+        );
+      } catch (err) {
+        logger.error(
+          `[${node.project}] Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
+        );
+        throw err;
+      }
+    } else {
+      try {
+        logger.info(
+          `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
+        );
+        await clone(
+          `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
+          dir,
+          checkoutInfo.branch
+        );
+      } catch (err) {
+        logger.error(
+          `[${node.project}] Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
+        );
+        throw err;
+      }
+    }
     return checkoutInfo;
   } else {
     logger.info(
       `[${node.project}] folder ${dir} already exists, nothing to checkout`
     );
     return undefined;
-  }
-}
-
-/**
- * It checks out the node repository
- *
- * @param {Object} context the application context
- * @param {Object} node the node to obtain checkout info
- * @param {Object} checkoutInfo the checkout information
- * @param {Object} dir the dir to check out
- */
-async function checkoutNode(context, node, checkoutInfo, dir) {
-  if (checkoutInfo.merge) {
-    logger.info(
-      `[${node.project}] Merging ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
-    );
-    try {
-      await clone(
-        `${context.config.github.serverUrlWithToken}/${node.project}`,
-        dir,
-        checkoutInfo.targetBranch
-      );
-    } catch (err) {
-      logger.error(
-        `[${node.project}] Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
-      );
-      throw err;
-    }
-    try {
-      await gitMerge(
-        dir,
-        `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
-        checkoutInfo.branch
-      );
-    } catch (err) {
-      logger.error(
-        `[${node.project}] Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
-      );
-      throw err;
-    }
-  } else {
-    try {
-      logger.info(
-        `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
-      );
-      await clone(
-        `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
-        dir,
-        checkoutInfo.branch
-      );
-    } catch (err) {
-      logger.error(
-        `[${node.project}] Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
-      );
-      throw err;
-    }
   }
 }
 
@@ -8565,7 +8553,7 @@ async function checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob) {
         `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.targetBranch}'  into '${dir}'`
       );
       await clone(
-        `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
+        `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
         dir,
         checkoutInfo.targetBranch
       );
@@ -8799,11 +8787,12 @@ function cloneNode(rootFolder, node) {
     logger.info(
       `[${node.project}] Clonning folder ${sourceFolder} into ${node.build.clone}`
     );
-    const clonedFolders = copyNodeFolder(
-      rootFolder,
-      sourceFolder,
-      node.build.clone
-    );
+    // const clonedFolders = copyNodeFolder(
+    //   rootFolder,
+    //   sourceFolder,
+    //   node.build.clone
+    // );
+    const clonedFolders = undefined;
     logger.info(
       `[${node.project}] Clonned folder ${sourceFolder} into ${clonedFolders}`
     );
@@ -17594,8 +17583,13 @@ async function mergeCommits(dir, ref) {
     .filter(commit => commit.length > 1);
 }
 
-async function merge(dir, repositoryUrl, branch) {
-  return await git(dir, "pull", repositoryUrl, branch);
+async function merge(dir, group, repositoryName, branch) {
+  return await git(
+    dir,
+    "pull",
+    `https://github.com/${group}/${repositoryName}`,
+    branch
+  );
 }
 
 async function head(dir) {
@@ -22319,11 +22313,9 @@ function getInputs() {
 async function createCommonConfig(eventData, rootFolder, env) {
   async function parseGitHub(eventData, env) {
     return {
-      serverUrl: getServerUrl(env["GITHUB_SERVER_URL"]), // https://github.com
-      serverUrlWithToken: getServerUrl(
-        env["GITHUB_SERVER_URL"],
-        env["GITHUB_TOKEN"]
-      ), // https://token@github.com
+      serverUrl: env["GITHUB_SERVER_URL"]
+        ? env["GITHUB_SERVER_URL"].replace(/\/$/, "")
+        : undefined, // https://github.com
       action: env["GITHUB_ACTION"], // Ginxogithub-action-build-chain
       sourceGroup: eventData.sourceGroup,
       author: eventData.author,
@@ -22345,15 +22337,6 @@ async function createCommonConfig(eventData, rootFolder, env) {
     github: await parseGitHub(eventData, env),
     rootFolder: rootFolder === undefined ? "" : rootFolder
   };
-}
-
-function getServerUrl(serverUrl, token = undefined) {
-  const result = serverUrl ? serverUrl.replace(/\/$/, "") : undefined;
-  if (result && token) {
-    return result.replace("://", `://${token}@`);
-  } else {
-    return result;
-  }
 }
 
 module.exports = {
@@ -26594,50 +26577,7 @@ module.exports = { treatUrl };
 /* 825 */,
 /* 826 */,
 /* 827 */,
-/* 828 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const fse = __webpack_require__(226);
-
-function copyNodeFolder(rootFolder, sourceFolder, destinationFolders) {
-  if (destinationFolders) {
-    const clonedFolders = (typeof destinationFolders === "string"
-      ? [destinationFolders]
-      : destinationFolders
-    ).map(destFolder => {
-      const destinationFolder = `${rootFolder}/${destFolder}`;
-      try {
-        fse.copySync(sourceFolder, destinationFolder);
-      } catch (err) {
-        throw new Error(
-          `Error copying project folder from  ${sourceFolder} to ${destinationFolder}. Message: ${err}`
-        );
-      }
-      return { original: destFolder, to: destinationFolder };
-    });
-    return clonedFolders.map(clonedFolder => {
-      const destinationFolder = `${sourceFolder}/${clonedFolder.original}`;
-      moveFolder(clonedFolder.to, destinationFolder);
-      return destinationFolder;
-    });
-  }
-  return undefined;
-}
-
-function moveFolder(sourceFolder, destinationFolder) {
-  try {
-    fse.moveSync(sourceFolder, destinationFolder);
-  } catch (err) {
-    throw new Error(
-      `Error moving project folder from  ${sourceFolder} to ${destinationFolder}. Message: ${err}`
-    );
-  }
-}
-
-module.exports = { copyNodeFolder };
-
-
-/***/ }),
+/* 828 */,
 /* 829 */,
 /* 830 */
 /***/ (function(module, __unusedexports, __webpack_require__) {

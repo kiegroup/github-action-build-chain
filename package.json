@@ -19,10 +19,6 @@
     "prepublish": "npm run lint && npm run test",
     "ncc-build": "ncc build bin/build-chain-event.js"
   },
-  "git-pre-hooks": {
-    "pre-commit": "npm run prettier && npm run ncc-build && git add dist/index.js",
-    "pre-push": "npm ci"
-  },
   "dependencies": {
     "@actions/artifact": "^0.3.5",
     "@actions/core": "^1.1.3",

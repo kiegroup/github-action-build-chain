@@ -34,12 +34,7 @@ function getYamlFileContent(filePath) {
   }
 }
 
-function createFolder(folder, recursive = false) {
-  fs.mkdirSync(folder, { recursive });
-}
-
 module.exports = {
   tmpdir,
-  getYamlFileContent,
-  createFolder
+  getYamlFileContent
 };

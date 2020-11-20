@@ -1228,15 +1228,17 @@ function onceStrict (fn) {
 
 const noTreatment = __webpack_require__(981);
 const mavenTreatment = __webpack_require__(121);
+const envionmentVariablesTreament = __webpack_require__(592);
 
 function treatCommand(command) {
+  const commandVariablesTreated = envionmentVariablesTreament.treat(command);
   let libraryToExecute = noTreatment;
-  if (!excludeTreatment(command)) {
-    if (command.match(/.*mvn .*/)) {
+  if (!excludeTreatment(commandVariablesTreated)) {
+    if (commandVariablesTreated.match(/.*mvn .*/)) {
       libraryToExecute = mavenTreatment;
     }
   }
-  return libraryToExecute.treat(command);
+  return libraryToExecute.treat(commandVariablesTreated);
 }
 
 function excludeTreatment(command) {
@@ -20402,7 +20404,37 @@ exports.getUploadSpecification = getUploadSpecification;
 
 /***/ }),
 /* 591 */,
-/* 592 */,
+/* 592 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+__webpack_require__(63).config();
+
+function treat(command) {
+  const variables = getVariablesFromCommand(command);
+  if (variables && variables.length > 0) {
+    return variables.reduce(
+      (acc, variable) => acc.replace(variable[0], process.env[variable[1]]),
+      command
+    );
+  } else {
+    return command;
+  }
+}
+
+/**
+ * it will return an array of arrays with [${{ env.VARIABLE }}, VARIABLE] elements
+ * @param {String} command the command to get variables from
+ */
+function getVariablesFromCommand(command) {
+  return [...command.matchAll(/\${{ env\.(\w+) }}/g)];
+}
+
+module.exports = {
+  treat
+};
+
+
+/***/ }),
 /* 593 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 

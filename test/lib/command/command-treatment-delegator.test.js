@@ -2,23 +2,37 @@ const {
   treatCommand
 } = require("../../../src/lib/command/command-treatment-delegator");
 jest.mock("../../../src/lib/command/maven-treatment", () => ({
-  treat: () => {
-    return "maven command";
+  treat: param => {
+    return `${param} [MAVEN]`;
   }
 }));
 
 jest.mock("../../../src/lib/command/no-treatment", () => ({
-  treat: () => {
-    return "same command";
+  treat: param => {
+    return param;
   }
 }));
+
+jest.mock("../../../src/lib/command/environment-variables-treatment", () => ({
+  treat: param => {
+    return `${param} with treated variables`;
+  }
+}));
+
+test("treatCommand check environment-variables-treatment", () => {
+  // Act
+  const result = treatCommand("mvn clean install");
+
+  // Assert
+  expect(result).toEqual("mvn clean install with treated variables [MAVEN]");
+});
 
 test("treatCommand maven", () => {
   // Act
   const result = treatCommand("mvn clean install");
 
   // Assert
-  expect(result).toEqual("maven command");
+  expect(result).toEqual("mvn clean install with treated variables [MAVEN]");
 });
 
 test("treatCommand maven with previous space", () => {
@@ -26,7 +40,7 @@ test("treatCommand maven with previous space", () => {
   const result = treatCommand(" mvn clean install");
 
   // Assert
-  expect(result).toEqual("maven command");
+  expect(result).toEqual(" mvn clean install with treated variables [MAVEN]");
 });
 
 test("treatCommand maven with envs", () => {
@@ -34,7 +48,9 @@ test("treatCommand maven with envs", () => {
   const result = treatCommand("env VAR=1 mvn clean install");
 
   // Assert
-  expect(result).toEqual("maven command");
+  expect(result).toEqual(
+    "env VAR=1 mvn clean install with treated variables [MAVEN]"
+  );
 });
 
 test("treatCommand maven more complex 1", () => {
@@ -44,7 +60,9 @@ test("treatCommand maven more complex 1", () => {
   );
 
   // Assert
-  expect(result).toEqual("maven command");
+  expect(result).toEqual(
+    'mvn -e -nsu -Dfull clean install -Prun-code-coverage -Pwildfly -Dcontainer=wildfly -Dcontainer.profile=wildfly -Dintegration-tests=true -Dmaven.test.failure.ignore=true -Dwebdriver.firefox.bin=/opt/tools/firefox-60esr/firefox-bin -DjvmArgs="-Xms1g -Xmx5g" with treated variables [MAVEN]'
+  );
 });
 
 test("treatCommand maven more complex 2", () => {
@@ -54,7 +72,9 @@ test("treatCommand maven more complex 2", () => {
   );
 
   // Assert
-  expect(result).toEqual("maven command");
+  expect(result).toEqual(
+    "mvn -e -T1C clean install -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true -Drevapi.skip=true with treated variables [MAVEN]"
+  );
 });
 
 test("treatCommand no command", () => {
@@ -62,7 +82,7 @@ test("treatCommand no command", () => {
   const result = treatCommand("./shell.sh");
 
   // Assert
-  expect(result).toEqual("same command");
+  expect(result).toEqual("./shell.sh with treated variables");
 });
 
 test("treatCommand echo ", () => {
@@ -70,7 +90,7 @@ test("treatCommand echo ", () => {
   const result = treatCommand('echo "command 1"');
 
   // Assert
-  expect(result).toEqual("same command");
+  expect(result).toEqual('echo "command 1" with treated variables');
 });
 
 test("treatCommand maven with export at the beginning", () => {
@@ -78,7 +98,9 @@ test("treatCommand maven with export at the beginning", () => {
   const result = treatCommand("export VARIABLE=mvn clean install");
 
   // Assert
-  expect(result).toEqual("same command");
+  expect(result).toEqual(
+    "export VARIABLE=mvn clean install with treated variables"
+  );
 });
 
 test("treatCommand maven with export in the midde", () => {
@@ -86,5 +108,7 @@ test("treatCommand maven with export in the midde", () => {
   const result = treatCommand("mvn clean install export VARIABLE=");
 
   // Assert
-  expect(result).toEqual("maven command");
+  expect(result).toEqual(
+    "mvn clean install export VARIABLE= with treated variables [MAVEN]"
+  );
 });

@@ -1,14 +1,16 @@
 const noTreatment = require("./no-treatment");
 const mavenTreatment = require("./maven-treatment");
+const envionmentVariablesTreament = require("./environment-variables-treatment");
 
 function treatCommand(command) {
+  const commandVariablesTreated = envionmentVariablesTreament.treat(command);
   let libraryToExecute = noTreatment;
-  if (!excludeTreatment(command)) {
-    if (command.match(/.*mvn .*/)) {
+  if (!excludeTreatment(commandVariablesTreated)) {
+    if (commandVariablesTreated.match(/.*mvn .*/)) {
       libraryToExecute = mavenTreatment;
     }
   }
-  return libraryToExecute.treat(command);
+  return libraryToExecute.treat(commandVariablesTreated);
 }
 
 function excludeTreatment(command) {

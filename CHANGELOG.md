@@ -5,6 +5,7 @@
 ## Enhancements:
 
 - `starting-project` input added
+- env variables treated from commands
 
 ## Bugs:
 

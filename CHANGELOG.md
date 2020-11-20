@@ -6,6 +6,10 @@
 
 - `starting-project` input added
 
+## Bugs:
+
+- Error treating export commands like `export DROOLS_VERSION=mvn org.apache.maven.plugins:maven-help-plugin:evaluate -Dexpression=project.version | grep ^7` will execute `export DROOLS_VERSION=mvn org.apache.maven.plugins:maven-help-plugin:evaluate -Dexpression=project.version | grep ^7 -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B`. Fixed.
+
 # V2.3
 
 ## Enhancements:

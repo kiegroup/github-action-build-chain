@@ -24,7 +24,6 @@ afterEach(() => {
 
 test("executeBuild only current commands", async () => {
   // Arrange
-
   const nodeChain = [
     {
       project: "a",
@@ -66,7 +65,6 @@ test("executeBuild only current commands", async () => {
 
 test("executeBuild upstream commands", async () => {
   // Arrange
-
   const nodeChain = [
     {
       project: "a",
@@ -284,4 +282,41 @@ test("executeBuildSpecificCommand", async () => {
   expect(execute).toHaveBeenCalledWith("a_folder", "command x treated");
   expect(execute).toHaveBeenCalledWith("b_folder", "command x treated");
   expect(execute).toHaveBeenCalledWith("c_folder", "command x treated");
+});
+
+test("executeBuild nodeChain not containing project triggering the job", async () => {
+  // Arrange
+
+  const nodeChain = [
+    {
+      project: "a",
+      build: {
+        "build-command": { current: "a command" }
+      }
+    },
+    {
+      project: "b",
+      build: {
+        "build-command": { current: "b command" }
+      }
+    },
+    {
+      project: "c",
+      build: {
+        "build-command": { current: "c command" }
+      }
+    }
+  ];
+
+  // Act
+  try {
+    await executeBuild("folder", nodeChain, "projectx");
+    expect(true).toEqual(false);
+  } catch (ex) {
+    expect(ex.message).toBe(
+      `The chain ${nodeChain.map(
+        node => node.project
+      )} does not contain the project triggering the job projectx`
+    );
+  }
 });

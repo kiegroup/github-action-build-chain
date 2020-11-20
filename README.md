@@ -110,6 +110,15 @@ See [action.yml](action.yml)
   - pull-request: executes the pull reques flow
   - fdb: executes the full downstream flow
 
+- **starting-project** (optional. the project triggering the job by default): The project you want start building from. It's not the same as the project triggering the job (which will remain the same), but the project to take tree from. For instance
+
+  > ```
+  > starting-project: 'groupX/projectX' // it will get project dependencies tree from 'groupX/projectX'
+  > starting-project: 'kiegroup/drools' // it will get project dependencies tree from 'kiegroup/drools'
+  > ```
+
+  > **_Note:_** You have to be sure the project tree to start building from, contains the project triggering the job.
+
 ## Archiving Artifacts
 
 The archive artifacts algorithm is basically copied from [actions/upload-artifact project](https://github.com/actions/upload-artifact) and (manually) transpile to javascript. The usage is basically the same (the inputs are different named adding `archive-artifacts` prefix and the [Conditional Artifact Upload](https://github.com/actions/upload-artifact#conditional-artifact-upload) is not enabled), so why do we include this `archive artifacts` mechanism in this tool if it's already implemented by another tool? well, because this treats the archive artifacts mechanism for the whole build chain, so in case you define an `archive-artifacts-path` in a different project from the chain, all of them will be uploaded. If you are wondering if you are able to use `actions/upload-artifact` instead of the one we propose, the answer is 'yes', just take into consideration the artifacts will be archived based on the definition from the project triggering the job.

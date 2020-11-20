@@ -15,6 +15,12 @@ const { addLocalExecutionVariables } = require("../bin-utils");
 
 async function execute(args, token, octokit) {
   if (args.build === "pr") {
+    addLocalExecutionVariables({
+      "starting-project": {
+        value: args.sp ? args.sp[0] : undefined,
+        mandatory: false
+      }
+    });
     await pullRequestLocalFlow(
       token,
       octokit,
@@ -24,6 +30,12 @@ async function execute(args, token, octokit) {
     );
   }
   if (args.build === "fd") {
+    addLocalExecutionVariables({
+      "starting-project": {
+        value: args.sp ? args.sp[0] : undefined,
+        mandatory: false
+      }
+    });
     await fdLocalFlow(token, octokit, process.env, args.folder[0], args.url[0]);
   }
   if (args.build === "single") {
@@ -37,7 +49,7 @@ async function execute(args, token, octokit) {
   }
   if (args.build === "branch") {
     addLocalExecutionVariables({
-      "starting-project": { value: args.p[0], mandatory: true }
+      "starting-project": { value: args.sp[0], mandatory: true }
     });
     await branchLocalFlow(
       token,
@@ -49,7 +61,6 @@ async function execute(args, token, octokit) {
       args.b[0],
       {
         command: args.c ? args.c[0] : undefined,
-        projectToStart: args.ps ? args.ps[0] : undefined,
         skipExecution: args.skipExecution
       }
     );

@@ -262,3 +262,81 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     ["failure", "always"]
   );
 });
+
+test("start no parent dependencies. startingProject", async () => {
+  // Arrange
+  const project = "kiegroup/lienzo-core";
+  const checkoutInfo = {
+    project,
+    group: "groupx",
+    branch: "branchx",
+    targetGroup: "targetGroupx",
+    targetBranch: "targetBranchx",
+    merge: true
+  };
+  const definitionTree = {};
+  const context = {
+    config: {
+      github: {
+        jobId: "job-id",
+        flowFile: "main.yaml",
+        group: "defaultGroup",
+        project,
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: path.join(
+            ".",
+            "test",
+            "resources",
+            "build-config",
+            "build-config.yaml"
+          ),
+          startingProject: "kiegroup/appformer"
+        },
+        repository: project
+      },
+      rootFolder: "folder"
+    }
+  };
+
+  getPlaceHolders.mockResolvedValueOnce({});
+  getTreeForProject.mockResolvedValueOnce(definitionTree);
+  parentChainFromNode.mockResolvedValueOnce([
+    { project },
+    { project: "project2" }
+  ]);
+  checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
+  getDir.mockReturnValueOnce("kiegroup/lienzo_core");
+  executeBuild.mockResolvedValueOnce(true);
+
+  // Act
+  await start(context, true);
+  // Assert
+  expect(getTreeForProject).toHaveBeenCalledWith(
+    "test/resources/build-config/build-config.yaml",
+    "kiegroup/appformer",
+    {}
+  );
+  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
+    { project },
+    { project: "project2" }
+  ]);
+
+  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
+  expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);
+
+  expect(executeBuild).toHaveBeenCalledTimes(1);
+  expect(executeBuild).toHaveBeenCalledWith(
+    "folder",
+    [{ project }, { project: "project2" }],
+    project
+  );
+  expect(archiveArtifacts).toHaveBeenCalledTimes(1);
+  expect(archiveArtifacts).toHaveBeenCalledWith(
+    { project },
+    [{ project }, { project: "project2" }],
+    ["success", "always"]
+  );
+});

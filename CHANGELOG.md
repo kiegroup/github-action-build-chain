@@ -1,5 +1,11 @@
 # Changelog
 
+# V2.4
+
+## Enhancements:
+
+- `starting-project` input added
+
 # V2.3
 
 ## Enhancements:

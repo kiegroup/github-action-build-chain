@@ -51,26 +51,11 @@ async function start(context, options = {}) {
   core.endGroup();
 
   if (!options.skipExecution) {
-    if (options.projectToStart) {
-      const nodeChainIndex = nodeChain
-        .map(node => node.project)
-        .indexOf(options.projectToStart);
-      if (nodeChainIndex === -1) {
-        throw new Error(
-          `The project to start "${
-            options.projectToStart
-          }" is not defined in ${nodeChain.map(node => node.project)}`
-        );
-      }
-      nodeChain = nodeChain.slice(nodeChainIndex);
-    }
-
     const executionResult = options.command
       ? await executeBuildSpecificCommand(
           context.config.rootFolder,
           nodeChain,
-          options.command,
-          options.projectToStart
+          options.command
         )
           .then(() => true)
           .catch(e => e)

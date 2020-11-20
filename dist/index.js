@@ -536,6 +536,13 @@ async function executeBuild(rootFolder, nodeChain, projectTriggeringJob) {
   const projectTriggeringJobIndex = nodeChain.findIndex(
     node => node.project === projectTriggeringJob
   );
+  if (projectTriggeringJobIndex < 0) {
+    throw new Error(
+      `The chain ${nodeChain.map(
+        node => node.project
+      )} does not contain the project triggering the job ${projectTriggeringJob}`
+    );
+  }
   for await (const [index, node] of nodeChain.entries()) {
     if (node.build && node.build.skip) {
       logger.info(
@@ -3536,16 +3543,21 @@ async function start(context, isArchiveArtifacts = true) {
   core.startGroup(
     `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
+
+  const leafToGetTreeFrom = context.config.github.inputs.startingProject
+    ? context.config.github.inputs.startingProject
+    : context.config.github.repository;
+
   const nodeChain = await getOrderedListForProject(
     context.config.github.inputs.definitionFile,
-    context.config.github.repository,
+    leafToGetTreeFrom,
     await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
 
   logger.info(
-    `Tree for project ${
-      context.config.github.repository
-    }. Chain: ${nodeChain.map(node => "\n" + node.project)}`
+    `Tree for project ${leafToGetTreeFrom}. Chain: ${nodeChain.map(
+      node => "\n" + node.project
+    )}`
   );
   const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
   core.endGroup();
@@ -24782,17 +24794,20 @@ async function start(context, isArchiveArtifacts = true) {
   core.startGroup(
     `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
+  const leafToGetTreeFrom = context.config.github.inputs.startingProject
+    ? context.config.github.inputs.startingProject
+    : context.config.github.repository;
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
-    context.config.github.repository,
+    leafToGetTreeFrom,
     await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
   const nodeChain = await parentChainFromNode(definitionTree);
 
   logger.info(
-    `Tree for project ${
-      context.config.github.repository
-    }. Dependencies: ${nodeChain.map(node => "\n" + node.project)}`
+    `Tree for project ${leafToGetTreeFrom}. Dependencies: ${nodeChain.map(
+      node => "\n" + node.project
+    )}`
   );
   const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
   core.endGroup();

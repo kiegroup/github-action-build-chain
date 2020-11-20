@@ -8,6 +8,13 @@ async function executeBuild(rootFolder, nodeChain, projectTriggeringJob) {
   const projectTriggeringJobIndex = nodeChain.findIndex(
     node => node.project === projectTriggeringJob
   );
+  if (projectTriggeringJobIndex < 0) {
+    throw new Error(
+      `The chain ${nodeChain.map(
+        node => node.project
+      )} does not contain the project triggering the job ${projectTriggeringJob}`
+    );
+  }
   for await (const [index, node] of nodeChain.entries()) {
     if (node.build && node.build.skip) {
       logger.info(

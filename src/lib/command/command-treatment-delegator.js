@@ -3,10 +3,16 @@ const mavenTreatment = require("./maven-treatment");
 
 function treatCommand(command) {
   let libraryToExecute = noTreatment;
-  if (command.match(/.*mvn .*/)) {
-    libraryToExecute = mavenTreatment;
+  if (!excludeTreatment(command)) {
+    if (command.match(/.*mvn .*/)) {
+      libraryToExecute = mavenTreatment;
+    }
   }
   return libraryToExecute.treat(command);
+}
+
+function excludeTreatment(command) {
+  return command.trim().match(/^export .*=/);
 }
 
 module.exports = {

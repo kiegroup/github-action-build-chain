@@ -103,6 +103,14 @@ test("treatCommand maven with export at the beginning", () => {
   );
 });
 
+test("treatCommand maven with echo at the beginning", () => {
+  // Act
+  const result = treatCommand("echo `mvn clean install`");
+
+  // Assert
+  expect(result).toEqual("echo `mvn clean install` with treated variables");
+});
+
 test("treatCommand maven with export in the midde", () => {
   // Act
   const result = treatCommand("mvn clean install export VARIABLE=");

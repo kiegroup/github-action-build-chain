@@ -14,7 +14,9 @@ function treatCommand(command) {
 }
 
 function excludeTreatment(command) {
-  return command.trim().match(/^export .*=/);
+  return (
+    command.trim().match(/^export .*=/) || command.trim().match(/^echo .*/)
+  );
 }
 
 module.exports = {

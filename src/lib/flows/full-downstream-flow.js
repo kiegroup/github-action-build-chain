@@ -18,16 +18,21 @@ async function start(context, isArchiveArtifacts = true) {
   core.startGroup(
     `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
+
+  const leafToGetTreeFrom = context.config.github.inputs.startingProject
+    ? context.config.github.inputs.startingProject
+    : context.config.github.repository;
+
   const nodeChain = await getOrderedListForProject(
     context.config.github.inputs.definitionFile,
-    context.config.github.repository,
+    leafToGetTreeFrom,
     await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
 
   logger.info(
-    `Tree for project ${
-      context.config.github.repository
-    }. Chain: ${nodeChain.map(node => "\n" + node.project)}`
+    `Tree for project ${leafToGetTreeFrom}. Chain: ${nodeChain.map(
+      node => "\n" + node.project
+    )}`
   );
   const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
   core.endGroup();

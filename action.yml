@@ -10,6 +10,9 @@ inputs:
     description: "the flow to execute, it can be 'pull-request', 'full-downstream' or 'single'"
     default: "pull-request"
     required: false
+  starting-project:
+    description: "the project to start flow from. By default is the project triggering the job"
+    required: false
 runs:
   using: "node12"
   main: "dist/index.js"

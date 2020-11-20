@@ -72,3 +72,19 @@ test("treatCommand echo ", () => {
   // Assert
   expect(result).toEqual("same command");
 });
+
+test("treatCommand maven with export at the beginning", () => {
+  // Act
+  const result = treatCommand("export VARIABLE=mvn clean install");
+
+  // Assert
+  expect(result).toEqual("same command");
+});
+
+test("treatCommand maven with export in the midde", () => {
+  // Act
+  const result = treatCommand("mvn clean install export VARIABLE=");
+
+  // Assert
+  expect(result).toEqual("maven command");
+});

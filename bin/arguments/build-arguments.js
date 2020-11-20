@@ -22,6 +22,11 @@ function pullRequestArguments(subParser) {
     required: true,
     help: "GitHub URL to pull request"
   });
+  parser.add_argument("-sp", "-starting-project", {
+    nargs: 1,
+    help:
+      "the project (one which is defined in dependencies file) to start building from"
+  });
 }
 
 function branchArguments(subParser) {
@@ -39,10 +44,10 @@ function branchArguments(subParser) {
     required: true,
     help: "the branch to execute flow"
   });
-  parser.add_argument("-ps", "-project-start", {
+  parser.add_argument("-sp", "-starting-project", {
     nargs: 1,
     help:
-      "the project (one which is defined in dependencies file) to resume building"
+      "the project (one which is defined in dependencies file) to start building from"
   });
   parser.add_argument("-g", "-group", {
     nargs: 1,
@@ -69,6 +74,11 @@ function fdArguments(subParser) {
     nargs: 1,
     required: true,
     help: "GitHub URL to pull request"
+  });
+  parser.add_argument("-sp", "-starting-project", {
+    nargs: 1,
+    help:
+      "the project (one which is defined in dependencies file) to start building from"
   });
 }
 

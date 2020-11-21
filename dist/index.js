@@ -528,7 +528,9 @@ module.exports.addConstructor = deprecated('addConstructor');
 
 const { logger } = __webpack_require__(79);
 const { execute } = __webpack_require__(81);
-const { treatCommand } = __webpack_require__(52);
+const {
+  treatCommand
+} = __webpack_require__(557);
 const { getDir } = __webpack_require__(330);
 const core = __webpack_require__(470);
 
@@ -636,7 +638,7 @@ const {
   getEvent
 } = __webpack_require__(8);
 const { start } = __webpack_require__(794);
-const { createCommonConfig } = __webpack_require__(668);
+const { createCommonConfig } = __webpack_require__(981);
 const { getProcessEnvVariable } = __webpack_require__(867);
 const fse = __webpack_require__(226);
 
@@ -1223,36 +1225,7 @@ function onceStrict (fn) {
 /***/ }),
 /* 50 */,
 /* 51 */,
-/* 52 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const noTreatment = __webpack_require__(981);
-const mavenTreatment = __webpack_require__(121);
-const envionmentVariablesTreament = __webpack_require__(592);
-
-function treatCommand(command) {
-  const commandVariablesTreated = envionmentVariablesTreament.treat(command);
-  let libraryToExecute = noTreatment;
-  if (!excludeTreatment(commandVariablesTreated)) {
-    if (commandVariablesTreated.match(/.*mvn .*/)) {
-      libraryToExecute = mavenTreatment;
-    }
-  }
-  return libraryToExecute.treat(commandVariablesTreated);
-}
-
-function excludeTreatment(command) {
-  return (
-    command.trim().match(/^export .*=/) || command.trim().match(/^echo .*/)
-  );
-}
-
-module.exports = {
-  treatCommand
-};
-
-
-/***/ }),
+/* 52 */,
 /* 53 */,
 /* 54 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
@@ -1615,7 +1588,7 @@ module.exports = {
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const { logger } = __webpack_require__(79);
-const exec = __webpack_require__(986);
+const { executeCommand } = __webpack_require__(284);
 
 class ExitError extends Error {
   constructor(message, code) {
@@ -1626,9 +1599,7 @@ class ExitError extends Error {
 
 async function execute(cwd, command) {
   logger.info(`Execute command '${command}' in dir '${cwd}'`);
-  const options = {};
-  options.cwd = cwd;
-  await exec.exec(command, [], options);
+  await executeCommand(cwd, command);
 }
 
 module.exports = {
@@ -2296,7 +2267,37 @@ module.exports = copySync
 /***/ }),
 /* 111 */,
 /* 112 */,
-/* 113 */,
+/* 113 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+__webpack_require__(63).config();
+
+function treat(command) {
+  const variables = getVariablesFromCommand(command);
+  if (variables && variables.length > 0) {
+    return variables.reduce(
+      (acc, variable) => acc.replace(variable[0], process.env[variable[1]]),
+      command
+    );
+  } else {
+    return command;
+  }
+}
+
+/**
+ * it will return an array of arrays with [${{ env.VARIABLE }}, VARIABLE] elements
+ * @param {String} command the command to get variables from
+ */
+function getVariablesFromCommand(command) {
+  return [...command.matchAll(/\${{ env\.(\w+) }}/g)];
+}
+
+module.exports = {
+  treat
+};
+
+
+/***/ }),
 /* 114 */,
 /* 115 */,
 /* 116 */,
@@ -3449,19 +3450,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 
 
 /***/ }),
-/* 121 */
-/***/ (function(module) {
-
-function treat(command) {
-  return `${command} -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B`;
-}
-
-module.exports = {
-  treat
-};
-
-
-/***/ }),
+/* 121 */,
 /* 122 */,
 /* 123 */,
 /* 124 */,
@@ -4433,7 +4422,24 @@ module.exports = new Type('tag:yaml.org,2002:bool', {
 /* 232 */,
 /* 233 */,
 /* 234 */,
-/* 235 */,
+/* 235 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const exec = __webpack_require__(986);
+__webpack_require__(63).config();
+
+async function execute(cwd, command) {
+  const options = {};
+  options.cwd = cwd;
+  await exec.exec(command, [], options);
+}
+
+module.exports = {
+  execute
+};
+
+
+/***/ }),
 /* 236 */,
 /* 237 */,
 /* 238 */,
@@ -7006,7 +7012,30 @@ exports.create = create;
 /***/ }),
 /* 282 */,
 /* 283 */,
-/* 284 */,
+/* 284 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const bashExecution = __webpack_require__(235);
+const exportExecution = __webpack_require__(987);
+
+async function executeCommand(cwd, command) {
+  let libraryToExecute = bashExecution;
+  if (isExport(command)) {
+    libraryToExecute = exportExecution;
+  }
+  return await libraryToExecute.execute(cwd, command);
+}
+
+function isExport(command) {
+  return command.trim().match(/^export .*=/);
+}
+
+module.exports = {
+  executeCommand
+};
+
+
+/***/ }),
 /* 285 */,
 /* 286 */,
 /* 287 */,
@@ -18662,7 +18691,36 @@ module.exports = YAMLException;
 
 
 /***/ }),
-/* 557 */,
+/* 557 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const noTreatment = __webpack_require__(989);
+const mavenTreatment = __webpack_require__(946);
+const envionmentVariablesTreament = __webpack_require__(113);
+
+function treatCommand(command) {
+  const commandVariablesTreated = envionmentVariablesTreament.treat(command);
+  let libraryToExecute = noTreatment;
+  if (!excludeTreatment(commandVariablesTreated)) {
+    if (commandVariablesTreated.match(/.*mvn .*/)) {
+      libraryToExecute = mavenTreatment;
+    }
+  }
+  return libraryToExecute.treat(commandVariablesTreated);
+}
+
+function excludeTreatment(command) {
+  return (
+    command.trim().match(/^export .*=/) || command.trim().match(/^echo .*/)
+  );
+}
+
+module.exports = {
+  treatCommand
+};
+
+
+/***/ }),
 /* 558 */,
 /* 559 */,
 /* 560 */,
@@ -20406,37 +20464,7 @@ exports.getUploadSpecification = getUploadSpecification;
 
 /***/ }),
 /* 591 */,
-/* 592 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-__webpack_require__(63).config();
-
-function treat(command) {
-  const variables = getVariablesFromCommand(command);
-  if (variables && variables.length > 0) {
-    return variables.reduce(
-      (acc, variable) => acc.replace(variable[0], process.env[variable[1]]),
-      command
-    );
-  } else {
-    return command;
-  }
-}
-
-/**
- * it will return an array of arrays with [${{ env.VARIABLE }}, VARIABLE] elements
- * @param {String} command the command to get variables from
- */
-function getVariablesFromCommand(command) {
-  return [...command.matchAll(/\${{ env\.(\w+) }}/g)];
-}
-
-module.exports = {
-  treat
-};
-
-
-/***/ }),
+/* 592 */,
 /* 593 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -22252,68 +22280,7 @@ module.exports = jsonfile
 
 /***/ }),
 /* 667 */,
-/* 668 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-const {
-  getDefinitionFile,
-  getStartingProject
-} = __webpack_require__(933);
-
-function getInputs() {
-  return {
-    definitionFile: getDefinitionFile(),
-    startingProject: getStartingProject()
-  };
-}
-
-async function createCommonConfig(eventData, rootFolder, env) {
-  async function parseGitHub(eventData, env) {
-    return {
-      serverUrl: getServerUrl(env["GITHUB_SERVER_URL"]), // https://github.com
-      serverUrlWithToken: getServerUrl(
-        env["GITHUB_SERVER_URL"],
-        env["GITHUB_TOKEN"]
-      ), // https://token@github.com
-      action: env["GITHUB_ACTION"], // Ginxogithub-action-build-chain
-      sourceGroup: eventData.sourceGroup,
-      author: eventData.author,
-      actor: env["GITHUB_ACTOR"], // Ginxo
-      sourceBranch: env["GITHUB_HEAD_REF"], // Ginxo-patch-1
-      targetBranch: env["GITHUB_BASE_REF"], // master
-      jobId: env["GITHUB_JOB"], // build-chain
-      sourceRepository: eventData.sourceRepository,
-      repository: env["GITHUB_REPOSITORY"], // Ginxo/lienzo-tests
-      group: env["GITHUB_REPOSITORY"].split("/")[0], // Ginxo
-      project: env["GITHUB_REPOSITORY"].split("/")[1], // lienzo-tests
-      groupProject: env["GITHUB_REPOSITORY"],
-      workflowName: env["GITHUB_WORKFLOW"], // Build Chain
-      ref: env["GITHUB_REF"], // refs/pull/1/merge'
-      inputs: getInputs()
-    };
-  }
-  return {
-    github: await parseGitHub(eventData, env),
-    rootFolder: rootFolder === undefined ? env["GITHUB_WORKSPACE"] : rootFolder
-  };
-}
-
-function getServerUrl(serverUrl, token = undefined) {
-  const result = serverUrl ? serverUrl.replace(/\/$/, "") : undefined;
-  if (result && token) {
-    return result.replace("://", `://${token}@`);
-  } else {
-    return result;
-  }
-}
-
-module.exports = {
-  createCommonConfig,
-  getInputs
-};
-
-
-/***/ }),
+/* 668 */,
 /* 669 */
 /***/ (function(module) {
 
@@ -24175,7 +24142,7 @@ const {
   getEvent
 } = __webpack_require__(8);
 const { start } = __webpack_require__(785);
-const { createCommonConfig } = __webpack_require__(668);
+const { createCommonConfig } = __webpack_require__(981);
 const { getProcessEnvVariable } = __webpack_require__(867);
 const fse = __webpack_require__(226);
 
@@ -24724,7 +24691,7 @@ const {
   getEvent
 } = __webpack_require__(8);
 const { start } = __webpack_require__(137);
-const { createCommonConfig } = __webpack_require__(668);
+const { createCommonConfig } = __webpack_require__(981);
 const { getProcessEnvVariable } = __webpack_require__(867);
 const fse = __webpack_require__(226);
 
@@ -28166,7 +28133,19 @@ module.exports = Type;
 
 
 /***/ }),
-/* 946 */,
+/* 946 */
+/***/ (function(module) {
+
+function treat(command) {
+  return `${command} -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn -B`;
+}
+
+module.exports = {
+  treat
+};
+
+
+/***/ }),
 /* 947 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -28993,14 +28972,63 @@ module.exports = {
 /* 979 */,
 /* 980 */,
 /* 981 */
-/***/ (function(module) {
+/***/ (function(module, __unusedexports, __webpack_require__) {
 
-function treat(command) {
-  return command;
+const {
+  getDefinitionFile,
+  getStartingProject
+} = __webpack_require__(933);
+
+function getInputs() {
+  return {
+    definitionFile: getDefinitionFile(),
+    startingProject: getStartingProject()
+  };
+}
+
+async function createCommonConfig(eventData, rootFolder, env) {
+  async function parseGitHub(eventData, env) {
+    return {
+      serverUrl: getServerUrl(env["GITHUB_SERVER_URL"]), // https://github.com
+      serverUrlWithToken: getServerUrl(
+        env["GITHUB_SERVER_URL"],
+        env["GITHUB_TOKEN"]
+      ), // https://token@github.com
+      action: env["GITHUB_ACTION"], // Ginxogithub-action-build-chain
+      sourceGroup: eventData.sourceGroup,
+      author: eventData.author,
+      actor: env["GITHUB_ACTOR"], // Ginxo
+      sourceBranch: env["GITHUB_HEAD_REF"], // Ginxo-patch-1
+      targetBranch: env["GITHUB_BASE_REF"], // master
+      jobId: env["GITHUB_JOB"], // build-chain
+      sourceRepository: eventData.sourceRepository,
+      repository: env["GITHUB_REPOSITORY"], // Ginxo/lienzo-tests
+      group: env["GITHUB_REPOSITORY"].split("/")[0], // Ginxo
+      project: env["GITHUB_REPOSITORY"].split("/")[1], // lienzo-tests
+      groupProject: env["GITHUB_REPOSITORY"],
+      workflowName: env["GITHUB_WORKFLOW"], // Build Chain
+      ref: env["GITHUB_REF"], // refs/pull/1/merge'
+      inputs: getInputs()
+    };
+  }
+  return {
+    github: await parseGitHub(eventData, env),
+    rootFolder: rootFolder === undefined ? env["GITHUB_WORKSPACE"] : rootFolder
+  };
+}
+
+function getServerUrl(serverUrl, token = undefined) {
+  const result = serverUrl ? serverUrl.replace(/\/$/, "") : undefined;
+  if (result && token) {
+    return result.replace("://", `://${token}@`);
+  } else {
+    return result;
+  }
 }
 
 module.exports = {
-  treat
+  createCommonConfig,
+  getInputs
 };
 
 
@@ -29059,7 +29087,25 @@ exports.exec = exec;
 //# sourceMappingURL=exec.js.map
 
 /***/ }),
-/* 987 */,
+/* 987 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+__webpack_require__(63).config();
+
+async function execute(cwd, command) {
+  process.env["KIE_VERSION"] = "NEW_VERSION";
+  // const options = {};
+  // options.cwd = cwd;
+  // await exec.exec(command, [], options);
+  console.log(cwd, command);
+}
+
+module.exports = {
+  execute
+};
+
+
+/***/ }),
 /* 988 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -29072,6 +29118,19 @@ module.exports = new Type('tag:yaml.org,2002:map', {
   kind: 'mapping',
   construct: function (data) { return data !== null ? data : {}; }
 });
+
+
+/***/ }),
+/* 989 */
+/***/ (function(module) {
+
+function treat(command) {
+  return command;
+}
+
+module.exports = {
+  treat
+};
 
 
 /***/ })

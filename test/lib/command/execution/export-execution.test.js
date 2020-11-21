@@ -2,8 +2,10 @@ const {
   execute
 } = require("../../../../src/lib/command/execution/export-execution");
 
-const { exec } = require("@actions/exec");
-jest.mock("@actions/exec");
+const {
+  execute: bashExecute
+} = require("../../../../src/lib/command/execution/bash-execution");
+jest.mock("../../../../src/lib/command/execution/bash-execution");
 
 test("execute simple export", async () => {
   // Arrange
@@ -14,7 +16,7 @@ test("execute simple export", async () => {
 
   // Assert
   expect(process.env["VARIABLE1"]).toBe("VALUE1");
-  expect(exec).toHaveBeenCalledTimes(0);
+  expect(bashExecute).toHaveBeenCalledTimes(0);
 });
 
 test("execute command export", async () => {
@@ -25,5 +27,10 @@ test("execute command export", async () => {
   await execute(cwd, command);
 
   // Assert
-  expect(exec).toHaveBeenCalledTimes(1);
+  expect(bashExecute).toHaveBeenCalledTimes(1);
+  expect(bashExecute).toHaveBeenCalledWith(
+    cwd,
+    "whatevercommand",
+    expect.anything()
+  );
 });

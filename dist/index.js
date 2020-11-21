@@ -4428,8 +4428,7 @@ module.exports = new Type('tag:yaml.org,2002:bool', {
 const exec = __webpack_require__(986);
 __webpack_require__(63).config();
 
-async function execute(cwd, command) {
-  const options = {};
+async function execute(cwd, command, options = {}) {
   options.cwd = cwd;
   await exec.exec(command, [], options);
 }
@@ -29091,7 +29090,7 @@ exports.exec = exec;
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const { logger } = __webpack_require__(79);
-const exec = __webpack_require__(986);
+const { execute: bashExecute } = __webpack_require__(235);
 __webpack_require__(63).config();
 
 async function execute(cwd, command) {
@@ -29099,10 +29098,7 @@ async function execute(cwd, command) {
     "Treating export command since it's not possible to run it from the runner itself"
   );
   const variableToStore = getVariable(command);
-  const expressionValue = await getValueFromExpression(
-    cwd,
-    getExpression(command)
-  );
+  const expressionValue = await executeExpression(cwd, getExpression(command));
 
   logger.info(
     `The variable ${variableToStore} has been stored with '${expressionValue}' value`
@@ -29110,7 +29106,7 @@ async function execute(cwd, command) {
   process.env[variableToStore] = expressionValue;
 }
 
-async function getValueFromExpression(cwd, exportExpression) {
+async function executeExpression(cwd, exportExpression) {
   const commandFromExpression = exportExpression.match(/`(.*)`/)
     ? exportExpression.match(/`(.*)`/)[1]
     : undefined;
@@ -29119,18 +29115,17 @@ async function getValueFromExpression(cwd, exportExpression) {
     logger.info(`Executing ${commandFromExpression} from export expression.`);
     let myOutput = "";
     let myError = "";
-    const options = {};
-    options.cwd = cwd;
-    options.listeners = {
-      stdout: data => {
-        myOutput = myOutput.concat(data.toString());
-      },
-      stderr: data => {
-        myError = myError.concat(data.toString());
+    const options = {
+      listeners: {
+        stdout: data => {
+          myOutput = myOutput.concat(data.toString());
+        },
+        stderr: data => {
+          myError = myError.concat(data.toString());
+        }
       }
     };
-    await exec.exec(commandFromExpression, [], options);
-    logger.info(`${exportExpression} executed with value: "${myOutput}".`);
+    await bashExecute(cwd, commandFromExpression, options);
     return myOutput;
   }
 

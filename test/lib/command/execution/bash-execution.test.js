@@ -15,3 +15,15 @@ test("execute", async () => {
   // Assert
   expect(exec).toHaveBeenCalledWith(command, [], { cwd });
 });
+
+test("execute with options", async () => {
+  // Arrange
+  const cwd = "cwd";
+  const command = "mvn clean install";
+  const options = { listener: () => {} };
+  // Act
+  await execute(cwd, command, options);
+
+  // Assert
+  expect(exec).toHaveBeenCalledWith(command, [], { cwd, ...options });
+});

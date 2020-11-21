@@ -1,20 +1,20 @@
 const {
   treatCommand
-} = require("../../../src/lib/command/treatment/command-treatment-delegator");
-jest.mock("../../../src/lib/command/treatment/maven-treatment", () => ({
+} = require("../../../../src/lib/command/treatment/command-treatment-delegator");
+jest.mock("../../../../src/lib/command/treatment/maven-treatment", () => ({
   treat: param => {
     return `${param} [MAVEN]`;
   }
 }));
 
-jest.mock("../../../src/lib/command/treatment/no-treatment", () => ({
+jest.mock("../../../../src/lib/command/treatment/no-treatment", () => ({
   treat: param => {
     return param;
   }
 }));
 
 jest.mock(
-  "../../../src/lib/command/treatment/environment-variables-treatment",
+  "../../../../src/lib/command/treatment/environment-variables-treatment",
   () => ({
     treat: param => {
       return `${param} with treated variables`;

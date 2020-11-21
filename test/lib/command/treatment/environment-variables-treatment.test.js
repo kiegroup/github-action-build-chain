@@ -1,7 +1,6 @@
 const {
   treat
-} = require("../../../src/lib/command/treatment/environment-variables-treatment");
-// require("dotenv").config();
+} = require("../../../../src/lib/command/treatment/environment-variables-treatment");
 
 test("treat existing variable", () => {
   // Arrange

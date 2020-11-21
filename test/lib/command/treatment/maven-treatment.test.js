@@ -1,4 +1,6 @@
-const { treat } = require("../../../src/lib/command/treatment/maven-treatment");
+const {
+  treat
+} = require("../../../../src/lib/command/treatment/maven-treatment");
 
 test("treat", () => {
   // Act

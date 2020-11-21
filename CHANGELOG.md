@@ -6,6 +6,7 @@
 
 - `starting-project` input added
 - env variables treated from commands
+- export command treated
 
 ## Bugs:
 

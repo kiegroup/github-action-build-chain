@@ -9,8 +9,8 @@ jest.mock("../../../../src/lib/flows/common/build-chain-flow-helper");
 
 const {
   treatCommand
-} = require("../../../../src/lib/command/command-treatment-delegator");
-jest.mock("../../../../src/lib/command/command-treatment-delegator");
+} = require("../../../../src/lib/command/treatment/command-treatment-delegator");
+jest.mock("../../../../src/lib/command/treatment/command-treatment-delegator");
 treatCommand.mockImplementation(param => `${param} treated`);
 
 const { execute } = require("../../../../src/lib/command/command");

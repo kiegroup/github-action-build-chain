@@ -1,4 +1,4 @@
-const { treat } = require("../../../src/lib/command/no-treatment");
+const { treat } = require("../../../../src/lib/command/treatment/no-treatment");
 
 test("treat", () => {
   // Act

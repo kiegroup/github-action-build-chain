@@ -1,5 +1,5 @@
 const { logger } = require("../common");
-const exec = require("@actions/exec");
+const { executeCommand } = require("./execution/command-execution-delegator");
 
 class ExitError extends Error {
   constructor(message, code) {
@@ -10,9 +10,7 @@ class ExitError extends Error {
 
 async function execute(cwd, command) {
   logger.info(`Execute command '${command}' in dir '${cwd}'`);
-  const options = {};
-  options.cwd = cwd;
-  await exec.exec(command, [], options);
+  await executeCommand(cwd, command);
 }
 
 module.exports = {

@@ -1,6 +1,8 @@
 const { logger } = require("../../common");
 const { execute } = require("../../command/command");
-const { treatCommand } = require("../../command/command-treatment-delegator");
+const {
+  treatCommand
+} = require("../../command/treatment/command-treatment-delegator");
 const { getDir } = require("./build-chain-flow-helper");
 const core = require("@actions/core");
 

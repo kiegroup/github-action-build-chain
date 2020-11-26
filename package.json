@@ -1,6 +1,6 @@
 {
   "name": "@kie/build-chain-action",
-  "version": "2.2.9",
+  "version": "2.2.10",
   "description": "GitHub action to define action chains",
   "main": "dist/build-chain-cli.js",
   "author": "Enrique Mingorance Cano <emingora@redhat.com>",

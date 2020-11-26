@@ -20,7 +20,7 @@ const { createOctokitInstance, getProcessEnvVariable } = require("./bin-utils");
 require("dotenv").config();
 
 async function main() {
-  const token = getProcessEnvVariable("GITHUB_TOKEN");
+  const token = getProcessEnvVariable("GITHUB_TOKEN", false);
   const octokit = createOctokitInstance(token);
   if (isPullRequestFlowType()) {
     await pullRequestEventFlow(token, octokit, process.env);

@@ -23,6 +23,7 @@ function getArguments() {
   });
   parser.add_argument("-token", "--token", {
     nargs: 1,
+    required: false,
     help: "The GITHUB_TOKEN. It can be set throw environment variable instead"
   });
   parser.add_argument("-d", "--debug", {

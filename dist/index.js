@@ -2061,7 +2061,7 @@ const { createOctokitInstance, getProcessEnvVariable } = __webpack_require__(867
 __webpack_require__(63).config();
 
 async function main() {
-  const token = getProcessEnvVariable("GITHUB_TOKEN");
+  const token = getProcessEnvVariable("GITHUB_TOKEN", false);
   const octokit = createOctokitInstance(token);
   if (isPullRequestFlowType()) {
     await pullRequestEventFlow(token, octokit, process.env);
@@ -26207,9 +26207,9 @@ __webpack_require__(63).config();
  * Gets an environment variable value
  * @param {String} name the environment variable name
  */
-function getProcessEnvVariable(name) {
+function getProcessEnvVariable(name, mandatory = true) {
   const val = process.env[name];
-  if (!val || !val.length) {
+  if (mandatory && (!val || !val.length)) {
     throw new ClientError(`environment variable ${name} not set!`);
   }
   return val;
@@ -26246,10 +26246,14 @@ function getDefaultRootFolder() {
 }
 
 function createOctokitInstance(token) {
-  return new Octokit({
-    auth: `token ${token}`,
-    userAgent: "kiegroup/github-build-chain-action"
-  });
+  return token
+    ? new Octokit({
+        auth: `token ${token}`,
+        userAgent: "kiegroup/github-build-chain-action"
+      })
+    : new Octokit({
+        userAgent: "kiegroup/github-build-chain-action"
+      });
 }
 
 module.exports = {

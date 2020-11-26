@@ -22,7 +22,7 @@ async function main() {
   if (args.token) {
     process.env["GITHUB_TOKEN"] = args.token[0];
   }
-  const token = getProcessEnvVariable("GITHUB_TOKEN");
+  const token = getProcessEnvVariable("GITHUB_TOKEN", false);
   const octokit = createOctokitInstance(token);
 
   addLocalExecutionVariables({

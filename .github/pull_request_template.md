@@ -1,6 +1,6 @@
 **Thank you for submitting this pull request**
 
-**JIRA**: _(please edit the JIRA link if it exists)_ 
+fix _(please add the issue ID if it exists)_ 
 
 [link](https://www.example.com)
 

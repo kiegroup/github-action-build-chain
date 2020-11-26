@@ -2,8 +2,6 @@
 
 fix _(please add the issue ID if it exists)_ 
 
-[link](https://www.example.com)
-
 **referenced Pull Requests**: _(please edit the URLs of referenced pullrequests if they exist)_
 
 * paste the link(s) from GitHub here

@@ -14,7 +14,7 @@ const {
   archiveArtifacts
 } = require("../artifacts/build-chain-flow-archive-artifact-helper");
 
-async function start(context, isArchiveArtifacts = true) {
+async function start(context, options = { isArchiveArtifacts: true }) {
   core.startGroup(
     `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
@@ -43,12 +43,13 @@ async function start(context, isArchiveArtifacts = true) {
   const executionResult = await executeBuild(
     context.config.rootFolder,
     nodeChain,
-    context.config.github.repository
+    context.config.github.repository,
+    options
   )
     .then(() => true)
     .catch(e => e);
 
-  if (isArchiveArtifacts) {
+  if (options.isArchiveArtifacts) {
     core.startGroup(`[Pull Request Flow] Archiving artifacts...`);
     await archiveArtifacts(
       nodeChain.find(node => node.project === context.config.github.repository),

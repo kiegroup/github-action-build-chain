@@ -18,18 +18,11 @@ const fse = require("fs-extra");
  * @param {String} rootFolder path to store flow data/projects
  * @param {Boolean} isArchiveArtifacts
  */
-async function execute(
-  token,
-  octokit,
-  env,
-  eventData,
-  rootFolder,
-  isArchiveArtifacts
-) {
+async function execute(token, octokit, env, eventData, rootFolder, options) {
   const githubInformation = createGithubInformationObject(eventData, env);
   const config = await createCommonConfig(githubInformation, rootFolder, env);
   const context = { token, octokit, config };
-  await start(context, isArchiveArtifacts);
+  await start(context, options);
 }
 
 /**
@@ -44,7 +37,9 @@ async function executeFromEvent(token, octokit, env) {
     "utf8"
   );
   const eventData = JSON.parse(eventDataStr);
-  await execute(token, octokit, env, eventData, undefined, true);
+  await execute(token, octokit, env, eventData, undefined, {
+    isArchiveArtifacts: true
+  });
 }
 
 /**
@@ -55,12 +50,20 @@ async function executeFromEvent(token, octokit, env) {
  * @param {String} rootFolder path to store flow data/projects
  * @param {String} eventUrl event url
  */
-async function executeLocally(token, octokit, env, rootFolder, eventUrl) {
+async function executeLocally(
+  token,
+  octokit,
+  env,
+  rootFolder,
+  eventUrl,
+  options = {}
+) {
   logger.info(`Executing pull request flow for ${eventUrl} in ${rootFolder}`);
+  options.isArchiveArtifacts = false;
 
   const eventData = await getEvent(octokit, eventUrl);
   prepareEnv(env, eventUrl, eventData);
-  await execute(token, octokit, env, eventData, rootFolder, false);
+  await execute(token, octokit, env, eventData, rootFolder, options);
 }
 
 module.exports = { executeLocally, executeFromEvent };

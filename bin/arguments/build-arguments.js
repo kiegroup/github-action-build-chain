@@ -16,23 +16,17 @@ function pullRequestArguments(subParser) {
   const parser = subParser.add_parser("pr", {
     help: "pull request flow. It will build projects based on their branches"
   });
-  parser.add_argument("-url", {
-    metavar: "<URL>",
-    nargs: 1,
-    required: true,
-    help: "GitHub URL to pull request"
-  });
-  parser.add_argument("-sp", "-starting-project", {
-    nargs: 1,
-    help:
-      "the project (one which is defined in dependencies file) to start building from"
-  });
+  urlArgument(parser);
+  startingProjectArgument(parser);
+  concatCommandArgument(parser);
 }
 
 function branchArguments(subParser) {
   const parser = subParser.add_parser("branch", {
     help: "branch flow. It will build projects based on their branches"
   });
+  startingProjectArgument(parser);
+  concatCommandArgument(parser);
   parser.add_argument("-p", "-project", {
     nargs: 1,
     required: true,
@@ -43,11 +37,6 @@ function branchArguments(subParser) {
     nargs: 1,
     required: true,
     help: "the branch to execute flow"
-  });
-  parser.add_argument("-sp", "-starting-project", {
-    nargs: 1,
-    help:
-      "the project (one which is defined in dependencies file) to start building from"
   });
   parser.add_argument("-g", "-group", {
     nargs: 1,
@@ -69,12 +58,29 @@ function fdArguments(subParser) {
   const parser = subParser.add_parser("fd", {
     help: "full downstream flow"
   });
+  urlArgument(parser);
+  startingProjectArgument(parser);
+  concatCommandArgument(parser);
+}
+
+function singleArguments(subParser) {
+  const parser = subParser.add_parser("single", {
+    help: "singe flow. Just the project from the url event is treated."
+  });
+  urlArgument(parser);
+  concatCommandArgument(parser);
+}
+
+function urlArgument(parser) {
   parser.add_argument("-url", {
     metavar: "<URL>",
     nargs: 1,
     required: true,
     help: "GitHub URL to pull request"
   });
+}
+
+function startingProjectArgument(parser) {
   parser.add_argument("-sp", "-starting-project", {
     nargs: 1,
     help:
@@ -82,15 +88,10 @@ function fdArguments(subParser) {
   });
 }
 
-function singleArguments(subParser) {
-  const parser = subParser.add_parser("single", {
-    help: "singe flow. Just the project from the url event is treated."
-  });
-  parser.add_argument("-url", {
-    metavar: "<URL>",
+function concatCommandArgument(parser) {
+  parser.add_argument("-cc", "-concat-command", {
     nargs: 1,
-    required: true,
-    help: "GitHub URL to pull request"
+    help: "a command to concatename to every execution command"
   });
 }
 

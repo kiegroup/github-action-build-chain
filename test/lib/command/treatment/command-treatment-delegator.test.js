@@ -22,6 +22,12 @@ jest.mock(
   })
 );
 
+jest.mock("../../../../src/lib/command/treatment/concat-treatment", () => ({
+  treat: (command, concatCommand) => {
+    return concatCommand ? `${command} ${concatCommand}` : command;
+  }
+}));
+
 test("treatCommand check environment-variables-treatment", () => {
   // Act
   const result = treatCommand("mvn clean install");
@@ -121,5 +127,17 @@ test("treatCommand maven with export in the midde", () => {
   // Assert
   expect(result).toEqual(
     "mvn clean install export VARIABLE= with treated variables [MAVEN]"
+  );
+});
+
+test("treatCommand with concat", () => {
+  // Act
+  const result = treatCommand("mvn clean install", {
+    concatCommand: "new thing to concat"
+  });
+
+  // Assert
+  expect(result).toEqual(
+    "mvn clean install new thing to concat with treated variables [MAVEN]"
   );
 });

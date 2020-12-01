@@ -70,7 +70,7 @@ test("start no parent dependencies. project triggering the job", async () => {
   executeBuild.mockResolvedValueOnce(true);
 
   // Act
-  await start(context, true);
+  await start(context, { isArchiveArtifacts: true });
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
@@ -88,7 +88,8 @@ test("start no parent dependencies. project triggering the job", async () => {
   expect(executeBuild).toHaveBeenCalledWith(
     "folder",
     [definitionTree],
-    project
+    project,
+    { isArchiveArtifacts: true }
   );
   expect(archiveArtifacts).toHaveBeenCalledTimes(1);
   expect(archiveArtifacts).toHaveBeenCalledWith(
@@ -141,7 +142,7 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
   executeBuild.mockResolvedValueOnce(true);
 
   // Act
-  await start(context, false);
+  await start(context, { isArchiveArtifacts: false });
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
@@ -159,7 +160,8 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
   expect(executeBuild).toHaveBeenCalledWith(
     "folder",
     [definitionTree],
-    project
+    project,
+    { isArchiveArtifacts: false }
   );
   expect(archiveArtifacts).toHaveBeenCalledTimes(0);
 });
@@ -209,7 +211,7 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
   });
   // Act
   try {
-    await start(context, true);
+    await start(context, { isArchiveArtifacts: true });
   } catch (ex) {
     expect(ex.message).toBe(
       "Command executions have failed, please review latest execution Error: error executing command"
@@ -232,7 +234,8 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
   expect(executeBuild).toHaveBeenCalledWith(
     "folder",
     [definitionTree],
-    project
+    project,
+    { isArchiveArtifacts: true }
   );
   expect(archiveArtifacts).toHaveBeenCalledTimes(1);
   expect(archiveArtifacts).toHaveBeenCalledWith(

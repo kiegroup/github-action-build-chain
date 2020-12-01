@@ -54,9 +54,9 @@ test("executeBuild only current commands", async () => {
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(3);
-  expect(treatCommand).toHaveBeenCalledWith("a command");
-  expect(treatCommand).toHaveBeenCalledWith("b command");
-  expect(treatCommand).toHaveBeenCalledWith("c command");
+  expect(treatCommand).toHaveBeenCalledWith("a command", {});
+  expect(treatCommand).toHaveBeenCalledWith("b command", {});
+  expect(treatCommand).toHaveBeenCalledWith("c command", {});
   expect(execute).toHaveBeenCalledTimes(3);
   expect(execute).toHaveBeenCalledWith("a_folder", "a command treated");
   expect(execute).toHaveBeenCalledWith("b_folder", "b command treated");
@@ -104,9 +104,9 @@ test("executeBuild upstream commands", async () => {
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(3);
-  expect(treatCommand).toHaveBeenCalledWith("a upstream command");
-  expect(treatCommand).toHaveBeenCalledWith("b command");
-  expect(treatCommand).toHaveBeenCalledWith("c command");
+  expect(treatCommand).toHaveBeenCalledWith("a upstream command", {});
+  expect(treatCommand).toHaveBeenCalledWith("b command", {});
+  expect(treatCommand).toHaveBeenCalledWith("c command", {});
   expect(execute).toHaveBeenCalledTimes(3);
   expect(execute).toHaveBeenCalledWith(
     "a_folder",
@@ -160,9 +160,9 @@ test("executeBuild upstream/downstream commands", async () => {
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(3);
-  expect(treatCommand).toHaveBeenCalledWith("a upstream command");
-  expect(treatCommand).toHaveBeenCalledWith("b command");
-  expect(treatCommand).toHaveBeenCalledWith("c downstream command");
+  expect(treatCommand).toHaveBeenCalledWith("a upstream command", {});
+  expect(treatCommand).toHaveBeenCalledWith("b command", {});
+  expect(treatCommand).toHaveBeenCalledWith("c downstream command", {});
   expect(execute).toHaveBeenCalledTimes(3);
   expect(execute).toHaveBeenCalledWith(
     "a_folder",
@@ -218,8 +218,8 @@ test("executeBuild skip", async () => {
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(2);
-  expect(treatCommand).toHaveBeenCalledWith("a upstream command");
-  expect(treatCommand).toHaveBeenCalledWith("c downstream command");
+  expect(treatCommand).toHaveBeenCalledWith("a upstream command", {});
+  expect(treatCommand).toHaveBeenCalledWith("c downstream command", {});
   expect(execute).toHaveBeenCalledTimes(2);
   expect(execute).toHaveBeenCalledWith(
     "a_folder",
@@ -275,9 +275,9 @@ test("executeBuildSpecificCommand", async () => {
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(3);
-  expect(treatCommand).toHaveBeenCalledWith("command x");
-  expect(treatCommand).toHaveBeenCalledWith("command x");
-  expect(treatCommand).toHaveBeenCalledWith("command x");
+  expect(treatCommand).toHaveBeenCalledWith("command x", {});
+  expect(treatCommand).toHaveBeenCalledWith("command x", {});
+  expect(treatCommand).toHaveBeenCalledWith("command x", {});
   expect(execute).toHaveBeenCalledTimes(3);
   expect(execute).toHaveBeenCalledWith("a_folder", "command x treated");
   expect(execute).toHaveBeenCalledWith("b_folder", "command x treated");
@@ -319,4 +319,53 @@ test("executeBuild nodeChain not containing project triggering the job", async (
       )} does not contain the project triggering the job projectx`
     );
   }
+});
+
+test("executeBuild only current commands with options", async () => {
+  // Arrange
+  const nodeChain = [
+    {
+      project: "a",
+      build: {
+        "build-command": { current: "a command" }
+      }
+    },
+    {
+      project: "b",
+      build: {
+        "build-command": { current: "b command" }
+      }
+    },
+    {
+      project: "c",
+      build: {
+        "build-command": { current: "c command" }
+      }
+    }
+  ];
+  getDir
+    .mockReturnValueOnce("a_folder")
+    .mockReturnValueOnce("b_folder")
+    .mockReturnValueOnce("c_folder");
+
+  // Act
+  await executeBuild("folder", nodeChain, "b", {
+    concatCommand: "awesome concat"
+  });
+
+  // Assert
+  expect(treatCommand).toHaveBeenCalledTimes(3);
+  expect(treatCommand).toHaveBeenCalledWith("a command", {
+    concatCommand: "awesome concat"
+  });
+  expect(treatCommand).toHaveBeenCalledWith("b command", {
+    concatCommand: "awesome concat"
+  });
+  expect(treatCommand).toHaveBeenCalledWith("c command", {
+    concatCommand: "awesome concat"
+  });
+  expect(execute).toHaveBeenCalledTimes(3);
+  expect(execute).toHaveBeenCalledWith("a_folder", "a command treated");
+  expect(execute).toHaveBeenCalledWith("b_folder", "b command treated");
+  expect(execute).toHaveBeenCalledWith("c_folder", "c command treated");
 });

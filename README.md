@@ -403,6 +403,7 @@ To choose between `pr`, `fd` or `single`
 **Arguments**:
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
+- **-cc**: The chance to concat an additional string to every command. Something like `-s settings.xml`.
 
 Examples:
 
@@ -415,6 +416,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 **Arguments**:
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
+- **-cc**: The chance to concat an additional string to every command. Something like `-s settings.xml`.
 
 Examples:
 
@@ -427,6 +429,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 **Arguments**:
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
+- **-cc**: The chance to concat an additional string to every command. Something like `-s settings.xml`.
 
 Examples:
 
@@ -443,6 +446,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **-g** (group from project argument): The group to take projects. In case you want to build projects from a different group than the one defined in "definition file". E.g. `-g=Ginxo`
 - **-c, -command**: A command to execute for all the projects, no matter what's defined in "definition file". E.g. `-c="mvn clean"`
 - **--skipExecution**: A command to skip execution, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
+- **-cc**: The chance to concat an additional string to every command. Something like `-s settings.xml`.
 
 Examples:
 

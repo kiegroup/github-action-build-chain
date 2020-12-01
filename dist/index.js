@@ -534,7 +534,12 @@ const {
 const { getDir } = __webpack_require__(330);
 const core = __webpack_require__(470);
 
-async function executeBuild(rootFolder, nodeChain, projectTriggeringJob) {
+async function executeBuild(
+  rootFolder,
+  nodeChain,
+  projectTriggeringJob,
+  options = {}
+) {
   const projectTriggeringJobIndex = nodeChain.findIndex(
     node => node.project === projectTriggeringJob
   );
@@ -557,15 +562,20 @@ async function executeBuild(rootFolder, nodeChain, projectTriggeringJob) {
           : index == projectTriggeringJobIndex
           ? "current"
           : "downstream";
-      await executeNodeBuildCommands(rootFolder, node, levelType);
+      await executeNodeBuildCommands(rootFolder, node, levelType, options);
     }
   }
 }
 
-async function executeBuildSpecificCommand(rootFolder, nodeChain, command) {
+async function executeBuildSpecificCommand(
+  rootFolder,
+  nodeChain,
+  command,
+  options = {}
+) {
   for await (const node of nodeChain) {
     const dir = getDir(rootFolder, node.project);
-    await executeBuildCommands(dir, command, node.project);
+    await executeBuildCommands(dir, command, node.project, options);
   }
 }
 
@@ -575,25 +585,33 @@ async function executeBuildSpecificCommand(rootFolder, nodeChain, command) {
  * @param {Object} node the node to execute
  * @param {String} levelType an option between upstream, current or downstream
  */
-async function executeNodeBuildCommands(rootFolder, node, levelType) {
+async function executeNodeBuildCommands(
+  rootFolder,
+  node,
+  levelType,
+  options = {}
+) {
   const dir = getDir(rootFolder, node.project);
   if (node.build["build-command"].before) {
     await executeBuildCommands(
       dir,
       getCommand(node.build["build-command"].before, levelType),
-      node.project
+      node.project,
+      options
     );
   }
   await executeBuildCommands(
     dir,
     getCommand(node.build["build-command"], levelType),
-    node.project
+    node.project,
+    options
   );
   if (node.build["build-command"].after) {
     await executeBuildCommands(
       dir,
       getCommand(node.build["build-command"].after, levelType),
-      node.project
+      node.project,
+      options
     );
   }
 }
@@ -602,13 +620,13 @@ function getCommand(buildCommand, levelType) {
   return buildCommand[levelType] || buildCommand.current;
 }
 
-async function executeBuildCommands(cwd, buildCommands, project) {
+async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
   if (buildCommands) {
     for (const command of Array.isArray(buildCommands)
       ? buildCommands.filter(c => c)
       : [buildCommands]) {
       core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
-      const commandTreated = treatCommand(command);
+      const commandTreated = treatCommand(command, options);
       try {
         await execute(cwd, commandTreated);
       } catch (e) {
@@ -657,12 +675,12 @@ async function execute(
   env,
   eventData,
   rootFolder,
-  isArchiveArtifacts
+  options = {}
 ) {
   const githubInformation = createGithubInformationObject(eventData, env);
   const config = await createCommonConfig(githubInformation, rootFolder, env);
   const context = { token, octokit, config };
-  await start(context, isArchiveArtifacts);
+  await start(context, options);
 }
 
 /**
@@ -677,7 +695,10 @@ async function executeFromEvent(token, octokit, env) {
     "utf8"
   );
   const eventData = JSON.parse(eventDataStr);
-  await execute(token, octokit, env, eventData, undefined, true);
+
+  await execute(token, octokit, env, eventData, undefined, {
+    isArchiveArtifacts: true
+  });
 }
 
 /**
@@ -688,12 +709,20 @@ async function executeFromEvent(token, octokit, env) {
  * @param {String} rootFolder path to store flow data/projects
  * @param {String} eventUrl event url
  */
-async function executeLocally(token, octokit, env, rootFolder, eventUrl) {
+async function executeLocally(
+  token,
+  octokit,
+  env,
+  rootFolder,
+  eventUrl,
+  options = {}
+) {
   logger.info(`Executing pull request flow for ${eventUrl} in ${rootFolder}`);
+  options.isArchiveArtifacts = false;
 
   const eventData = await getEvent(octokit, eventUrl);
   prepareEnv(env, eventUrl, eventData);
-  await execute(token, octokit, env, eventData, rootFolder, false);
+  await execute(token, octokit, env, eventData, rootFolder, options);
 }
 
 module.exports = { executeLocally, executeFromEvent };
@@ -1378,7 +1407,19 @@ module.exports.makeDirSync = (input, options) => {
 /* 55 */,
 /* 56 */,
 /* 57 */,
-/* 58 */,
+/* 58 */
+/***/ (function(module) {
+
+function treat(command, concatCommand) {
+  return concatCommand ? `${command} ${concatCommand}` : command;
+}
+
+module.exports = {
+  treat
+};
+
+
+/***/ }),
 /* 59 */,
 /* 60 */,
 /* 61 */,
@@ -3538,7 +3579,7 @@ const {
   archiveArtifacts
 } = __webpack_require__(503);
 
-async function start(context, isArchiveArtifacts = true) {
+async function start(context, options = { isArchiveArtifacts: true }) {
   core.startGroup(
     `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
@@ -3568,12 +3609,13 @@ async function start(context, isArchiveArtifacts = true) {
   const executionResult = await executeBuild(
     context.config.rootFolder,
     nodeChain,
-    context.config.github.repository
+    context.config.github.repository,
+    options
   )
     .then(() => true)
     .catch(e => e);
 
-  if (isArchiveArtifacts) {
+  if (options.isArchiveArtifacts) {
     core.startGroup(`[Full Downstream Flow] Archiving artifacts...`);
     await archiveArtifacts(
       nodeChain.find(node => node.project === context.config.github.repository),
@@ -18696,9 +18738,16 @@ module.exports = YAMLException;
 const noTreatment = __webpack_require__(989);
 const mavenTreatment = __webpack_require__(946);
 const envionmentVariablesTreament = __webpack_require__(113);
+const concatTreatment = __webpack_require__(58);
 
-function treatCommand(command) {
-  const commandVariablesTreated = envionmentVariablesTreament.treat(command);
+function treatCommand(command, options = {}) {
+  const commandConcatTreated = concatTreatment.treat(
+    command,
+    options ? options.concatCommand : undefined
+  );
+  const commandVariablesTreated = envionmentVariablesTreament.treat(
+    commandConcatTreated
+  );
   let libraryToExecute = noTreatment;
   if (!excludeTreatment(commandVariablesTreated)) {
     if (commandVariablesTreated.match(/.*mvn .*/)) {
@@ -24154,18 +24203,11 @@ const fse = __webpack_require__(226);
  * @param {String} rootFolder path to store flow data/projects
  * @param {Boolean} isArchiveArtifacts
  */
-async function execute(
-  token,
-  octokit,
-  env,
-  eventData,
-  rootFolder,
-  isArchiveArtifacts
-) {
+async function execute(token, octokit, env, eventData, rootFolder, options) {
   const githubInformation = createGithubInformationObject(eventData, env);
   const config = await createCommonConfig(githubInformation, rootFolder, env);
   const context = { token, octokit, config };
-  await start(context, isArchiveArtifacts);
+  await start(context, options);
 }
 
 /**
@@ -24180,7 +24222,9 @@ async function executeFromEvent(token, octokit, env) {
     "utf8"
   );
   const eventData = JSON.parse(eventDataStr);
-  await execute(token, octokit, env, eventData, undefined, true);
+  await execute(token, octokit, env, eventData, undefined, {
+    isArchiveArtifacts: true
+  });
 }
 
 /**
@@ -24191,12 +24235,20 @@ async function executeFromEvent(token, octokit, env) {
  * @param {String} rootFolder path to store flow data/projects
  * @param {String} eventUrl event url
  */
-async function executeLocally(token, octokit, env, rootFolder, eventUrl) {
+async function executeLocally(
+  token,
+  octokit,
+  env,
+  rootFolder,
+  eventUrl,
+  options = {}
+) {
   logger.info(`Executing pull request flow for ${eventUrl} in ${rootFolder}`);
+  options.isArchiveArtifacts = false;
 
   const eventData = await getEvent(octokit, eventUrl);
   prepareEnv(env, eventUrl, eventData);
-  await execute(token, octokit, env, eventData, rootFolder, false);
+  await execute(token, octokit, env, eventData, rootFolder, options);
 }
 
 module.exports = { executeLocally, executeFromEvent };
@@ -24703,18 +24755,11 @@ const fse = __webpack_require__(226);
  * @param {String} rootFolder path to store flow data/projects
  * @param {Boolean} isArchiveArtifacts
  */
-async function execute(
-  token,
-  octokit,
-  env,
-  eventData,
-  rootFolder,
-  isArchiveArtifacts
-) {
+async function execute(token, octokit, env, eventData, rootFolder, options) {
   const githubInformation = createGithubInformationObject(eventData, env);
   const config = await createCommonConfig(githubInformation, rootFolder, env);
   const context = { token, octokit, config };
-  await start(context, isArchiveArtifacts);
+  await start(context, options);
 }
 
 /**
@@ -24729,7 +24774,9 @@ async function executeFromEvent(token, octokit, env) {
     "utf8"
   );
   const eventData = JSON.parse(eventDataStr);
-  await execute(token, octokit, env, eventData, undefined, true);
+  await execute(token, octokit, env, eventData, undefined, {
+    isArchiveArtifacts: true
+  });
 }
 
 /**
@@ -24740,12 +24787,20 @@ async function executeFromEvent(token, octokit, env) {
  * @param {String} rootFolder path to store flow data/projects
  * @param {String} eventUrl event url
  */
-async function executeLocally(token, octokit, env, rootFolder, eventUrl) {
+async function executeLocally(
+  token,
+  octokit,
+  env,
+  rootFolder,
+  eventUrl,
+  options = {}
+) {
   logger.info(`Executing pull request flow for ${eventUrl} in ${rootFolder}`);
+  options.isArchiveArtifacts = false;
 
   const eventData = await getEvent(octokit, eventUrl);
   prepareEnv(env, eventUrl, eventData);
-  await execute(token, octokit, env, eventData, rootFolder, false);
+  await execute(token, octokit, env, eventData, rootFolder, options);
 }
 
 module.exports = { executeLocally, executeFromEvent };
@@ -24796,7 +24851,7 @@ const {
   archiveArtifacts
 } = __webpack_require__(503);
 
-async function start(context, isArchiveArtifacts = true) {
+async function start(context, options = { isArchiveArtifacts: true }) {
   core.startGroup(
     `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
@@ -24825,12 +24880,13 @@ async function start(context, isArchiveArtifacts = true) {
   const executionResult = await executeBuild(
     context.config.rootFolder,
     nodeChain,
-    context.config.github.repository
+    context.config.github.repository,
+    options
   )
     .then(() => true)
     .catch(e => e);
 
-  if (isArchiveArtifacts) {
+  if (options.isArchiveArtifacts) {
     core.startGroup(`[Pull Request Flow] Archiving artifacts...`);
     await archiveArtifacts(
       nodeChain.find(node => node.project === context.config.github.repository),
@@ -24890,7 +24946,7 @@ const {
   archiveArtifacts
 } = __webpack_require__(503);
 
-async function start(context, isArchiveArtifacts = true) {
+async function start(context, options = { isArchiveArtifacts: true }) {
   core.startGroup(
     `[Single Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
@@ -24916,12 +24972,13 @@ async function start(context, isArchiveArtifacts = true) {
   const executionResult = await executeBuild(
     context.config.rootFolder,
     nodeChain,
-    context.config.github.repository
+    context.config.github.repository,
+    options
   )
     .then(() => true)
     .catch(e => e);
 
-  if (isArchiveArtifacts) {
+  if (options.isArchiveArtifacts) {
     core.startGroup(`[Single Flow] Archiving artifacts...`);
     await archiveArtifacts(
       nodeChain.find(node => node.project === context.config.github.repository),

@@ -57,7 +57,7 @@ test("executeFromEvent", async () => {
   );
   expect(start).toHaveBeenCalledWith(
     { token: "token", octokit: "octokit", config: "commonconfig" },
-    true
+    { isArchiveArtifacts: true }
   );
 });
 
@@ -124,7 +124,7 @@ test("executeLocally", async () => {
   );
   expect(start).toHaveBeenCalledWith(
     { token: "token", octokit, config: "commonconfig" },
-    false
+    { isArchiveArtifacts: false }
   );
 });
 
@@ -191,7 +191,7 @@ test("executeLocally no pull_request.repo info", async () => {
   );
   expect(start).toHaveBeenCalledWith(
     { token: "token", octokit, config: "commonconfig" },
-    false
+    { isArchiveArtifacts: false }
   );
 });
 
@@ -256,6 +256,6 @@ test("executeLocally no pull_request.repo or eventData.repository info", async (
   );
   expect(start).toHaveBeenCalledWith(
     { token: "token", octokit, config: "commonconfig" },
-    false
+    { isArchiveArtifacts: false }
   );
 });

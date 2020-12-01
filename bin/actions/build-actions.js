@@ -26,7 +26,8 @@ async function execute(args, token, octokit) {
       octokit,
       process.env,
       args.folder[0],
-      args.url[0]
+      args.url[0],
+      { concatCommand: args.cc ? args.cc[0] : undefined }
     );
   }
   if (args.build === "fd") {
@@ -36,7 +37,14 @@ async function execute(args, token, octokit) {
         mandatory: false
       }
     });
-    await fdLocalFlow(token, octokit, process.env, args.folder[0], args.url[0]);
+    await fdLocalFlow(
+      token,
+      octokit,
+      process.env,
+      args.folder[0],
+      args.url[0],
+      { concatCommand: args.cc ? args.cc[0] : undefined }
+    );
   }
   if (args.build === "single") {
     await singleLocalFlow(
@@ -44,7 +52,8 @@ async function execute(args, token, octokit) {
       octokit,
       process.env,
       args.folder[0],
-      args.url[0]
+      args.url[0],
+      { concatCommand: args.cc ? args.cc[0] : undefined }
     );
   }
   if (args.build === "branch") {
@@ -61,7 +70,8 @@ async function execute(args, token, octokit) {
       args.b[0],
       {
         command: args.c ? args.c[0] : undefined,
-        skipExecution: args.skipExecution
+        skipExecution: args.skipExecution,
+        concatCommand: args.cc ? args.cc[0] : undefined
       }
     );
   }

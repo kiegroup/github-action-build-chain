@@ -55,14 +55,16 @@ async function start(context, options = {}) {
       ? await executeBuildSpecificCommand(
           context.config.rootFolder,
           nodeChain,
-          options.command
+          options.command,
+          options
         )
           .then(() => true)
           .catch(e => e)
       : await executeBuild(
           context.config.rootFolder,
           nodeChain,
-          context.config.github.repository
+          context.config.github.repository,
+          options
         )
           .then(() => true)
           .catch(e => e);

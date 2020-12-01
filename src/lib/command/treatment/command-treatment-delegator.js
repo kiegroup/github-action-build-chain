@@ -1,9 +1,16 @@
 const noTreatment = require("./no-treatment");
 const mavenTreatment = require("./maven-treatment");
 const envionmentVariablesTreament = require("./environment-variables-treatment");
+const concatTreatment = require("./concat-treatment");
 
-function treatCommand(command) {
-  const commandVariablesTreated = envionmentVariablesTreament.treat(command);
+function treatCommand(command, options = {}) {
+  const commandConcatTreated = concatTreatment.treat(
+    command,
+    options ? options.concatCommand : undefined
+  );
+  const commandVariablesTreated = envionmentVariablesTreament.treat(
+    commandConcatTreated
+  );
   let libraryToExecute = noTreatment;
   if (!excludeTreatment(commandVariablesTreated)) {
     if (commandVariablesTreated.match(/.*mvn .*/)) {

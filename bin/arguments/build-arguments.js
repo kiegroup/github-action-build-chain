@@ -18,7 +18,7 @@ function pullRequestArguments(subParser) {
   });
   urlArgument(parser);
   startingProjectArgument(parser);
-  concatCommandArgument(parser);
+  customCommandTreatmentArgument(parser);
 }
 
 function branchArguments(subParser) {
@@ -26,7 +26,7 @@ function branchArguments(subParser) {
     help: "branch flow. It will build projects based on their branches"
   });
   startingProjectArgument(parser);
-  concatCommandArgument(parser);
+  customCommandTreatmentArgument(parser);
   parser.add_argument("-p", "-project", {
     nargs: 1,
     required: true,
@@ -60,7 +60,7 @@ function fdArguments(subParser) {
   });
   urlArgument(parser);
   startingProjectArgument(parser);
-  concatCommandArgument(parser);
+  customCommandTreatmentArgument(parser);
 }
 
 function singleArguments(subParser) {
@@ -68,7 +68,7 @@ function singleArguments(subParser) {
     help: "singe flow. Just the project from the url event is treated."
   });
   urlArgument(parser);
-  concatCommandArgument(parser);
+  customCommandTreatmentArgument(parser);
 }
 
 function urlArgument(parser) {
@@ -88,10 +88,11 @@ function startingProjectArgument(parser) {
   });
 }
 
-function concatCommandArgument(parser) {
-  parser.add_argument("-cc", "-concat-command", {
-    nargs: 1,
-    help: "a command to concatename to every execution command"
+function customCommandTreatmentArgument(parser) {
+  parser.add_argument("-cct", "-custom-command-treatment", {
+    nargs: "*",
+    help:
+      "a custom replacement expression regEx||replacemenExpression. Something like (mvn .*)||$1 -s settings.xml. See documentation for more information."
   });
 }
 

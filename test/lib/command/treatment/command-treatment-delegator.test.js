@@ -22,9 +22,9 @@ jest.mock(
   })
 );
 
-jest.mock("../../../../src/lib/command/treatment/concat-treatment", () => ({
-  treat: (command, concatCommand) => {
-    return concatCommand ? `${command} ${concatCommand}` : command;
+jest.mock("../../../../src/lib/command/treatment/regex-treatment", () => ({
+  treat: (command, replaceExArray) => {
+    return replaceExArray ? `${command} regexreplacement` : command;
   }
 }));
 
@@ -133,11 +133,11 @@ test("treatCommand maven with export in the midde", () => {
 test("treatCommand with concat", () => {
   // Act
   const result = treatCommand("mvn clean install", {
-    concatCommand: "new thing to concat"
+    replaceExArray: []
   });
 
   // Assert
   expect(result).toEqual(
-    "mvn clean install new thing to concat with treated variables [MAVEN]"
+    "mvn clean install with treated variables [MAVEN] regexreplacement"
   );
 });

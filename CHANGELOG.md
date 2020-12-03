@@ -1,5 +1,11 @@
 # Changelog
 
+# V2.5 (next release)
+
+## Enhancements:
+
+- `custom-command-treatment` CLI option
+
 # V2.4
 
 ## Enhancements:

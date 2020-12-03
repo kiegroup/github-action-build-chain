@@ -1407,19 +1407,7 @@ module.exports.makeDirSync = (input, options) => {
 /* 55 */,
 /* 56 */,
 /* 57 */,
-/* 58 */
-/***/ (function(module) {
-
-function treat(command, concatCommand) {
-  return concatCommand ? `${command} ${concatCommand}` : command;
-}
-
-module.exports = {
-  treat
-};
-
-
-/***/ }),
+/* 58 */,
 /* 59 */,
 /* 60 */,
 /* 61 */,
@@ -2307,7 +2295,64 @@ module.exports = copySync
 
 /***/ }),
 /* 111 */,
-/* 112 */,
+/* 112 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const { logger } = __webpack_require__(79);
+
+/**
+ *
+ * @param {String} command the command to treat
+ * @param {Array} replaceExArray an array containing "regex||expression to replace"
+ */
+function treat(command, replaceExArray) {
+  if (replaceExArray) {
+    logger.info(
+      `[REGEX COMMAND REPLACEMENT] Replacing command: '${command}' by expressions: '${replaceExArray}'`
+    );
+    const result = replaceExArray.reduce(
+      (acc, replaceEx) => treatReplaceEx(acc, replaceEx),
+      command
+    );
+    logger.info(
+      result === command
+        ? `[REGEX COMMAND REPLACEMENT] No replacement for ${command}`
+        : `[REGEX COMMAND REPLACEMENT] Replaced to: '${result}'`
+    );
+    return result;
+  } else {
+    return command;
+  }
+}
+
+function treatReplaceEx(command, replaceEx) {
+  const replacemenExpression = getReplacemenExpression(replaceEx);
+  return command.replace(
+    replacemenExpression.regEx,
+    replacemenExpression.replace
+  );
+}
+
+function getReplacemenExpression(replaceEx) {
+  const split = replaceEx.split("||");
+  return { regEx: createRegex(split[0]), replace: split[1] };
+}
+
+function createRegex(str) {
+  const [, literal, flag] = str.split("/");
+  return literal
+    ? flag
+      ? new RegExp(literal, flag)
+      : new RegExp(literal)
+    : new RegExp(str);
+}
+
+module.exports = {
+  treat
+};
+
+
+/***/ }),
 /* 113 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -18738,23 +18783,20 @@ module.exports = YAMLException;
 const noTreatment = __webpack_require__(989);
 const mavenTreatment = __webpack_require__(946);
 const envionmentVariablesTreament = __webpack_require__(113);
-const concatTreatment = __webpack_require__(58);
+const regExTreatment = __webpack_require__(112);
 
 function treatCommand(command, options = {}) {
-  const commandConcatTreated = concatTreatment.treat(
-    command,
-    options ? options.concatCommand : undefined
-  );
-  const commandVariablesTreated = envionmentVariablesTreament.treat(
-    commandConcatTreated
-  );
+  const commandVariablesTreated = envionmentVariablesTreament.treat(command);
   let libraryToExecute = noTreatment;
   if (!excludeTreatment(commandVariablesTreated)) {
     if (commandVariablesTreated.match(/.*mvn .*/)) {
       libraryToExecute = mavenTreatment;
     }
   }
-  return libraryToExecute.treat(commandVariablesTreated);
+  return regExTreatment.treat(
+    libraryToExecute.treat(commandVariablesTreated),
+    options.replaceExArray
+  );
 }
 
 function excludeTreatment(command) {

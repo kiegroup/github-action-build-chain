@@ -403,7 +403,7 @@ To choose between `pr`, `fd` or `single`
 **Arguments**:
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
-- **-cc**: The chance to concat an additional string to every command. Something like `-s settings.xml`.
+- **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 
 Examples:
 
@@ -416,7 +416,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 **Arguments**:
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
-- **-cc**: The chance to concat an additional string to every command. Something like `-s settings.xml`.
+- **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 
 Examples:
 
@@ -429,7 +429,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 **Arguments**:
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
-- **-cc**: The chance to concat an additional string to every command. Something like `-s settings.xml`.
+- **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 
 Examples:
 
@@ -446,7 +446,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **-g** (group from project argument): The group to take projects. In case you want to build projects from a different group than the one defined in "definition file". E.g. `-g=Ginxo`
 - **-c, -command**: A command to execute for all the projects, no matter what's defined in "definition file". E.g. `-c="mvn clean"`
 - **--skipExecution**: A command to skip execution, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
-- **-cc**: The chance to concat an additional string to every command. Something like `-s settings.xml`.
+- **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 
 Examples:
 
@@ -469,6 +469,16 @@ Examples:
 ```
 build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/master/.ci/pull-request-config.yaml tools project-list
 ```
+
+#### Custom Command Replacement
+
+It is possible to define custom expression to replace commands. The expression structure is `RegEx||ReplacementEx` where:
+
+- `RegEx`: you can define regular expression with or without literals. See [Javascript RegExp](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp)
+- `||` just split `RegEx` from `ReplacementEx`
+- `ReplacementEx`: See [Javascript String replacement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace)
+
+So basically at left side of `||` you define the regular expression where you want to apply string replacement from right side. For example, considering command `mvn clean install` in case we apply `(^mvn .*)||$1 -s ~/.m2/settings.xml` the final command will be `mvn clean install -s ~/.m2/settings.xml`
 
 ## Development
 

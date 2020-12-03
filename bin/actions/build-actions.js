@@ -27,7 +27,7 @@ async function execute(args, token, octokit) {
       process.env,
       args.folder[0],
       args.url[0],
-      { concatCommand: args.cc ? args.cc[0] : undefined }
+      { replaceExArray: args.cct }
     );
   }
   if (args.build === "fd") {
@@ -43,7 +43,7 @@ async function execute(args, token, octokit) {
       process.env,
       args.folder[0],
       args.url[0],
-      { concatCommand: args.cc ? args.cc[0] : undefined }
+      { replaceExArray: args.cct }
     );
   }
   if (args.build === "single") {
@@ -53,7 +53,7 @@ async function execute(args, token, octokit) {
       process.env,
       args.folder[0],
       args.url[0],
-      { concatCommand: args.cc ? args.cc[0] : undefined }
+      { replaceExArray: args.cct }
     );
   }
   if (args.build === "branch") {
@@ -71,7 +71,7 @@ async function execute(args, token, octokit) {
       {
         command: args.c ? args.c[0] : undefined,
         skipExecution: args.skipExecution,
-        concatCommand: args.cc ? args.cc[0] : undefined
+        replaceExArray: args.cct
       }
     );
   }

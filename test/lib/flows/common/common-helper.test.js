@@ -350,19 +350,19 @@ test("executeBuild only current commands with options", async () => {
 
   // Act
   await executeBuild("folder", nodeChain, "b", {
-    concatCommand: "awesome concat"
+    optionx: "awesome option"
   });
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(3);
   expect(treatCommand).toHaveBeenCalledWith("a command", {
-    concatCommand: "awesome concat"
+    optionx: "awesome option"
   });
   expect(treatCommand).toHaveBeenCalledWith("b command", {
-    concatCommand: "awesome concat"
+    optionx: "awesome option"
   });
   expect(treatCommand).toHaveBeenCalledWith("c command", {
-    concatCommand: "awesome concat"
+    optionx: "awesome option"
   });
   expect(execute).toHaveBeenCalledTimes(3);
   expect(execute).toHaveBeenCalledWith("a_folder", "a command treated");

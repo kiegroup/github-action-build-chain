@@ -1,23 +1,20 @@
 const noTreatment = require("./no-treatment");
 const mavenTreatment = require("./maven-treatment");
 const envionmentVariablesTreament = require("./environment-variables-treatment");
-const concatTreatment = require("./concat-treatment");
+const regExTreatment = require("./regex-treatment");
 
 function treatCommand(command, options = {}) {
-  const commandConcatTreated = concatTreatment.treat(
-    command,
-    options ? options.concatCommand : undefined
-  );
-  const commandVariablesTreated = envionmentVariablesTreament.treat(
-    commandConcatTreated
-  );
+  const commandVariablesTreated = envionmentVariablesTreament.treat(command);
   let libraryToExecute = noTreatment;
   if (!excludeTreatment(commandVariablesTreated)) {
     if (commandVariablesTreated.match(/.*mvn .*/)) {
       libraryToExecute = mavenTreatment;
     }
   }
-  return libraryToExecute.treat(commandVariablesTreated);
+  return regExTreatment.treat(
+    libraryToExecute.treat(commandVariablesTreated),
+    options.replaceExArray
+  );
 }
 
 function excludeTreatment(command) {

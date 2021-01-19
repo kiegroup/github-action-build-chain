@@ -11,7 +11,10 @@ const {
   executeLocally: branchLocalFlow
 } = require("../flows/build-chain-branch");
 
-const { addLocalExecutionVariables } = require("../bin-utils");
+const {
+  addLocalExecutionVariables,
+  treatSkipProjectCheckout
+} = require("../bin-utils");
 
 async function execute(args, token, octokit) {
   if (args.build === "pr") {
@@ -27,7 +30,10 @@ async function execute(args, token, octokit) {
       process.env,
       args.folder[0],
       args.url[0],
-      { replaceExArray: args.cct }
+      {
+        replaceExArray: args.cct,
+        skipProjectCheckout: treatSkipProjectCheckout(args.spc)
+      }
     );
   }
   if (args.build === "fd") {
@@ -43,7 +49,10 @@ async function execute(args, token, octokit) {
       process.env,
       args.folder[0],
       args.url[0],
-      { replaceExArray: args.cct }
+      {
+        replaceExArray: args.cct,
+        skipProjectCheckout: treatSkipProjectCheckout(args.spc)
+      }
     );
   }
   if (args.build === "single") {
@@ -53,7 +62,10 @@ async function execute(args, token, octokit) {
       process.env,
       args.folder[0],
       args.url[0],
-      { replaceExArray: args.cct }
+      {
+        replaceExArray: args.cct,
+        skipProjectCheckout: treatSkipProjectCheckout(args.spc)
+      }
     );
   }
   if (args.build === "branch") {
@@ -71,7 +83,8 @@ async function execute(args, token, octokit) {
       {
         command: args.c ? args.c[0] : undefined,
         skipExecution: args.skipExecution,
-        replaceExArray: args.cct
+        replaceExArray: args.cct,
+        skipProjectCheckout: treatSkipProjectCheckout(args.spc)
       }
     );
   }

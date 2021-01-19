@@ -574,7 +574,13 @@ async function executeBuildSpecificCommand(
   options = {}
 ) {
   for await (const node of nodeChain) {
-    const dir = getDir(rootFolder, node.project);
+    const dir = getDir(
+      rootFolder,
+      node.project,
+      options.skipProjectCheckout
+        ? options.skipProjectCheckout.get(node.project)
+        : undefined
+    );
     await executeBuildCommands(dir, command, node.project, options);
   }
 }
@@ -591,7 +597,13 @@ async function executeNodeBuildCommands(
   levelType,
   options = {}
 ) {
-  const dir = getDir(rootFolder, node.project);
+  const dir = getDir(
+    rootFolder,
+    node.project,
+    options.skipProjectCheckout
+      ? options.skipProjectCheckout.get(node.project)
+      : undefined
+  );
   if (node.build["build-command"].before) {
     await executeBuildCommands(
       dir,
@@ -3644,7 +3656,12 @@ async function start(context, options = { isArchiveArtifacts: true }) {
       node => "\n" + node.project
     )}`
   );
-  const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
+  const checkoutInfo = await checkoutDefinitionTree(
+    context,
+    nodeChain,
+    "pr",
+    options.skipProjectCheckout
+  );
   core.endGroup();
 
   core.startGroup(`[Full Downstream Flow] Checkout Summary...`);
@@ -8048,28 +8065,54 @@ const { getNodeTriggeringJob } = __webpack_require__(645);
 const { copyNodeFolder } = __webpack_require__(828);
 const fs = __webpack_require__(747);
 
-async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
+async function checkoutDefinitionTree(
+  context,
+  nodeChain,
+  flow = "pr",
+  skipProjectCheckout = new Map()
+) {
   const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
   return Promise.all(
     nodeChain.map(async node => {
       try {
-        const result = Promise.resolve({
-          project: node.project,
-          checkoutInfo:
-            flow === "pr"
-              ? await checkoutProjectPullRequestFlow(
-                  context,
-                  node,
-                  nodeTriggeringTheJob
-                )
-              : await checkoutProjectBranchFlow(
-                  context,
-                  node,
-                  nodeTriggeringTheJob
-                )
-        });
-        logger.info(`[${node.project}] Checked out.`);
-        cloneNode(context.config.rootFolder, node);
+        const result = !skipProjectCheckout.get(node.project)
+          ? Promise.resolve({
+              project: node.project,
+              checkoutInfo:
+                flow === "pr"
+                  ? await checkoutProjectPullRequestFlow(
+                      context,
+                      node,
+                      nodeTriggeringTheJob
+                    )
+                  : await checkoutProjectBranchFlow(
+                      context,
+                      node,
+                      nodeTriggeringTheJob
+                    )
+            })
+          : {
+              project: node.project,
+              info: `not checked out. Folder to take sources from: ${skipProjectCheckout.get(
+                node.project
+              )}`
+            };
+        logger.info(
+          `[${node.project}] ${
+            skipProjectCheckout.get(node.project)
+              ? "Check out skipped."
+              : "Checked out."
+          }`
+        );
+        cloneNode(
+          context.config.rootFolder,
+          node,
+          getDir(
+            context.config.rootFolder,
+            node.project,
+            skipProjectCheckout.get(node.project)
+          )
+        );
         return result;
       } catch (err) {
         throw { project: node.project, message: err };
@@ -8347,7 +8390,10 @@ function getMapping(
   }
 }
 
-function getDir(rootFolder, project) {
+function getDir(rootFolder, project, skipCheckoutProjectFolder = undefined) {
+  if (skipCheckoutProjectFolder) {
+    return skipCheckoutProjectFolder;
+  }
   const folder =
     rootFolder !== undefined && rootFolder !== "" ? rootFolder : ".";
 
@@ -8420,10 +8466,10 @@ async function getPlaceHolders(context, definitionFile) {
  *
  * @param {String} rootFolder the folder where the build chain is storing the information
  * @param {Object} node the node to clone
+ * @param {String} sourceFolder the folder to clone
  */
-function cloneNode(rootFolder, node) {
+function cloneNode(rootFolder, node, sourceFolder) {
   if (node.build && node.build.clone) {
-    const sourceFolder = getDir(rootFolder, node.project);
     logger.info(
       `[${node.project}] Clonning folder ${sourceFolder} into ${node.build.clone}`
     );
@@ -24912,7 +24958,12 @@ async function start(context, options = { isArchiveArtifacts: true }) {
       node => "\n" + node.project
     )}`
   );
-  const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
+  const checkoutInfo = await checkoutDefinitionTree(
+    context,
+    nodeChain,
+    "pr",
+    options.skipProjectCheckout
+  );
   core.endGroup();
 
   core.startGroup(`[Pull Request Flow] Checkout Summary...`);
@@ -25004,7 +25055,12 @@ async function start(context, options = { isArchiveArtifacts: true }) {
       context.config.github.inputs.startingProject
     }. Nodes: ${nodeChain.map(node => "\n" + node.project)}`
   );
-  const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
+  const checkoutInfo = await checkoutDefinitionTree(
+    context,
+    nodeChain,
+    "pr",
+    options.skipProjectCheckout
+  );
   core.endGroup();
 
   core.startGroup(`[Single Flow] Checkout Summary...`);
@@ -26355,11 +26411,23 @@ function createOctokitInstance(token) {
       });
 }
 
+function treatSkipProjectCheckout(spc) {
+  const map = new Map();
+  if (spc && spc.length > 0) {
+    spc.forEach(element => {
+      const elementSplit = element.split("=");
+      map.set(elementSplit[0], elementSplit[1]);
+    });
+  }
+  return map;
+}
+
 module.exports = {
   addLocalExecutionVariables,
   createOctokitInstance,
   getProcessEnvVariable,
-  getDefaultRootFolder
+  getDefaultRootFolder,
+  treatSkipProjectCheckout
 };
 
 

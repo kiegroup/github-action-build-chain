@@ -19,6 +19,7 @@ function pullRequestArguments(subParser) {
   urlArgument(parser);
   startingProjectArgument(parser);
   customCommandTreatmentArgument(parser);
+  skipProjectCheckout(parser);
 }
 
 function branchArguments(subParser) {
@@ -27,6 +28,7 @@ function branchArguments(subParser) {
   });
   startingProjectArgument(parser);
   customCommandTreatmentArgument(parser);
+  skipProjectCheckout(parser);
   parser.add_argument("-p", "-project", {
     nargs: 1,
     required: true,
@@ -61,6 +63,7 @@ function fdArguments(subParser) {
   urlArgument(parser);
   startingProjectArgument(parser);
   customCommandTreatmentArgument(parser);
+  skipProjectCheckout(parser);
 }
 
 function singleArguments(subParser) {
@@ -69,6 +72,7 @@ function singleArguments(subParser) {
   });
   urlArgument(parser);
   customCommandTreatmentArgument(parser);
+  skipProjectCheckout(parser);
 }
 
 function urlArgument(parser) {
@@ -93,6 +97,14 @@ function customCommandTreatmentArgument(parser) {
     nargs: "*",
     help:
       "a custom replacement expression regEx||replacemenExpression. Something like (mvn .*)||$1 -s settings.xml. See documentation for more information."
+  });
+}
+
+function skipProjectCheckout(parser) {
+  parser.add_argument("-spc", "-skip-project-checkout", {
+    nargs: "*",
+    help:
+      "a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./'`."
   });
 }
 

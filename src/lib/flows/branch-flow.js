@@ -42,7 +42,8 @@ async function start(context, options = {}) {
   const checkoutInfo = await checkoutDefinitionTree(
     context,
     nodeChain,
-    "branch"
+    "branch",
+    options.skipProjectCheckout
   );
   core.endGroup();
 

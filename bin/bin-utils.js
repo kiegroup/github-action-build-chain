@@ -58,9 +58,21 @@ function createOctokitInstance(token) {
       });
 }
 
+function treatSkipProjectCheckout(spc) {
+  const map = new Map();
+  if (spc && spc.length > 0) {
+    spc.forEach(element => {
+      const elementSplit = element.split("=");
+      map.set(elementSplit[0], elementSplit[1]);
+    });
+  }
+  return map;
+}
+
 module.exports = {
   addLocalExecutionVariables,
   createOctokitInstance,
   getProcessEnvVariable,
-  getDefaultRootFolder
+  getDefaultRootFolder,
+  treatSkipProjectCheckout
 };

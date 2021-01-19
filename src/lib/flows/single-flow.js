@@ -27,7 +27,12 @@ async function start(context, options = { isArchiveArtifacts: true }) {
       context.config.github.inputs.startingProject
     }. Nodes: ${nodeChain.map(node => "\n" + node.project)}`
   );
-  const checkoutInfo = await checkoutDefinitionTree(context, nodeChain);
+  const checkoutInfo = await checkoutDefinitionTree(
+    context,
+    nodeChain,
+    "pr",
+    options
+  );
   core.endGroup();
 
   core.startGroup(`[Single Flow] Checkout Summary...`);

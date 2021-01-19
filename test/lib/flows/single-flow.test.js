@@ -77,9 +77,12 @@ test("start no parent dependencies. project triggering the job", async () => {
     project,
     {}
   );
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
-    definitionTree
-  ]);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(
+    context,
+    [definitionTree],
+    "pr",
+    { isArchiveArtifacts: true }
+  );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);
@@ -149,9 +152,12 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
     project,
     {}
   );
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
-    definitionTree
-  ]);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(
+    context,
+    [definitionTree],
+    "pr",
+    { isArchiveArtifacts: false }
+  );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);
@@ -223,9 +229,12 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     project,
     {}
   );
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
-    definitionTree
-  ]);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(
+    context,
+    [definitionTree],
+    "pr",
+    { isArchiveArtifacts: true }
+  );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);

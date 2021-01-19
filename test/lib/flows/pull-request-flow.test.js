@@ -85,10 +85,12 @@ test("start no parent dependencies. project triggering the job", async () => {
     {}
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
-    { project },
-    { project: "project2" }
-  ]);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(
+    context,
+    [{ project }, { project: "project2" }],
+    "pr",
+    { isArchiveArtifacts: true }
+  );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);
@@ -163,10 +165,12 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
     {}
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
-    { project },
-    { project: "project2" }
-  ]);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(
+    context,
+    [{ project }, { project: "project2" }],
+    "pr",
+    { isArchiveArtifacts: false }
+  );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);
@@ -243,10 +247,12 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     {}
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
-    { project },
-    { project: "project2" }
-  ]);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(
+    context,
+    [{ project }, { project: "project2" }],
+    "pr",
+    { isArchiveArtifacts: true }
+  );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);
@@ -322,10 +328,12 @@ test("start no parent dependencies. startingProject", async () => {
     {}
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
-  expect(checkoutDefinitionTree).toHaveBeenCalledWith(context, [
-    { project },
-    { project: "project2" }
-  ]);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(
+    context,
+    [{ project }, { project: "project2" }],
+    "pr",
+    { isArchiveArtifacts: true }
+  );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
   expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);

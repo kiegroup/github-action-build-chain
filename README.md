@@ -404,6 +404,8 @@ To choose between `pr`, `fd` or `single`
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
+- **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
+- **skipParallelCheckout**: Checkout the project sequencially.
 
 Examples:
 
@@ -417,6 +419,8 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
+- **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
+- **skipParallelCheckout**: Checkout the project sequencially.
 
 Examples:
 
@@ -430,6 +434,8 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
+- **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
+- **skipParallelCheckout**: Checkout the project sequencially.
 
 Examples:
 
@@ -447,6 +453,8 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **-c, -command**: A command to execute for all the projects, no matter what's defined in "definition file". E.g. `-c="mvn clean"`
 - **--skipExecution**: A command to skip execution, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
+- **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
+- **skipParallelCheckout**: Checkout the project sequencially.
 
 Examples:
 

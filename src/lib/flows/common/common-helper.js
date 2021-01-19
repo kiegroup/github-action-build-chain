@@ -46,7 +46,13 @@ async function executeBuildSpecificCommand(
   options = {}
 ) {
   for await (const node of nodeChain) {
-    const dir = getDir(rootFolder, node.project);
+    const dir = getDir(
+      rootFolder,
+      node.project,
+      options.skipProjectCheckout
+        ? options.skipProjectCheckout.get(node.project)
+        : undefined
+    );
     await executeBuildCommands(dir, command, node.project, options);
   }
 }
@@ -63,7 +69,13 @@ async function executeNodeBuildCommands(
   levelType,
   options = {}
 ) {
-  const dir = getDir(rootFolder, node.project);
+  const dir = getDir(
+    rootFolder,
+    node.project,
+    options.skipProjectCheckout
+      ? options.skipProjectCheckout.get(node.project)
+      : undefined
+  );
   if (node.build["build-command"].before) {
     await executeBuildCommands(
       dir,

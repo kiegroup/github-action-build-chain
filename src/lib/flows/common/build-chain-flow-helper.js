@@ -12,28 +12,61 @@ const { getNodeTriggeringJob } = require("../../util/chain-util");
 const { copyNodeFolder } = require("../../util/fs-util");
 const fs = require("fs");
 
-async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
+async function checkoutDefinitionTree(
+  context,
+  nodeChain,
+  flow = "pr",
+  options = { skipProjectCheckout: new Map(), skipParallelCheckout: false }
+) {
+  const result = options.skipParallelCheckout
+    ? await checkoutDefinitionTreeSequencial(context, nodeChain, flow, options)
+    : await checkoutDefinitionTreeParallel(context, nodeChain, flow, options);
+  return result;
+}
+
+async function checkoutDefinitionTreeParallel(
+  context,
+  nodeChain,
+  flow,
+  options
+) {
   const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
+
   return Promise.all(
     nodeChain.map(async node => {
       try {
-        const result = Promise.resolve({
-          project: node.project,
-          checkoutInfo:
-            flow === "pr"
-              ? await checkoutProjectPullRequestFlow(
-                  context,
-                  node,
-                  nodeTriggeringTheJob
-                )
-              : await checkoutProjectBranchFlow(
-                  context,
-                  node,
-                  nodeTriggeringTheJob
-                )
-        });
-        logger.info(`[${node.project}] Checked out.`);
-        cloneNode(context.config.rootFolder, node);
+        const result = !options.skipProjectCheckout.get(node.project)
+          ? Promise.resolve({
+              project: node.project,
+              checkoutInfo: await checkoutAndComposeInfo(
+                context,
+                node,
+                nodeTriggeringTheJob,
+                flow
+              )
+            })
+          : {
+              project: node.project,
+              info: `not checked out. Folder to take sources from: ${options.skipProjectCheckout.get(
+                node.project
+              )}`
+            };
+        logger.info(
+          `[${node.project}] ${
+            options.skipProjectCheckout.get(node.project)
+              ? "Check out skipped."
+              : "Checked out."
+          }`
+        );
+        cloneNode(
+          context.config.rootFolder,
+          node,
+          getDir(
+            context.config.rootFolder,
+            node.project,
+            options.skipProjectCheckout.get(node.project)
+          )
+        );
         return result;
       } catch (err) {
         throw { project: node.project, message: err };
@@ -50,6 +83,70 @@ async function checkoutDefinitionTree(context, nodeChain, flow = "pr") {
       logger.error(`[${err.project}] Error checking it out. ${err.message}`);
       throw err.message;
     });
+}
+
+async function checkoutDefinitionTreeSequencial(
+  context,
+  nodeChain,
+  flow,
+  options
+) {
+  const result = [];
+  const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
+  for (const node of nodeChain) {
+    try {
+      result.push(
+        !options.skipProjectCheckout.get(node.project)
+          ? {
+              project: node.project,
+              checkoutInfo: await checkoutAndComposeInfo(
+                context,
+                node,
+                nodeTriggeringTheJob,
+                flow
+              )
+            }
+          : {
+              project: node.project,
+              info: `not checked out. Folder to take sources from: ${options.skipProjectCheckout.get(
+                node.project
+              )}`
+            }
+      );
+      logger.info(
+        `[${node.project}] ${
+          options.skipProjectCheckout.get(node.project)
+            ? "Check out skipped."
+            : "Checked out."
+        }`
+      );
+      cloneNode(
+        context.config.rootFolder,
+        node,
+        getDir(
+          context.config.rootFolder,
+          node.project,
+          options.skipProjectCheckout.get(node.project)
+        )
+      );
+    } catch (err) {
+      logger.error(`Error checking out project ${node.project}`);
+      throw err;
+    }
+  }
+
+  return result;
+}
+
+async function checkoutAndComposeInfo(
+  context,
+  node,
+  nodeTriggeringTheJob,
+  flow
+) {
+  return flow === "pr"
+    ? await checkoutProjectPullRequestFlow(context, node, nodeTriggeringTheJob)
+    : await checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob);
 }
 
 async function checkoutProjectPullRequestFlow(
@@ -311,7 +408,10 @@ function getMapping(
   }
 }
 
-function getDir(rootFolder, project) {
+function getDir(rootFolder, project, skipCheckoutProjectFolder = undefined) {
+  if (skipCheckoutProjectFolder) {
+    return skipCheckoutProjectFolder;
+  }
   const folder =
     rootFolder !== undefined && rootFolder !== "" ? rootFolder : ".";
 
@@ -384,10 +484,10 @@ async function getPlaceHolders(context, definitionFile) {
  *
  * @param {String} rootFolder the folder where the build chain is storing the information
  * @param {Object} node the node to clone
+ * @param {String} sourceFolder the folder to clone
  */
-function cloneNode(rootFolder, node) {
+function cloneNode(rootFolder, node, sourceFolder) {
   if (node.build && node.build.clone) {
-    const sourceFolder = getDir(rootFolder, node.project);
     logger.info(
       `[${node.project}] Clonning folder ${sourceFolder} into ${node.build.clone}`
     );

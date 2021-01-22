@@ -37,7 +37,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
     context,
     nodeChain,
     "pr",
-    options.skipProjectCheckout
+    options
   );
   core.endGroup();
 

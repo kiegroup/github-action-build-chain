@@ -3660,7 +3660,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
     context,
     nodeChain,
     "pr",
-    options.skipProjectCheckout
+    options
   );
   core.endGroup();
 
@@ -8069,37 +8069,44 @@ async function checkoutDefinitionTree(
   context,
   nodeChain,
   flow = "pr",
-  skipProjectCheckout = new Map()
+  options = { skipProjectCheckout: new Map(), skipParallelCheckout: false }
+) {
+  const result = options.skipParallelCheckout
+    ? await checkoutDefinitionTreeSequencial(context, nodeChain, flow, options)
+    : await checkoutDefinitionTreeParallel(context, nodeChain, flow, options);
+  return result;
+}
+
+async function checkoutDefinitionTreeParallel(
+  context,
+  nodeChain,
+  flow,
+  options
 ) {
   const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
+
   return Promise.all(
     nodeChain.map(async node => {
       try {
-        const result = !skipProjectCheckout.get(node.project)
+        const result = !options.skipProjectCheckout.get(node.project)
           ? Promise.resolve({
               project: node.project,
-              checkoutInfo:
-                flow === "pr"
-                  ? await checkoutProjectPullRequestFlow(
-                      context,
-                      node,
-                      nodeTriggeringTheJob
-                    )
-                  : await checkoutProjectBranchFlow(
-                      context,
-                      node,
-                      nodeTriggeringTheJob
-                    )
+              checkoutInfo: await checkoutAndComposeInfo(
+                context,
+                node,
+                nodeTriggeringTheJob,
+                flow
+              )
             })
           : {
               project: node.project,
-              info: `not checked out. Folder to take sources from: ${skipProjectCheckout.get(
+              info: `not checked out. Folder to take sources from: ${options.skipProjectCheckout.get(
                 node.project
               )}`
             };
         logger.info(
           `[${node.project}] ${
-            skipProjectCheckout.get(node.project)
+            options.skipProjectCheckout.get(node.project)
               ? "Check out skipped."
               : "Checked out."
           }`
@@ -8110,7 +8117,7 @@ async function checkoutDefinitionTree(
           getDir(
             context.config.rootFolder,
             node.project,
-            skipProjectCheckout.get(node.project)
+            options.skipProjectCheckout.get(node.project)
           )
         );
         return result;
@@ -8129,6 +8136,70 @@ async function checkoutDefinitionTree(
       logger.error(`[${err.project}] Error checking it out. ${err.message}`);
       throw err.message;
     });
+}
+
+async function checkoutDefinitionTreeSequencial(
+  context,
+  nodeChain,
+  flow,
+  options
+) {
+  const result = [];
+  const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
+  for (const node of nodeChain) {
+    try {
+      result.push(
+        !options.skipProjectCheckout.get(node.project)
+          ? {
+              project: node.project,
+              checkoutInfo: await checkoutAndComposeInfo(
+                context,
+                node,
+                nodeTriggeringTheJob,
+                flow
+              )
+            }
+          : {
+              project: node.project,
+              info: `not checked out. Folder to take sources from: ${options.skipProjectCheckout.get(
+                node.project
+              )}`
+            }
+      );
+      logger.info(
+        `[${node.project}] ${
+          options.skipProjectCheckout.get(node.project)
+            ? "Check out skipped."
+            : "Checked out."
+        }`
+      );
+      cloneNode(
+        context.config.rootFolder,
+        node,
+        getDir(
+          context.config.rootFolder,
+          node.project,
+          options.skipProjectCheckout.get(node.project)
+        )
+      );
+    } catch (err) {
+      logger.error(`Error checking out project ${node.project}`);
+      throw err;
+    }
+  }
+
+  return result;
+}
+
+async function checkoutAndComposeInfo(
+  context,
+  node,
+  nodeTriggeringTheJob,
+  flow
+) {
+  return flow === "pr"
+    ? await checkoutProjectPullRequestFlow(context, node, nodeTriggeringTheJob)
+    : await checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob);
 }
 
 async function checkoutProjectPullRequestFlow(
@@ -24962,7 +25033,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
     context,
     nodeChain,
     "pr",
-    options.skipProjectCheckout
+    options
   );
   core.endGroup();
 
@@ -25059,7 +25130,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
     context,
     nodeChain,
     "pr",
-    options.skipProjectCheckout
+    options
   );
   core.endGroup();
 

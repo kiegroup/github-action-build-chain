@@ -89,7 +89,7 @@ test("start no parent dependencies. project triggering the job", async () => {
     context,
     [{ project }, { project: "project2" }],
     "pr",
-    undefined
+    { isArchiveArtifacts: true }
   );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
@@ -169,7 +169,7 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
     context,
     [{ project }, { project: "project2" }],
     "pr",
-    undefined
+    { isArchiveArtifacts: false }
   );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
@@ -251,7 +251,7 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     context,
     [{ project }, { project: "project2" }],
     "pr",
-    undefined
+    { isArchiveArtifacts: true }
   );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
@@ -332,7 +332,7 @@ test("start no parent dependencies. startingProject", async () => {
     context,
     [{ project }, { project: "project2" }],
     "pr",
-    undefined
+    { isArchiveArtifacts: true }
   );
 
   expect(printCheckoutInformation).toHaveBeenCalledTimes(1);

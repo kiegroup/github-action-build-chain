@@ -43,7 +43,7 @@ async function start(context, options = {}) {
     context,
     nodeChain,
     "branch",
-    options.skipProjectCheckout
+    options
   );
   core.endGroup();
 

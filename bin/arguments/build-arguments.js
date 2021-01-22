@@ -20,6 +20,7 @@ function pullRequestArguments(subParser) {
   startingProjectArgument(parser);
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
+  skipParallelCheckout(parser);
 }
 
 function branchArguments(subParser) {
@@ -29,6 +30,7 @@ function branchArguments(subParser) {
   startingProjectArgument(parser);
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
+  skipParallelCheckout(parser);
   parser.add_argument("-p", "-project", {
     nargs: 1,
     required: true,
@@ -64,6 +66,7 @@ function fdArguments(subParser) {
   startingProjectArgument(parser);
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
+  skipParallelCheckout(parser);
 }
 
 function singleArguments(subParser) {
@@ -73,6 +76,7 @@ function singleArguments(subParser) {
   urlArgument(parser);
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
+  skipParallelCheckout(parser);
 }
 
 function urlArgument(parser) {
@@ -105,6 +109,13 @@ function skipProjectCheckout(parser) {
     nargs: "*",
     help:
       "a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./'`."
+  });
+}
+
+function skipParallelCheckout(parser) {
+  parser.add_argument("--skipParallelCheckout", {
+    action: "store_true",
+    help: "Checkout the project sequencially."
   });
 }
 

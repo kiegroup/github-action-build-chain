@@ -8188,7 +8188,10 @@ async function checkoutDefinitionTreeSequencial(
     }
   }
 
-  return result;
+  return result.reduce((acc, curr) => {
+    acc[curr.project] = curr.checkoutInfo;
+    return acc;
+  }, {});
 }
 
 async function checkoutAndComposeInfo(

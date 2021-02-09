@@ -14,22 +14,31 @@ const {
   archiveArtifacts
 } = require("../artifacts/build-chain-flow-archive-artifact-helper");
 
-async function start(context, options = { isArchiveArtifacts: true }) {
+async function start(
+  context,
+  options = { skipProjectCheckout: new Map(), isArchiveArtifacts: true }
+) {
   core.startGroup(
     `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
-  const leafToGetTreeFrom = context.config.github.inputs.startingProject
+  const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
-    leafToGetTreeFrom,
+    projectTriggeringJob,
     await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
-  const nodeChain = await parentChainFromNode(definitionTree);
 
+  if (definitionTree === undefined) {
+    const errorMessage = `The project ${projectTriggeringJob} can't be resolved on definition file. Please review project-dependencies.`;
+    console.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+
+  const nodeChain = await parentChainFromNode(definitionTree);
   logger.info(
-    `Tree for project ${leafToGetTreeFrom}. Dependencies: ${nodeChain.map(
+    `Tree for project ${projectTriggeringJob}. Dependencies: ${nodeChain.map(
       node => "\n" + node.project
     )}`
   );
@@ -48,7 +57,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   const executionResult = await executeBuild(
     context.config.rootFolder,
     nodeChain,
-    context.config.github.repository,
+    projectTriggeringJob,
     options
   )
     .then(() => true)
@@ -57,7 +66,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   if (options.isArchiveArtifacts) {
     core.startGroup(`[Pull Request Flow] Archiving artifacts...`);
     await archiveArtifacts(
-      nodeChain.find(node => node.project === context.config.github.repository),
+      nodeChain.find(node => node.project === projectTriggeringJob),
       nodeChain,
       executionResult === true ? ["success", "always"] : ["failure", "always"]
     );

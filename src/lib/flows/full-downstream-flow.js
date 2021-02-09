@@ -18,19 +18,18 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   core.startGroup(
     `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
-
-  const leafToGetTreeFrom = context.config.github.inputs.startingProject
+  const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
 
   const nodeChain = await getOrderedListForProject(
     context.config.github.inputs.definitionFile,
-    leafToGetTreeFrom,
+    projectTriggeringJob,
     await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
 
   logger.info(
-    `Tree for project ${leafToGetTreeFrom}. Chain: ${nodeChain.map(
+    `Tree for project ${projectTriggeringJob}. Chain: ${nodeChain.map(
       node => "\n" + node.project
     )}`
   );
@@ -49,7 +48,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   const executionResult = await executeBuild(
     context.config.rootFolder,
     nodeChain,
-    context.config.github.repository,
+    projectTriggeringJob,
     options
   )
     .then(() => true)
@@ -58,7 +57,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   if (options.isArchiveArtifacts) {
     core.startGroup(`[Full Downstream Flow] Archiving artifacts...`);
     await archiveArtifacts(
-      nodeChain.find(node => node.project === context.config.github.repository),
+      nodeChain.find(node => node.project === projectTriggeringJob),
       nodeChain,
       executionResult === true ? ["success", "always"] : ["failure", "always"]
     );

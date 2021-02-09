@@ -32,6 +32,12 @@ async function start(context, options = {}) {
       )
     : getTree(context.config.github.inputs.definitionFile, urlPlaceHolders);
 
+  if (definitionTree === undefined) {
+    const errorMessage = `The project ${context.config.github.inputs.startingProject} can't be resolved on definition file. Please review project-dependencies.`;
+    console.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+
   let nodeChain = await parentChainFromNode(definitionTree);
 
   logger.info(

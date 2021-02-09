@@ -2015,6 +2015,11 @@ function dependencyListToTree(dependencyList, buildConfiguration) {
 
     if (node.dependencies && node.dependencies.length > 0) {
       node.dependencies.forEach(dependency => {
+        if ([null, undefined].includes(map[dependency.project])) {
+          const errorMessage = `The project ${dependency.project} does not exist on project list. Please review your project definition file`;
+          console.error(errorMessage);
+          throw new Error(errorMessage);
+        }
         dependencyList[map[dependency.project].index].children.push({
           ...map[node.project].node
         });
@@ -3640,19 +3645,18 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   core.startGroup(
     `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
-
-  const leafToGetTreeFrom = context.config.github.inputs.startingProject
+  const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
 
   const nodeChain = await getOrderedListForProject(
     context.config.github.inputs.definitionFile,
-    leafToGetTreeFrom,
+    projectTriggeringJob,
     await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
 
   logger.info(
-    `Tree for project ${leafToGetTreeFrom}. Chain: ${nodeChain.map(
+    `Tree for project ${projectTriggeringJob}. Chain: ${nodeChain.map(
       node => "\n" + node.project
     )}`
   );
@@ -3671,7 +3675,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   const executionResult = await executeBuild(
     context.config.rootFolder,
     nodeChain,
-    context.config.github.repository,
+    projectTriggeringJob,
     options
   )
     .then(() => true)
@@ -3680,7 +3684,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   if (options.isArchiveArtifacts) {
     core.startGroup(`[Full Downstream Flow] Archiving artifacts...`);
     await archiveArtifacts(
-      nodeChain.find(node => node.project === context.config.github.repository),
+      nodeChain.find(node => node.project === projectTriggeringJob),
       nodeChain,
       executionResult === true ? ["success", "always"] : ["failure", "always"]
     );
@@ -8071,6 +8075,11 @@ async function checkoutDefinitionTree(
   flow = "pr",
   options = { skipProjectCheckout: new Map(), skipParallelCheckout: false }
 ) {
+  options.skipProjectCheckout = [null, undefined].includes(
+    options.skipProjectCheckout
+  )
+    ? new Map()
+    : options.skipProjectCheckout;
   const result = options.skipParallelCheckout
     ? await checkoutDefinitionTreeSequencial(context, nodeChain, flow, options)
     : await checkoutDefinitionTreeParallel(context, nodeChain, flow, options);
@@ -22712,9 +22721,9 @@ function read(fileContent) {
   try {
     return yaml.safeLoad(fileContent);
   } catch (e) {
-    throw new ReadYamlException(
-      `error reading yaml file content. Error: ${e.message}`
-    );
+    const errorMessage = `error reading yaml file content. Error: ${e.message}`;
+    console.error(errorMessage);
+    throw new ReadYamlException(errorMessage);
   }
 }
 
@@ -25014,22 +25023,31 @@ const {
   archiveArtifacts
 } = __webpack_require__(503);
 
-async function start(context, options = { isArchiveArtifacts: true }) {
+async function start(
+  context,
+  options = { skipProjectCheckout: new Map(), isArchiveArtifacts: true }
+) {
   core.startGroup(
     `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
-  const leafToGetTreeFrom = context.config.github.inputs.startingProject
+  const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
-    leafToGetTreeFrom,
+    projectTriggeringJob,
     await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
-  const nodeChain = await parentChainFromNode(definitionTree);
 
+  if (definitionTree === undefined) {
+    const errorMessage = `The project ${projectTriggeringJob} can't be resolved on definition file. Please review project-dependencies.`;
+    console.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+
+  const nodeChain = await parentChainFromNode(definitionTree);
   logger.info(
-    `Tree for project ${leafToGetTreeFrom}. Dependencies: ${nodeChain.map(
+    `Tree for project ${projectTriggeringJob}. Dependencies: ${nodeChain.map(
       node => "\n" + node.project
     )}`
   );
@@ -25048,7 +25066,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   const executionResult = await executeBuild(
     context.config.rootFolder,
     nodeChain,
-    context.config.github.repository,
+    projectTriggeringJob,
     options
   )
     .then(() => true)
@@ -25057,7 +25075,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   if (options.isArchiveArtifacts) {
     core.startGroup(`[Pull Request Flow] Archiving artifacts...`);
     await archiveArtifacts(
-      nodeChain.find(node => node.project === context.config.github.repository),
+      nodeChain.find(node => node.project === projectTriggeringJob),
       nodeChain,
       executionResult === true ? ["success", "always"] : ["failure", "always"]
     );
@@ -25118,9 +25136,12 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   core.startGroup(
     `[Single Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
+  const projectTriggeringJob = context.config.github.inputs.startingProject
+    ? context.config.github.inputs.startingProject
+    : context.config.github.repository;
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
-    context.config.github.repository,
+    projectTriggeringJob,
     await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
   const nodeChain = [definitionTree];
@@ -25145,7 +25166,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   const executionResult = await executeBuild(
     context.config.rootFolder,
     nodeChain,
-    context.config.github.repository,
+    projectTriggeringJob,
     options
   )
     .then(() => true)
@@ -25154,7 +25175,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   if (options.isArchiveArtifacts) {
     core.startGroup(`[Single Flow] Archiving artifacts...`);
     await archiveArtifacts(
-      nodeChain.find(node => node.project === context.config.github.repository),
+      nodeChain.find(node => node.project === projectTriggeringJob),
       nodeChain,
       executionResult === true ? ["success", "always"] : ["failure", "always"]
     );

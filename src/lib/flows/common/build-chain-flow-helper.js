@@ -18,6 +18,11 @@ async function checkoutDefinitionTree(
   flow = "pr",
   options = { skipProjectCheckout: new Map(), skipParallelCheckout: false }
 ) {
+  options.skipProjectCheckout = [null, undefined].includes(
+    options.skipProjectCheckout
+  )
+    ? new Map()
+    : options.skipProjectCheckout;
   const result = options.skipParallelCheckout
     ? await checkoutDefinitionTreeSequencial(context, nodeChain, flow, options)
     : await checkoutDefinitionTreeParallel(context, nodeChain, flow, options);

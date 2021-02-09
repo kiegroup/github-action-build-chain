@@ -301,7 +301,7 @@ test("start no parent dependencies. startingProject", async () => {
             "build-config",
             "build-config.yaml"
           ),
-          startingProject: "kiegroup/appformer"
+          startingProject: "project2"
         },
         repository: project
       },
@@ -324,7 +324,7 @@ test("start no parent dependencies. startingProject", async () => {
   // Assert
   expect(getTreeForProject).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
-    "kiegroup/appformer",
+    "project2",
     {}
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
@@ -342,12 +342,12 @@ test("start no parent dependencies. startingProject", async () => {
   expect(executeBuild).toHaveBeenCalledWith(
     "folder",
     [{ project }, { project: "project2" }],
-    project,
+    "project2",
     { isArchiveArtifacts: true }
   );
   expect(archiveArtifacts).toHaveBeenCalledTimes(1);
   expect(archiveArtifacts).toHaveBeenCalledWith(
-    { project },
+    { project: "project2" },
     [{ project }, { project: "project2" }],
     ["success", "always"]
   );

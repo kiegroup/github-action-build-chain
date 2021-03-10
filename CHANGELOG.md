@@ -5,6 +5,7 @@
 ## Enhancements:
 
 - `custom-command-treatment` CLI option
+- `@kie/build-chain-configuration-reader` upgraded to `2.0.4`
 
 # V2.4
 

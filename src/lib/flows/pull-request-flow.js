@@ -29,6 +29,13 @@ async function start(
     projectTriggeringJob,
     await getPlaceHolders(context, context.config.github.inputs.definitionFile)
   );
+
+  if (definitionTree === undefined) {
+    const errorMessage = `The project ${projectTriggeringJob} can't be resolved on definition file. Please review project-dependencies.`;
+    console.error(errorMessage);
+    throw new Error(errorMessage);
+  }
+
   const nodeChain = await parentChainFromNode(definitionTree);
   logger.info(
     `Tree for project ${projectTriggeringJob}. Dependencies: ${nodeChain.map(

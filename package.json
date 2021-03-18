@@ -1,6 +1,6 @@
 {
   "name": "@kie/build-chain-action",
-  "version": "2.2.19",
+  "version": "2.2.20",
   "description": "GitHub action to define action chains",
   "main": "dist/build-chain-cli.js",
   "author": "Enrique Mingorance Cano <emingora@redhat.com>",
@@ -31,10 +31,10 @@
     "@kie/build-chain-configuration-reader": "^2.0.4",
     "@octokit/rest": "^17.6.0",
     "argparse": "^2.0.1",
+    "dotenv": "^8.2.0",
     "fs-extra": "^9.0.0",
     "js-yaml": "^3.14.0",
-    "tmp": "^0.2.1",
-    "dotenv": "^8.2.0"
+    "tmp": "^0.2.1"
   },
   "devDependencies": {
     "@zeit/ncc": "^0.22.3",

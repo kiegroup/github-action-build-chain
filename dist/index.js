@@ -8354,7 +8354,11 @@ async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
   const sourceBranch = context.config.github.sourceBranch;
   const targetGroup = node.repo.group;
   const targetProject = node.repo.name;
-  const targetBranch = mapping.target;
+  const targetBranch =
+    mapping.source && mapping.source === context.config.github.targetBranch
+      ? mapping.target
+      : context.config.github.targetBranch;
+
   const forkedProjectName = await getForkedProjectName(
     context.octokit,
     targetGroup,

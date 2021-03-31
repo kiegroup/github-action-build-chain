@@ -164,7 +164,7 @@ This is something additional to [@actions/glob](https://github.com/actions/toolk
 archive-artifacts:
   path: |
     path/output/bin/
-    path2/output2/bin2/@sucess
+    path2/output2/bin2/@success
     path/output/test-results@failure
     !path/**/*.tmp@always
 ```

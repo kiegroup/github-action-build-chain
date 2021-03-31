@@ -28,9 +28,12 @@ async function start(context, options = {}) {
     ? await getTreeForProject(
         context.config.github.inputs.definitionFile,
         context.config.github.inputs.startingProject,
-        urlPlaceHolders
+        { urlPlaceHolders, token: context.token }
       )
-    : getTree(context.config.github.inputs.definitionFile, urlPlaceHolders);
+    : getTree(context.config.github.inputs.definitionFile, {
+        urlPlaceHolders,
+        token: context.token
+      });
 
   let nodeChain = await parentChainFromNode(definitionTree);
 

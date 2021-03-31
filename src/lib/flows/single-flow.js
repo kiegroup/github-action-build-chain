@@ -21,8 +21,15 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
     projectTriggeringJob,
-    await getPlaceHolders(context, context.config.github.inputs.definitionFile)
+    {
+      urlPlaceHolders: await getPlaceHolders(
+        context,
+        context.config.github.inputs.definitionFile
+      ),
+      token: context.token
+    }
   );
+
   const nodeChain = [definitionTree];
 
   logger.info(

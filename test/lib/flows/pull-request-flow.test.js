@@ -79,10 +79,12 @@ test("start no parent dependencies. project triggering the job", async () => {
   // Act
   await start(context, { isArchiveArtifacts: true });
   // Assert
-  expect(getTreeForProject).toHaveBeenCalledWith(
+  expect(
+    getTreeForProject
+  ).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
     project,
-    {}
+    { token: undefined, urlPlaceHolders: {} }
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(
@@ -159,10 +161,12 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
   // Act
   await start(context, { isArchiveArtifacts: false });
   // Assert
-  expect(getTreeForProject).toHaveBeenCalledWith(
+  expect(
+    getTreeForProject
+  ).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
     project,
-    {}
+    { token: undefined, urlPlaceHolders: {} }
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(
@@ -241,10 +245,12 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     );
   }
   // Assert
-  expect(getTreeForProject).toHaveBeenCalledWith(
+  expect(
+    getTreeForProject
+  ).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
     project,
-    {}
+    { token: undefined, urlPlaceHolders: {} }
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(
@@ -322,10 +328,12 @@ test("start no parent dependencies. startingProject", async () => {
   // Act
   await start(context, { isArchiveArtifacts: true });
   // Assert
-  expect(getTreeForProject).toHaveBeenCalledWith(
+  expect(
+    getTreeForProject
+  ).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
     "project2",
-    {}
+    { token: undefined, urlPlaceHolders: {} }
   );
   expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(

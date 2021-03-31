@@ -76,10 +76,12 @@ test("start no parent dependencies. project triggering the job", async () => {
   // Act
   await start(context, { isArchiveArtifacts: true });
   // Assert
-  expect(getOrderedListForProject).toHaveBeenCalledWith(
+  expect(
+    getOrderedListForProject
+  ).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
     project,
-    {}
+    { token: undefined, urlPlaceHolders: {} }
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(
     context,
@@ -153,10 +155,12 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
   // Act
   await start(context, { isArchiveArtifacts: false });
   // Assert
-  expect(getOrderedListForProject).toHaveBeenCalledWith(
+  expect(
+    getOrderedListForProject
+  ).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
     project,
-    {}
+    { token: undefined, urlPlaceHolders: {} }
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(
     context,
@@ -232,10 +236,12 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     );
   }
   // Assert
-  expect(getOrderedListForProject).toHaveBeenCalledWith(
+  expect(
+    getOrderedListForProject
+  ).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
     project,
-    {}
+    { token: undefined, urlPlaceHolders: {} }
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(
     context,
@@ -310,10 +316,12 @@ test("start no parent dependencies. startingProject", async () => {
   // Act
   await start(context, { isArchiveArtifacts: true });
   // Assert
-  expect(getOrderedListForProject).toHaveBeenCalledWith(
+  expect(
+    getOrderedListForProject
+  ).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
     "project2",
-    {}
+    { token: undefined, urlPlaceHolders: {} }
   );
   expect(checkoutDefinitionTree).toHaveBeenCalledWith(
     context,

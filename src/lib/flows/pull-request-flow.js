@@ -24,10 +24,17 @@ async function start(
   const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
+
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
     projectTriggeringJob,
-    await getPlaceHolders(context, context.config.github.inputs.definitionFile)
+    {
+      urlPlaceHolders: await getPlaceHolders(
+        context,
+        context.config.github.inputs.definitionFile
+      ),
+      token: context.token
+    }
   );
   const nodeChain = await parentChainFromNode(definitionTree);
   logger.info(

@@ -809,9 +809,10 @@ module.exports._enoent = enoent;
 const http = __webpack_require__(605);
 const https = __webpack_require__(211);
 
-function checkUrlExist(url) {
+function checkUrlExist(url, token = undefined) {
+  const options = token ? { headers: { Authorization: `token ${token}` } } : {};
   return new Promise(resolve => {
-    (url.startsWith("https://") ? https : http).get(url, response => {
+    (url.startsWith("https://") ? https : http).get(url, options, response => {
       resolve(200 === response.statusCode);
     });
   });
@@ -1951,8 +1952,11 @@ const { validateNode } = __webpack_require__(127);
  * @param {string} file - The definition file. It can be a URL or a in the filesystem.
  * @param {Object} urlPlaceHolders the url place holders to replace url. This is needed in case either the definition file or the dependencies file are loaded from a URL
  */
-async function getTree(file, urlPlaceHolders = {}) {
-  const definition = await readDefinitionFile(file, urlPlaceHolders);
+async function getTree(
+  file,
+  options = { urlPlaceHolders: {}, token: undefined }
+) {
+  const definition = await readDefinitionFile(file, options);
   return dependencyListToTree(definition.dependencies, definition);
 }
 
@@ -1963,12 +1967,12 @@ async function getTree(file, urlPlaceHolders = {}) {
  * @param {string} project - The project name to look for.
  * @param {Object} urlPlaceHolders the url place holders to replace url. This is needed in case either the definition file or the dependencies file are loaded from a URL
  */
-async function getTreeForProject(file, project, urlPlaceHolders = {}) {
-  return lookForProject(
-    await getTree(file, urlPlaceHolders),
-    project,
-    undefined
-  );
+async function getTreeForProject(
+  file,
+  project,
+  options = { urlPlaceHolders: {}, token: undefined }
+) {
+  return lookForProject(await getTree(file, options), project);
 }
 
 /**
@@ -3652,7 +3656,13 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   const nodeChain = await getOrderedListForProject(
     context.config.github.inputs.definitionFile,
     projectTriggeringJob,
-    await getPlaceHolders(context, context.config.github.inputs.definitionFile)
+    {
+      urlPlaceHolders: await getPlaceHolders(
+        context,
+        context.config.github.inputs.definitionFile
+      ),
+      token: context.token
+    }
   );
 
   logger.info(
@@ -7967,8 +7977,11 @@ const { parentChainFromNode } = __webpack_require__(636);
  * @param {string} file - The definition file. It can be a URL or a in the filesystem.
  * @param {string} project - The project name to look for.
  */
-async function getOrderedListForTree(file, urlPlaceHolders = {}) {
-  const tree = await getTree(file, urlPlaceHolders);
+async function getOrderedListForTree(
+  file,
+  options = { urlPlaceHolders: {}, token: undefined }
+) {
+  const tree = await getTree(file, options);
   return getOrderedList(tree);
 }
 
@@ -7977,8 +7990,12 @@ async function getOrderedListForTree(file, urlPlaceHolders = {}) {
  * @param {string} file - The definition file. It can be a URL or a in the filesystem.
  * @param {string} project - The project name to look for.
  */
-async function getOrderedListForProject(file, project, urlPlaceHolders = {}) {
-  const tree = await getTreeForProject(file, project, urlPlaceHolders);
+async function getOrderedListForProject(
+  file,
+  project,
+  options = { urlPlaceHolders: {}, token: undefined }
+) {
+  const tree = await getTreeForProject(file, project, options);
   return getOrderedList([tree]);
 }
 
@@ -8514,7 +8531,7 @@ async function getPlaceHolders(context, definitionFile) {
       BRANCH: context.config.github.sourceBranch
     };
     const sourceUrl = treatUrl(definitionFile, placeHolderSource);
-    if (!(await checkUrlExist(sourceUrl))) {
+    if (!(await checkUrlExist(sourceUrl, context.token))) {
       const placeHoldersTargetSource = {
         GROUP: context.config.github.group,
         PROJECT_NAME: context.config.github.project,
@@ -8524,14 +8541,14 @@ async function getPlaceHolders(context, definitionFile) {
         definitionFile,
         placeHoldersTargetSource
       );
-      if (!(await checkUrlExist(targetSourceUrl))) {
+      if (!(await checkUrlExist(targetSourceUrl, context.token))) {
         const placeHoldersTarget = {
           GROUP: context.config.github.group,
           PROJECT_NAME: context.config.github.project,
           BRANCH: context.config.github.targetBranch
         };
         const targetUrl = treatUrl(definitionFile, placeHoldersTarget);
-        if (!(await checkUrlExist(targetUrl))) {
+        if (!(await checkUrlExist(targetUrl, context.token))) {
           throw new Error(
             `Definition file ${definitionFile} does not exist for any of these cases: ${sourceUrl}, ${targetSourceUrl} or ${targetUrl}`
           );
@@ -20706,22 +20723,27 @@ exports.getUploadSpecification = getUploadSpecification;
 const http = __webpack_require__(605);
 const https = __webpack_require__(211);
 
-function requestUrl(url) {
+function requestUrl(url, token) {
+  const options = token ? { headers: { Authorization: `token ${token}` } } : {};
   return new Promise((resolve, reject) => {
-    (url.startsWith("https://") ? https : http).get(url, response => {
-      let chunks_of_data = [];
-      response.on("data", fragments => chunks_of_data.push(fragments));
-      response.on("end", () =>
-        resolve(Buffer.concat(chunks_of_data).toString())
-      );
-      response.on("error", error => reject(error));
-    });
+    (url.startsWith("https://") ? https : http)
+      .get(url, options, response => {
+        if (response.statusCode < 200 || response.statusCode > 299) {
+          reject(`Status: ${response.statusCode}. ${response.statusMessage}`);
+        }
+        let chunks_of_data = [];
+        response.on("data", fragments => chunks_of_data.push(fragments));
+        response.on("end", () =>
+          resolve(Buffer.concat(chunks_of_data).toString())
+        );
+      })
+      .on("error", error => reject(error));
   });
 }
 
-async function getUrlContent(url) {
+async function getUrlContent(url, token = undefined) {
   try {
-    return await requestUrl(url);
+    return await requestUrl(url, token);
   } catch (error) {
     throw new Error(`Error getting ${url}. Error: ${error}`);
   }
@@ -25049,10 +25071,17 @@ async function start(
   const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
+
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
     projectTriggeringJob,
-    await getPlaceHolders(context, context.config.github.inputs.definitionFile)
+    {
+      urlPlaceHolders: await getPlaceHolders(
+        context,
+        context.config.github.inputs.definitionFile
+      ),
+      token: context.token
+    }
   );
   const nodeChain = await parentChainFromNode(definitionTree);
   logger.info(
@@ -25151,8 +25180,15 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
     projectTriggeringJob,
-    await getPlaceHolders(context, context.config.github.inputs.definitionFile)
+    {
+      urlPlaceHolders: await getPlaceHolders(
+        context,
+        context.config.github.inputs.definitionFile
+      ),
+      token: context.token
+    }
   );
+
   const nodeChain = [definitionTree];
 
   logger.info(
@@ -25258,10 +25294,13 @@ const { read: readYaml } = __webpack_require__(674);
  * @param {string} file - The definition file. It can be a URL or a in the filesystem.
  * @param {Object} urlPlaceHolders the url place holders to replace url. This is needed in case either the definition file or the dependencies file are loaded from a URL
  */
-async function readDefinitionFile(file, urlPlaceHolders = {}) {
+async function readDefinitionFile(
+  file,
+  options = { urlPlaceHolders: {}, token: undefined }
+) {
   return file.startsWith("http")
-    ? readDefinitionFileFromUrl(file, urlPlaceHolders)
-    : readDefinitionFileFromFile(file, urlPlaceHolders);
+    ? readDefinitionFileFromUrl(file, options)
+    : readDefinitionFileFromFile(file, options.urlPlaceHolders);
 }
 
 /**
@@ -25269,13 +25308,16 @@ async function readDefinitionFile(file, urlPlaceHolders = {}) {
  * @param {String} filePath the definition file path
  * @param {Object} urlPlaceHolders the url place holders to replace url
  */
-async function readDefinitionFileFromFile(filePath, urlPlaceHolders) {
+async function readDefinitionFileFromFile(
+  filePath,
+  options = { urlPlaceHolders: {}, token: undefined }
+) {
   const defintionFileContent = fs.readFileSync(filePath, "utf8");
   return loadYaml(
     readYaml(defintionFileContent),
     filePath.substring(0, filePath.lastIndexOf("/")),
     defintionFileContent,
-    urlPlaceHolders
+    options
   );
 }
 
@@ -25284,13 +25326,16 @@ async function readDefinitionFileFromFile(filePath, urlPlaceHolders) {
  * @param {String} url the url to the definition file
  * @param {Object} urlPlaceHolders the url place holders to replace url
  */
-async function readDefinitionFileFromUrl(url, urlPlaceHolders) {
-  const treatedUrl = treatUrl(url, urlPlaceHolders);
+async function readDefinitionFileFromUrl(
+  url,
+  options = { urlPlaceHolders: {}, token: undefined }
+) {
+  const treatedUrl = treatUrl(url, options.urlPlaceHolders);
   return loadYaml(
-    readYaml(await getUrlContent(treatedUrl)),
+    readYaml(await getUrlContent(treatedUrl, options.token)),
     "./",
     url,
-    urlPlaceHolders
+    options
   );
 }
 
@@ -25305,14 +25350,14 @@ async function loadYaml(
   definitionYaml,
   definitionFileFolder,
   containerPath,
-  urlPlaceHolders
+  options = { urlPlaceHolders: {}, token: undefined }
 ) {
   validateDefinition(definitionYaml);
   definitionYaml.dependencies = await loadDependencies(
     definitionYaml.dependencies,
     definitionFileFolder,
     containerPath,
-    urlPlaceHolders
+    options
   );
   return definitionYaml;
 }
@@ -25328,7 +25373,7 @@ async function loadDependencies(
   dependencies,
   definitionFileFolder,
   containerPath,
-  urlPlaceHolders
+  options = { urlPlaceHolders: {}, token: undefined }
 ) {
   let dependenciesFinalPath = dependencies;
   if (dependencies) {
@@ -25337,24 +25382,26 @@ async function loadDependencies(
       !Array.isArray(dependencies) &&
       !dependencies.startsWith("http")
     ) {
-      const treatedUrl = treatUrl(containerPath, urlPlaceHolders);
+      const treatedUrl = treatUrl(containerPath, options.urlPlaceHolders);
       dependenciesFinalPath = `${treatedUrl.substring(
         0,
         treatedUrl.lastIndexOf("/")
       )}/${dependencies}`;
-      const dependenciesContent = await getUrlContent(dependenciesFinalPath);
+      const dependenciesContent = await getUrlContent(
+        dependenciesFinalPath,
+        options.token
+      );
       fs.writeFileSync(dependencies, dependenciesContent);
     }
 
     if (!Array.isArray(dependencies)) {
       const dependenciesFilePath = dependencies.startsWith("http")
-        ? treatUrl(dependencies, urlPlaceHolders)
+        ? treatUrl(dependencies, options.urlPlaceHolders)
         : `${definitionFileFolder}/${dependencies}`;
       const dependenciesFileContent = dependencies.startsWith("http")
-        ? await getUrlContent(dependenciesFilePath)
+        ? await getUrlContent(dependenciesFilePath, options.token)
         : fs.readFileSync(dependenciesFilePath, "utf8");
       const dependenciesYaml = readYaml(dependenciesFileContent);
-      // console.log(`dependenciesFilePath ${dependenciesFilePath}`, dependenciesYaml, urlPlaceHolders)
       validateDependencies(dependenciesYaml);
       // Once the dependencies are loaded, the `extends` proporty is concatenated to the current dependencies
       return (
@@ -25365,7 +25412,7 @@ async function loadDependencies(
             dependenciesFilePath.lastIndexOf("/")
           ),
           dependenciesFinalPath,
-          urlPlaceHolders
+          options
         )
       ).concat(dependenciesYaml.dependencies);
     } else {
@@ -25831,9 +25878,11 @@ module.exports = {
  */
 function treatUrl(url, placeHolders) {
   let result = url;
-  Object.entries(placeHolders).forEach(
-    ([key, value]) => (result = result.replace(`$\{${key}}`, value))
-  );
+  if (placeHolders) {
+    Object.entries(placeHolders).forEach(
+      ([key, value]) => (result = result.replace(`$\{${key}}`, value))
+    );
+  }
   return result;
 }
 

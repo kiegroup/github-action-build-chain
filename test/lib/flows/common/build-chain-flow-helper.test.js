@@ -1364,6 +1364,39 @@ test("getPlaceHolders url. source group and branch ok", async () => {
   });
 });
 
+test("getPlaceHolders url. source group and branch ok Token", async () => {
+  // Arrange
+  const context = {
+    token: "tokenx",
+    config: {
+      github: {
+        sourceGroup: "sGroup",
+        group: "tGroup",
+        project: "projectx",
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch"
+      }
+    }
+  };
+  const definitionFile =
+    "http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+  checkUrlExist.mockResolvedValueOnce(true);
+  // Act
+  const result = await getPlaceHolders(context, definitionFile);
+
+  // Assert
+  expect(checkUrlExist).toHaveBeenCalledTimes(1);
+  expect(checkUrlExist).toHaveBeenCalledWith(
+    "http://whateverurl.domain/sGroup/projectx/sBranch/file.yaml",
+    "tokenx"
+  );
+  expect(result).toStrictEqual({
+    BRANCH: "sBranch",
+    GROUP: "sGroup",
+    PROJECT_NAME: "projectx"
+  });
+});
+
 test("getPlaceHolders url. target group and source branch ok", async () => {
   // Arrange
   const context = {

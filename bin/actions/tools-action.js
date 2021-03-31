@@ -6,9 +6,11 @@ const { logger } = require("../../src/lib/common");
 async function execute(args) {
   if (args.tools === "project-list") {
     logger.info(`Executing project list for ${args.df[0]}`);
-    const orderedList = (await getOrderedListForTree(args.df[0])).map(
-      e => e.project
-    );
+    const orderedList = (
+      await getOrderedListForTree(args.df[0], {
+        token: args.token ? args.token[0] : undefined
+      })
+    ).map(e => e.project);
 
     if (args.skipGroup) {
       logger.info(

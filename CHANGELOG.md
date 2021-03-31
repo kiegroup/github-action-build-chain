@@ -7,6 +7,7 @@
 - `custom-command-treatment` CLI option
 - `@kie/build-chain-configuration-reader` upgraded to `2.0.4`
 - error mapping branches solved
+- allow to read definition files from private repositories
 
 # V2.4
 

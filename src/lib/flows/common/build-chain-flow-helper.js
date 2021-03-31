@@ -457,7 +457,7 @@ async function getPlaceHolders(context, definitionFile) {
       BRANCH: context.config.github.sourceBranch
     };
     const sourceUrl = treatUrl(definitionFile, placeHolderSource);
-    if (!(await checkUrlExist(sourceUrl))) {
+    if (!(await checkUrlExist(sourceUrl, context.token))) {
       const placeHoldersTargetSource = {
         GROUP: context.config.github.group,
         PROJECT_NAME: context.config.github.project,
@@ -467,14 +467,14 @@ async function getPlaceHolders(context, definitionFile) {
         definitionFile,
         placeHoldersTargetSource
       );
-      if (!(await checkUrlExist(targetSourceUrl))) {
+      if (!(await checkUrlExist(targetSourceUrl, context.token))) {
         const placeHoldersTarget = {
           GROUP: context.config.github.group,
           PROJECT_NAME: context.config.github.project,
           BRANCH: context.config.github.targetBranch
         };
         const targetUrl = treatUrl(definitionFile, placeHoldersTarget);
-        if (!(await checkUrlExist(targetUrl))) {
+        if (!(await checkUrlExist(targetUrl, context.token))) {
           throw new Error(
             `Definition file ${definitionFile} does not exist for any of these cases: ${sourceUrl}, ${targetSourceUrl} or ${targetUrl}`
           );

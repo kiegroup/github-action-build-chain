@@ -23,6 +23,13 @@ jest.mock("../../../src/lib/summary");
 const { getTreeForProject } = require("@kie/build-chain-configuration-reader");
 jest.mock("@kie/build-chain-configuration-reader");
 
+const { execute: executePre } = require("../../../src/lib/flows/sections/pre");
+const {
+  execute: executePost
+} = require("../../../src/lib/flows/sections/post");
+jest.mock("../../../src/lib/flows/sections/pre");
+jest.mock("../../../src/lib/flows/sections/post");
+
 afterEach(() => {
   jest.clearAllMocks();
 });
@@ -102,6 +109,23 @@ test("start no parent dependencies. project triggering the job", async () => {
     [definitionTree],
     ["success", "always"]
   );
+
+  expect(executePre).toHaveBeenCalledTimes(1);
+  expect(executePre).toHaveBeenCalledWith(
+    "test/resources/build-config/build-config.yaml",
+    {
+      token: undefined,
+      urlPlaceHolders: {}
+    }
+  );
+  expect(executePost).toHaveBeenCalledTimes(1);
+  expect(
+    executePost
+  ).toHaveBeenCalledWith(
+    "test/resources/build-config/build-config.yaml",
+    true,
+    { token: undefined, urlPlaceHolders: {} }
+  );
 });
 
 test("start no parent dependencies. project triggering the job. isArchiveArtifacts to false", async () => {
@@ -174,6 +198,23 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
     { isArchiveArtifacts: false }
   );
   expect(archiveArtifacts).toHaveBeenCalledTimes(0);
+
+  expect(executePre).toHaveBeenCalledTimes(1);
+  expect(executePre).toHaveBeenCalledWith(
+    "test/resources/build-config/build-config.yaml",
+    {
+      token: undefined,
+      urlPlaceHolders: {}
+    }
+  );
+  expect(executePost).toHaveBeenCalledTimes(1);
+  expect(
+    executePost
+  ).toHaveBeenCalledWith(
+    "test/resources/build-config/build-config.yaml",
+    true,
+    { token: undefined, urlPlaceHolders: {} }
+  );
 });
 
 test("start no parent dependencies. project triggering the job. Execute Exception", async () => {
@@ -257,5 +298,22 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     { project },
     [definitionTree],
     ["failure", "always"]
+  );
+
+  expect(executePre).toHaveBeenCalledTimes(1);
+  expect(executePre).toHaveBeenCalledWith(
+    "test/resources/build-config/build-config.yaml",
+    {
+      token: undefined,
+      urlPlaceHolders: {}
+    }
+  );
+  expect(executePost).toHaveBeenCalledTimes(1);
+  expect(
+    executePost
+  ).toHaveBeenCalledWith(
+    "test/resources/build-config/build-config.yaml",
+    new Error("error executing command"),
+    { token: undefined, urlPlaceHolders: {} }
   );
 });

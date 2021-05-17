@@ -109,7 +109,9 @@ async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
     for (const command of Array.isArray(buildCommands)
       ? buildCommands.filter(c => c)
       : [buildCommands]) {
-      core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
+      if (!options.skipStartGroup) {
+        core.startGroup(`[${project}]. Command: '${command}' in dir ${cwd}`);
+      }
       const commandTreated = treatCommand(command, options);
       try {
         await execute(cwd, commandTreated);
@@ -118,9 +120,15 @@ async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
           `[${project}] error executing command '${commandTreated}'`
         );
       }
-      core.endGroup();
+      if (!options.skipStartGroup) {
+        core.endGroup();
+      }
     }
   }
 }
 
-module.exports = { executeBuild, executeBuildSpecificCommand };
+module.exports = {
+  executeBuild,
+  executeBuildSpecificCommand,
+  executeBuildCommands
+};

@@ -119,6 +119,67 @@ See [action.yml](action.yml)
 
   > **_Note:_** You have to be sure the project tree to start building from, contains the project triggering the job.
 
+## Pre/Post sections
+
+It is possible to define pre and post sections in the definition-file. The idea is to have the chance to execute something before (`pre`) or after (`post`) project checkout and build command execution.
+
+### PRE
+
+```
+pre: string | multiline string
+```
+
+It will be executed even before checking out projects.
+
+#### Examples
+
+```
+pre: export VARIABLE_NAME=value
+```
+
+```
+pre: |
+  export VARIABLE_NAME=value
+  echo $VARIABLE_NAME
+```
+
+### POST
+
+```
+post:
+  success: string | multiline string
+  failure: string | multiline string
+  always: string | multiline string
+```
+
+It will be executed after executing all commands for every project and after archiving artifacts. The options are:
+
+- `success`: it will be executed in case there's no error during build execution.
+- `failure`: it will be executed in case there's any error during build execution.
+- `always`: it will be always executed.
+
+#### Examples
+
+```
+post:
+  success: echo 'final message in case of no errors'
+  failure: echo 'final message in case of any error'
+  always: echo 'final message always printed'
+```
+
+```
+post:
+  success: |
+    echo 'final message in case of no errors 1'
+    echo 'final message in case of no errors 2'
+  failure: |
+    echo 'final message in case of any error'
+    echo 'final message in case of any error 2'
+  always: |
+    echo 'final message always printed'
+    echo 'final message always printed 2'
+```
+
 ## Archiving Artifacts
 
 The archive artifacts algorithm is basically copied from [actions/upload-artifact project](https://github.com/actions/upload-artifact) and (manually) transpile to javascript. The usage is basically the same (the inputs are different named adding `archive-artifacts` prefix and the [Conditional Artifact Upload](https://github.com/actions/upload-artifact#conditional-artifact-upload) is not enabled), so why do we include this `archive artifacts` mechanism in this tool if it's already implemented by another tool? well, because this treats the archive artifacts mechanism for the whole build chain, so in case you define an `archive-artifacts-path` in a different project from the chain, all of them will be uploaded. If you are wondering if you are able to use `actions/upload-artifact` instead of the one we propose, the answer is 'yes', just take into consideration the artifacts will be archived based on the definition from the project triggering the job.

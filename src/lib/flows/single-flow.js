@@ -11,7 +11,19 @@ const {
   archiveArtifacts
 } = require("../artifacts/build-chain-flow-archive-artifact-helper");
 
+const { execute: executePre } = require("./sections/pre");
+const { execute: executePost } = require("./sections/post");
+
 async function start(context, options = { isArchiveArtifacts: true }) {
+  const readerOptions = {
+    urlPlaceHolders: await getPlaceHolders(
+      context,
+      context.config.github.inputs.definitionFile
+    ),
+    token: context.token
+  };
+  await executePre(context.config.github.inputs.definitionFile, readerOptions);
+
   core.startGroup(
     `[Single Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
@@ -21,13 +33,7 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
     projectTriggeringJob,
-    {
-      urlPlaceHolders: await getPlaceHolders(
-        context,
-        context.config.github.inputs.definitionFile
-      ),
-      token: context.token
-    }
+    readerOptions
   );
 
   const nodeChain = [definitionTree];
@@ -69,6 +75,12 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   } else {
     logger.info("Archive artifact won't be executed");
   }
+
+  await executePost(
+    context.config.github.inputs.definitionFile,
+    executionResult,
+    readerOptions
+  );
 
   if (executionResult !== true) {
     logger.error(executionResult);

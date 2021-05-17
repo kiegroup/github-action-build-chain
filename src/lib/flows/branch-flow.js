@@ -15,25 +15,35 @@ const {
   executeBuildSpecificCommand
 } = require("./common/common-helper");
 
+const { execute: executePre } = require("./sections/pre");
+const { execute: executePost } = require("./sections/post");
+
 async function start(context, options = {}) {
+  const readerOptions = {
+    urlPlaceHolders: await getPlaceHolders(
+      context,
+      context.config.github.inputs.definitionFile
+    ),
+    token: context.token
+  };
+  if (!options.skipExecution) {
+    await executePre(
+      context.config.github.inputs.definitionFile,
+      readerOptions
+    );
+  }
+
   core.startGroup(
     `[Branch Flow] Checking out ${context.config.github.groupProject} and its dependencies`
-  );
-  const urlPlaceHolders = await getPlaceHolders(
-    context,
-    context.config.github.inputs.definitionFile
   );
 
   const definitionTree = context.config.github.inputs.startingProject
     ? await getTreeForProject(
         context.config.github.inputs.definitionFile,
         context.config.github.inputs.startingProject,
-        { urlPlaceHolders, token: context.token }
+        readerOptions
       )
-    : getTree(context.config.github.inputs.definitionFile, {
-        urlPlaceHolders,
-        token: context.token
-      });
+    : getTree(context.config.github.inputs.definitionFile, readerOptions);
 
   let nodeChain = await parentChainFromNode(definitionTree);
 
@@ -72,6 +82,12 @@ async function start(context, options = {}) {
         )
           .then(() => true)
           .catch(e => e);
+
+    await executePost(
+      context.config.github.inputs.definitionFile,
+      executionResult,
+      readerOptions
+    );
 
     if (executionResult !== true) {
       logger.error(executionResult);

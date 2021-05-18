@@ -37,8 +37,9 @@ async function executeExpression(cwd, exportExpression) {
     await bashExecute(cwd, commandFromExpression, options);
     return myOutput;
   }
-
-  return exportExpression;
+  return exportExpression
+    ? exportExpression.replace(/['"]+/g, "")
+    : exportExpression;
 }
 
 function getVariable(command) {

@@ -4,7 +4,8 @@ function treat(command) {
   const variables = getVariablesFromCommand(command);
   if (variables && variables.length > 0) {
     return variables.reduce(
-      (acc, variable) => acc.replace(variable[0], process.env[variable[1]]),
+      (acc, variable) =>
+        acc.replace(variable[0], process.env[variable[1]] || ""),
       command
     );
   } else {

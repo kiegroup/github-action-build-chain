@@ -22,7 +22,7 @@ test("execute simple export", async () => {
 test("execute simple export with quotes", async () => {
   // Arrange
   const cwd = "cwd";
-  const command = "export VARIABLE1_B=\"VALUE1 VALUE2\"";
+  const command = 'export VARIABLE1_B="VALUE1 VALUE2"';
   // Act
   await execute(cwd, command);
 

@@ -34,5 +34,5 @@ test("treat existing variable", () => {
   const result = treat("command x ${{ env.VARIABLE_NOT_DEFINED }}");
 
   // Assert
-  expect(result).toEqual("command x undefined");
+  expect(result).toEqual("command x ");
 });

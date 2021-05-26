@@ -553,12 +553,12 @@ So basically at left side of `||` you define the regular expression where you wa
 
 ### build-chain-configuration-reader dependency
 
-The definition files are read thanks to [build-chain-configuration-reader](https://github.com/kiegroup/build-chain-configuration-reader) library so in case you want to modify something from there it's easier if you just [npm link](https://docs.npmjs.com/cli/link) it:
+The definition files are read thanks to [build-chain-configuration-reader](https://github.com/kiegroup/build-chain-configuration-reader) library so in case you want to modify something from there it's easier if you just [pnpm link](https://pnpm.io/cli/link) it:
 
 - clone repo and browse to the folder
-- `npm/yarn install` it
-- (`sudo`) `npm link`
-- and then from this project folder execute `npm link @kie/build-chain-configuration-reader`
+- `pnpm install` it
+- (`sudo`) `pnpm link`
+- and then from this project folder execute `pnpm link @kie/build-chain-configuration-reader`
 
 ## Github limitations
 

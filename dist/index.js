@@ -8857,21 +8857,17 @@ async function checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob) {
  * @param {Object} nodeTriggeringTheJob the node triggering the job
  */
 async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
-  const mapping = getMapping(
+  const sourceGroup = context.config.github.sourceGroup;
+  const sourceBranch = context.config.github.sourceBranch;
+  const targetGroup = node.repo.group;
+  const targetProject = node.repo.name;
+  const targetBranch = getTarget(
     nodeTriggeringTheJob.project,
     nodeTriggeringTheJob.mapping,
     node.project,
     node.mapping,
     context.config.github.targetBranch
   );
-  const sourceGroup = context.config.github.sourceGroup;
-  const sourceBranch = context.config.github.sourceBranch;
-  const targetGroup = node.repo.group;
-  const targetProject = node.repo.name;
-  const targetBranch =
-    mapping.source && mapping.source === context.config.github.targetBranch
-      ? mapping.target
-      : context.config.github.targetBranch;
 
   const forkedProjectName = await getForkedProjectName(
     context.octokit,
@@ -8880,11 +8876,7 @@ async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
     sourceGroup
   );
   logger.info(
-    `[${targetGroup}/${targetProject}] Getting checkout Info. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
-      mapping.source
-        ? "source:" + mapping.source + " target:" + mapping.target
-        : "Not defined"
-    }`
+    `[${targetGroup}/${targetProject}] Getting checkout Info. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping target: ${targetBranch}`
   );
   return (await doesBranchExist(
     context.octokit,
@@ -8944,14 +8936,14 @@ async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
 }
 
 /**
- * it returns back a {source, target} object
+ * it returns back the target object based on the mapping object
  * @param {String} projectTriggeringTheJob the project name of the project triggering the job
  * @param {Object} projectTriggeringTheJobMapping the mapping object of the project triggering the job
  * @param {String} currentProject the project name of the current project
  * @param {Object} currentProjectMapping the mappinf object of the current project
  * @param {String} targetBranch the target branch
  */
-function getMapping(
+function getTarget(
   projectTriggeringTheJob,
   projectTriggeringTheJobMapping,
   currentProject,
@@ -8959,6 +8951,7 @@ function getMapping(
   targetBranch
 ) {
   // If the current project it the project triggering the job there's no mapping
+
   if (currentProject !== projectTriggeringTheJob) {
     // If the current project has been excluded from the mapping, there's no mapping
     if (
@@ -8968,27 +8961,57 @@ function getMapping(
         : true)
     ) {
       // The mapping is either taken from the project mapping or from the default one
-      const mapping = projectTriggeringTheJobMapping.dependencies[
-        currentProject
-      ]
-        ? projectTriggeringTheJobMapping.dependencies[currentProject]
-        : projectTriggeringTheJobMapping.dependencies.default;
-      return { source: mapping.source, target: mapping.target };
+      const mapping =
+        getMappingInfo(
+          currentProject,
+          projectTriggeringTheJobMapping.dependencies[currentProject],
+          targetBranch
+        ) ||
+        getMappingInfo(
+          currentProject,
+          projectTriggeringTheJobMapping.dependencies.default,
+          targetBranch
+        );
+      return mapping ? mapping.target : targetBranch;
       // If the current project has a mapping and the source matched with the targetBranch then this mapping is taken
-    } else if (
-      currentProjectMapping &&
-      currentProjectMapping.source === targetBranch
-    ) {
-      return {
-        source: currentProjectMapping.source,
-        target: currentProjectMapping.target
-      };
+    } else if (currentProjectMapping && currentProjectMapping.dependant) {
+      const mapping =
+        getMappingInfo(
+          currentProject,
+          currentProjectMapping.dependant[projectTriggeringTheJob],
+          targetBranch
+        ) ||
+        getMappingInfo(
+          currentProject,
+          currentProjectMapping.dependant.default,
+          targetBranch
+        );
+      return mapping ? mapping.target : targetBranch;
     } else {
-      return { target: targetBranch };
+      return targetBranch;
     }
   } else {
-    return { target: targetBranch };
+    return targetBranch;
   }
+}
+
+function getMappingInfo(currentProject, mapping, sourceBranch) {
+  if (mapping) {
+    // The exact match has precedence over the regex
+    const foundMapping =
+      mapping.filter(e => e.source === sourceBranch) ||
+      mapping.filter(e => sourceBranch.match(new RegExp(e.source)));
+    if (foundMapping.length) {
+      const found = foundMapping[0];
+      if (foundMapping.length > 1) {
+        logger.warn(
+          `The mapping for ${currentProject} has a duplication for source branch ${sourceBranch}. First matching ${found.target} will be used.`
+        );
+      }
+      return found;
+    }
+  }
+  return undefined;
 }
 
 function getDir(rootFolder, project, skipCheckoutProjectFolder = undefined) {
@@ -9090,7 +9113,7 @@ module.exports = {
   getCheckoutInfo,
   getDir,
   getPlaceHolders,
-  getMapping
+  getTarget
 };
 
 

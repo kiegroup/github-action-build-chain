@@ -1,6 +1,14 @@
 # Changelog
 
-# V2.5 (next release)
+# V2.6 (next release)
+
+## Enhancements:
+
+- `@kie/build-chain-configuration-reader` upgraded to `2.2.0`
+- definition version moved to 2.1
+- targetExpression mapping
+
+# V2.5
 
 ## Enhancements:
 

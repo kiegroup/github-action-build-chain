@@ -2139,9 +2139,13 @@ const {
   executeFromEvent: singleEventFlow
 } = __webpack_require__(15);
 const {
+  executeFromEvent: branchEventFlow
+} = __webpack_require__(131);
+const {
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,
+  isBranchFlowType,
   getFlowType
 } = __webpack_require__(933);
 const { createOctokitInstance, getProcessEnvVariable } = __webpack_require__(867);
@@ -2156,6 +2160,8 @@ async function main() {
     await fdbEventFlow(token, octokit, process.env);
   } else if (isSingleFlowType()) {
     await singleEventFlow(token, octokit, process.env);
+  } else if (isBranchFlowType()) {
+    await branchEventFlow(token, octokit, process.env);
   } else {
     throw new Error(
       `flow type input value '${getFlowType()}' is not supported. Please check documentation.`
@@ -3658,7 +3664,115 @@ module.exports = require("child_process");
 
 /***/ }),
 /* 130 */,
-/* 131 */,
+/* 131 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const { logger } = __webpack_require__(79);
+const { start } = __webpack_require__(361);
+const { createCommonConfig } = __webpack_require__(981);
+const assert = __webpack_require__(357);
+const fse = __webpack_require__(226);
+const { getProcessEnvVariable } = __webpack_require__(867);
+
+/**
+ * Executes branch flow
+ * @param {String} token the token to communicate to github
+ * @param {Object} octokit octokit instance
+ * @param {Object} env proces.env
+ * @param {Object} eventData
+ * @param {String} rootFolder path to store flow data/projects
+ * @param {String} command the command to execute for every project, no matter what's defined on definition file
+ * @param {String} projectToStart the project to start building
+ */
+async function execute(
+  token,
+  octokit,
+  env,
+  githubInformation,
+  rootFolder,
+  options = {}
+) {
+  const config = await createCommonConfig(githubInformation, rootFolder, env);
+  const context = { token, octokit, config };
+  await start(context, options);
+}
+
+/**
+ * Prepares execution when this is triggered from a github action's event
+ * @param {String} token the token to communicate to github
+ * @param {Object} octokit octokit instance
+ * @param {Object} env proces.env
+ */
+async function executeFromEvent(token, octokit, env) {
+  const eventDataStr = await fse.readFile(
+    getProcessEnvVariable("GITHUB_EVENT_PATH"),
+    "utf8"
+  );
+  const eventData = JSON.parse(eventDataStr);
+  logger.info("eventData", eventData);
+  const githubInformation = {
+    sourceGroup: "groupName",
+    author: "groupName",
+    sourceRepository: "project"
+  };
+
+  await execute(token, octokit, env, githubInformation, undefined, {
+    isArchiveArtifacts: true
+  });
+}
+
+/**
+ * Prepares execution when this is triggered from command line
+ * @param {String} token the token to communicate to github
+ * @param {Object} octokit octokit instance
+ * @param {String} eventUrl event url
+ * @param {Object} env proces.env
+ * @param {String} rootFolder path to store flow data/projects
+ * @param {String} group the group to projects from
+ * @param {String} project the project to get the chain from
+ * @param {String} branch the branch to checkout projects
+ * @param {String} command the command to execute for every project, no matter what's defined on definition file
+ * @param {String} projectToStart the project to start building
+ * @param {String} skipExecution if the execution has to be skipped
+ */
+async function executeLocally(
+  token,
+  octokit,
+  env,
+  rootFolder,
+  group,
+  project,
+  branch,
+  options = {}
+) {
+  assert(
+    project.includes("/"),
+    `project ${project} should follow 'group/projectName' pattern`
+  );
+  const groupName = group ? group : project.split("/")[0];
+  logger.info(
+    `Executing branch flow for ${project}:${branch} in ${rootFolder}`
+  );
+
+  env["GITHUB_SERVER_URL"] = "https://github.com";
+  env["GITHUB_ACTION"] = undefined;
+  env["GITHUB_ACTOR"] = groupName;
+  env["GITHUB_HEAD_REF"] = branch;
+  env["GITHUB_BASE_REF"] = branch;
+  env["GITHUB_REPOSITORY"] = project;
+  const githubInformation = {
+    sourceGroup: groupName,
+    author: groupName,
+    sourceRepository: project
+  };
+
+  await execute(token, octokit, env, githubInformation, rootFolder, options);
+}
+
+module.exports = { executeLocally, executeFromEvent };
+
+
+/***/ }),
 /* 132 */,
 /* 133 */,
 /* 134 */,
@@ -9050,7 +9164,115 @@ exports.DefaultArtifactClient = DefaultArtifactClient;
 
 /***/ }),
 /* 360 */,
-/* 361 */,
+/* 361 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const {
+  checkoutDefinitionTree,
+  getPlaceHolders
+} = __webpack_require__(330);
+const {
+  getTreeForProject,
+  getTree,
+  parentChainFromNode
+} = __webpack_require__(352);
+const core = __webpack_require__(470);
+const { logger } = __webpack_require__(79);
+const { printCheckoutInformation } = __webpack_require__(656);
+const {
+  executeBuild,
+  executeBuildSpecificCommand
+} = __webpack_require__(11);
+
+const { execute: executePre } = __webpack_require__(99);
+const { execute: executePost } = __webpack_require__(153);
+
+async function start(context, options = {}) {
+  const readerOptions = {
+    urlPlaceHolders: await getPlaceHolders(
+      context,
+      context.config.github.inputs.definitionFile
+    ),
+    token: context.token
+  };
+  if (!options.skipExecution) {
+    await executePre(
+      context.config.github.inputs.definitionFile,
+      readerOptions
+    );
+  }
+
+  core.startGroup(
+    `[Branch Flow] Checking out ${context.config.github.groupProject} and its dependencies`
+  );
+
+  const definitionTree = context.config.github.inputs.startingProject
+    ? await getTreeForProject(
+        context.config.github.inputs.definitionFile,
+        context.config.github.inputs.startingProject,
+        readerOptions
+      )
+    : getTree(context.config.github.inputs.definitionFile, readerOptions);
+
+  let nodeChain = await parentChainFromNode(definitionTree);
+
+  logger.info(
+    `Tree for project ${
+      context.config.github.inputs.startingProject
+    }. Dependencies: ${nodeChain.map(node => "\n" + node.project)}`
+  );
+  const checkoutInfo = await checkoutDefinitionTree(
+    context,
+    nodeChain,
+    "branch",
+    options
+  );
+  core.endGroup();
+
+  core.startGroup(`[Branch Flow] Checkout Summary...`);
+  printCheckoutInformation(checkoutInfo);
+  core.endGroup();
+
+  if (!options.skipExecution) {
+    const executionResult = options.command
+      ? await executeBuildSpecificCommand(
+          context.config.rootFolder,
+          nodeChain,
+          options.command,
+          options
+        )
+          .then(() => true)
+          .catch(e => e)
+      : await executeBuild(
+          context.config.rootFolder,
+          nodeChain,
+          context.config.github.repository,
+          options
+        )
+          .then(() => true)
+          .catch(e => e);
+
+    await executePost(
+      context.config.github.inputs.definitionFile,
+      executionResult,
+      readerOptions
+    );
+
+    if (executionResult !== true) {
+      logger.error(executionResult);
+      throw new Error(
+        `Command executions have failed, please review latest execution ${executionResult}`
+      );
+    }
+  } else {
+    logger.info("Execution has been skipped. Won't execute.");
+  }
+}
+
+module.exports = { start };
+
+
+/***/ }),
 /* 362 */,
 /* 363 */
 /***/ (function(module) {
@@ -28565,13 +28787,18 @@ function isSingleFlowType() {
   return getFlowType() === "single";
 }
 
+function isBranchFlowType() {
+  return getFlowType() === "branch";
+}
+
 module.exports = {
   getDefinitionFile,
   getStartingProject,
   getFlowType,
   isPullRequestFlowType,
   isFDFlowType,
-  isSingleFlowType
+  isSingleFlowType,
+  isBranchFlowType
 };
 
 

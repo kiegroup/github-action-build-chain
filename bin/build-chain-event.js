@@ -11,9 +11,13 @@ const {
   executeFromEvent: singleEventFlow
 } = require("./flows/build-chain-single");
 const {
+  executeFromEvent: branchEventFlow
+} = require("./flows/build-chain-branch");
+const {
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,
+  isBranchFlowType,
   getFlowType
 } = require("../src/lib/util/action-utils");
 const { createOctokitInstance, getProcessEnvVariable } = require("./bin-utils");
@@ -28,6 +32,8 @@ async function main() {
     await fdbEventFlow(token, octokit, process.env);
   } else if (isSingleFlowType()) {
     await singleEventFlow(token, octokit, process.env);
+  } else if (isBranchFlowType()) {
+    await branchEventFlow(token, octokit, process.env);
   } else {
     throw new Error(
       `flow type input value '${getFlowType()}' is not supported. Please check documentation.`

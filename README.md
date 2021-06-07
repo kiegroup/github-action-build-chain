@@ -14,7 +14,7 @@ Just defining the **build chain** flow in every project you want to trigger, the
 
 ## Allowed configuration files versions
 
-- 2.0
+- 2.1
 
 ## Build Chain Flows
 
@@ -556,7 +556,7 @@ So basically at left side of `||` you define the regular expression where you wa
 The definition files are read thanks to [build-chain-configuration-reader](https://github.com/kiegroup/build-chain-configuration-reader) library so in case you want to modify something from there it's easier if you just [npm link](https://docs.npmjs.com/cli/link) it:
 
 - clone repo and browse to the folder
-- `npm/yarn install` it
+- `npm install` it
 - (`sudo`) `npm link`
 - and then from this project folder execute `npm link @kie/build-chain-configuration-reader`
 

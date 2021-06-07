@@ -3606,7 +3606,7 @@ Glob.prototype._stat2 = function (f, abs, er, stat, cb) {
 
 const assert = __webpack_require__(357);
 
-const allowedVersions = ["2.0"];
+const allowedVersions = ["2.1"];
 
 function validateDefinition(definition) {
   assert(
@@ -8476,21 +8476,17 @@ async function checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob) {
  * @param {Object} nodeTriggeringTheJob the node triggering the job
  */
 async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
-  const mapping = getMapping(
+  const sourceGroup = context.config.github.sourceGroup;
+  const sourceBranch = context.config.github.sourceBranch;
+  const targetGroup = node.repo.group;
+  const targetProject = node.repo.name;
+  const targetBranch = getTarget(
     nodeTriggeringTheJob.project,
     nodeTriggeringTheJob.mapping,
     node.project,
     node.mapping,
     context.config.github.targetBranch
   );
-  const sourceGroup = context.config.github.sourceGroup;
-  const sourceBranch = context.config.github.sourceBranch;
-  const targetGroup = node.repo.group;
-  const targetProject = node.repo.name;
-  const targetBranch =
-    mapping.source && mapping.source === context.config.github.targetBranch
-      ? mapping.target
-      : context.config.github.targetBranch;
 
   const forkedProjectName = await getForkedProjectName(
     context.octokit,
@@ -8499,11 +8495,7 @@ async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
     sourceGroup
   );
   logger.info(
-    `[${targetGroup}/${targetProject}] Getting checkout Info. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping: ${
-      mapping.source
-        ? "source:" + mapping.source + " target:" + mapping.target
-        : "Not defined"
-    }`
+    `[${targetGroup}/${targetProject}] Getting checkout Info. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping target: ${targetBranch}`
   );
   return (await doesBranchExist(
     context.octokit,
@@ -8563,14 +8555,14 @@ async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
 }
 
 /**
- * it returns back a {source, target} object
+ * it returns back the target object based on the mapping object
  * @param {String} projectTriggeringTheJob the project name of the project triggering the job
  * @param {Object} projectTriggeringTheJobMapping the mapping object of the project triggering the job
  * @param {String} currentProject the project name of the current project
  * @param {Object} currentProjectMapping the mappinf object of the current project
  * @param {String} targetBranch the target branch
  */
-function getMapping(
+function getTarget(
   projectTriggeringTheJob,
   projectTriggeringTheJobMapping,
   currentProject,
@@ -8578,6 +8570,7 @@ function getMapping(
   targetBranch
 ) {
   // If the current project it the project triggering the job there's no mapping
+
   if (currentProject !== projectTriggeringTheJob) {
     // If the current project has been excluded from the mapping, there's no mapping
     if (
@@ -8587,27 +8580,62 @@ function getMapping(
         : true)
     ) {
       // The mapping is either taken from the project mapping or from the default one
-      const mapping = projectTriggeringTheJobMapping.dependencies[
-        currentProject
-      ]
-        ? projectTriggeringTheJobMapping.dependencies[currentProject]
-        : projectTriggeringTheJobMapping.dependencies.default;
-      return { source: mapping.source, target: mapping.target };
+      const mapping =
+        getMappingInfo(
+          currentProject,
+          projectTriggeringTheJobMapping.dependencies[currentProject],
+          targetBranch
+        ) ||
+        getMappingInfo(
+          currentProject,
+          projectTriggeringTheJobMapping.dependencies.default,
+          targetBranch
+        );
+      return mapping ? mapping.target : targetBranch;
       // If the current project has a mapping and the source matched with the targetBranch then this mapping is taken
-    } else if (
-      currentProjectMapping &&
-      currentProjectMapping.source === targetBranch
-    ) {
-      return {
-        source: currentProjectMapping.source,
-        target: currentProjectMapping.target
-      };
+    } else if (currentProjectMapping && currentProjectMapping.dependant) {
+      const mapping =
+        getMappingInfo(
+          currentProject,
+          currentProjectMapping.dependant[projectTriggeringTheJob],
+          targetBranch
+        ) ||
+        getMappingInfo(
+          currentProject,
+          currentProjectMapping.dependant.default,
+          targetBranch
+        );
+      return mapping ? mapping.target : targetBranch;
     } else {
-      return { target: targetBranch };
+      return targetBranch;
     }
   } else {
-    return { target: targetBranch };
+    return targetBranch;
   }
+}
+
+function getMappingInfo(currentProject, mapping, sourceBranch) {
+  if (mapping) {
+    // The exact match has precedence over the regex
+    const foundMappingEqual = mapping.filter(e => e.source === sourceBranch);
+    const foundMappingRegex = mapping.filter(e =>
+      sourceBranch.match(new RegExp(`^${e.source}$`))
+    );
+    const foundMapping =
+      foundMappingEqual && foundMappingEqual.length
+        ? foundMappingEqual
+        : foundMappingRegex;
+    if (foundMapping.length) {
+      const found = foundMapping[0];
+      if (foundMapping.length > 1) {
+        logger.warn(
+          `The mapping for ${currentProject} has a duplication for source branch ${sourceBranch}. First matching ${found.target} will be used.`
+        );
+      }
+      return found;
+    }
+  }
+  return undefined;
 }
 
 function getDir(rootFolder, project, skipCheckoutProjectFolder = undefined) {
@@ -8709,7 +8737,7 @@ module.exports = {
   getCheckoutInfo,
   getDir,
   getPlaceHolders,
-  getMapping
+  getTarget
 };
 
 
@@ -25420,7 +25448,7 @@ exports.getUserAgent = getUserAgent;
 const fs = __webpack_require__(747);
 
 const { getUrlContent } = __webpack_require__(593);
-const { treatUrl } = __webpack_require__(824);
+const { treatUrl, treatMapping } = __webpack_require__(824);
 const {
   validateDefinition,
   validateDependencies
@@ -25498,6 +25526,12 @@ async function loadYaml(
     containerPath,
     options
   );
+  if (definitionYaml.dependencies) {
+    definitionYaml.dependencies
+      .filter(dependency => dependency.mapping)
+      .map(dependency => dependency.mapping)
+      .forEach(mapping => treatMapping(mapping));
+  }
   return definitionYaml;
 }
 
@@ -26025,7 +26059,32 @@ function treatUrl(url, placeHolders) {
   return result;
 }
 
-module.exports = { treatUrl };
+function treatMapping(mapping) {
+  if (mapping) {
+    treatMappingDependencies(mapping.dependencies);
+    treatMappingDependencies(mapping.dependant);
+  }
+}
+
+function treatMappingDependencies(mappingDependencies) {
+  Object.values(mappingDependencies || []).forEach(mappingElement =>
+    mappingElement
+      .filter(mapping => mapping.targetExpression)
+      .forEach(mapping => {
+        try {
+          mapping.target = eval(mapping.targetExpression);
+        } catch (ex) {
+          console.error(
+            `Error evaluating expression \`${mapping.targetExpression}\` for source: \`${mapping.source}\``,
+            ex
+          );
+          mapping.target = undefined;
+        }
+      })
+  );
+}
+
+module.exports = { treatUrl, treatMapping };
 
 
 /***/ }),

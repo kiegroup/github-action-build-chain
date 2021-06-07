@@ -1843,3 +1843,141 @@ test("getTarget targetBranch same. No project triggering job mapping. Mapping ta
   // Assert
   expect(result).toStrictEqual("master");
 });
+
+test("getTarget targetBranch same. projectB mapping master", () => {
+  // Arrange
+  const projectTriggeringTheJob = "projectB";
+  const projectTriggeringTheJobMapping = undefined;
+  const currentProject = "projectA";
+  const currentProjectMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "7.x",
+          target: "master"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "master",
+          target: "7.x"
+        }
+      ],
+      projectB: [
+        {
+          source: "main",
+          target: "main-map"
+        },
+        {
+          source: "master",
+          target: "master-map"
+        }
+      ]
+    }
+  };
+  const targetBranch = "master";
+  // Act
+  const result = getTarget(
+    projectTriggeringTheJob,
+    projectTriggeringTheJobMapping,
+    currentProject,
+    currentProjectMapping,
+    targetBranch
+  );
+  // Assert
+  expect(result).toStrictEqual("master-map");
+});
+
+test("getTarget targetBranch same. projectB mapping main", () => {
+  // Arrange
+  const projectTriggeringTheJob = "projectB";
+  const projectTriggeringTheJobMapping = undefined;
+  const currentProject = "projectA";
+  const currentProjectMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "7.x",
+          target: "master"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "master",
+          target: "7.x"
+        }
+      ],
+      projectB: [
+        {
+          source: "main",
+          target: "main-map"
+        },
+        {
+          source: "master",
+          target: "master-map"
+        }
+      ]
+    }
+  };
+  const targetBranch = "main";
+  // Act
+  const result = getTarget(
+    projectTriggeringTheJob,
+    projectTriggeringTheJobMapping,
+    currentProject,
+    currentProjectMapping,
+    targetBranch
+  );
+  // Assert
+  expect(result).toStrictEqual("main-map");
+});
+
+test("getTarget targetBranch same. projectB no matching mapping", () => {
+  // Arrange
+  const projectTriggeringTheJob = "projectB";
+  const projectTriggeringTheJobMapping = undefined;
+  const currentProject = "projectA";
+  const currentProjectMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "7.x",
+          target: "master"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "masterx",
+          target: "7.x.y"
+        }
+      ],
+      projectB: [
+        {
+          source: "main",
+          target: "main-map"
+        },
+        {
+          source: "master",
+          target: "master-map"
+        }
+      ]
+    }
+  };
+  const targetBranch = "masterx";
+  // Act
+  const result = getTarget(
+    projectTriggeringTheJob,
+    projectTriggeringTheJobMapping,
+    currentProject,
+    currentProjectMapping,
+    targetBranch
+  );
+  // Assert
+  expect(result).toStrictEqual("7.x.y");
+});

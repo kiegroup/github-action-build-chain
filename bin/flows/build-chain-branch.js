@@ -8,7 +8,7 @@ const assert = require("assert");
  * @param {String} token the token to communicate to github
  * @param {Object} octokit octokit instance
  * @param {Object} env proces.env
- * @param {Object} githubInformation
+ * @param {Object} eventData
  * @param {String} rootFolder path to store flow data/projects
  * @param {String} command the command to execute for every project, no matter what's defined on definition file
  * @param {String} projectToStart the project to start building
@@ -33,8 +33,18 @@ async function execute(
  * @param {Object} env proces.env
  */
 async function executeFromEvent(token, octokit, env) {
-  // TODO
-  logger.error("Functionallity not implemented yet", token, octokit, env);
+  const groupName = env["GITHUB_REPOSITORY_OWNER"];
+  const project = env["GITHUB_REPOSITORY"];
+
+  const githubInformation = {
+    sourceGroup: groupName,
+    author: groupName,
+    sourceRepository: project
+  };
+
+  await execute(token, octokit, env, githubInformation, undefined, {
+    isArchiveArtifacts: true
+  });
 }
 
 /**

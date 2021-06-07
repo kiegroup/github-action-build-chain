@@ -24,11 +24,16 @@ function isSingleFlowType() {
   return getFlowType() === "single";
 }
 
+function isBranchFlowType() {
+  return getFlowType() === "branch";
+}
+
 module.exports = {
   getDefinitionFile,
   getStartingProject,
   getFlowType,
   isPullRequestFlowType,
   isFDFlowType,
-  isSingleFlowType
+  isSingleFlowType,
+  isBranchFlowType
 };

@@ -427,9 +427,14 @@ function getTarget(
 function getMappingInfo(currentProject, mapping, sourceBranch) {
   if (mapping) {
     // The exact match has precedence over the regex
+    const foundMappingEqual = mapping.filter(e => e.source === sourceBranch);
+    const foundMappingRegex = mapping.filter(e =>
+      sourceBranch.match(new RegExp(`^${e.source}$`))
+    );
     const foundMapping =
-      mapping.filter(e => e.source === sourceBranch) ||
-      mapping.filter(e => sourceBranch.match(new RegExp(e.source)));
+      foundMappingEqual && foundMappingEqual.length
+        ? foundMappingEqual
+        : foundMappingRegex;
     if (foundMapping.length) {
       const found = foundMapping[0];
       if (foundMapping.length > 1) {

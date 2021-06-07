@@ -1981,3 +1981,95 @@ test("getTarget targetBranch same. projectB no matching mapping", () => {
   // Assert
   expect(result).toStrictEqual("7.x.y");
 });
+
+test("getTarget targetBranch same. regex", () => {
+  // Arrange
+  const projectTriggeringTheJob = "projectB";
+  const projectTriggeringTheJobMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "8.x",
+          target: "master8.x"
+        },
+        {
+          source: ".*",
+          target: "master.*"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "master",
+          target: "7.x"
+        }
+      ]
+    },
+    exclude: ["projectC"]
+  };
+  const currentProject = "projectD";
+  const currentProjectMapping = [
+    {
+      source: "7.x",
+      target: "branchX"
+    }
+  ];
+  const targetBranch = "7.x";
+  // Act
+  const result = getTarget(
+    projectTriggeringTheJob,
+    projectTriggeringTheJobMapping,
+    currentProject,
+    currentProjectMapping,
+    targetBranch
+  );
+  // Assert
+  expect(result).toStrictEqual("master.*");
+});
+
+test("getTarget targetBranch same. regex2", () => {
+  // Arrange
+  const projectTriggeringTheJob = "projectB";
+  const projectTriggeringTheJobMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "8.x",
+          target: "master8.x"
+        },
+        {
+          source: "\\d\\..",
+          target: "master.*"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "master",
+          target: "7.x"
+        }
+      ]
+    },
+    exclude: ["projectC"]
+  };
+  const currentProject = "projectD";
+  const currentProjectMapping = [
+    {
+      source: "7.x",
+      target: "branchX"
+    }
+  ];
+  const targetBranch = "7.x";
+  // Act
+  const result = getTarget(
+    projectTriggeringTheJob,
+    projectTriggeringTheJobMapping,
+    currentProject,
+    currentProjectMapping,
+    targetBranch
+  );
+  // Assert
+  expect(result).toStrictEqual("master.*");
+});

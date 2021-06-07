@@ -2,8 +2,6 @@ const { logger } = require("../../src/lib/common");
 const { start } = require("../../src/lib/flows/branch-flow");
 const { createCommonConfig } = require("../../src/lib/flows/common/config");
 const assert = require("assert");
-const fse = require("fs-extra");
-const { getProcessEnvVariable } = require("../bin-utils");
 
 /**
  * Executes branch flow
@@ -35,16 +33,13 @@ async function execute(
  * @param {Object} env proces.env
  */
 async function executeFromEvent(token, octokit, env) {
-  const eventDataStr = await fse.readFile(
-    getProcessEnvVariable("GITHUB_EVENT_PATH"),
-    "utf8"
-  );
-  const eventData = JSON.parse(eventDataStr);
-  logger.info("eventData", eventData);
+  const groupName = env["GITHUB_REPOSITORY_OWNER"];
+  const project = env["GITHUB_REPOSITORY"];
+
   const githubInformation = {
-    sourceGroup: "groupName",
-    author: "groupName",
-    sourceRepository: "project"
+    sourceGroup: groupName,
+    author: groupName,
+    sourceRepository: project
   };
 
   await execute(token, octokit, env, githubInformation, undefined, {

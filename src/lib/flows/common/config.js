@@ -22,8 +22,16 @@ async function createCommonConfig(eventData, rootFolder, env) {
       sourceGroup: eventData.sourceGroup,
       author: eventData.author,
       actor: env["GITHUB_ACTOR"], // Ginxo
-      sourceBranch: env["GITHUB_HEAD_REF"], // Ginxo-patch-1
-      targetBranch: env["GITHUB_BASE_REF"], // master
+      sourceBranch:
+        env["GITHUB_HEAD_REF"] ||
+        (env["GITHUB_REF"]
+          ? env["GITHUB_REF"].split("refs/heads/").pop()
+          : undefined), // Ginxo-patch-1
+      targetBranch:
+        env["GITHUB_BASE_REF"] ||
+        (env["GITHUB_REF"]
+          ? env["GITHUB_REF"].split("refs/heads/").pop()
+          : undefined), // master
       jobId: env["GITHUB_JOB"], // build-chain
       sourceRepository: eventData.sourceRepository,
       repository: env["GITHUB_REPOSITORY"], // Ginxo/lienzo-tests

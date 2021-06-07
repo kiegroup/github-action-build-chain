@@ -109,6 +109,8 @@ See [action.yml](action.yml)
 
   - pull-request: executes the pull reques flow
   - fdb: executes the full downstream flow
+  - branch: executes the tool for a specific branch
+  - single: executes the tool for a single project
 
 - **starting-project** (optional. the project triggering the job by default): The project you want start building from. It's not the same as the project triggering the job (which will remain the same), but the project to take tree from. For instance
 

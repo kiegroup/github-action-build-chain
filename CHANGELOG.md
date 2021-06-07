@@ -7,6 +7,7 @@
 - `@kie/build-chain-configuration-reader` upgraded to `2.2.0`
 - definition version moved to 2.1
 - targetExpression mapping
+- branch flow from GA
 
 # V2.5
 

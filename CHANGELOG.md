@@ -1,6 +1,6 @@
 # Changelog
 
-# V2.5 (next release)
+# V2.5
 
 ## Enhancements:
 
@@ -9,6 +9,9 @@
 - error mapping branches solved
 - allow to read definition files from private repositories
 - pre/post sections
+
+## Bugs:
+- windows error on joining folder https://github.com/kiegroup/github-action-build-chain/issues/153
 
 # V2.4
 

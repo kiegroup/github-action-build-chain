@@ -8201,6 +8201,7 @@ const { checkUrlExist } = __webpack_require__(22);
 const { getNodeTriggeringJob } = __webpack_require__(645);
 const { copyNodeFolder } = __webpack_require__(828);
 const fs = __webpack_require__(747);
+const path = __webpack_require__(622);
 
 async function checkoutDefinitionTree(
   context,
@@ -8616,8 +8617,7 @@ function getDir(rootFolder, project, skipCheckoutProjectFolder = undefined) {
   }
   const folder =
     rootFolder !== undefined && rootFolder !== "" ? rootFolder : ".";
-
-  return `${folder}/${project.replace(/ |-/g, "_").replace("/", "_")}`;
+  return `${path.join(folder, project.replace(/ |-/g, "_").replace("/", "_"))}`;
 }
 
 async function getForkedProjectName(octokit, owner, project, wantedOwner) {

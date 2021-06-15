@@ -9,6 +9,9 @@
 - targetExpression mapping
 - branch flow from GA
 
+## Bugs:
+- windows error on joining folder https://github.com/kiegroup/github-action-build-chain/issues/153
+
 # V2.5
 
 ## Enhancements:

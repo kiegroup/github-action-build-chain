@@ -11,6 +11,7 @@ const { checkUrlExist } = require("../../util/http");
 const { getNodeTriggeringJob } = require("../../util/chain-util");
 const { copyNodeFolder } = require("../../util/fs-util");
 const fs = require("fs");
+const path = require("path");
 
 async function checkoutDefinitionTree(
   context,
@@ -454,8 +455,7 @@ function getDir(rootFolder, project, skipCheckoutProjectFolder = undefined) {
   }
   const folder =
     rootFolder !== undefined && rootFolder !== "" ? rootFolder : ".";
-
-  return `${folder}/${project.replace(/ |-/g, "_").replace("/", "_")}`;
+  return `${path.join(folder, project.replace(/ |-/g, "_").replace("/", "_"))}`;
 }
 
 async function getForkedProjectName(octokit, owner, project, wantedOwner) {

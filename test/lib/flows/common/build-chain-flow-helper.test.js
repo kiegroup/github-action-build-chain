@@ -700,12 +700,12 @@ test("checkoutDefinitionTree sBranch does not exists but has PR no root Folder",
   // Assert
   expect(mergeMock).toHaveBeenCalledTimes(2);
   expect(mergeMock).toHaveBeenCalledWith(
-    "./kiegroup_lienzo_core",
+    "kiegroup_lienzo_core",
     "URL_with_token/sourceGroup/lienzo-core-forked",
     "sBranch"
   );
   expect(mergeMock).toHaveBeenCalledWith(
-    "./kiegroup_droolsjbpm_build_bootstrap",
+    "kiegroup_droolsjbpm_build_bootstrap",
     "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
     "sBranch"
   );
@@ -713,12 +713,12 @@ test("checkoutDefinitionTree sBranch does not exists but has PR no root Folder",
   expect(cloneMock).toHaveBeenCalledTimes(2);
   expect(cloneMock).toHaveBeenCalledWith(
     "URL_with_token/kiegroup/lienzo-core",
-    "./kiegroup_lienzo_core",
+    "kiegroup_lienzo_core",
     "tBranch"
   );
   expect(cloneMock).toHaveBeenCalledWith(
     "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
-    "./kiegroup_droolsjbpm_build_bootstrap",
+    "kiegroup_droolsjbpm_build_bootstrap",
     "tBranch"
   );
 

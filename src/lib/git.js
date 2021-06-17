@@ -271,6 +271,28 @@ async function hasOriginPullRequest(octokit, owner, repo, branch) {
   }
 }
 
+async function getRepository(octokit, owner, repo) {
+  assert(octokit, "octokit is not defined");
+  assert(owner, "owner is not defined");
+  assert(repo, "repo is not defined");
+  try {
+    const { status, data } = await octokit.repos.get({
+      owner,
+      repo
+    });
+    if (status == 200) {
+      return data;
+    } else if (status == 404) {
+      return undefined;
+    }
+  } catch (e) {
+    logger.error(
+      `Error getting project from  https://api.github.com/repos/${owner}/${repo}'".`
+    );
+    throw e;
+  }
+}
+
 async function getForkedProject(
   octokit,
   owner,
@@ -332,5 +354,6 @@ module.exports = {
   push,
   doesBranchExist,
   hasPullRequest,
-  getForkedProject
+  getForkedProject,
+  getRepository
 };

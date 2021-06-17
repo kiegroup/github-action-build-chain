@@ -8,8 +8,10 @@
 - definition version moved to 2.1
 - targetExpression mapping
 - branch flow from GA
+- getForkedProjectName improved
 
 ## Bugs:
+
 - windows error on joining folder https://github.com/kiegroup/github-action-build-chain/issues/153
 
 # V2.5

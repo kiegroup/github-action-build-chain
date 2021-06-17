@@ -5,6 +5,8 @@ const prInfo = require("./resources/pr_list_info.json");
 const prInfoEmpty = require("./resources/pr_list_info_empty.json");
 const forkedProjectListInfo = require("./resources/forked_projects_list_info.json");
 const forkedProjectListInfoEmpty = require("./resources/forked_projects_list_info_empty.json");
+const getRepositoryOk = require("./resources/get_project_ok.json");
+const getRepositoryNotFound = require("./resources/get_project_not_found.json");
 
 async function init(dir) {
   await fse.mkdirs(dir);
@@ -309,5 +311,40 @@ test("getForkedProject second page empty", async () => {
   );
 
   expect(octokit.repos.listForks).toHaveBeenCalledTimes(2);
+  expect(result).toBeUndefined();
+});
+
+test("getRepository existing", async () => {
+  const octokit = {
+    repos: {
+      get: jest.fn(({ owner, repo }) => {
+        return owner === "Ginxo" && repo === "repox"
+          ? { status: 200, data: getRepositoryOk }
+          : undefined;
+      })
+    }
+  };
+
+  const result = await git.getRepository(octokit, "Ginxo", "repox");
+
+  expect(octokit.repos.get).toHaveBeenCalledTimes(1);
+  expect(result).not.toBeUndefined();
+  expect(result.id).toBe(203378120);
+});
+
+test("getRepository not found", async () => {
+  const octokit = {
+    repos: {
+      get: jest.fn(({ owner, repo }) => {
+        return owner === "Ginxo" && repo === "repox"
+          ? { status: 404, data: getRepositoryNotFound }
+          : undefined;
+      })
+    }
+  };
+
+  const result = await git.getRepository(octokit, "Ginxo", "repox");
+
+  expect(octokit.repos.get).toHaveBeenCalledTimes(1);
   expect(result).toBeUndefined();
 });

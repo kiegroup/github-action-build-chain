@@ -3,7 +3,8 @@ const {
   doesBranchExist,
   merge: gitMerge,
   hasPullRequest,
-  getForkedProject
+  getForkedProject,
+  getRepository
 } = require("../../git");
 const { logger } = require("../../common");
 const { treatUrl } = require("@kie/build-chain-configuration-reader");
@@ -460,12 +461,9 @@ function getDir(rootFolder, project, skipCheckoutProjectFolder = undefined) {
 
 async function getForkedProjectName(octokit, owner, project, wantedOwner) {
   if (owner !== wantedOwner) {
-    const forkedProject = await getForkedProject(
-      octokit,
-      owner,
-      project,
-      wantedOwner
-    );
+    const forkedProject =
+      (await getRepository(octokit, wantedOwner, project)) ||
+      (await getForkedProject(octokit, owner, project, wantedOwner));
     return !forkedProject || !forkedProject.name ? project : forkedProject.name;
   } else {
     return project;
@@ -547,5 +545,6 @@ module.exports = {
   getCheckoutInfo,
   getDir,
   getPlaceHolders,
-  getTarget
+  getTarget,
+  getForkedProjectName
 };

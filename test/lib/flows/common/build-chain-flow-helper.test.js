@@ -2,14 +2,16 @@ const {
   getCheckoutInfo,
   checkoutDefinitionTree,
   getPlaceHolders,
-  getTarget
+  getTarget,
+  getForkedProjectName
 } = require("../../../../src/lib/flows/common/build-chain-flow-helper");
 const {
   doesBranchExist: doesBranchExistMock,
   clone: cloneMock,
   merge: mergeMock,
   hasPullRequest: hasPullRequestMock,
-  getForkedProject: getForkedProjectMock
+  getForkedProject: getForkedProjectMock,
+  getRepository: getRepositoryMock
 } = require("../../../../src/lib/git");
 jest.mock("../../../../src/lib/git");
 
@@ -2072,4 +2074,70 @@ test("getTarget targetBranch same. regex2", () => {
   );
   // Assert
   expect(result).toStrictEqual("master.*");
+});
+
+test("getForkedProjectName same name", async () => {
+  // Arrange
+  const octokit = "octokit";
+  const owner = "owner";
+  const project = "project";
+  const wantedOwner = "owner";
+
+  // Act
+  const result = await getForkedProjectName(
+    octokit,
+    owner,
+    project,
+    wantedOwner
+  );
+
+  // Assert
+  expect(getRepositoryMock).toHaveBeenCalledTimes(0);
+  expect(getForkedProjectMock).toHaveBeenCalledTimes(0);
+  expect(result).toStrictEqual(project);
+});
+
+test("getForkedProjectName getForkedProject found", async () => {
+  // Arrange
+  const octokit = "octokit";
+  const owner = "owner";
+  const project = "project";
+  const wantedOwner = "wantedOwner";
+  getRepositoryMock.mockResolvedValueOnce({ name: project });
+
+  // Act
+  const result = await getForkedProjectName(
+    octokit,
+    owner,
+    project,
+    wantedOwner
+  );
+
+  // Assert
+  expect(getRepositoryMock).toHaveBeenCalledTimes(1);
+  expect(getForkedProjectMock).toHaveBeenCalledTimes(0);
+  expect(result).toStrictEqual(project);
+});
+
+test("getForkedProjectName getForkedProject not found", async () => {
+  // Arrange
+  const octokit = "octokit";
+  const owner = "owner";
+  const project = "project";
+  const wantedOwner = "wantedOwner";
+  getRepositoryMock.mockResolvedValueOnce(undefined);
+  getForkedProjectMock.mockResolvedValueOnce({ name: "projectXFroked" });
+
+  // Act
+  const result = await getForkedProjectName(
+    octokit,
+    owner,
+    project,
+    wantedOwner
+  );
+
+  // Assert
+  expect(getRepositoryMock).toHaveBeenCalledTimes(1);
+  expect(getForkedProjectMock).toHaveBeenCalledTimes(1);
+  expect(result).toStrictEqual("projectXFroked");
 });

@@ -8302,7 +8302,8 @@ const {
   doesBranchExist,
   merge: gitMerge,
   hasPullRequest,
-  getForkedProject
+  getForkedProject,
+  getRepository
 } = __webpack_require__(484);
 const { logger } = __webpack_require__(79);
 const { treatUrl } = __webpack_require__(352);
@@ -8759,12 +8760,9 @@ function getDir(rootFolder, project, skipCheckoutProjectFolder = undefined) {
 
 async function getForkedProjectName(octokit, owner, project, wantedOwner) {
   if (owner !== wantedOwner) {
-    const forkedProject = await getForkedProject(
-      octokit,
-      owner,
-      project,
-      wantedOwner
-    );
+    const forkedProject =
+      (await getRepository(octokit, wantedOwner, project)) ||
+      (await getForkedProject(octokit, owner, project, wantedOwner));
     return !forkedProject || !forkedProject.name ? project : forkedProject.name;
   } else {
     return project;
@@ -8846,7 +8844,8 @@ module.exports = {
   getCheckoutInfo,
   getDir,
   getPlaceHolders,
-  getTarget
+  getTarget,
+  getForkedProjectName
 };
 
 
@@ -18002,6 +18001,28 @@ async function hasOriginPullRequest(octokit, owner, repo, branch) {
   }
 }
 
+async function getRepository(octokit, owner, repo) {
+  assert(octokit, "octokit is not defined");
+  assert(owner, "owner is not defined");
+  assert(repo, "repo is not defined");
+  // console.error("getRepository", owner, repo, undefined);
+  try {
+    const { status, data } = await octokit.repos.get({
+      owner,
+      repo
+    });
+    if (status == 200) {
+      return data;
+    }
+    return undefined;
+  } catch (e) {
+    logger.warn(
+      `${owner}/${repo} not found. Trying to get it by forked project list.`
+    );
+    return undefined;
+  }
+}
+
 async function getForkedProject(
   octokit,
   owner,
@@ -18063,7 +18084,8 @@ module.exports = {
   push,
   doesBranchExist,
   hasPullRequest,
-  getForkedProject
+  getForkedProject,
+  getRepository
 };
 
 

@@ -18015,6 +18015,9 @@ async function getRepository(octokit, owner, repo) {
     } else if (status == 404) {
       return undefined;
     }
+    throw new Error(
+      `Error requesting repository information from github for repository ${owner}/${repo}. Relaunch the job please. If the problem persists check Github Status page.`
+    );
   } catch (e) {
     logger.error(
       `Error getting project from  https://api.github.com/repos/${owner}/${repo}'".`

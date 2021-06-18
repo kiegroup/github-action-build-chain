@@ -348,3 +348,26 @@ test("getRepository not found", async () => {
   expect(octokit.repos.get).toHaveBeenCalledTimes(1);
   expect(result).toBeUndefined();
 });
+
+test("getRepository different to 404", async () => {
+  const octokit = {
+    repos: {
+      get: jest.fn(({ owner, repo }) => {
+        return owner === "Ginxo" && repo === "repox"
+          ? { status: 405, data: getRepositoryNotFound }
+          : undefined;
+      })
+    }
+  };
+
+  try {
+    await git.getRepository(octokit, "Ginxo", "repox");
+    expect(true).toBe(false);
+  } catch (ex) {
+    expect(ex.message).toBe(
+      "Error requesting repository information from github for repository Ginxo/repox. Relaunch the job please. If the problem persists check Github Status page."
+    );
+  }
+
+  expect(octokit.repos.get).toHaveBeenCalledTimes(1);
+});

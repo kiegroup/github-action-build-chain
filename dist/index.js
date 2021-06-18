@@ -18005,6 +18005,7 @@ async function getRepository(octokit, owner, repo) {
   assert(octokit, "octokit is not defined");
   assert(owner, "owner is not defined");
   assert(repo, "repo is not defined");
+  // console.error("getRepository", owner, repo, undefined);
   try {
     const { status, data } = await octokit.repos.get({
       owner,
@@ -18012,17 +18013,13 @@ async function getRepository(octokit, owner, repo) {
     });
     if (status == 200) {
       return data;
-    } else if (status == 404) {
-      return undefined;
     }
-    throw new Error(
-      `Error requesting repository information from github for repository ${owner}/${repo}. Relaunch the job please. If the problem persists check Github Status page.`
-    );
+    return undefined;
   } catch (e) {
-    logger.error(
-      `Error getting project from  https://api.github.com/repos/${owner}/${repo}'".`
+    logger.warn(
+      `${owner}/${repo} not found. Trying to get it by forked project list.`
     );
-    throw e;
+    return undefined;
   }
 }
 

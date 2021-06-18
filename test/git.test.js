@@ -360,14 +360,24 @@ test("getRepository different to 404", async () => {
     }
   };
 
-  try {
-    await git.getRepository(octokit, "Ginxo", "repox");
-    expect(true).toBe(false);
-  } catch (ex) {
-    expect(ex.message).toBe(
-      "Error requesting repository information from github for repository Ginxo/repox. Relaunch the job please. If the problem persists check Github Status page."
-    );
-  }
-
+  const result = await git.getRepository(octokit, "Ginxo", "repox");
   expect(octokit.repos.get).toHaveBeenCalledTimes(1);
+  expect(result).toBeUndefined();
+});
+
+test("getRepository different exception", async () => {
+  const octokit = {
+    repos: {
+      get: jest.fn(({ owner, repo }) => {
+        if (owner === "Ginxo" && repo === "repox") {
+          throw new Error();
+        }
+        return { status: 200, data: getRepositoryOk };
+      })
+    }
+  };
+
+  const result = await git.getRepository(octokit, "Ginxo", "repox");
+  expect(octokit.repos.get).toHaveBeenCalledTimes(1);
+  expect(result).toBeUndefined();
 });

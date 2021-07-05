@@ -1441,7 +1441,7 @@ test("getPlaceHolders url. target group and source branch ok", async () => {
   // Assert
   expect(checkUrlExist).toHaveBeenCalledTimes(2);
   expect(result).toStrictEqual({
-    BRANCH: "sBranch",
+    BRANCH: "tBranch",
     GROUP: "tGroup",
     PROJECT_NAME: "projectx"
   });
@@ -1472,7 +1472,7 @@ test("getPlaceHolders url. target group and branch ok", async () => {
   // Assert
   expect(checkUrlExist).toHaveBeenCalledTimes(3);
   expect(result).toStrictEqual({
-    BRANCH: "tBranch",
+    BRANCH: "sBranch",
     GROUP: "tGroup",
     PROJECT_NAME: "projectx"
   });
@@ -1502,7 +1502,7 @@ test("getPlaceHolders url. error", async () => {
     await getPlaceHolders(context, definitionFile);
   } catch (ex) {
     expect(ex.message).toBe(
-      "Definition file http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml does not exist for any of these cases: http://whateverurl.domain/sGroup/projectx/sBranch/file.yaml, http://whateverurl.domain/tGroup/projectx/sBranch/file.yaml or http://whateverurl.domain/tGroup/projectx/tBranch/file.yaml"
+      "Definition file http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml does not exist for any case"
     );
   }
 });

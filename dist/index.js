@@ -8769,51 +8769,65 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
   }
 }
 
+async function getPlaceHoldersHelper(definitionFile, placeHolder, token) {
+  const url = treatUrl(definitionFile, placeHolder);
+  const doesUrlExist = await checkUrlExist(url, token);
+  doesUrlExist
+    ? logger.info(`${url} exists, using it`)
+    : logger.warn(`${url} does not exists.`);
+  return doesUrlExist ? url : undefined;
+}
+
 /**
  * it checks what's the proper URL to retrieve definition from in case a URL with ${} expression is defined. It will try sourceGroup/sourceBranch then targetGroup/sourceBranch and then targetGroup/targetBranch in this order.
  * @param {Object} context the context information
  * @param {Object} definitionFile the definition file path or URL
  */
 async function getPlaceHolders(context, definitionFile) {
+  logger.info(`Getting place holders for ${definitionFile}.`);
+  let placeHolders = {};
   if (definitionFile.startsWith("http") && definitionFile.includes("${")) {
-    const placeHolderSource = {
+    placeHolders = {
       GROUP: context.config.github.sourceGroup,
       PROJECT_NAME: context.config.github.project,
       BRANCH: context.config.github.sourceBranch
     };
-    const sourceUrl = treatUrl(definitionFile, placeHolderSource);
-    if (!(await checkUrlExist(sourceUrl, context.token))) {
-      const placeHoldersTargetSource = {
+    const sourceUrl = await getPlaceHoldersHelper(
+      definitionFile,
+      placeHolders,
+      context.token
+    );
+    if (!sourceUrl) {
+      placeHolders = {
         GROUP: context.config.github.group,
         PROJECT_NAME: context.config.github.project,
-        BRANCH: context.config.github.sourceBranch
+        BRANCH: context.config.github.targetBranch
       };
-      const targetSourceUrl = treatUrl(
+      const targetTargetUrl = await getPlaceHoldersHelper(
         definitionFile,
-        placeHoldersTargetSource
+        placeHolders,
+        context.token
       );
-      if (!(await checkUrlExist(targetSourceUrl, context.token))) {
-        const placeHoldersTarget = {
+      if (!targetTargetUrl) {
+        placeHolders = {
           GROUP: context.config.github.group,
           PROJECT_NAME: context.config.github.project,
-          BRANCH: context.config.github.targetBranch
+          BRANCH: context.config.github.sourceBranch
         };
-        const targetUrl = treatUrl(definitionFile, placeHoldersTarget);
-        if (!(await checkUrlExist(targetUrl, context.token))) {
+        const targetSourceUrl = await getPlaceHoldersHelper(
+          definitionFile,
+          placeHolders,
+          context.token
+        );
+        if (!targetSourceUrl) {
           throw new Error(
-            `Definition file ${definitionFile} does not exist for any of these cases: ${sourceUrl}, ${targetSourceUrl} or ${targetUrl}`
+            `Definition file ${definitionFile} does not exist for any case`
           );
-        } else {
-          return placeHoldersTarget;
         }
-      } else {
-        return placeHoldersTargetSource;
       }
-    } else {
-      return placeHolderSource;
     }
   }
-  return {};
+  return placeHolders;
 }
 
 /**

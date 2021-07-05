@@ -9,6 +9,7 @@
 - targetExpression mapping
 - branch flow from GA
 - getForkedProjectName improved
+- issue #158 definition file URL improvements GROUP/BRANCH placeholders
 
 ## Bugs:
 

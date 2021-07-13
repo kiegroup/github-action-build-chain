@@ -405,7 +405,13 @@ function getTarget(
         );
       return mapping ? mapping.target : targetBranch;
       // If the current project has a mapping and the source matched with the targetBranch then this mapping is taken
-    } else if (currentProjectMapping && currentProjectMapping.dependant) {
+    } else if (
+      currentProjectMapping &&
+      currentProjectMapping.dependant &&
+      (currentProjectMapping.exclude
+        ? !currentProjectMapping.exclude.includes(projectTriggeringTheJob)
+        : true)
+    ) {
       const mapping =
         getMappingInfo(
           currentProject,

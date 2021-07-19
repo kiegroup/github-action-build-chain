@@ -1655,7 +1655,63 @@ test("getTarget targetBranch same. No project triggering job mapping. Project ex
           target: "7.x"
         }
       ]
-    }
+    },
+    exclude: ["projectB"]
+  };
+  const targetBranch = "master";
+  // Act
+  const result = getTarget(
+    projectTriggeringTheJob,
+    projectTriggeringTheJobMapping,
+    currentProject,
+    currentProjectMapping,
+    targetBranch
+  );
+  // Assert
+  expect(result).toStrictEqual(targetBranch);
+});
+
+test("getTarget targetBranch same. No project triggering job mapping. Project not excluded", () => {
+  // Arrange
+  const projectTriggeringTheJob = "projectB";
+  const projectTriggeringTheJobMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "7.x",
+          target: "master"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "master",
+          target: "7.x"
+        }
+      ]
+    },
+    exclude: ["projectC", "projectD"]
+  };
+  const currentProject = "projectD";
+  const currentProjectMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "7.x",
+          target: "master"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "master",
+          target: "7.x"
+        }
+      ]
+    },
+    exclude: ["projectX"]
   };
   const targetBranch = "master";
   // Act

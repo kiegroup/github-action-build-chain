@@ -469,6 +469,8 @@ To choose between `pr`, `fd` or `single`
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
 - **skipParallelCheckout**: Checkout the project sequencially.
+- **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
+
 
 Examples:
 
@@ -484,6 +486,8 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
 - **skipParallelCheckout**: Checkout the project sequencially.
+- **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
+
 
 Examples:
 
@@ -499,6 +503,8 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
 - **skipParallelCheckout**: Checkout the project sequencially.
+- **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
+
 
 Examples:
 
@@ -518,6 +524,8 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
 - **skipParallelCheckout**: Checkout the project sequencially.
+- **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
+
 
 Examples:
 

@@ -73,6 +73,7 @@ function singleArguments(subParser) {
   const parser = subParser.add_parser("single", {
     help: "singe flow. Just the project from the url event is treated."
   });
+  startingProjectArgument(parser);
   urlArgument(parser);
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);

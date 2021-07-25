@@ -8,13 +8,13 @@ jobs:
       - uses: actions/checkout@v2
       - name: Build Chain
         id: build-chain
-        uses: kiegroup/github-action-build-chain@master
+        uses: kiegroup/github-action-build-chain@main
         with:
           parent-dependencies: |
             lienzo-core
             groupx/errai
           child-dependencies: |
-            appformer@7.x:master
+            appformer@7.x:main
             lienzo-tests
           build-command: |
             mvn clean

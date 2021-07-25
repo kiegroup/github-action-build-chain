@@ -24,7 +24,7 @@ test("readYamlFile", () => {
             },
             id: "build-chain",
             name: "Build Chain",
-            uses: "kiegroup/github-action-build-chain@master",
+            uses: "kiegroup/github-action-build-chain@main",
             with: {
               "build-command": `mvn clean
 mvn -e -nsu -Dfull clean install -Prun-code-coverage -Dcontainer.profile=wildfly -Dintegration-tests=true -Dmaven.test.failure.ignore=true -DjvmArgs="-Xms1g -Xmx4g -XX:+CMSClassUnloadingEnabled"
@@ -35,7 +35,7 @@ mvn -e -nsu -fae -T1C clean install -Dfull -DskipTests -Dgwt.compiler.skip=true 
               "build-command-upstream": `mvn clean
 mvn -e -T1C clean install -DskipTests -Dgwt.compiler.skip=true -Dgwt.skipCompilation=true -Denforcer.skip=true -Dcheckstyle.skip=true -Dspotbugs.skip=true -Drevapi.skip=true
 `,
-              "child-dependencies": `appformer@7.x:master
+              "child-dependencies": `appformer@7.x:main
 lienzo-tests
 `,
               "parent-dependencies": `lienzo-core

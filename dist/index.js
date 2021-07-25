@@ -29793,7 +29793,7 @@ async function createCommonConfig(eventData, rootFolder, env) {
         env["GITHUB_BASE_REF"] ||
         (env["GITHUB_REF"]
           ? env["GITHUB_REF"].split("refs/heads/").pop()
-          : undefined), // master
+          : undefined), // main
       jobId: env["GITHUB_JOB"], // build-chain
       sourceRepository: eventData.sourceRepository,
       repository: env["GITHUB_REPOSITORY"], // Ginxo/lienzo-tests

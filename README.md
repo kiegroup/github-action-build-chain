@@ -105,6 +105,8 @@ See [action.yml](action.yml)
   > definition-file: 'https://raw.githubusercontent.com/${GROUP}/${PROJECT_NAME}/${BRANCH}/.ci/pull-request-config.yaml'
   > ```
 
+> **_Note:_** In case you use URL way, remember you should point the file content itself, so in case you want to use https://github.com/kiegroup/droolsjbpm-build-bootstrap/blob/a1efb55f17fd0fd9001b073c999e3fd2a80600a6/.ci/pull-request-config.yaml, `definition-file` value should be https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/a1efb55f17fd0fd9001b073c999e3fd2a80600a6/.ci/pull-request-config.yaml (Raw one for this case) or (using dynamic placeholders) https://raw.githubusercontent.com/${GROUP}/${PROJECT_NAME}/${BRANCH}/.ci/pull-request-config.yaml
+
 - **flow-type** (optional. 'pull-request' by default): The flow you want to execute. Possible values
 
   - pull-request: executes the pull reques flow

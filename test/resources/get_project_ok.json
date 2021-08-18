@@ -96,7 +96,7 @@
   "forks": 0,
   "open_issues": 0,
   "watchers": 0,
-  "default_branch": "master",
+  "default_branch": "main",
   "temp_clone_token": null,
   "parent": {
     "id": 1381673,
@@ -196,7 +196,7 @@
     "forks": 2038,
     "open_issues": 35,
     "watchers": 3693,
-    "default_branch": "master"
+    "default_branch": "main"
   },
   "source": {
     "id": 1381673,
@@ -296,7 +296,7 @@
     "forks": 2038,
     "open_issues": 35,
     "watchers": 3693,
-    "default_branch": "master"
+    "default_branch": "main"
   },
   "network_count": 2038,
   "subscribers_count": 1

@@ -7,7 +7,7 @@ afterEach(() => {
 test("checkUrlExist HTTPS OK", async () => {
   // Act
   const result = await checkUrlExist(
-    "https://raw.githubusercontent.com/kiegroup/github-action-build-chain/master/package.json"
+    "https://raw.githubusercontent.com/kiegroup/github-action-build-chain/main/package.json"
   );
   // Assert
   expect(result).toBe(true);

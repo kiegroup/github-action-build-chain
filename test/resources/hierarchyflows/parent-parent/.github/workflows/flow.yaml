@@ -7,7 +7,7 @@ jobs:
     steps:
       - name: Build Chain
         id: build-chain
-        uses: kiegroup/github-action-build-chain@master
+        uses: kiegroup/github-action-build-chain@main
         with:
           child-dependencies: "parent"
           build-command: 'echo "parent-parent"'

@@ -272,12 +272,12 @@
         "forks": 0,
         "open_issues": 2,
         "watchers": 0,
-        "default_branch": "master"
+        "default_branch": "main"
       }
     },
     "base": {
-      "label": "kiegroup:master",
-      "ref": "master",
+      "label": "kiegroup:main",
+      "ref": "main",
       "sha": "6517bed168792855fb651aa62f4ba69a1a3a5b4e",
       "user": {
         "login": "kiegroup",
@@ -397,7 +397,7 @@
         "forks": 380,
         "open_issues": 16,
         "watchers": 188,
-        "default_branch": "master"
+        "default_branch": "main"
       }
     },
     "_links": {

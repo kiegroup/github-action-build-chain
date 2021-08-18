@@ -975,14 +975,14 @@ test("checkoutDefinitionTree with mapping project NOT triggering the job", async
           default: [
             {
               source: "7.x",
-              target: "master"
+              target: "main"
             }
           ]
         },
         dependant: {
           default: [
             {
-              source: "master",
+              source: "main",
               target: "7.x"
             }
           ]
@@ -1002,7 +1002,7 @@ test("checkoutDefinitionTree with mapping project NOT triggering the job", async
         sourceGroup: "sourceGroup",
         author: "author",
         sourceBranch: "sBranch",
-        targetBranch: "master"
+        targetBranch: "main"
       },
       rootFolder: "folder"
     }
@@ -1070,17 +1070,17 @@ test("checkoutDefinitionTree with mapping project NOT triggering the job", async
   expect(cloneMock).toHaveBeenCalledWith(
     "URL_with_token/kiegroup/jbpm",
     "folder/kiegroup_jbpm",
-    "master"
+    "main"
   );
   expect(cloneMock).toHaveBeenCalledWith(
     "URL_with_token/kiegroup/drools",
     "folder/kiegroup_drools",
-    "master"
+    "main"
   );
   expect(cloneMock).toHaveBeenCalledWith(
     "URL_with_token/kiegroup/lienzo-core",
     "folder/kiegroup_lienzo_core",
-    "master"
+    "main"
   );
 
   expect(Object.keys(result).length).toBe(8);
@@ -1142,14 +1142,14 @@ test("checkoutDefinitionTree with mapping project triggering the job", async () 
           default: [
             {
               source: "7.x",
-              target: "master"
+              target: "main"
             }
           ]
         },
         dependant: {
           default: [
             {
-              source: "master",
+              source: "main",
               target: "7.x"
             }
           ]
@@ -1239,17 +1239,17 @@ test("checkoutDefinitionTree with mapping project triggering the job", async () 
   expect(cloneMock).toHaveBeenCalledWith(
     "URL_with_token/kiegroup/jbpm",
     "folder/kiegroup_jbpm",
-    "master"
+    "main"
   );
   expect(cloneMock).toHaveBeenCalledWith(
     "URL_with_token/kiegroup/drools",
     "folder/kiegroup_drools",
-    "master"
+    "main"
   );
   expect(cloneMock).toHaveBeenCalledWith(
     "URL_with_token/kiegroup/lienzo-core",
     "folder/kiegroup_lienzo_core",
-    "master"
+    "main"
   );
 
   expect(Object.keys(result).length).toBe(8);
@@ -1515,14 +1515,14 @@ test("getTarget project triggering the job", () => {
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
@@ -1554,14 +1554,14 @@ test("getTarget targetBranch different. No project triggering job mapping", () =
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
@@ -1590,20 +1590,20 @@ test("getTarget targetBranch same. No project triggering job mapping", () => {
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
     }
   };
-  const targetBranch = "master";
+  const targetBranch = "main";
   // Act
   const result = getTarget(
     projectTriggeringTheJob,
@@ -1624,14 +1624,14 @@ test("getTarget targetBranch same. No project triggering job mapping. Project ex
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
@@ -1644,21 +1644,21 @@ test("getTarget targetBranch same. No project triggering job mapping. Project ex
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
     },
     exclude: ["projectB"]
   };
-  const targetBranch = "master";
+  const targetBranch = "main";
   // Act
   const result = getTarget(
     projectTriggeringTheJob,
@@ -1679,14 +1679,14 @@ test("getTarget targetBranch same. No project triggering job mapping. Project no
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
@@ -1699,21 +1699,21 @@ test("getTarget targetBranch same. No project triggering job mapping. Project no
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
     },
     exclude: ["projectX"]
   };
-  const targetBranch = "master";
+  const targetBranch = "main";
   // Act
   const result = getTarget(
     projectTriggeringTheJob,
@@ -1734,14 +1734,14 @@ test("getTarget targetBranch same. No project triggering job mapping. Project ex
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
@@ -1750,7 +1750,7 @@ test("getTarget targetBranch same. No project triggering job mapping. Project ex
   };
   const currentProject = "projectD";
   const currentProjectMapping = undefined;
-  const targetBranch = "master";
+  const targetBranch = "main";
   // Act
   const result = getTarget(
     projectTriggeringTheJob,
@@ -1771,14 +1771,14 @@ test("getTarget targetBranch same. No project triggering job mapping. Project ex
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
@@ -1791,20 +1791,20 @@ test("getTarget targetBranch same. No project triggering job mapping. Project ex
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
     }
   };
-  const targetBranch = "master";
+  const targetBranch = "main";
   // Act
   const result = getTarget(
     projectTriggeringTheJob,
@@ -1825,7 +1825,7 @@ test("getTarget targetBranch same. No project triggering job mapping. Mapping ta
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ],
       projectD: [
@@ -1838,7 +1838,7 @@ test("getTarget targetBranch same. No project triggering job mapping. Mapping ta
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
@@ -1868,14 +1868,14 @@ test("getTarget targetBranch same. No project triggering job mapping. Mapping ta
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
@@ -1899,53 +1899,7 @@ test("getTarget targetBranch same. No project triggering job mapping. Mapping ta
     targetBranch
   );
   // Assert
-  expect(result).toStrictEqual("master");
-});
-
-test("getTarget targetBranch same. projectB mapping master", () => {
-  // Arrange
-  const projectTriggeringTheJob = "projectB";
-  const projectTriggeringTheJobMapping = undefined;
-  const currentProject = "projectA";
-  const currentProjectMapping = {
-    dependencies: {
-      default: [
-        {
-          source: "7.x",
-          target: "master"
-        }
-      ]
-    },
-    dependant: {
-      default: [
-        {
-          source: "master",
-          target: "7.x"
-        }
-      ],
-      projectB: [
-        {
-          source: "main",
-          target: "main-map"
-        },
-        {
-          source: "master",
-          target: "master-map"
-        }
-      ]
-    }
-  };
-  const targetBranch = "master";
-  // Act
-  const result = getTarget(
-    projectTriggeringTheJob,
-    projectTriggeringTheJobMapping,
-    currentProject,
-    currentProjectMapping,
-    targetBranch
-  );
-  // Assert
-  expect(result).toStrictEqual("master-map");
+  expect(result).toStrictEqual("main");
 });
 
 test("getTarget targetBranch same. projectB mapping main", () => {
@@ -1958,14 +1912,14 @@ test("getTarget targetBranch same. projectB mapping main", () => {
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ],
@@ -1975,8 +1929,54 @@ test("getTarget targetBranch same. projectB mapping main", () => {
           target: "main-map"
         },
         {
-          source: "master",
-          target: "master-map"
+          source: "main",
+          target: "main-map"
+        }
+      ]
+    }
+  };
+  const targetBranch = "main";
+  // Act
+  const result = getTarget(
+    projectTriggeringTheJob,
+    projectTriggeringTheJobMapping,
+    currentProject,
+    currentProjectMapping,
+    targetBranch
+  );
+  // Assert
+  expect(result).toStrictEqual("main-map");
+});
+
+test("getTarget targetBranch same. projectB mapping main", () => {
+  // Arrange
+  const projectTriggeringTheJob = "projectB";
+  const projectTriggeringTheJobMapping = undefined;
+  const currentProject = "projectA";
+  const currentProjectMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "7.x",
+          target: "main"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "main",
+          target: "7.x"
+        }
+      ],
+      projectB: [
+        {
+          source: "main",
+          target: "main-map"
+        },
+        {
+          source: "main",
+          target: "main-map"
         }
       ]
     }
@@ -2004,14 +2004,14 @@ test("getTarget targetBranch same. projectB no matching mapping", () => {
       default: [
         {
           source: "7.x",
-          target: "master"
+          target: "main"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "masterx",
+          source: "mainx",
           target: "7.x.y"
         }
       ],
@@ -2021,13 +2021,13 @@ test("getTarget targetBranch same. projectB no matching mapping", () => {
           target: "main-map"
         },
         {
-          source: "master",
-          target: "master-map"
+          source: "main",
+          target: "main-map"
         }
       ]
     }
   };
-  const targetBranch = "masterx";
+  const targetBranch = "mainx";
   // Act
   const result = getTarget(
     projectTriggeringTheJob,
@@ -2048,18 +2048,18 @@ test("getTarget targetBranch same. regex", () => {
       default: [
         {
           source: "8.x",
-          target: "master8.x"
+          target: "main8.x"
         },
         {
           source: ".*",
-          target: "master.*"
+          target: "main.*"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
@@ -2083,7 +2083,7 @@ test("getTarget targetBranch same. regex", () => {
     targetBranch
   );
   // Assert
-  expect(result).toStrictEqual("master.*");
+  expect(result).toStrictEqual("main.*");
 });
 
 test("getTarget targetBranch same. regex2", () => {
@@ -2094,18 +2094,18 @@ test("getTarget targetBranch same. regex2", () => {
       default: [
         {
           source: "8.x",
-          target: "master8.x"
+          target: "main8.x"
         },
         {
           source: "\\d\\..",
-          target: "master.*"
+          target: "main.*"
         }
       ]
     },
     dependant: {
       default: [
         {
-          source: "master",
+          source: "main",
           target: "7.x"
         }
       ]
@@ -2129,7 +2129,7 @@ test("getTarget targetBranch same. regex2", () => {
     targetBranch
   );
   // Assert
-  expect(result).toStrictEqual("master.*");
+  expect(result).toStrictEqual("main.*");
 });
 
 test("getForkedProjectName same name", async () => {

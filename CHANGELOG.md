@@ -9,11 +9,13 @@
 - targetExpression mapping
 - branch flow from GA
 - getForkedProjectName improved
-- issue #158 definition file URL improvements GROUP/BRANCH placeholders
 
 ## Bugs:
 
 - windows error on joining folder https://github.com/kiegroup/github-action-build-chain/issues/153
+- issue #158 definition file URL improvements GROUP/BRANCH placeholders
+- add starting-project CLI argument to single flow type option
+- starting-project argument missing documentation
 
 # V2.5
 

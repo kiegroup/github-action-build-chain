@@ -7,7 +7,7 @@ const {
   getTreeForProject,
   parentChainFromNode
 } = require("@kie/build-chain-configuration-reader");
-const { printCheckoutInformation } = require("../summary");
+const { printCheckoutInformation, printExecutionPlan } = require("../summary");
 const { logger } = require("../common");
 const core = require("@actions/core");
 const {
@@ -29,9 +29,6 @@ async function start(
   };
   await executePre(context.config.github.inputs.definitionFile, readerOptions);
 
-  core.startGroup(
-    `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
-  );
   const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
@@ -42,6 +39,15 @@ async function start(
     readerOptions
   );
   const nodeChain = await parentChainFromNode(definitionTree);
+
+  core.startGroup(`[Pull Request Flow] Execution Plan...`);
+  printExecutionPlan(nodeChain, projectTriggeringJob);
+  core.endGroup();
+
+  core.startGroup(
+    `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
+  );
+
   logger.info(
     `Tree for project ${projectTriggeringJob}. Dependencies: ${nodeChain.map(
       node => "\n" + node.project

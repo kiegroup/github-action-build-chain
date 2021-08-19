@@ -473,7 +473,6 @@ To choose between `pr`, `fd` or `single`
 - **skipParallelCheckout**: Checkout the project sequencially.
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
 
-
 Examples:
 
 ```
@@ -490,7 +489,6 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **skipParallelCheckout**: Checkout the project sequencially.
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
 
-
 Examples:
 
 ```
@@ -506,7 +504,6 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
 - **skipParallelCheckout**: Checkout the project sequencially.
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
-
 
 Examples:
 
@@ -527,7 +524,6 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
 - **skipParallelCheckout**: Checkout the project sequencially.
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
-
 
 Examples:
 

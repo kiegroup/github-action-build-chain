@@ -9,6 +9,7 @@
 - targetExpression mapping
 - branch flow from GA
 - getForkedProjectName improved
+- print execution plan
 
 ## Bugs:
 

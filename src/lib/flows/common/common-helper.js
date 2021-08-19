@@ -130,5 +130,6 @@ async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
 module.exports = {
   executeBuild,
   executeBuildSpecificCommand,
-  executeBuildCommands
+  executeBuildCommands,
+  getCommand
 };

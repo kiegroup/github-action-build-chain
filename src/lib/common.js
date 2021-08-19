@@ -31,6 +31,7 @@ const logger = {
     }
   },
 
+  emptyLine: () => log("", ["\n"]),
   info: (...str) => log("[INFO] ", str),
   warn: (...str) => log("[WARN] ", str),
 

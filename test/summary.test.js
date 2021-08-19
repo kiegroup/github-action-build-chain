@@ -1,4 +1,7 @@
-const { printCheckoutInformation } = require("../src/lib/summary");
+const {
+  printCheckoutInformation,
+  printExecutionPlan
+} = require("../src/lib/summary");
 const { logger } = require("../src/lib/common");
 jest.mock("../src/lib/common");
 
@@ -115,4 +118,203 @@ test("printCheckoutInformation undefined", async () => {
 
   // // Assert
   expect(logger.info).toHaveBeenCalledTimes(0);
+});
+
+test("printExecutionPlan projecty triggering the job", async () => {
+  // Arrange
+  const projectTriggeringJob = "projecty";
+  const nodeChain = [
+    {
+      project: "projectx",
+      build: {
+        "build-command": {
+          before: {
+            current: "projectx before current command",
+            upstream: "projectx before upstream command",
+            downstream: "projectx before downstream command"
+          },
+          current: "projectx current current command",
+          upstream: "projectx current upstream command",
+          downstream: "projectx current downstream command",
+          after: {
+            current: "projectx after current command",
+            upstream: "projectx after upstream command",
+            downstream: "projectx after downstream command"
+          }
+        },
+        skip: undefined
+      }
+    },
+    {
+      project: "projecty",
+      build: {
+        "build-command": {
+          before: {
+            current: "projecty before current command",
+            upstream: "projecty before upstream command",
+            downstream: "projecty before downstream command"
+          },
+          current: "projecty current current command",
+          upstream: "projecty current upstream command",
+          downstream: "projecty current downstream command",
+          after: {
+            current: "projecty after current command",
+            upstream: "projecty after upstream command",
+            downstream: "projecty after downstream command"
+          }
+        },
+        skip: undefined
+      }
+    }
+  ];
+
+  // Act
+  printExecutionPlan(nodeChain, projectTriggeringJob);
+
+  // // Assert
+  expect(logger.info).toHaveBeenCalledTimes(13);
+  expect(logger.info).toHaveBeenCalledWith("[2] projects will be executed");
+  expect(logger.info).toHaveBeenCalledWith("[projectx]");
+  expect(logger.info).toHaveBeenCalledWith("[projecty]");
+  expect(logger.info).toHaveBeenCalledWith("Level Type: [upstream].");
+  expect(logger.info).toHaveBeenCalledWith("Level Type: [current].");
+  expect(logger.info).toHaveBeenCalledWith("projectx before upstream command");
+  expect(logger.info).toHaveBeenCalledWith("projectx current upstream command");
+  expect(logger.info).toHaveBeenCalledWith("projectx after upstream command");
+  expect(logger.info).toHaveBeenCalledWith("projecty before current command");
+  expect(logger.info).toHaveBeenCalledWith("projecty current current command");
+  expect(logger.info).toHaveBeenCalledWith("projecty after current command");
+});
+
+test("printExecutionPlan skip all", async () => {
+  // Arrange
+  const projectTriggeringJob = "projecty";
+  const nodeChain = [
+    {
+      project: "projectx",
+      build: {
+        "build-command": {
+          before: {
+            current: "projectx before current command",
+            upstream: "projectx before upstream command",
+            downstream: "projectx before downstream command"
+          },
+          current: "projectx current current command",
+          upstream: "projectx current upstream command",
+          downstream: "projectx current downstream command",
+          after: {
+            current: "projectx after current command",
+            upstream: "projectx after upstream command",
+            downstream: "projectx after downstream command"
+          }
+        },
+        skip: true
+      }
+    },
+    {
+      project: "projecty",
+      build: {
+        "build-command": {
+          before: {
+            current: "projecty before current command",
+            upstream: "projecty before upstream command",
+            downstream: "projecty before downstream command"
+          },
+          current: "projecty current current command",
+          upstream: "projecty current upstream command",
+          downstream: "projecty current downstream command",
+          after: {
+            current: "projecty after current command",
+            upstream: "projecty after upstream command",
+            downstream: "projecty after downstream command"
+          }
+        },
+        skip: true
+      }
+    }
+  ];
+
+  // Act
+  printExecutionPlan(nodeChain, projectTriggeringJob);
+
+  // // Assert
+  expect(logger.info).toHaveBeenCalledTimes(9);
+  expect(logger.info).toHaveBeenCalledWith("[2] projects will be executed");
+  expect(logger.info).toHaveBeenCalledWith("[projectx]");
+  expect(logger.info).toHaveBeenCalledWith("[projecty]");
+  expect(logger.info).toHaveBeenCalledWith("Level Type: [upstream].");
+  expect(logger.info).toHaveBeenCalledWith("Level Type: [current].");
+  expect(logger.info).toHaveBeenCalledWith(
+    "No command will be executed (the project is skipped)."
+  );
+});
+
+test("printExecutionPlan projectx triggering the job", async () => {
+  // Arrange
+  const projectTriggeringJob = "projectx";
+  const nodeChain = [
+    {
+      project: "projectx",
+      build: {
+        "build-command": {
+          before: {
+            current: "projectx before current command",
+            upstream: "projectx before upstream command",
+            downstream: "projectx before downstream command"
+          },
+          current: "projectx current current command",
+          upstream: "projectx current upstream command",
+          downstream: "projectx current downstream command",
+          after: {
+            current: "projectx after current command",
+            upstream: "projectx after upstream command",
+            downstream: "projectx after downstream command"
+          }
+        },
+        skip: undefined
+      }
+    },
+    {
+      project: "projecty",
+      build: {
+        "build-command": {
+          before: {
+            current: "projecty before current command",
+            upstream: "projecty before upstream command",
+            downstream: "projecty before downstream command"
+          },
+          current: "projecty current current command",
+          upstream: "projecty current upstream command",
+          downstream: "projecty current downstream command",
+          after: {
+            current: "projecty after current command",
+            upstream: "projecty after upstream command",
+            downstream: "projecty after downstream command"
+          }
+        },
+        skip: undefined
+      }
+    }
+  ];
+
+  // Act
+  printExecutionPlan(nodeChain, projectTriggeringJob);
+
+  // // Assert
+  expect(logger.info).toHaveBeenCalledTimes(13);
+  expect(logger.info).toHaveBeenCalledWith("[2] projects will be executed");
+  expect(logger.info).toHaveBeenCalledWith("[projectx]");
+  expect(logger.info).toHaveBeenCalledWith("[projecty]");
+  expect(logger.info).toHaveBeenCalledWith("Level Type: [current].");
+  expect(logger.info).toHaveBeenCalledWith("Level Type: [downstream].");
+  expect(logger.info).toHaveBeenCalledWith("projectx before current command");
+  expect(logger.info).toHaveBeenCalledWith("projectx current current command");
+  expect(logger.info).toHaveBeenCalledWith("projectx after current command");
+  expect(logger.info).toHaveBeenCalledWith(
+    "projecty before downstream command"
+  );
+  expect(logger.info).toHaveBeenCalledWith(
+    "projecty current downstream command"
+  );
+  expect(logger.info).toHaveBeenCalledWith("projecty after downstream command");
 });

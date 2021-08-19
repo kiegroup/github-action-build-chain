@@ -658,7 +658,8 @@ async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
 module.exports = {
   executeBuild,
   executeBuildSpecificCommand,
-  executeBuildCommands
+  executeBuildCommands,
+  getCommand
 };
 
 
@@ -1603,6 +1604,7 @@ const logger = {
     }
   },
 
+  emptyLine: () => log("", ["\n"]),
   info: (...str) => log("[INFO] ", str),
   warn: (...str) => log("[WARN] ", str),
 
@@ -3785,7 +3787,7 @@ const {
   getOrderedListForProject
 } = __webpack_require__(352);
 
-const { printCheckoutInformation } = __webpack_require__(656);
+const { printCheckoutInformation, printExecutionPlan } = __webpack_require__(656);
 const { logger } = __webpack_require__(79);
 const core = __webpack_require__(470);
 const {
@@ -3805,9 +3807,6 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   };
   await executePre(context.config.github.inputs.definitionFile, readerOptions);
 
-  core.startGroup(
-    `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
-  );
   const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
@@ -3816,6 +3815,14 @@ async function start(context, options = { isArchiveArtifacts: true }) {
     context.config.github.inputs.definitionFile,
     projectTriggeringJob,
     readerOptions
+  );
+
+  core.startGroup(`[Full Downstream Flow] Execution Plan...`);
+  printExecutionPlan(nodeChain, projectTriggeringJob);
+  core.endGroup();
+
+  core.startGroup(
+    `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
 
   logger.info(
@@ -22788,6 +22795,7 @@ if (process.platform === 'linux') {
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 const { logger } = __webpack_require__(79);
+const { getCommand } = __webpack_require__(11);
 
 const groupBy = (checkoutInfo, key) => {
   return Object.values(checkoutInfo).reduce((acc, checkInfo) => {
@@ -22831,8 +22839,63 @@ function printCheckoutInformation(checkoutInfo) {
   }
 }
 
+function printExecutionPlanNode(node, levelType) {
+  logger.emptyLine();
+  logger.info(`[${node.project}]`);
+  logger.info(`Level Type: [${levelType}].`);
+  if (node.build && node.build.skip) {
+    logger.info(`No command will be executed (the project is skipped).`);
+  } else {
+    if (
+      node.build["build-command"].before &&
+      getCommand(node.build["build-command"].before, levelType)
+    ) {
+      logger.info(getCommand(node.build["build-command"].before, levelType));
+    }
+    logger.info(getCommand(node.build["build-command"], levelType));
+    if (
+      node.build["build-command"].after &&
+      getCommand(node.build["build-command"].after, levelType)
+    ) {
+      logger.info(getCommand(node.build["build-command"].after, levelType));
+    }
+  }
+}
+
+function printExecutionPlan(nodeChain, projectTriggeringJob) {
+  if (nodeChain && Object.keys(nodeChain).length) {
+    logger.info("----------------------------------------------");
+    logger.info(`[${Object.keys(nodeChain).length}] projects will be executed`);
+
+    const projectTriggeringJobIndex = nodeChain.findIndex(
+      node => node.project === projectTriggeringJob
+    );
+    if (projectTriggeringJobIndex < 0) {
+      throw new Error(
+        `The chain ${nodeChain.map(
+          node => node.project
+        )} does not contain the project triggering the job ${projectTriggeringJob}`
+      );
+    }
+    Object.entries(nodeChain).forEach(([index, node]) =>
+      printExecutionPlanNode(
+        node,
+        index < projectTriggeringJobIndex
+          ? "upstream"
+          : index == projectTriggeringJobIndex
+          ? "current"
+          : "downstream"
+      )
+    );
+
+    logger.emptyLine();
+    logger.info("----------------------------------------------");
+  }
+}
+
 module.exports = {
-  printCheckoutInformation
+  printCheckoutInformation,
+  printExecutionPlan
 };
 
 
@@ -25457,7 +25520,7 @@ const {
   getTreeForProject,
   parentChainFromNode
 } = __webpack_require__(352);
-const { printCheckoutInformation } = __webpack_require__(656);
+const { printCheckoutInformation, printExecutionPlan } = __webpack_require__(656);
 const { logger } = __webpack_require__(79);
 const core = __webpack_require__(470);
 const {
@@ -25479,9 +25542,6 @@ async function start(
   };
   await executePre(context.config.github.inputs.definitionFile, readerOptions);
 
-  core.startGroup(
-    `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
-  );
   const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
@@ -25492,6 +25552,15 @@ async function start(
     readerOptions
   );
   const nodeChain = await parentChainFromNode(definitionTree);
+
+  core.startGroup(`[Pull Request Flow] Execution Plan...`);
+  printExecutionPlan(nodeChain, projectTriggeringJob);
+  core.endGroup();
+
+  core.startGroup(
+    `[Pull Request Flow] Checking out ${context.config.github.groupProject} and its dependencies`
+  );
+
   logger.info(
     `Tree for project ${projectTriggeringJob}. Dependencies: ${nodeChain.map(
       node => "\n" + node.project

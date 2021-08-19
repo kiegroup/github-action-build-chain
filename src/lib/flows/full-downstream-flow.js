@@ -7,7 +7,7 @@ const {
   getOrderedListForProject
 } = require("@kie/build-chain-configuration-reader");
 
-const { printCheckoutInformation } = require("../summary");
+const { printCheckoutInformation, printExecutionPlan } = require("../summary");
 const { logger } = require("../common");
 const core = require("@actions/core");
 const {
@@ -27,9 +27,6 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   };
   await executePre(context.config.github.inputs.definitionFile, readerOptions);
 
-  core.startGroup(
-    `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
-  );
   const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
@@ -38,6 +35,14 @@ async function start(context, options = { isArchiveArtifacts: true }) {
     context.config.github.inputs.definitionFile,
     projectTriggeringJob,
     readerOptions
+  );
+
+  core.startGroup(`[Full Downstream Flow] Execution Plan...`);
+  printExecutionPlan(nodeChain, projectTriggeringJob);
+  core.endGroup();
+
+  core.startGroup(
+    `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
   );
 
   logger.info(

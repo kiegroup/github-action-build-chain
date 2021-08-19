@@ -14,7 +14,7 @@ dependencies:
       - project: kiegroup/droolsjbpm-build-bootstrap
 
   - project: kiegroup/appformer
-    dependencies:    
+    dependencies:
       - project: kiegroup/lienzo-core
       - project: kiegroup/droolsjbpm-build-bootstrap
       - project: kiegroup/lienzo-tests
@@ -47,7 +47,7 @@ dependencies:
           - source: main
             target: 7.x
       exclude:
-        - kiegroup/optaweb-employee-rostering  
+        - kiegroup/optaweb-employee-rostering
         - kiegroup/optaweb-vehicle-routing
 
   - project: kiegroup/kie-jpmml-integration
@@ -129,7 +129,7 @@ dependencies:
           - source: main
             target: 7.x
       exclude:
-        - kiegroup/optaweb-vehicle-routing  
+        - kiegroup/optaweb-vehicle-routing
         - kiegroup/optaplanner
 
   - project: kiegroup/optaweb-vehicle-routing
@@ -145,7 +145,7 @@ dependencies:
           - source: main
             target: 7.x
       exclude:
-        - kiegroup/optaweb-employee-rostering  
+        - kiegroup/optaweb-employee-rostering
         - kiegroup/optaplanner
 
   - project: kiegroup/kie-wb-distributions
@@ -157,3 +157,7 @@ dependencies:
       - project: kiegroup/appformer
       - project: kiegroup/kie-uberfire-extensions
       - project: kiegroup/optaplanner-wb
+
+  - project: kiegroup/process-migration-service
+    dependencies:
+      - project: kiegroup/droolsjbpm-integration

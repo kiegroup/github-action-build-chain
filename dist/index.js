@@ -26370,7 +26370,37 @@ module.exports = {
 /* 822 */,
 /* 823 */,
 /* 824 */
-/***/ (function(module) {
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const { logger } = __webpack_require__(979);
+
+/**
+ * Treats the url containing a expression between `%{` and `}` (without quotes)
+ * @param {String} url with expressions
+ */
+function executeUrlExpressions(url) {
+  let result = url;
+  const expression = /%{([^%]+)}/g;
+  let match;
+  while ((match = expression.exec(url))) {
+    logger.info(`Expression found in URL ${result}.`);
+    logger.info(`Expression: ${match[1]}.`);
+
+    try {
+      const expressionEvalResult = eval(match[1]);
+      logger.info(`Expression Result: ${expressionEvalResult}.`);
+      result = result.replace(`%{${match[1]}}`, expressionEvalResult);
+      logger.emptyLine();
+    } catch (ex) {
+      logger.error(
+        `Error evaluating expression \`${match[1]}\` for url: \`${result}\``,
+        ex
+      );
+      throw ex;
+    }
+  }
+  return result;
+}
 
 /**
  * it treats the url in case it contains
@@ -26384,7 +26414,8 @@ function treatUrl(url, placeHolders) {
       ([key, value]) => (result = result.replace(`$\{${key}}`, value))
     );
   }
-  return result;
+
+  return executeUrlExpressions(result);
 }
 
 function treatMapping(mapping) {
@@ -26402,7 +26433,7 @@ function treatMappingDependencies(mappingDependencies) {
         try {
           mapping.target = eval(mapping.targetExpression);
         } catch (ex) {
-          console.error(
+          logger.error(
             `Error evaluating expression \`${mapping.targetExpression}\` for source: \`${mapping.source}\``,
             ex
           );
@@ -26412,7 +26443,7 @@ function treatMappingDependencies(mappingDependencies) {
   );
 }
 
-module.exports = { treatUrl, treatMapping };
+module.exports = { treatUrl, treatMapping, executeUrlExpressions };
 
 
 /***/ }),
@@ -29824,7 +29855,73 @@ module.exports = {
 /* 976 */,
 /* 977 */,
 /* 978 */,
-/* 979 */,
+/* 979 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+const util = __webpack_require__(669);
+const process = __webpack_require__(765);
+
+class ClientError extends Error {}
+
+class TimeoutError extends Error {}
+
+function log(prefix, obj) {
+  if (process.env.NODE_ENV !== "test") {
+    const str = obj.map(o => (typeof o === "object" ? inspect(o) : o));
+    if (prefix) {
+      console.log.apply(console, [prefix, ...str]);
+    } else {
+      console.log.apply(console, str);
+    }
+  }
+}
+
+const logger = {
+  level: "info",
+
+  trace: (...str) => {
+    if (logger.level === "trace") {
+      log("[TRACE]", str);
+    }
+  },
+
+  debug: (...str) => {
+    if (logger.level === "trace" || logger.level === "debug") {
+      log("DEBUG", str);
+    }
+  },
+
+  emptyLine: () => log("", []),
+  info: (...str) => log("[INFO] ", str),
+  warn: (...str) => log("[WARN] ", str),
+
+  error: (...str) => {
+    if (str.length === 1) {
+      if (str[0] instanceof Error) {
+        if (logger.level === "trace" || logger.level === "debug") {
+          log(null, [str[0].stack || str[0]]);
+        } else {
+          log("[ERROR] ", [str[0].message || str[0]]);
+        }
+      }
+    } else {
+      log("[ERROR] ", str);
+    }
+  }
+};
+
+function inspect(obj) {
+  return util.inspect(obj, false, null, true);
+}
+
+module.exports = {
+  ClientError,
+  TimeoutError,
+  logger
+};
+
+
+/***/ }),
 /* 980 */,
 /* 981 */
 /***/ (function(module, __unusedexports, __webpack_require__) {

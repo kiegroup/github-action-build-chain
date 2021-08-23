@@ -26415,9 +26415,7 @@ function treatUrl(url, placeHolders) {
     );
   }
 
-  const finalResult = executeUrlExpressions(result);
-  logger.info(`Final url is ${finalResult}`);
-  return finalResult;
+  return executeUrlExpressions(result);
 }
 
 function treatMapping(mapping) {

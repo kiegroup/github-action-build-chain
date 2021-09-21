@@ -64,7 +64,6 @@ async function clone(from, to, branch) {
       ".",
       "clone",
       "--quiet",
-      "--shallow-submodules",
       "--no-tags",
       "--branch",
       branch,

@@ -1902,6 +1902,124 @@ test("getTarget targetBranch same. No project triggering job mapping. Mapping ta
   expect(result).toStrictEqual("main");
 });
 
+test("getTarget targetBranch same. Both have mapping. Mapping taken from dependencies (from default)", () => {
+  // Arrange
+  const projectTriggeringTheJob = "projectB";
+  const projectTriggeringTheJobMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "7.x",
+          target: "main"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "main",
+          target: "7.x"
+        }
+      ]
+    }
+  };
+  const currentProject = "projectD";
+  const currentProjectMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "8.x",
+          target: "branchX"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "branchX",
+          target: "8.x"
+        }
+      ]
+    }
+  };
+  const targetBranch = "branchX";
+  // Act
+  const result = getTarget(
+    projectTriggeringTheJob,
+    projectTriggeringTheJobMapping,
+    currentProject,
+    currentProjectMapping,
+    targetBranch
+  );
+  // Assert
+  expect(result).toStrictEqual("8.x");
+});
+
+test("getTarget targetBranch same. Both have mapping. Mapping taken from dependencies (from project mapping)", () => {
+  // Arrange
+  const projectTriggeringTheJob = "projectB";
+  const projectTriggeringTheJobMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "7.x",
+          target: "main"
+        }
+      ],
+      projectB: [
+        {
+          source: "9.x",
+          target: "main"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "main",
+          target: "7.x"
+        }
+      ]
+    }
+  };
+  const currentProject = "projectD";
+  const currentProjectMapping = {
+    dependencies: {
+      default: [
+        {
+          source: "8.x",
+          target: "branchX"
+        }
+      ]
+    },
+    dependant: {
+      default: [
+        {
+          source: "branchY",
+          target: "8.x"
+        }
+      ],
+      projectB: [
+        {
+          source: "branchX",
+          target: "9.x"
+        }
+      ]
+    }
+  };
+  const targetBranch = "branchX";
+  // Act
+  const result = getTarget(
+    projectTriggeringTheJob,
+    projectTriggeringTheJobMapping,
+    currentProject,
+    currentProjectMapping,
+    targetBranch
+  );
+  // Assert
+  expect(result).toStrictEqual("9.x");
+});
+
 test("getTarget targetBranch same. projectB mapping main", () => {
   // Arrange
   const projectTriggeringTheJob = "projectB";

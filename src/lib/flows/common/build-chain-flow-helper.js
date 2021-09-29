@@ -403,9 +403,12 @@ function getTarget(
           projectTriggeringTheJobMapping.dependencies.default,
           targetBranch
         );
-      return mapping ? mapping.target : targetBranch;
+      if (mapping) {
+        return mapping.target;
+      }
       // If the current project has a mapping and the source matched with the targetBranch then this mapping is taken
-    } else if (
+    }
+    if (
       currentProjectMapping &&
       currentProjectMapping.dependant &&
       (currentProjectMapping.exclude
@@ -423,13 +426,12 @@ function getTarget(
           currentProjectMapping.dependant.default,
           targetBranch
         );
-      return mapping ? mapping.target : targetBranch;
-    } else {
-      return targetBranch;
+      if (mapping) {
+        return mapping.target;
+      }
     }
-  } else {
-    return targetBranch;
   }
+  return targetBranch;
 }
 
 function getMappingInfo(currentProject, mapping, sourceBranch) {

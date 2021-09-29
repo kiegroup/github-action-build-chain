@@ -17,7 +17,7 @@
 - issue #158 definition file URL improvements GROUP/BRANCH placeholders
 - add starting-project CLI argument to single flow type option
 - starting-project argument missing documentation
-- look up both current and project triggering mappings
+- look up both current and project triggering mappings. issue #176
 
 # V2.5
 

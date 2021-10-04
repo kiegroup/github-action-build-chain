@@ -8306,8 +8306,9 @@ module.exports = {
 
 const {
   clone,
+  rebase,
   doesBranchExist,
-  merge: gitMerge,
+  fetchFromRemote,
   hasPullRequest,
   getForkedProject,
   getRepository
@@ -8504,36 +8505,45 @@ async function checkoutProjectPullRequestFlow(
 async function checkoutNode(context, node, checkoutInfo, dir) {
   if (checkoutInfo.merge) {
     logger.info(
-      `[${node.project}] Merging ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      `[${node.project}] Rebasing ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch} onto ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch}`
     );
     try {
       await clone(
-        `${context.config.github.serverUrlWithToken}/${node.project}`,
-        dir,
-        checkoutInfo.targetBranch
-      );
-    } catch (err) {
-      logger.error(
-        `[${node.project}] Error checking out (before merging)  ${context.config.github.serverUrl}/${node.repo.group}/${node.project}:${context.config.github.targetBranch}`
-      );
-      throw err;
-    }
-    try {
-      await gitMerge(
-        dir,
         `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
+        dir,
         checkoutInfo.branch
       );
     } catch (err) {
       logger.error(
-        `[${node.project}] Error merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually merge it and relaunch.`
+        `[${node.project}] Error checking out (before rebasing) ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      );
+      throw err;
+    }
+    try {
+      await fetchFromRemote(
+        dir,
+        "upstream",
+        `${context.config.github.serverUrlWithToken}/${node.project}`,
+        checkoutInfo.targetBranch
+      );
+    } catch (err) {
+      logger.error(
+        `[${node.project}] Error fetching target branch (before rebasing) ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch}`
+      );
+      throw err;
+    }
+    try {
+      await rebase(dir, "upstream", checkoutInfo.targetBranch);
+    } catch (err) {
+      logger.error(
+        `[${node.project}] Error rebasing ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually rebase it and relaunch.`
       );
       throw err;
     }
   } else {
     try {
       logger.info(
-        `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}'  into '${dir}'`
+        `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}' into '${dir}'`
       );
       await clone(
         `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
@@ -17845,6 +17855,11 @@ async function fetch(dir, branch) {
   );
 }
 
+async function fetchFromRemote(dir, name, url, branch) {
+  await git(dir, "remote", "add", name, url);
+  await git(dir, "fetch", "--quiet", "--no-tags", name, branch);
+}
+
 async function fetchUntilMergeBase(dir, branch, timeout) {
   const maxTime = new Date().getTime() + timeout;
   const ref = `refs/remotes/origin/${branch}`;
@@ -17925,8 +17940,14 @@ async function sha(dir, branch) {
   return await git(dir, "show-ref", "-s", `refs/remotes/origin/${branch}`);
 }
 
-async function rebase(dir, branch) {
-  return await git(dir, "rebase", "--quiet", "--autosquash", branch);
+async function rebase(dir, remote, branch) {
+  return await git(
+    dir,
+    "rebase",
+    "--quiet",
+    "--autosquash",
+    `${remote}/${branch}`
+  );
 }
 
 async function push(dir, force, branch) {
@@ -18102,6 +18123,7 @@ module.exports = {
   git,
   clone,
   fetch,
+  fetchFromRemote,
   fetchUntilMergeBase,
   fetchDeepen,
   mergeBase,
@@ -22816,7 +22838,7 @@ function printCheckoutInformation(checkoutInfo) {
         checkInfo
           ? `${checkInfo.group}/${checkInfo.project}:${checkInfo.branch}.${
               checkInfo.merge
-                ? ` It has Been merged with ${checkInfo.targetGroup}/${checkInfo.project}:${checkInfo.targetBranch}`
+                ? ` It has been rebased onto ${checkInfo.targetGroup}/${checkInfo.project}:${checkInfo.targetBranch}`
                 : ""
             }`
           : `${project}: No checkout information`
@@ -22830,7 +22852,7 @@ function printCheckoutInformation(checkoutInfo) {
             checkInfo => `
   ${checkInfo.group}/${checkInfo.project}${
               checkInfo.merge
-                ? `. Merged with ${checkInfo.targetGroup}/${checkInfo.project}:${checkInfo.targetBranch}`
+                ? `. Rebased onto ${checkInfo.targetGroup}/${checkInfo.project}:${checkInfo.targetBranch}`
                 : ""
             }`
           )}`

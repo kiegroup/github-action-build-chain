@@ -10,6 +10,7 @@
 - branch flow from GA
 - getForkedProjectName improved
 - print execution plan
+- use rebasing for integrating PR changes in target branch
 
 ## Bugs:
 

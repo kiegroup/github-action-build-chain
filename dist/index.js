@@ -8522,7 +8522,6 @@ async function checkoutNode(context, node, checkoutInfo, dir) {
     try {
       await fetchFromRemote(
         dir,
-        "upstream",
         `${context.config.github.serverUrlWithToken}/${node.project}`,
         checkoutInfo.targetBranch
       );
@@ -8533,7 +8532,7 @@ async function checkoutNode(context, node, checkoutInfo, dir) {
       throw err;
     }
     try {
-      await rebase(dir, "upstream", checkoutInfo.targetBranch);
+      await rebase(dir, checkoutInfo.targetBranch);
     } catch (err) {
       logger.error(
         `[${node.project}] Error rebasing ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually rebase it and relaunch.`
@@ -17855,7 +17854,7 @@ async function fetch(dir, branch) {
   );
 }
 
-async function fetchFromRemote(dir, name, url, branch) {
+async function fetchFromRemote(dir, url, branch, name = "upstream") {
   await git(dir, "remote", "add", name, url);
   await git(dir, "fetch", "--quiet", "--no-tags", name, branch);
 }
@@ -17940,12 +17939,13 @@ async function sha(dir, branch) {
   return await git(dir, "show-ref", "-s", `refs/remotes/origin/${branch}`);
 }
 
-async function rebase(dir, remote, branch) {
+async function rebase(dir, branch, remote = "upstream") {
   return await git(
     dir,
     "rebase",
     "--quiet",
     "--autosquash",
+    "--keep-empty",
     `${remote}/${branch}`
   );
 }

@@ -382,3 +382,45 @@ test("getRepository different exception", async () => {
   expect(octokit.repos.get).toHaveBeenCalledTimes(1);
   expect(result).toBeUndefined();
 });
+
+test("fetch branch from remote repository", async () => {
+  await tmpdir(async path => {
+    const origin = `${path}/origin`;
+    await init(origin);
+    await commit(origin);
+    const ws = `${path}/ws`;
+    await init(ws);
+    await git.fetchFromRemote(ws, `file://${origin}`, "main");
+    const remoteInfo = await git.git(ws, "branch", "-rl", "upstream/main");
+    expect(remoteInfo).toBe("upstream/main");
+  });
+});
+
+test("rebase onto remote branch", async () => {
+  await tmpdir(async path => {
+    const origin = `${path}/origin`;
+    await init(origin);
+    await commit(origin, "origin1");
+    const ws = `${path}/ws`;
+    await git.clone(`file://${origin}`, ws, "main");
+    await commit(ws, "ws1");
+    await commit(origin, "origin2");
+    const originHead = await git.git(
+      origin,
+      "show",
+      "HEAD",
+      "--format=%H",
+      "--no-patch"
+    );
+    await git.fetchFromRemote(ws, `file://${origin}`, "main");
+    await git.rebase(ws, "main");
+    const wsBeforeHead = await git.git(
+      ws,
+      "show",
+      "HEAD^1",
+      "--format=%H",
+      "--no-patch"
+    );
+    expect(wsBeforeHead).toBe(originHead);
+  });
+});

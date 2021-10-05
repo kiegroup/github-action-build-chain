@@ -86,7 +86,7 @@ async function fetch(dir, branch) {
   );
 }
 
-async function fetchFromRemote(dir, name, url, branch) {
+async function fetchFromRemote(dir, url, branch, name = "upstream") {
   await git(dir, "remote", "add", name, url);
   await git(dir, "fetch", "--quiet", "--no-tags", name, branch);
 }
@@ -171,12 +171,13 @@ async function sha(dir, branch) {
   return await git(dir, "show-ref", "-s", `refs/remotes/origin/${branch}`);
 }
 
-async function rebase(dir, remote, branch) {
+async function rebase(dir, branch, remote = "upstream") {
   return await git(
     dir,
     "rebase",
     "--quiet",
     "--autosquash",
+    "--keep-empty",
     `${remote}/${branch}`
   );
 }

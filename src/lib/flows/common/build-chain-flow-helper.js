@@ -216,7 +216,6 @@ async function checkoutNode(context, node, checkoutInfo, dir) {
     try {
       await fetchFromRemote(
         dir,
-        "upstream",
         `${context.config.github.serverUrlWithToken}/${node.project}`,
         checkoutInfo.targetBranch
       );
@@ -227,7 +226,7 @@ async function checkoutNode(context, node, checkoutInfo, dir) {
       throw err;
     }
     try {
-      await rebase(dir, "upstream", checkoutInfo.targetBranch);
+      await rebase(dir, checkoutInfo.targetBranch);
     } catch (err) {
       logger.error(
         `[${node.project}] Error rebasing ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}. Please manually rebase it and relaunch.`

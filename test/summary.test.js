@@ -44,16 +44,16 @@ test("printCheckoutInformation", async () => {
   // // Assert
   expect(logger.info).toHaveBeenCalledTimes(8);
   expect(logger.info).toHaveBeenCalledWith(
-    "groupx/projectx:branchx. It has Been merged with targetGroupx/projectx:targetBranchx"
+    "groupx/projectx:branchx. It has been rebased onto targetGroupx/projectx:targetBranchx"
   );
   expect(logger.info).toHaveBeenCalledWith(
-    "groupy/projecty:branchx. It has Been merged with targetGroupy/projecty:targetBranchy"
+    "groupy/projecty:branchx. It has been rebased onto targetGroupy/projecty:targetBranchy"
   );
   expect(logger.info).toHaveBeenCalledWith("groupz/projectz:branchz.");
   expect(logger.info)
     .toHaveBeenCalledWith(`Projects taken from branch "branchx":
-  groupx/projectx. Merged with targetGroupx/projectx:targetBranchx,
-  groupy/projecty. Merged with targetGroupy/projecty:targetBranchy`);
+  groupx/projectx. Rebased onto targetGroupx/projectx:targetBranchx,
+  groupy/projecty. Rebased onto targetGroupy/projecty:targetBranchy`);
   expect(logger.info)
     .toHaveBeenCalledWith(`Projects taken from branch "branchz":
   groupz/projectz`);
@@ -90,7 +90,7 @@ test("printCheckoutInformation some undefined", async () => {
     "kiegroup/droolsjbpm-integration: No checkout information"
   );
   expect(logger.info).toHaveBeenCalledWith(
-    "kiegroup/lienzo-tests:branchx. It has Been merged with targetGroupy/lienzo-tests:targetBranchy"
+    "kiegroup/lienzo-tests:branchx. It has been rebased onto targetGroupy/lienzo-tests:targetBranchy"
   );
   expect(logger.info).toHaveBeenCalledWith("kiegroup/lienzo-core:branchz.");
   expect(logger.info)

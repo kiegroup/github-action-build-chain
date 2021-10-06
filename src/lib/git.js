@@ -28,7 +28,6 @@ function git(cwd, ...args) {
   ];
   // the URL passed to the clone command could contain a password!
   const command = `git ${args.join(" ")}`;
-  logger.debug("Executing", command);
   return new Promise((resolve, reject) => {
     const proc = spawn(
       "git",
@@ -84,6 +83,11 @@ async function fetch(dir, branch) {
     "origin",
     `${branch}:refs/remotes/origin/${branch}`
   );
+}
+
+async function fetchFromRemote(dir, url, branch, name = "upstream") {
+  await git(dir, "remote", "add", name, url);
+  await git(dir, "fetch", "--quiet", "--no-tags", name, branch);
 }
 
 async function fetchUntilMergeBase(dir, branch, timeout) {
@@ -166,8 +170,14 @@ async function sha(dir, branch) {
   return await git(dir, "show-ref", "-s", `refs/remotes/origin/${branch}`);
 }
 
-async function rebase(dir, branch) {
-  return await git(dir, "rebase", "--quiet", "--autosquash", branch);
+async function rebase(dir, branch, remote = "upstream") {
+  return await git(
+    dir,
+    "rebase",
+    "--quiet",
+    "--autosquash",
+    `${remote}/${branch}`
+  );
 }
 
 async function push(dir, force, branch) {
@@ -343,6 +353,7 @@ module.exports = {
   git,
   clone,
   fetch,
+  fetchFromRemote,
   fetchUntilMergeBase,
   fetchDeepen,
   mergeBase,

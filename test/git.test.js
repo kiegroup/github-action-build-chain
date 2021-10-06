@@ -39,7 +39,7 @@ test("fetch branch from remote repository. Default name", async () => {
     "remote",
     "add",
     "upstream",
-    "file:///home/emingora/development/projects/RedHat/kiegroup/github-action-build-chain/test/origin"
+    `file://${origin}`
   ]);
   expect(secondCall.args).toStrictEqual([
     "-c",
@@ -79,7 +79,7 @@ test("fetch branch from remote repository. No default name", async () => {
     "remote",
     "add",
     "origin",
-    "file:///home/emingora/development/projects/RedHat/kiegroup/github-action-build-chain/test/origin"
+    `file://${origin}`
   ]);
   expect(secondCall.args).toStrictEqual([
     "-c",

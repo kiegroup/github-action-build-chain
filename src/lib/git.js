@@ -28,7 +28,6 @@ function git(cwd, ...args) {
   ];
   // the URL passed to the clone command could contain a password!
   const command = `git ${args.join(" ")}`;
-  logger.debug("Executing", command);
   return new Promise((resolve, reject) => {
     const proc = spawn(
       "git",
@@ -177,7 +176,6 @@ async function rebase(dir, branch, remote = "upstream") {
     "rebase",
     "--quiet",
     "--autosquash",
-    "--keep-empty",
     `${remote}/${branch}`
   );
 }

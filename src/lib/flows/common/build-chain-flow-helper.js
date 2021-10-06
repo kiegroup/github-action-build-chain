@@ -128,15 +128,17 @@ async function checkoutDefinitionTreeSequencial(
             : "Checked out."
         }`
       );
-      cloneNode(
-        context.config.rootFolder,
-        node,
-        getDir(
+      if (!options.skipCheckout) {
+        cloneNode(
           context.config.rootFolder,
-          node.project,
-          options.skipProjectCheckout.get(node.project)
-        )
-      );
+          node,
+          getDir(
+            context.config.rootFolder,
+            node.project,
+            options.skipProjectCheckout.get(node.project)
+          )
+        );
+      }
     } catch (err) {
       logger.error(`Error checking out project ${node.project}`);
       throw err;

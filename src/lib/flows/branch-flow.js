@@ -18,7 +18,7 @@ const {
 const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
 
-async function start(context, options = {}) {
+async function start(context, options = { skipExecution: false }) {
   const readerOptions = {
     urlPlaceHolders: await getPlaceHolders(
       context,
@@ -60,11 +60,11 @@ async function start(context, options = {}) {
   );
   core.endGroup();
 
-  core.startGroup(`[Branch Flow] Checkout Summary...`);
-  printCheckoutInformation(checkoutInfo);
-  core.endGroup();
-
   if (!options.skipExecution) {
+    core.startGroup(`[Branch Flow] Checkout Summary...`);
+    printCheckoutInformation(checkoutInfo);
+    core.endGroup();
+
     const executionResult = options.command
       ? await executeBuildSpecificCommand(
           context.config.rootFolder,
@@ -96,7 +96,7 @@ async function start(context, options = {}) {
       );
     }
   } else {
-    logger.info("Execution has been skipped. Won't execute.");
+    logger.info("Execution has been skipped.");
   }
 }
 

@@ -435,3 +435,79 @@ test("start no parent dependencies. startingProject", async () => {
     { token: undefined, urlPlaceHolders: {} }
   );
 });
+
+
+
+test("start no parent dependencies. project triggering the job. Skip Execution", async () => {
+  // Arrange
+  const project = "kiegroup/lienzo-core";
+  const checkoutInfo = {
+    project,
+    group: "groupx",
+    branch: "branchx",
+    targetGroup: "targetGroupx",
+    targetBranch: "targetBranchx",
+    merge: true
+  };
+  const definitionTree = {};
+  const context = {
+    config: {
+      github: {
+        jobId: "job-id",
+        flowFile: "main.yaml",
+        group: "defaultGroup",
+        project,
+        sourceBranch: "sBranch",
+        targetBranch: "tBranch",
+        inputs: {
+          definitionFile: path.join(
+            ".",
+            "test",
+            "resources",
+            "build-config",
+            "build-config.yaml"
+          )
+        },
+        repository: project
+      },
+      rootFolder: "folder"
+    }
+  };
+
+  getPlaceHolders.mockResolvedValueOnce({});
+  getTreeForProject.mockResolvedValueOnce(definitionTree);
+  parentChainFromNode.mockResolvedValueOnce([
+    { project },
+    { project: "project2" }
+  ]);
+  checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
+  getDir.mockReturnValueOnce("kiegroup/lienzo_core");
+  executeBuild.mockResolvedValueOnce(true);
+
+  // Act
+  await start(context, { isArchiveArtifacts: true, skipExecution: true });
+  // Assert
+  expect(
+    getTreeForProject
+  ).toHaveBeenCalledWith(
+    "test/resources/build-config/build-config.yaml",
+    project,
+    { token: undefined, urlPlaceHolders: {} }
+  );
+  expect(parentChainFromNode).toHaveBeenCalledWith(definitionTree);
+  expect(checkoutDefinitionTree).toHaveBeenCalledWith(
+    context,
+    [{ project }, { project: "project2" }],
+    "pr",
+    { isArchiveArtifacts: true, skipExecution: true }
+  );
+
+  expect(printCheckoutInformation).toHaveBeenCalledTimes(1);
+  expect(printCheckoutInformation).toHaveBeenCalledWith(checkoutInfo);
+
+  expect(executeBuild).toHaveBeenCalledTimes(0);
+  expect(archiveArtifacts).toHaveBeenCalledTimes(0);
+  expect(executePre).toHaveBeenCalledTimes(0);
+  expect(executePost).toHaveBeenCalledTimes(0);
+});
+

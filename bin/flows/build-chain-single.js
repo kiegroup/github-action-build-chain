@@ -6,8 +6,6 @@ const {
 } = require("./build-chain-pull-request-helper");
 const { start } = require("../../src/lib/flows/single-flow");
 const { createCommonConfig } = require("../../src/lib/flows/common/config");
-const { getProcessEnvVariable } = require("../bin-utils");
-const fse = require("fs-extra");
 
 /**
  * Executes single flow
@@ -37,14 +35,9 @@ async function execute(
  * @param {String} token the token to communicate to github
  * @param {Object} octokit octokit instance
  * @param {Object} env proces.env
+ * @param {Object} the JSON object for the event data
  */
-async function executeFromEvent(token, octokit, env) {
-  const eventDataStr = await fse.readFile(
-    getProcessEnvVariable("GITHUB_EVENT_PATH"),
-    "utf8"
-  );
-  const eventData = JSON.parse(eventDataStr);
-
+async function executeFromEvent(token, octokit, env, eventData) {
   await execute(token, octokit, env, eventData, undefined, {
     isArchiveArtifacts: true
   });

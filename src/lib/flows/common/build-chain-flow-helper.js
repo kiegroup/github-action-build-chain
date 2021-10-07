@@ -504,7 +504,6 @@ async function getPlaceHoldersHelper(definitionFile, placeHolder, token) {
  * @param {Object} definitionFile the definition file path or URL
  */
 async function getPlaceHolders(context, definitionFile) {
-  logger.info(`Getting place holders for ${definitionFile}.`);
   let placeHolders = {};
   if (definitionFile.startsWith("http") && definitionFile.includes("${")) {
     placeHolders = {

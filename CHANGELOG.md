@@ -13,6 +13,7 @@
 - use rebasing for integrating PR changes in target branch
 - --skipExecution flag to skip the command execution and artifacts archiving for all the flow types
 - --skipCheckout to skip project checkout. Checkout information will be printed anyway
+- print command: the tool will print the command to be copy pasted in order to execute in any environment
 
 ## Bugs:
 

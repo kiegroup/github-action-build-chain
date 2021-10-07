@@ -436,8 +436,6 @@ test("start no parent dependencies. startingProject", async () => {
   );
 });
 
-
-
 test("start no parent dependencies. project triggering the job. Skip Execution", async () => {
   // Arrange
   const project = "kiegroup/lienzo-core";
@@ -510,4 +508,3 @@ test("start no parent dependencies. project triggering the job. Skip Execution",
   expect(executePre).toHaveBeenCalledTimes(0);
   expect(executePost).toHaveBeenCalledTimes(0);
 });
-

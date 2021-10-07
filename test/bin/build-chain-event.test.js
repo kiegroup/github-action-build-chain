@@ -25,7 +25,11 @@ const {
 } = require("../../bin/flows/build-chain-single");
 jest.mock("../../bin/flows/build-chain-single");
 
+const { readFile } = require("fs-extra");
+jest.mock("fs-extra");
+
 require("dotenv").config();
+jest.mock("@actions/core");
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -33,7 +37,26 @@ afterEach(() => {
 
 test("buildChain test event pull request", async () => {
   // Arrange
+  const projectName = "kiegroup/lienzo-core";
+  const eventData = {
+    action: "opened",
+    ref: `refs/pull/135/merge`,
+    type: "pull_request",
+    pull_request: {
+      head: {
+        user: { login: "login" },
+        ref: "ref",
+        repo: { full_name: projectName }
+      },
+      base: { ref: "ref", repo: { full_name: projectName } },
+      repo: { full_name: projectName }
+    }
+  };
+  readFile.mockResolvedValueOnce(JSON.stringify(eventData));
+  getProcessEnvVariable.mockReturnValueOnce("githubeventpath");
+
   const octokitMockInstance = "octokitinstance";
+
   getProcessEnvVariable.mockReturnValueOnce("githubtoken");
   createOctokitInstance.mockReturnValueOnce(octokitMockInstance);
   isPullRequestFlowType.mockReturnValueOnce(true);
@@ -46,12 +69,31 @@ test("buildChain test event pull request", async () => {
   expect(pullRequestEventFlow).toHaveBeenCalledWith(
     "githubtoken",
     octokitMockInstance,
-    process.env
+    process.env,
+    eventData
   );
 });
 
 test("buildChain test event fd", async () => {
   // Arrange
+  const projectName = "kiegroup/lienzo-core";
+  const eventData = {
+    action: "opened",
+    ref: `refs/pull/135/merge`,
+    type: "pull_request",
+    pull_request: {
+      head: {
+        user: { login: "login" },
+        ref: "ref",
+        repo: { full_name: projectName }
+      },
+      base: { ref: "ref", repo: { full_name: projectName } },
+      repo: { full_name: projectName }
+    }
+  };
+  readFile.mockResolvedValueOnce(JSON.stringify(eventData));
+  getProcessEnvVariable.mockReturnValueOnce("githubeventpath");
+
   const octokitMockInstance = "octokitinstance";
   getProcessEnvVariable.mockReturnValueOnce("githubtoken");
   createOctokitInstance.mockReturnValueOnce(octokitMockInstance);
@@ -67,12 +109,31 @@ test("buildChain test event fd", async () => {
   expect(fdEventFlow).toHaveBeenCalledWith(
     "githubtoken",
     octokitMockInstance,
-    process.env
+    process.env,
+    eventData
   );
 });
 
 test("buildChain test event single", async () => {
   // Arrange
+  const projectName = "kiegroup/lienzo-core";
+  const eventData = {
+    action: "opened",
+    ref: `refs/pull/135/merge`,
+    type: "pull_request",
+    pull_request: {
+      head: {
+        user: { login: "login" },
+        ref: "ref",
+        repo: { full_name: projectName }
+      },
+      base: { ref: "ref", repo: { full_name: projectName } },
+      repo: { full_name: projectName }
+    }
+  };
+  readFile.mockResolvedValueOnce(JSON.stringify(eventData));
+  getProcessEnvVariable.mockReturnValueOnce("githubeventpath");
+
   const octokitMockInstance = "octokitinstance";
   getProcessEnvVariable.mockReturnValueOnce("githubtoken");
   createOctokitInstance.mockReturnValueOnce(octokitMockInstance);
@@ -89,18 +150,38 @@ test("buildChain test event single", async () => {
   expect(singleEventFlow).toHaveBeenCalledWith(
     "githubtoken",
     octokitMockInstance,
-    process.env
+    process.env,
+    eventData
   );
 });
 
 test("buildChain test event none", async () => {
   // Arrange
+  const projectName = "kiegroup/lienzo-core";
+  const eventData = {
+    action: "opened",
+    ref: `refs/pull/135/merge`,
+    type: "pull_request",
+    pull_request: {
+      head: {
+        user: { login: "login" },
+        ref: "ref",
+        repo: { full_name: projectName }
+      },
+      base: { ref: "ref", repo: { full_name: projectName } },
+      repo: { full_name: projectName }
+    }
+  };
+  readFile.mockResolvedValueOnce(JSON.stringify(eventData));
+  getProcessEnvVariable.mockReturnValueOnce("githubeventpath");
+
   const octokitMockInstance = "octokitinstance";
   getProcessEnvVariable.mockReturnValueOnce("githubtoken");
   createOctokitInstance.mockReturnValueOnce(octokitMockInstance);
   isPullRequestFlowType.mockReturnValueOnce(false);
   isFDFlowType.mockReturnValueOnce(false);
   isSingleFlowType.mockReturnValueOnce(false);
+  getFlowType.mockReturnValueOnce("flowtype");
   getFlowType.mockReturnValueOnce("flowtype");
 
   // Act

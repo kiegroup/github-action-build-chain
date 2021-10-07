@@ -678,8 +678,6 @@ const {
 } = __webpack_require__(8);
 const { start } = __webpack_require__(794);
 const { createCommonConfig } = __webpack_require__(981);
-const { getProcessEnvVariable } = __webpack_require__(867);
-const fse = __webpack_require__(226);
 
 /**
  * Executes single flow
@@ -709,14 +707,9 @@ async function execute(
  * @param {String} token the token to communicate to github
  * @param {Object} octokit octokit instance
  * @param {Object} env proces.env
+ * @param {Object} the JSON object for the event data
  */
-async function executeFromEvent(token, octokit, env) {
-  const eventDataStr = await fse.readFile(
-    getProcessEnvVariable("GITHUB_EVENT_PATH"),
-    "utf8"
-  );
-  const eventData = JSON.parse(eventDataStr);
-
+async function executeFromEvent(token, octokit, env, eventData) {
   await execute(token, octokit, env, eventData, undefined, {
     isArchiveArtifacts: true
   });
@@ -2148,20 +2141,71 @@ const {
   isFDFlowType,
   isSingleFlowType,
   isBranchFlowType,
-  getFlowType
+  getFlowType,
+  eventFlowTypeToCliFlowType,
+  getDefinitionFile,
+  getStartingProject
 } = __webpack_require__(933);
 const { createOctokitInstance, getProcessEnvVariable } = __webpack_require__(867);
 __webpack_require__(63).config();
+const core = __webpack_require__(470);
+const pkg = __webpack_require__(731);
+const fse = __webpack_require__(226);
+
+async function getEventData() {
+  let eventPath;
+  try {
+    eventPath = getProcessEnvVariable("GITHUB_EVENT_PATH");
+  } catch (e) {
+    logger.error(
+      "Error trying to get event path from 'GITHUB_EVENT_PATH' environment variable. Are you sure you are executing this based on a github event?"
+    );
+    throw e;
+  }
+  const eventDataStr = await fse.readFile(eventPath, "utf8");
+  return JSON.parse(eventDataStr);
+}
+
+/**
+ * prints the local command to be copy pasted by the users
+ *
+ * @param {Object} the JSON object for the event data
+ */
+function printLocalCommand(eventData) {
+  core.startGroup(`Printing local execution command`);
+  logger.info(
+    "You can copy paste the following commands to locally execute build chain tool."
+  );
+  logger.info(`npm i @kie/build-chain-action@${pkg.version} -g`);
+  logger.info(
+    `${Object.keys(
+      pkg.bin
+    )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
+      getFlowType()
+    )} -url ${eventData.pull_request.html_url} ${
+      getStartingProject() ? `-sp ${getStartingProject}` : ""
+    }`
+  );
+
+  logger.warn("Remember you need Node installed in the environment.");
+  logger.warn("The `GITHUB_TOKEN` has to be set in the environment.");
+  core.endGroup();
+}
 
 async function main() {
+  const eventData = await getEventData();
+
+  printLocalCommand(eventData);
+
   const token = getProcessEnvVariable("GITHUB_TOKEN", false);
   const octokit = createOctokitInstance(token);
+
   if (isPullRequestFlowType()) {
-    await pullRequestEventFlow(token, octokit, process.env);
+    await pullRequestEventFlow(token, octokit, process.env, eventData);
   } else if (isFDFlowType()) {
-    await fdbEventFlow(token, octokit, process.env);
+    await fdbEventFlow(token, octokit, process.env, eventData);
   } else if (isSingleFlowType()) {
-    await singleEventFlow(token, octokit, process.env);
+    await singleEventFlow(token, octokit, process.env, eventData);
   } else if (isBranchFlowType()) {
     await branchEventFlow(token, octokit, process.env);
   } else {
@@ -8824,7 +8868,6 @@ async function getPlaceHoldersHelper(definitionFile, placeHolder, token) {
  * @param {Object} definitionFile the definition file path or URL
  */
 async function getPlaceHolders(context, definitionFile) {
-  logger.info(`Getting place holders for ${definitionFile}.`);
   let placeHolders = {};
   if (definitionFile.startsWith("http") && definitionFile.includes("${")) {
     placeHolders = {
@@ -24905,8 +24948,6 @@ const {
 } = __webpack_require__(8);
 const { start } = __webpack_require__(785);
 const { createCommonConfig } = __webpack_require__(981);
-const { getProcessEnvVariable } = __webpack_require__(867);
-const fse = __webpack_require__(226);
 
 /**
  * Executes pull request flow
@@ -24929,13 +24970,9 @@ async function execute(token, octokit, env, eventData, rootFolder, options) {
  * @param {String} token the token to communicate to github
  * @param {Object} octokit octokit instance
  * @param {Object} env proces.env
+ * @param {Object} the JSON object for the event data
  */
-async function executeFromEvent(token, octokit, env) {
-  const eventDataStr = await fse.readFile(
-    getProcessEnvVariable("GITHUB_EVENT_PATH"),
-    "utf8"
-  );
-  const eventData = JSON.parse(eventDataStr);
+async function executeFromEvent(token, octokit, env, eventData) {
   await execute(token, octokit, env, eventData, undefined, {
     isArchiveArtifacts: true
   });
@@ -25067,7 +25104,12 @@ exports.SearchState = SearchState;
 /***/ }),
 /* 729 */,
 /* 730 */,
-/* 731 */,
+/* 731 */
+/***/ (function(module) {
+
+module.exports = {"name":"@kie/build-chain-action","version":"2.3.13","description":"GitHub action to define action chains","main":"dist/build-chain-cli.js","author":"Enrique Mingorance Cano <emingora@redhat.com>","license":"SEE LICENSE IN LICENSE","private":false,"bin":{"build-chain-action":"./bin/build-chain-cli.js"},"scripts":{"test":"jest","locktt":"locktt","lint":"eslint .","prettier":"prettier -l src/** test/**/*.js","prettier-write":"prettier --write .","lint-final":"npm run prettier && npm run lint","prepublish":"npm run lint && npm run test","ncc-build":"ncc build bin/build-chain-event.js"},"git-pre-hooks":{"pre-commit":"npm run prettier && npm run ncc-build && git add dist/index.js","pre-push":"npm ci"},"dependencies":{"@actions/artifact":"^0.3.5","@actions/core":"^1.1.3","@actions/exec":"^1.0.4","@actions/glob":"^0.1.0","@kie/build-chain-configuration-reader":"^2.2.2","@octokit/rest":"^17.6.0","argparse":"^2.0.1","dotenv":"^8.2.0","fs-extra":"^9.0.0","js-yaml":"^3.14.0","tmp":"^0.2.1"},"devDependencies":{"@zeit/ncc":"^0.22.3","eslint":"^7.10.0","eslint-config-google":"^0.14.0","eslint-config-prettier":"^6.11.0","eslint-config-standard":"^14.1.1","eslint-plugin-import":"^2.22.0","eslint-plugin-jest":"^23.19.0","eslint-plugin-node":"^11.1.0","eslint-plugin-prettier":"^3.1.4","eslint-plugin-promise":"^4.2.1","eslint-plugin-standard":"^4.0.1","git-pre-hooks":"^1.2.1","jest":"^25.5.1","mock-spawn":"^0.2.6","prettier":"^2.0.5"},"jest":{"testEnvironment":"node","modulePathIgnorePatterns":["locally_execution/"]},"prettier":{"trailingComma":"none","arrowParens":"avoid"},"engines":{"node":">= 12.18.0"}};
+
+/***/ }),
 /* 732 */,
 /* 733 */,
 /* 734 */,
@@ -25457,8 +25499,6 @@ const {
 } = __webpack_require__(8);
 const { start } = __webpack_require__(137);
 const { createCommonConfig } = __webpack_require__(981);
-const { getProcessEnvVariable } = __webpack_require__(867);
-const fse = __webpack_require__(226);
 
 /**
  * Executes full downstream flow
@@ -25481,13 +25521,9 @@ async function execute(token, octokit, env, eventData, rootFolder, options) {
  * @param {String} token the token to communicate to github
  * @param {Object} octokit octokit instance
  * @param {Object} env proces.env
+ * @param {Object} the JSON object for the event data
  */
-async function executeFromEvent(token, octokit, env) {
-  const eventDataStr = await fse.readFile(
-    getProcessEnvVariable("GITHUB_EVENT_PATH"),
-    "utf8"
-  );
-  const eventData = JSON.parse(eventDataStr);
+async function executeFromEvent(token, octokit, env, eventData) {
   await execute(token, octokit, env, eventData, undefined, {
     isArchiveArtifacts: true
   });
@@ -28994,6 +29030,19 @@ function isBranchFlowType() {
   return getFlowType() === "branch";
 }
 
+function eventFlowTypeToCliFlowType(flowType) {
+  switch (flowType) {
+    case "pull-request":
+      return "pr";
+    case "single":
+      return "single";
+    case "full-downstream":
+      return "fd";
+    default:
+      return undefined;
+  }
+}
+
 module.exports = {
   getDefinitionFile,
   getStartingProject,
@@ -29001,7 +29050,8 @@ module.exports = {
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,
-  isBranchFlowType
+  isBranchFlowType,
+  eventFlowTypeToCliFlowType
 };
 
 

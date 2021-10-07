@@ -21,6 +21,8 @@ function pullRequestArguments(subParser) {
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
   skipParallelCheckout(parser);
+  skipCheckout(parser);
+  skipExecution(parser);
 }
 
 function branchArguments(subParser) {
@@ -31,6 +33,8 @@ function branchArguments(subParser) {
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
   skipParallelCheckout(parser);
+  skipCheckout(parser);
+  skipExecution(parser);
   parser.add_argument("-p", "-project", {
     nargs: 1,
     required: true,
@@ -52,10 +56,6 @@ function branchArguments(subParser) {
     help:
       "the command(s) to execute for every project. This will override definition file configuration (just dependency tree will be taken into account)."
   });
-  parser.add_argument("--skipExecution", {
-    action: "store_true",
-    help: "If you want to skip command(s) execution(s)."
-  });
 }
 
 function fdArguments(subParser) {
@@ -67,6 +67,8 @@ function fdArguments(subParser) {
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
   skipParallelCheckout(parser);
+  skipCheckout(parser);
+  skipExecution(parser);
 }
 
 function singleArguments(subParser) {
@@ -78,6 +80,8 @@ function singleArguments(subParser) {
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
   skipParallelCheckout(parser);
+  skipCheckout(parser);
+  skipExecution(parser);
 }
 
 function urlArgument(parser) {
@@ -117,6 +121,20 @@ function skipParallelCheckout(parser) {
   parser.add_argument("--skipParallelCheckout", {
     action: "store_true",
     help: "Checkout the project sequencially."
+  });
+}
+
+function skipCheckout(parser) {
+  parser.add_argument("--skipCheckout", {
+    action: "store_true",
+    help: "Skips the checkout (but prints out the checkout information)."
+  });
+}
+
+function skipExecution(parser) {
+  parser.add_argument("--skipExecution", {
+    action: "store_true",
+    help: "Skips the execution and archiving steps."
   });
 }
 

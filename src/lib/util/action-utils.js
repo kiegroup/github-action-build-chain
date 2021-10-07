@@ -28,6 +28,19 @@ function isBranchFlowType() {
   return getFlowType() === "branch";
 }
 
+function eventFlowTypeToCliFlowType(flowType) {
+  switch (flowType) {
+    case "pull-request":
+      return "pr";
+    case "single":
+      return "single";
+    case "full-downstream":
+      return "fd";
+    default:
+      return undefined;
+  }
+}
+
 module.exports = {
   getDefinitionFile,
   getStartingProject,
@@ -35,5 +48,6 @@ module.exports = {
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,
-  isBranchFlowType
+  isBranchFlowType,
+  eventFlowTypeToCliFlowType
 };

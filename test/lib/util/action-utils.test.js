@@ -4,7 +4,8 @@ const {
   getFlowType,
   isPullRequestFlowType,
   isFDFlowType,
-  isSingleFlowType
+  isSingleFlowType,
+  eventFlowTypeToCliFlowType
 } = require("../../../src/lib/util/action-utils");
 
 const { getInput } = require("@actions/core");
@@ -129,4 +130,39 @@ test("isSingleFlowType not ok", () => {
 
   // Assert
   expect(result).toEqual(expectedResult);
+});
+
+test("eventFlowTypeToCliFlowType pull-request", () => {
+  // Arrange
+  const flowType = "pull-request";
+  const expected = "pr";
+  // Act
+  const result = eventFlowTypeToCliFlowType(flowType);
+
+  // Assert
+  expect(result).toEqual(expected);
+});
+
+describe("eventFlowTypeToCliFlowType", () => {
+  const testCases = [
+    {
+      flowType: "pull-request",
+      expected: "pr"
+    },
+    {
+      flowType: "single",
+      expected: "single"
+    },
+    {
+      flowType: "full-downstream",
+      expected: "fd"
+    }
+  ];
+
+  testCases.forEach(test => {
+    it(`type: '${test.flowType}' which is: '${test.expected}'`, () => {
+      const result = eventFlowTypeToCliFlowType(test.flowType);
+      expect(result).toEqual(test.expected);
+    });
+  });
 });

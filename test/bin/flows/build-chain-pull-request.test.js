@@ -6,10 +6,7 @@ const { createCommonConfig } = require("../../../src/lib/flows/common/config");
 jest.mock("../../../src/lib/flows/common/config");
 const { start } = require("../../../src/lib/flows/pull-request-flow");
 jest.mock("../../../src/lib/flows/pull-request-flow");
-const { getProcessEnvVariable } = require("../../../bin/bin-utils");
 jest.mock("../../../bin/bin-utils");
-const { readFile } = require("fs-extra");
-jest.mock("fs-extra");
 jest.mock("../../../src/lib/fs-helper");
 
 afterEach(() => {
@@ -35,9 +32,7 @@ test("executeFromEvent", async () => {
     pull_request: pull_request_data
   };
 
-  readFile.mockResolvedValueOnce(JSON.stringify(eventData));
   createCommonConfig.mockResolvedValueOnce("commonconfig");
-  getProcessEnvVariable.mockReturnValueOnce("githubeventpath");
   const expectedGithubInformation = {
     sourceGroup: "kiegroup",
     author: "login",
@@ -45,7 +40,7 @@ test("executeFromEvent", async () => {
   };
 
   // Act
-  await executeFromEvent("token", "octokit", { key: "value" });
+  await executeFromEvent("token", "octokit", { key: "value" }, eventData);
 
   // Assert
   expect(createCommonConfig).toHaveBeenCalledWith(
@@ -82,15 +77,7 @@ test("executeLocally", async () => {
       )
     }
   };
-  const eventData = {
-    action: "opened",
-    ref: `refs/pull/135/merge`,
-    type: "pull_request",
-    pull_request: pull_request_data
-  };
-  readFile.mockResolvedValueOnce(JSON.stringify(eventData));
   createCommonConfig.mockResolvedValueOnce("commonconfig");
-  getProcessEnvVariable.mockReturnValueOnce("githubeventpath");
 
   const expectedGithubInformation = {
     sourceGroup: "kiegroup",
@@ -148,16 +135,7 @@ test("executeLocally no pull_request.repo info", async () => {
       )
     }
   };
-  const eventData = {
-    action: "opened",
-    ref: `refs/pull/135/merge`,
-    type: "pull_request",
-    pull_request: pull_request_data,
-    repository: { name: projectName }
-  };
-  readFile.mockResolvedValueOnce(JSON.stringify(eventData));
   createCommonConfig.mockResolvedValueOnce("commonconfig");
-  getProcessEnvVariable.mockReturnValueOnce("githubeventpath");
 
   const expectedGithubInformation = {
     sourceGroup: "kiegroup",
@@ -215,15 +193,7 @@ test("executeLocally no pull_request.repo or eventData.repository info", async (
       )
     }
   };
-  const eventData = {
-    action: "opened",
-    ref: `refs/pull/135/merge`,
-    type: "pull_request",
-    pull_request: pull_request_data
-  };
-  readFile.mockResolvedValueOnce(JSON.stringify(eventData));
   createCommonConfig.mockResolvedValueOnce("commonconfig");
-  getProcessEnvVariable.mockReturnValueOnce("githubeventpath");
 
   const expectedGithubInformation = {
     sourceGroup: "kiegroup",

@@ -17,7 +17,10 @@ const {
 const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
 
-async function start(context, options = { isArchiveArtifacts: true }) {
+async function start(
+  context,
+  options = { isArchiveArtifacts: true, skipExecution: false }
+) {
   const readerOptions = {
     urlPlaceHolders: await getPlaceHolders(
       context,
@@ -25,7 +28,12 @@ async function start(context, options = { isArchiveArtifacts: true }) {
     ),
     token: context.token
   };
-  await executePre(context.config.github.inputs.definitionFile, readerOptions);
+  if (!options.skipExecution) {
+    await executePre(
+      context.config.github.inputs.definitionFile,
+      readerOptions
+    );
+  }
 
   const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
@@ -37,9 +45,11 @@ async function start(context, options = { isArchiveArtifacts: true }) {
     readerOptions
   );
 
-  core.startGroup(`[Full Downstream Flow] Execution Plan...`);
-  printExecutionPlan(nodeChain, projectTriggeringJob);
-  core.endGroup();
+  if (!options.skipExecution) {
+    core.startGroup(`[Full Downstream Flow] Execution Plan...`);
+    printExecutionPlan(nodeChain, projectTriggeringJob);
+    core.endGroup();
+  }
 
   core.startGroup(
     `[Full Downstream Flow] Checking out ${context.config.github.groupProject} and its dependencies`
@@ -62,38 +72,42 @@ async function start(context, options = { isArchiveArtifacts: true }) {
   printCheckoutInformation(checkoutInfo);
   core.endGroup();
 
-  const executionResult = await executeBuild(
-    context.config.rootFolder,
-    nodeChain,
-    projectTriggeringJob,
-    options
-  )
-    .then(() => true)
-    .catch(e => e);
-
-  if (options.isArchiveArtifacts) {
-    core.startGroup(`[Full Downstream Flow] Archiving artifacts...`);
-    await archiveArtifacts(
-      nodeChain.find(node => node.project === projectTriggeringJob),
+  if (!options.skipExecution) {
+    const executionResult = await executeBuild(
+      context.config.rootFolder,
       nodeChain,
-      executionResult === true ? ["success", "always"] : ["failure", "always"]
+      projectTriggeringJob,
+      options
+    )
+      .then(() => true)
+      .catch(e => e);
+
+    if (options.isArchiveArtifacts) {
+      core.startGroup(`[Full Downstream Flow] Archiving artifacts...`);
+      await archiveArtifacts(
+        nodeChain.find(node => node.project === projectTriggeringJob),
+        nodeChain,
+        executionResult === true ? ["success", "always"] : ["failure", "always"]
+      );
+      core.endGroup();
+    } else {
+      logger.info("Archive artifact won't be executed");
+    }
+
+    await executePost(
+      context.config.github.inputs.definitionFile,
+      executionResult,
+      readerOptions
     );
-    core.endGroup();
+
+    if (executionResult !== true) {
+      logger.error(executionResult);
+      throw new Error(
+        `Command executions have failed, please review latest execution ${executionResult}`
+      );
+    }
   } else {
-    logger.info("Archive artifact won't be executed");
-  }
-
-  await executePost(
-    context.config.github.inputs.definitionFile,
-    executionResult,
-    readerOptions
-  );
-
-  if (executionResult !== true) {
-    logger.error(executionResult);
-    throw new Error(
-      `Command executions have failed, please review latest execution ${executionResult}`
-    );
+    logger.info("Execution has been skipped.");
   }
 }
 

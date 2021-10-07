@@ -43,38 +43,34 @@ async function checkoutDefinitionTreeParallel(
   return Promise.all(
     nodeChain.map(async node => {
       try {
-        const result = !options.skipProjectCheckout.get(node.project)
-          ? Promise.resolve({
-              project: node.project,
-              checkoutInfo: await checkoutAndComposeInfo(
-                context,
-                node,
-                nodeTriggeringTheJob,
-                flow
-              )
-            })
-          : {
-              project: node.project,
-              info: `not checked out. Folder to take sources from: ${options.skipProjectCheckout.get(
-                node.project
-              )}`
-            };
+        const skipCheckout =
+          options.skipCheckout || options.skipProjectCheckout.get(node.project);
+        const result = Promise.resolve({
+          project: node.project,
+          checkoutInfo: await checkoutAndComposeInfo(
+            context,
+            node,
+            nodeTriggeringTheJob,
+            flow,
+            skipCheckout
+          )
+        });
         logger.info(
           `[${node.project}] ${
-            options.skipProjectCheckout.get(node.project)
-              ? "Check out skipped."
-              : "Checked out."
+            skipCheckout ? "Check out skipped." : "Checked out."
           }`
         );
-        cloneNode(
-          context.config.rootFolder,
-          node,
-          getDir(
+        if (!skipCheckout) {
+          cloneNode(
             context.config.rootFolder,
-            node.project,
-            options.skipProjectCheckout.get(node.project)
-          )
-        );
+            node,
+            getDir(
+              context.config.rootFolder,
+              node.project,
+              options.skipProjectCheckout.get(node.project)
+            )
+          );
+        }
         return result;
       } catch (err) {
         throw { project: node.project, message: err };
@@ -103,40 +99,34 @@ async function checkoutDefinitionTreeSequencial(
   const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
   for (const node of nodeChain) {
     try {
-      result.push(
-        !options.skipProjectCheckout.get(node.project)
-          ? {
-              project: node.project,
-              checkoutInfo: await checkoutAndComposeInfo(
-                context,
-                node,
-                nodeTriggeringTheJob,
-                flow
-              )
-            }
-          : {
-              project: node.project,
-              info: `not checked out. Folder to take sources from: ${options.skipProjectCheckout.get(
-                node.project
-              )}`
-            }
-      );
+      const skipCheckout =
+        options.skipCheckout || options.skipProjectCheckout.get(node.project);
+      result.push({
+        project: node.project,
+        checkoutInfo: await checkoutAndComposeInfo(
+          context,
+          node,
+          nodeTriggeringTheJob,
+          flow,
+          skipCheckout
+        )
+      });
       logger.info(
         `[${node.project}] ${
-          options.skipProjectCheckout.get(node.project)
-            ? "Check out skipped."
-            : "Checked out."
+          skipCheckout ? "Check out skipped." : "Checked out."
         }`
       );
-      cloneNode(
-        context.config.rootFolder,
-        node,
-        getDir(
+      if (!skipCheckout) {
+        cloneNode(
           context.config.rootFolder,
-          node.project,
-          options.skipProjectCheckout.get(node.project)
-        )
-      );
+          node,
+          getDir(
+            context.config.rootFolder,
+            node.project,
+            options.skipProjectCheckout.get(node.project)
+          )
+        );
+      }
     } catch (err) {
       logger.error(`Error checking out project ${node.project}`);
       throw err;
@@ -153,17 +143,29 @@ async function checkoutAndComposeInfo(
   context,
   node,
   nodeTriggeringTheJob,
-  flow
+  flow,
+  skipCheckout
 ) {
   return flow === "pr"
-    ? await checkoutProjectPullRequestFlow(context, node, nodeTriggeringTheJob)
-    : await checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob);
+    ? await checkoutProjectPullRequestFlow(
+        context,
+        node,
+        nodeTriggeringTheJob,
+        skipCheckout
+      )
+    : await checkoutProjectBranchFlow(
+        context,
+        node,
+        nodeTriggeringTheJob,
+        skipCheckout
+      );
 }
 
 async function checkoutProjectPullRequestFlow(
   context,
   node,
-  nodeTriggeringTheJob
+  nodeTriggeringTheJob,
+  skipCheckout
 ) {
   logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
@@ -178,7 +180,9 @@ async function checkoutProjectPullRequestFlow(
       logger.error(msg);
       throw new Error(msg);
     }
-    await checkoutNode(context, node, checkoutInfo, dir);
+    if (!skipCheckout) {
+      await checkoutNode(context, node, checkoutInfo, dir);
+    }
     return checkoutInfo;
   } else {
     logger.info(
@@ -252,7 +256,12 @@ async function checkoutNode(context, node, checkoutInfo, dir) {
   }
 }
 
-async function checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob) {
+async function checkoutProjectBranchFlow(
+  context,
+  node,
+  nodeTriggeringTheJob,
+  skipCheckout
+) {
   logger.info(`[${node.project}] Checking out project`);
   const dir = getDir(context.config.rootFolder, node.project);
   if (!fs.existsSync(dir)) {
@@ -267,20 +276,22 @@ async function checkoutProjectBranchFlow(context, node, nodeTriggeringTheJob) {
       logger.error(msg);
       throw new Error(msg);
     }
-    try {
-      logger.info(
-        `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.targetBranch}'  into '${dir}'`
-      );
-      await clone(
-        `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
-        dir,
-        checkoutInfo.targetBranch
-      );
-    } catch (err) {
-      logger.error(
-        `Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
-      );
-      throw err;
+    if (!skipCheckout) {
+      try {
+        logger.info(
+          `Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.targetBranch}'  into '${dir}'`
+        );
+        await clone(
+          `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,
+          dir,
+          checkoutInfo.targetBranch
+        );
+      } catch (err) {
+        logger.error(
+          `Error checking out ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}.`
+        );
+        throw err;
+      }
     }
     return checkoutInfo;
   } else {
@@ -502,7 +513,6 @@ async function getPlaceHoldersHelper(definitionFile, placeHolder, token) {
  * @param {Object} definitionFile the definition file path or URL
  */
 async function getPlaceHolders(context, definitionFile) {
-  logger.info(`Getting place holders for ${definitionFile}.`);
   let placeHolders = {};
   if (definitionFile.startsWith("http") && definitionFile.includes("${")) {
     placeHolders = {

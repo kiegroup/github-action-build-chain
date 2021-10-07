@@ -33,7 +33,9 @@ async function execute(args, token, octokit) {
       {
         replaceExArray: args.cct,
         skipProjectCheckout: treatSkipProjectCheckout(args.spc),
-        skipParallelCheckout: args.skipParallelCheckout
+        skipParallelCheckout: args.skipParallelCheckout,
+        skipCheckout: args.skipCheckout,
+        skipExecution: args.skipExecution
       }
     );
   }
@@ -53,7 +55,9 @@ async function execute(args, token, octokit) {
       {
         replaceExArray: args.cct,
         skipProjectCheckout: treatSkipProjectCheckout(args.spc),
-        skipParallelCheckout: args.skipParallelCheckout
+        skipParallelCheckout: args.skipParallelCheckout,
+        skipCheckout: args.skipCheckout,
+        skipExecution: args.skipExecution
       }
     );
   }
@@ -67,7 +71,9 @@ async function execute(args, token, octokit) {
       {
         replaceExArray: args.cct,
         skipProjectCheckout: treatSkipProjectCheckout(args.spc),
-        skipParallelCheckout: args.skipParallelCheckout
+        skipParallelCheckout: args.skipParallelCheckout,
+        skipCheckout: args.skipCheckout,
+        skipExecution: args.skipExecution
       }
     );
   }
@@ -88,7 +94,8 @@ async function execute(args, token, octokit) {
         skipExecution: args.skipExecution,
         replaceExArray: args.cct,
         skipProjectCheckout: treatSkipProjectCheckout(args.spc),
-        skipParallelCheckout: args.skipParallelCheckout
+        skipParallelCheckout: args.skipParallelCheckout,
+        skipCheckout: args.skipCheckout
       }
     );
   }

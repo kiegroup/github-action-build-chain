@@ -1,6 +1,6 @@
 {
   "name": "@kie/build-chain-action",
-  "version": "2.3.12",
+  "version": "2.3.13",
   "description": "GitHub action to define action chains",
   "main": "dist/build-chain-cli.js",
   "author": "Enrique Mingorance Cano <emingora@redhat.com>",
@@ -17,7 +17,7 @@
     "prettier-write": "prettier --write .",
     "lint-final": "npm run prettier && npm run lint",
     "prepublish": "npm run lint && npm run test",
-    "ncc-build": "ncc build bin/build-chain-event.js"
+    "ncc-build": "ncc build --minify bin/build-chain-event.js"
   },
   "git-pre-hooks": {
     "pre-commit": "npm run prettier && npm run ncc-build && git add dist/index.js",

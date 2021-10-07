@@ -5,4 +5,4 @@ locally_execution/**/*
 test/**/_temp/**/*
 build_chain_20*/**/*
 yarn.lock
-./project-dependencies.yaml
+/project-dependencies.yaml

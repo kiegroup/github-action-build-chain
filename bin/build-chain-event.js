@@ -49,24 +49,27 @@ async function getEventData() {
  * @param {Object} the JSON object for the event data
  */
 function printLocalCommand(eventData) {
-  core.startGroup(`Printing local execution command`);
-  logger.info(
-    "You can copy paste the following commands to locally execute build chain tool."
-  );
-  logger.info(`npm i @kie/build-chain-action@${pkg.version} -g`);
-  logger.info(
-    `${Object.keys(
-      pkg.bin
-    )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
-      getFlowType()
-    )} -url ${eventData.pull_request.html_url} ${
-      getStartingProject() ? `-sp ${getStartingProject}` : ""
-    }`
-  );
+  // TODO: to be improved
+  if (eventData.pull_request) {
+    core.startGroup(`Printing local execution command`);
+    logger.info(
+      "You can copy paste the following commands to locally execute build chain tool."
+    );
+    logger.info(`npm i @kie/build-chain-action@${pkg.version} -g`);
+    logger.info(
+      `${Object.keys(
+        pkg.bin
+      )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
+        getFlowType()
+      )} -url ${eventData.pull_request.html_url} ${
+        getStartingProject() ? `-sp ${getStartingProject}` : ""
+      }`
+    );
 
-  logger.warn("Remember you need Node installed in the environment.");
-  logger.warn("The `GITHUB_TOKEN` has to be set in the environment.");
-  core.endGroup();
+    logger.warn("Remember you need Node installed in the environment.");
+    logger.warn("The `GITHUB_TOKEN` has to be set in the environment.");
+    core.endGroup();
+  }
 }
 
 async function main() {

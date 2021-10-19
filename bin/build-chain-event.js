@@ -54,6 +54,8 @@ function printLocalCommand(eventData) {
     "You can copy paste the following commands to locally execute build chain tool."
   );
   logger.info(`npm i @kie/build-chain-action@${pkg.version} -g`);
+  console.log(eventData);
+  logger.info(eventData);
   logger.info(
     `${Object.keys(
       pkg.bin

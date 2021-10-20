@@ -26,8 +26,8 @@ const logger = {
   },
 
   debug: (...str) => {
-    if (logger.level === "trace" || logger.level === "debug") {
-      log("DEBUG", str);
+    if (logger.isDebug()) {
+      log("[DEBUG]", str);
     }
   },
 
@@ -38,7 +38,7 @@ const logger = {
   error: (...str) => {
     if (str.length === 1) {
       if (str[0] instanceof Error) {
-        if (logger.level === "trace" || logger.level === "debug") {
+        if (logger.isDebug()) {
           log(null, [str[0].stack || str[0]]);
         } else {
           log("[ERROR] ", [str[0].message || str[0]]);
@@ -47,7 +47,8 @@ const logger = {
     } else {
       log("[ERROR] ", str);
     }
-  }
+  },
+  isDebug: () => logger.level === "trace" || logger.level === "debug"
 };
 
 function inspect(obj) {

@@ -2,6 +2,7 @@ const {
   getDefinitionFile,
   getStartingProject,
   getFlowType,
+  getLoggerLevel,
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,
@@ -41,6 +42,37 @@ test("getStartingProject", () => {
   expect(result).toEqual(expectedResult);
 });
 
+describe("getLoggerLevel", () => {
+  test("ok", () => {
+    // Arrange
+    const expectedResult = "debug";
+    getInput.mockImplementationOnce(param =>
+      param === "logger-level" ? expectedResult : undefined
+    );
+    // Act
+    const result = getLoggerLevel();
+
+    // Assert
+    expect(result).toEqual(expectedResult);
+  });
+  test("exception", () => {
+    // Arrange
+    const expectedResult = "not-existing-logger-level";
+    getInput.mockImplementationOnce(param =>
+      param === "logger-level" ? expectedResult : undefined
+    );
+
+    // Act & Assert
+    try {
+      getLoggerLevel();
+    } catch (ex) {
+      expect(ex.message).toBe(
+        "invalid 'logger-level' input: not-existing-logger-level"
+      );
+    }
+  });
+});
+
 test("getFlowType", () => {
   // Arrange
   const expectedResult = "pull-request";
@@ -54,93 +86,88 @@ test("getFlowType", () => {
   expect(result).toEqual(expectedResult);
 });
 
-test("isPullRequestFlowType ok", () => {
-  // Arrange
-  const expectedResult = true;
-  getInput.mockImplementationOnce(param =>
-    param === "flow-type" ? "pull-request" : undefined
-  );
-  // Act
-  const result = isPullRequestFlowType();
+describe("isPullRequestFlowType", () => {
+  test("ok", () => {
+    // Arrange
+    const expectedResult = true;
+    getInput.mockImplementationOnce(param =>
+      param === "flow-type" ? "pull-request" : undefined
+    );
+    // Act
+    const result = isPullRequestFlowType();
 
-  // Assert
-  expect(result).toEqual(expectedResult);
+    // Assert
+    expect(result).toEqual(expectedResult);
+  });
+
+  test("not ok", () => {
+    // Arrange
+    const expectedResult = false;
+    getInput.mockImplementationOnce(param =>
+      param === "flow-type" ? "full-downstream" : undefined
+    );
+    // Act
+    const result = isPullRequestFlowType();
+
+    // Assert
+    expect(result).toEqual(expectedResult);
+  });
 });
 
-test("isPullRequestFlowType not ok", () => {
-  // Arrange
-  const expectedResult = false;
-  getInput.mockImplementationOnce(param =>
-    param === "flow-type" ? "full-downstream" : undefined
-  );
-  // Act
-  const result = isPullRequestFlowType();
+describe("isFDFlowType", () => {
+  test("ok", () => {
+    // Arrange
+    const expectedResult = true;
+    getInput.mockImplementationOnce(param =>
+      param === "flow-type" ? "full-downstream" : undefined
+    );
+    // Act
+    const result = isFDFlowType();
 
-  // Assert
-  expect(result).toEqual(expectedResult);
+    // Assert
+    expect(result).toEqual(expectedResult);
+  });
+
+  test("not ok", () => {
+    // Arrange
+    const expectedResult = false;
+    getInput.mockImplementationOnce(param =>
+      param === "flow-type" ? "pull-request" : undefined
+    );
+    // Act
+    const result = isFDFlowType();
+
+    // Assert
+    expect(result).toEqual(expectedResult);
+  });
 });
 
-test("isFDFlowType ok", () => {
-  // Arrange
-  const expectedResult = true;
-  getInput.mockImplementationOnce(param =>
-    param === "flow-type" ? "full-downstream" : undefined
-  );
-  // Act
-  const result = isFDFlowType();
+describe("isSingleFlowType", () => {
+  test("ok", () => {
+    // Arrange
+    const expectedResult = true;
+    getInput.mockImplementationOnce(param =>
+      param === "flow-type" ? "single" : undefined
+    );
+    // Act
+    const result = isSingleFlowType();
 
-  // Assert
-  expect(result).toEqual(expectedResult);
-});
+    // Assert
+    expect(result).toEqual(expectedResult);
+  });
 
-test("isFDFlowType not ok", () => {
-  // Arrange
-  const expectedResult = false;
-  getInput.mockImplementationOnce(param =>
-    param === "flow-type" ? "pull-request" : undefined
-  );
-  // Act
-  const result = isFDFlowType();
+  test("not ok", () => {
+    // Arrange
+    const expectedResult = false;
+    getInput.mockImplementationOnce(param =>
+      param === "flow-type" ? "pull-request" : undefined
+    );
+    // Act
+    const result = isSingleFlowType();
 
-  // Assert
-  expect(result).toEqual(expectedResult);
-});
-
-test("isSingleFlowType ok", () => {
-  // Arrange
-  const expectedResult = true;
-  getInput.mockImplementationOnce(param =>
-    param === "flow-type" ? "single" : undefined
-  );
-  // Act
-  const result = isSingleFlowType();
-
-  // Assert
-  expect(result).toEqual(expectedResult);
-});
-
-test("isSingleFlowType not ok", () => {
-  // Arrange
-  const expectedResult = false;
-  getInput.mockImplementationOnce(param =>
-    param === "flow-type" ? "pull-request" : undefined
-  );
-  // Act
-  const result = isSingleFlowType();
-
-  // Assert
-  expect(result).toEqual(expectedResult);
-});
-
-test("eventFlowTypeToCliFlowType pull-request", () => {
-  // Arrange
-  const flowType = "pull-request";
-  const expected = "pr";
-  // Act
-  const result = eventFlowTypeToCliFlowType(flowType);
-
-  // Assert
-  expect(result).toEqual(expected);
+    // Assert
+    expect(result).toEqual(expectedResult);
+  });
 });
 
 describe("eventFlowTypeToCliFlowType", () => {
@@ -159,10 +186,10 @@ describe("eventFlowTypeToCliFlowType", () => {
     }
   ];
 
-  testCases.forEach(test => {
-    it(`type: '${test.flowType}' which is: '${test.expected}'`, () => {
-      const result = eventFlowTypeToCliFlowType(test.flowType);
-      expect(result).toEqual(test.expected);
+  testCases.forEach(testCase => {
+    test(`type: '${testCase.flowType}' which is: '${testCase.expected}'`, () => {
+      const result = eventFlowTypeToCliFlowType(testCase.flowType);
+      expect(result).toEqual(testCase.expected);
     });
   });
 });

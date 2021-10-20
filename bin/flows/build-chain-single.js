@@ -27,6 +27,11 @@ async function execute(
   const githubInformation = createGithubInformationObject(eventData, env);
   const config = await createCommonConfig(githubInformation, rootFolder, env);
   const context = { token, octokit, config };
+  logger.debug(
+    "build-chain-pull-single.js. githubInformation",
+    githubInformation
+  );
+  logger.debug("build-chain-pull-single.js. config", config);
   await start(context, options);
 }
 

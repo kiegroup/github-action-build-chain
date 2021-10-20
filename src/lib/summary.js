@@ -11,6 +11,7 @@ const groupBy = (checkoutInfo, key) => {
 };
 
 function printCheckoutInformation(checkoutInfo) {
+  logger.debug("summary.js checkoutInfo", checkoutInfo);
   if (checkoutInfo && Object.keys(checkoutInfo).length) {
     logger.info("----------------------------------------------");
     Object.entries(checkoutInfo).forEach(([project, checkInfo]) =>

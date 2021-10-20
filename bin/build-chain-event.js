@@ -19,6 +19,7 @@ const {
   isSingleFlowType,
   isBranchFlowType,
   getFlowType,
+  getLoggerLevel,
   eventFlowTypeToCliFlowType,
   getDefinitionFile,
   getStartingProject
@@ -74,6 +75,8 @@ function printLocalCommand(eventData) {
 
 async function main() {
   const eventData = await getEventData();
+  logger.level = getLoggerLevel();
+  logger.debug(eventData);
 
   printLocalCommand(eventData);
 

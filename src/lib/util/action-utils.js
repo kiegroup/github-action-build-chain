@@ -1,4 +1,5 @@
 const core = require("@actions/core");
+const { ClientError } = require("../common");
 
 function getDefinitionFile() {
   return core.getInput("definition-file");
@@ -10,6 +11,14 @@ function getStartingProject() {
 
 function getFlowType() {
   return core.getInput("flow-type");
+}
+
+function getLoggerLevel() {
+  const loggerLevel = core.getInput("logger-level");
+  if (!["info", "trace", "debug"].includes(loggerLevel)) {
+    throw new ClientError(`invalid 'logger-level' input: ${loggerLevel}`);
+  }
+  return loggerLevel;
 }
 
 function isPullRequestFlowType() {
@@ -45,6 +54,7 @@ module.exports = {
   getDefinitionFile,
   getStartingProject,
   getFlowType,
+  getLoggerLevel,
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,

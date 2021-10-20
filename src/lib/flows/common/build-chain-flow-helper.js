@@ -39,6 +39,7 @@ async function checkoutDefinitionTreeParallel(
   options
 ) {
   const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
+  logger.debug("nodeTriggeringTheJob", nodeTriggeringTheJob);
 
   return Promise.all(
     nodeChain.map(async node => {
@@ -97,6 +98,8 @@ async function checkoutDefinitionTreeSequencial(
 ) {
   const result = [];
   const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
+  logger.debug("nodeTriggeringTheJob", nodeTriggeringTheJob);
+
   for (const node of nodeChain) {
     try {
       const skipCheckout =

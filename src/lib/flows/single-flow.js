@@ -18,6 +18,8 @@ async function start(
   context,
   options = { isArchiveArtifacts: true, skipExecution: false }
 ) {
+  logger.debug("single-flow.js options", options);
+
   const readerOptions = {
     urlPlaceHolders: await getPlaceHolders(
       context,
@@ -25,6 +27,8 @@ async function start(
     ),
     token: context.token
   };
+  logger.debug("single-flow.js readerOptions", readerOptions);
+
   if (!options.skipExecution) {
     await executePre(
       context.config.github.inputs.definitionFile,
@@ -38,11 +42,14 @@ async function start(
   const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
+  logger.debug("single-flow.js projectTriggeringJob", projectTriggeringJob);
+
   const definitionTree = await getTreeForProject(
     context.config.github.inputs.definitionFile,
     projectTriggeringJob,
     readerOptions
   );
+  logger.debug("single-flow.js definitionTree", definitionTree);
 
   const nodeChain = [definitionTree];
 

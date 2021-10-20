@@ -23,6 +23,11 @@ async function execute(
 ) {
   const config = await createCommonConfig(githubInformation, rootFolder, env);
   const context = { token, octokit, config };
+  logger.debug(
+    "build-chain-pull-branch.js. githubInformation",
+    githubInformation
+  );
+  logger.debug("build-chain-pull-branch.js. config", config);
   await start(context, options);
 }
 

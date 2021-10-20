@@ -21,6 +21,8 @@ async function start(
   context,
   options = { isArchiveArtifacts: true, skipExecution: false }
 ) {
+  logger.debug("full-downstream-flow.js options", options);
+
   const readerOptions = {
     urlPlaceHolders: await getPlaceHolders(
       context,
@@ -28,6 +30,8 @@ async function start(
     ),
     token: context.token
   };
+  logger.debug("full-downstream-flow.js readerOptions", readerOptions);
+
   if (!options.skipExecution) {
     await executePre(
       context.config.github.inputs.definitionFile,
@@ -38,12 +42,17 @@ async function start(
   const projectTriggeringJob = context.config.github.inputs.startingProject
     ? context.config.github.inputs.startingProject
     : context.config.github.repository;
+  logger.debug(
+    "full-downstream-flow.js projectTriggeringJob",
+    projectTriggeringJob
+  );
 
   const nodeChain = await getOrderedListForProject(
     context.config.github.inputs.definitionFile,
     projectTriggeringJob,
     readerOptions
   );
+  logger.debug("full-downstream-flow.js nodeChain", nodeChain);
 
   if (!options.skipExecution) {
     core.startGroup(`[Full Downstream Flow] Execution Plan...`);

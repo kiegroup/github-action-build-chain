@@ -21,22 +21,22 @@ const COMMON_ARGS = [
 ];
 
 function git(cwd, ...args) {
-  const stdio = [
-    "ignore",
-    "pipe",
-    logger.level === "trace" || logger.level === "debug" ? "inherit" : "pipe"
-  ];
+  const stdio = ["ignore", "pipe", logger.isDebug() ? "inherit" : "pipe"];
+  const filteredArgs = args.filter(
+    arg =>
+      ![null, undefined].includes(arg) &&
+      (!logger.isDebug() || arg !== "--quiet")
+  );
   // the URL passed to the clone command could contain a password!
-  const command = `git ${args.join(" ")}`;
+  const command = `git ${filteredArgs.join(" ")}`;
+  logger.debug(`Executing git command ${command}`);
   return new Promise((resolve, reject) => {
-    const proc = spawn(
-      "git",
-      COMMON_ARGS.concat(args.filter(a => a !== null)),
-      { cwd, stdio }
-    );
+    const proc = spawn("git", COMMON_ARGS.concat(filteredArgs), { cwd, stdio });
     const buffers = [];
-    proc.stdout.on("data", data => buffers.push(data));
-    proc.stderr.on("data", data => buffers.push(data));
+    if (stdio[2] !== "inherit") {
+      proc.stdout.on("data", data => buffers.push(data));
+      proc.stderr.on("data", data => buffers.push(data));
+    }
 
     proc.on("error", () => {
       reject(new Error(`command failed: ${command}`));

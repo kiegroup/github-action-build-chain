@@ -19,6 +19,7 @@ const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
 
 async function start(context, options = { skipExecution: false }) {
+  logger.debug("branch-flow.js options", options);
   const readerOptions = {
     urlPlaceHolders: await getPlaceHolders(
       context,
@@ -26,6 +27,8 @@ async function start(context, options = { skipExecution: false }) {
     ),
     token: context.token
   };
+  logger.debug("branch-flow.js readerOptions", readerOptions);
+
   if (!options.skipExecution) {
     await executePre(
       context.config.github.inputs.definitionFile,
@@ -44,8 +47,10 @@ async function start(context, options = { skipExecution: false }) {
         readerOptions
       )
     : getTree(context.config.github.inputs.definitionFile, readerOptions);
+  logger.debug("branch-flow.js definitionTree", definitionTree);
 
   let nodeChain = await parentChainFromNode(definitionTree);
+  logger.debug("branch-flow.js nodeChain", nodeChain);
 
   logger.info(
     `Tree for project ${
@@ -60,11 +65,11 @@ async function start(context, options = { skipExecution: false }) {
   );
   core.endGroup();
 
-  if (!options.skipExecution) {
-    core.startGroup(`[Branch Flow] Checkout Summary...`);
-    printCheckoutInformation(checkoutInfo);
-    core.endGroup();
+  core.startGroup(`[Branch Flow] Checkout Summary...`);
+  printCheckoutInformation(checkoutInfo);
+  core.endGroup();
 
+  if (!options.skipExecution) {
     const executionResult = options.command
       ? await executeBuildSpecificCommand(
           context.config.rootFolder,

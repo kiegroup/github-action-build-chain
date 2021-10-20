@@ -1,7 +1,7 @@
 {
   "name": "@kie/build-chain-action",
-  "version": "2.3.14",
-  "description": "GitHub action to define action chains",
+  "version": "2.3.15",
+  "description": "Library to execute commands based on github projects dependencies.",
   "main": "dist/build-chain-cli.js",
   "author": "Enrique Mingorance Cano <emingora@redhat.com>",
   "license": "SEE LICENSE IN LICENSE",

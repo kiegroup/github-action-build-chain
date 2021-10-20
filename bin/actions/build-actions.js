@@ -79,7 +79,10 @@ async function execute(args, token, octokit) {
   }
   if (args.build === "branch") {
     addLocalExecutionVariables({
-      "starting-project": { value: args.sp[0], mandatory: true }
+      "starting-project": {
+        value: args.sp ? args.sp[0] : undefined,
+        mandatory: true
+      }
     });
     await branchLocalFlow(
       token,

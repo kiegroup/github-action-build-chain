@@ -285,12 +285,13 @@ async function getRepository(octokit, owner, repo) {
   assert(octokit, "octokit is not defined");
   assert(owner, "owner is not defined");
   assert(repo, "repo is not defined");
-  // console.error("getRepository", owner, repo, undefined);
   try {
     const { status, data } = await octokit.repos.get({
       owner,
       repo
     });
+    logger.debug(`getRepository info ${owner}/${repo}. ${status}`);
+    logger.debug(data);
     if (status == 200) {
       return data;
     }

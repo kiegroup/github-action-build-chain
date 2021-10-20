@@ -35,72 +35,74 @@ test("clone creates the target directory", async () => {
   });
 });
 
-test("fetchUntilMergeBase finds the correct merge base", async () => {
-  await tmpdir(async path => {
-    const origin = `${path}/origin`;
-    await init(origin);
-    await commit(origin, "base %d", 10);
-    const base = await git.head(origin);
-    await git.git(origin, "checkout", "-b", "br1");
-    await commit(origin, "br1 %d", 20);
-    await git.git(origin, "checkout", "main");
-    await commit(origin, "main %d", 20);
+describe("fetchUntilMergeBase", () => {
+  test("finds the correct merge base", async () => {
+    await tmpdir(async path => {
+      const origin = `${path}/origin`;
+      await init(origin);
+      await commit(origin, "base %d", 10);
+      const base = await git.head(origin);
+      await git.git(origin, "checkout", "-b", "br1");
+      await commit(origin, "br1 %d", 20);
+      await git.git(origin, "checkout", "main");
+      await commit(origin, "main %d", 20);
 
-    const ws = `${path}/ws`;
-    await git.clone(`file://${path}/origin`, ws, "br1");
-    await git.fetch(ws, "main");
-    expect(await git.fetchUntilMergeBase(ws, "main", 10000)).toBe(base);
-  });
-}, 15000);
+      const ws = `${path}/ws`;
+      await git.clone(`file://${path}/origin`, ws, "br1");
+      await git.fetch(ws, "main");
+      expect(await git.fetchUntilMergeBase(ws, "main", 10000)).toBe(base);
+    });
+  }, 15000);
 
-test("fetchUntilMergeBase finds the earliest merge base 1", async () => {
-  await tmpdir(async path => {
-    const origin = `${path}/origin`;
-    await init(origin);
-    await commit(origin, "base %d", 10);
-    const base = await git.head(origin);
-    await git.git(origin, "branch", "br1");
-    await commit(origin, "main %d", 10);
-    await git.git(origin, "checkout", "br1");
-    await commit(origin, "br1 before merge %d", 5);
-    await git.git(origin, "merge", "--no-ff", "main");
-    await commit(origin, "br1 after merge %d", 10);
-    await git.git(origin, "checkout", "main");
-    await commit(origin, "main after merge %d", 10);
+  test("finds the earliest merge base 1", async () => {
+    await tmpdir(async path => {
+      const origin = `${path}/origin`;
+      await init(origin);
+      await commit(origin, "base %d", 10);
+      const base = await git.head(origin);
+      await git.git(origin, "branch", "br1");
+      await commit(origin, "main %d", 10);
+      await git.git(origin, "checkout", "br1");
+      await commit(origin, "br1 before merge %d", 5);
+      await git.git(origin, "merge", "--no-ff", "main");
+      await commit(origin, "br1 after merge %d", 10);
+      await git.git(origin, "checkout", "main");
+      await commit(origin, "main after merge %d", 10);
 
-    const ws = `${path}/ws`;
-    await git.clone(`file://${path}/origin`, ws, "br1");
-    await git.fetch(ws, "main");
-    expect(await git.fetchUntilMergeBase(ws, "main", 10000)).toBe(base);
-  });
-}, 15000);
+      const ws = `${path}/ws`;
+      await git.clone(`file://${path}/origin`, ws, "br1");
+      await git.fetch(ws, "main");
+      expect(await git.fetchUntilMergeBase(ws, "main", 10000)).toBe(base);
+    });
+  }, 15000);
 
-test("fetchUntilMergeBase finds the earliest merge base 2", async () => {
-  await tmpdir(async path => {
-    const origin = `${path}/origin`;
-    await init(origin);
-    await commit(origin, "base a%d", 5);
-    const base = await git.head(origin);
-    await commit(origin, "base b%d", 5);
-    await git.git(origin, "branch", "br1");
-    await commit(origin, "main %d", 10);
-    await git.git(origin, "checkout", "br1");
-    await commit(origin, "br1 before merge %d", 5);
-    await git.git(origin, "merge", "--no-ff", "main");
-    await commit(origin, "br1 after merge %d", 10);
-    await git.git(origin, "checkout", "main");
-    await commit(origin, "main after merge %d", 10);
-    await git.git(origin, "checkout", "-b", "br2", base);
-    await commit(origin, "br2");
-    await git.git(origin, "checkout", "br1");
-    await git.git(origin, "merge", "--no-ff", "br2");
+  test("finds the earliest merge base 2", async () => {
+    await tmpdir(async path => {
+      const origin = `${path}/origin`;
+      await init(origin);
+      await commit(origin, "base a%d", 5);
+      const base = await git.head(origin);
+      await commit(origin, "base b%d", 5);
+      await git.git(origin, "branch", "br1");
+      await commit(origin, "main %d", 10);
+      await git.git(origin, "checkout", "br1");
+      await commit(origin, "br1 before merge %d", 5);
+      await git.git(origin, "merge", "--no-ff", "main");
+      await commit(origin, "br1 after merge %d", 10);
+      await git.git(origin, "checkout", "main");
+      await commit(origin, "main after merge %d", 10);
+      await git.git(origin, "checkout", "-b", "br2", base);
+      await commit(origin, "br2");
+      await git.git(origin, "checkout", "br1");
+      await git.git(origin, "merge", "--no-ff", "br2");
 
-    const ws = `${path}/ws`;
-    await git.clone(`file://${path}/origin`, ws, "br1");
-    await git.fetch(ws, "main");
-    expect(await git.fetchUntilMergeBase(ws, "main", 10000)).toBe(base);
-  });
-}, 15000);
+      const ws = `${path}/ws`;
+      await git.clone(`file://${path}/origin`, ws, "br1");
+      await git.fetch(ws, "main");
+      expect(await git.fetchUntilMergeBase(ws, "main", 10000)).toBe(base);
+    });
+  }, 15000);
+});
 
 test("mergeCommits returns the correct commits", async () => {
   await tmpdir(async path => {
@@ -222,163 +224,167 @@ test("hasPullRequest false", async () => {
   expect(octokit.pulls.list).toHaveBeenCalledTimes(2);
 });
 
-test("getForkedProject existing", async () => {
-  const octokit = {
-    repos: {
-      listForks: jest.fn(({ owner, repo }) => {
-        return owner === "ownerx" && repo === "repox"
-          ? { status: 200, data: forkedProjectListInfo }
-          : undefined;
-      })
-    }
-  };
+describe("getForkedProject", () => {
+  test("existing", async () => {
+    const octokit = {
+      repos: {
+        listForks: jest.fn(({ owner, repo }) => {
+          return owner === "ownerx" && repo === "repox"
+            ? { status: 200, data: forkedProjectListInfo }
+            : undefined;
+        })
+      }
+    };
 
-  const result = await git.getForkedProject(
-    octokit,
-    "ownerx",
-    "repox",
-    "Ginxo"
-  );
+    const result = await git.getForkedProject(
+      octokit,
+      "ownerx",
+      "repox",
+      "Ginxo"
+    );
 
-  expect(octokit.repos.listForks).toHaveBeenCalledTimes(1);
-  expect(result).not.toBeUndefined();
-  expect(result.id).toBe(225822299);
+    expect(octokit.repos.listForks).toHaveBeenCalledTimes(1);
+    expect(result).not.toBeUndefined();
+    expect(result.id).toBe(225822299);
+  });
+
+  test("not existing", async () => {
+    const octokit = {
+      repos: {
+        listForks: jest.fn(({ owner, repo, page }) => {
+          return owner === "ownerx" && repo === "repox" && page == 1
+            ? { status: 200, data: forkedProjectListInfo }
+            : owner === "ownerx" && repo === "repox" && page == 2
+            ? { status: 304, data: forkedProjectListInfoEmpty }
+            : undefined;
+        })
+      }
+    };
+
+    const result = await git.getForkedProject(
+      octokit,
+      "ownerx",
+      "repox",
+      "weirdowner"
+    );
+
+    expect(octokit.repos.listForks).toHaveBeenCalledTimes(2);
+    expect(result).toBeUndefined();
+  });
+
+  test("empty", async () => {
+    const octokit = {
+      repos: {
+        listForks: jest.fn(({ owner, repo, page }) => {
+          return owner === "ownerx" && repo === "repox" && page == 1
+            ? { status: 200, data: forkedProjectListInfoEmpty }
+            : undefined;
+        })
+      }
+    };
+
+    const result = await git.getForkedProject(
+      octokit,
+      "ownerx",
+      "repox",
+      "weirdowner"
+    );
+
+    expect(octokit.repos.listForks).toHaveBeenCalledTimes(1);
+    expect(result).toBeUndefined();
+  });
+
+  test("second page empty", async () => {
+    const octokit = {
+      repos: {
+        listForks: jest.fn(({ owner, repo, page }) => {
+          return owner === "ownerx" && repo === "repox" && page == 1
+            ? { status: 200, data: forkedProjectListInfo }
+            : owner === "ownerx" && repo === "repox" && page == 2
+            ? { status: 200, data: forkedProjectListInfoEmpty }
+            : undefined;
+        })
+      }
+    };
+
+    const result = await git.getForkedProject(
+      octokit,
+      "ownerx",
+      "repox",
+      "weirdowner"
+    );
+
+    expect(octokit.repos.listForks).toHaveBeenCalledTimes(2);
+    expect(result).toBeUndefined();
+  });
 });
 
-test("getForkedProject not existing", async () => {
-  const octokit = {
-    repos: {
-      listForks: jest.fn(({ owner, repo, page }) => {
-        return owner === "ownerx" && repo === "repox" && page == 1
-          ? { status: 200, data: forkedProjectListInfo }
-          : owner === "ownerx" && repo === "repox" && page == 2
-          ? { status: 304, data: forkedProjectListInfoEmpty }
-          : undefined;
-      })
-    }
-  };
+describe("getRepository", () => {
+  test("existing", async () => {
+    const octokit = {
+      repos: {
+        get: jest.fn(({ owner, repo }) => {
+          return owner === "Ginxo" && repo === "repox"
+            ? { status: 200, data: getRepositoryOk }
+            : undefined;
+        })
+      }
+    };
 
-  const result = await git.getForkedProject(
-    octokit,
-    "ownerx",
-    "repox",
-    "weirdowner"
-  );
+    const result = await git.getRepository(octokit, "Ginxo", "repox");
 
-  expect(octokit.repos.listForks).toHaveBeenCalledTimes(2);
-  expect(result).toBeUndefined();
-});
+    expect(octokit.repos.get).toHaveBeenCalledTimes(1);
+    expect(result).not.toBeUndefined();
+    expect(result.id).toBe(203378120);
+  });
 
-test("getForkedProject empty", async () => {
-  const octokit = {
-    repos: {
-      listForks: jest.fn(({ owner, repo, page }) => {
-        return owner === "ownerx" && repo === "repox" && page == 1
-          ? { status: 200, data: forkedProjectListInfoEmpty }
-          : undefined;
-      })
-    }
-  };
+  test("not found", async () => {
+    const octokit = {
+      repos: {
+        get: jest.fn(({ owner, repo }) => {
+          return owner === "Ginxo" && repo === "repox"
+            ? { status: 404, data: getRepositoryNotFound }
+            : undefined;
+        })
+      }
+    };
 
-  const result = await git.getForkedProject(
-    octokit,
-    "ownerx",
-    "repox",
-    "weirdowner"
-  );
+    const result = await git.getRepository(octokit, "Ginxo", "repox");
 
-  expect(octokit.repos.listForks).toHaveBeenCalledTimes(1);
-  expect(result).toBeUndefined();
-});
+    expect(octokit.repos.get).toHaveBeenCalledTimes(1);
+    expect(result).toBeUndefined();
+  });
 
-test("getForkedProject second page empty", async () => {
-  const octokit = {
-    repos: {
-      listForks: jest.fn(({ owner, repo, page }) => {
-        return owner === "ownerx" && repo === "repox" && page == 1
-          ? { status: 200, data: forkedProjectListInfo }
-          : owner === "ownerx" && repo === "repox" && page == 2
-          ? { status: 200, data: forkedProjectListInfoEmpty }
-          : undefined;
-      })
-    }
-  };
+  test("different to 404", async () => {
+    const octokit = {
+      repos: {
+        get: jest.fn(({ owner, repo }) => {
+          return owner === "Ginxo" && repo === "repox"
+            ? { status: 405, data: getRepositoryNotFound }
+            : undefined;
+        })
+      }
+    };
 
-  const result = await git.getForkedProject(
-    octokit,
-    "ownerx",
-    "repox",
-    "weirdowner"
-  );
+    const result = await git.getRepository(octokit, "Ginxo", "repox");
+    expect(octokit.repos.get).toHaveBeenCalledTimes(1);
+    expect(result).toBeUndefined();
+  });
 
-  expect(octokit.repos.listForks).toHaveBeenCalledTimes(2);
-  expect(result).toBeUndefined();
-});
+  test("different exception", async () => {
+    const octokit = {
+      repos: {
+        get: jest.fn(({ owner, repo }) => {
+          if (owner === "Ginxo" && repo === "repox") {
+            throw new Error();
+          }
+          return { status: 200, data: getRepositoryOk };
+        })
+      }
+    };
 
-test("getRepository existing", async () => {
-  const octokit = {
-    repos: {
-      get: jest.fn(({ owner, repo }) => {
-        return owner === "Ginxo" && repo === "repox"
-          ? { status: 200, data: getRepositoryOk }
-          : undefined;
-      })
-    }
-  };
-
-  const result = await git.getRepository(octokit, "Ginxo", "repox");
-
-  expect(octokit.repos.get).toHaveBeenCalledTimes(1);
-  expect(result).not.toBeUndefined();
-  expect(result.id).toBe(203378120);
-});
-
-test("getRepository not found", async () => {
-  const octokit = {
-    repos: {
-      get: jest.fn(({ owner, repo }) => {
-        return owner === "Ginxo" && repo === "repox"
-          ? { status: 404, data: getRepositoryNotFound }
-          : undefined;
-      })
-    }
-  };
-
-  const result = await git.getRepository(octokit, "Ginxo", "repox");
-
-  expect(octokit.repos.get).toHaveBeenCalledTimes(1);
-  expect(result).toBeUndefined();
-});
-
-test("getRepository different to 404", async () => {
-  const octokit = {
-    repos: {
-      get: jest.fn(({ owner, repo }) => {
-        return owner === "Ginxo" && repo === "repox"
-          ? { status: 405, data: getRepositoryNotFound }
-          : undefined;
-      })
-    }
-  };
-
-  const result = await git.getRepository(octokit, "Ginxo", "repox");
-  expect(octokit.repos.get).toHaveBeenCalledTimes(1);
-  expect(result).toBeUndefined();
-});
-
-test("getRepository different exception", async () => {
-  const octokit = {
-    repos: {
-      get: jest.fn(({ owner, repo }) => {
-        if (owner === "Ginxo" && repo === "repox") {
-          throw new Error();
-        }
-        return { status: 200, data: getRepositoryOk };
-      })
-    }
-  };
-
-  const result = await git.getRepository(octokit, "Ginxo", "repox");
-  expect(octokit.repos.get).toHaveBeenCalledTimes(1);
-  expect(result).toBeUndefined();
+    const result = await git.getRepository(octokit, "Ginxo", "repox");
+    expect(octokit.repos.get).toHaveBeenCalledTimes(1);
+    expect(result).toBeUndefined();
+  });
 });

@@ -19,16 +19,16 @@ const {
   isSingleFlowType,
   isBranchFlowType,
   getFlowType,
-  getLoggerLevel,
-  eventFlowTypeToCliFlowType,
-  getDefinitionFile,
-  getStartingProject
+  getLoggerLevel
 } = require("../src/lib/util/action-utils");
-const { createOctokitInstance, getProcessEnvVariable } = require("./bin-utils");
+const {
+  createOctokitInstance,
+  getProcessEnvVariable
+} = require("./utils/bin-utils");
 require("dotenv").config();
-const core = require("@actions/core");
-const pkg = require("../package.json");
 const fse = require("fs-extra");
+
+const { printLocalCommand } = require("./utils/print-event-command-utils");
 
 async function getEventData() {
   let eventPath;
@@ -42,35 +42,6 @@ async function getEventData() {
   }
   const eventDataStr = await fse.readFile(eventPath, "utf8");
   return JSON.parse(eventDataStr);
-}
-
-/**
- * prints the local command to be copy pasted by the users
- *
- * @param {Object} the JSON object for the event data
- */
-function printLocalCommand(eventData) {
-  // TODO: to be improved
-  if (eventData.pull_request) {
-    core.startGroup(`Printing local execution command`);
-    logger.info(
-      "You can copy paste the following commands to locally execute build chain tool."
-    );
-    logger.info(`npm i @kie/build-chain-action@${pkg.version} -g`);
-    logger.info(
-      `${Object.keys(
-        pkg.bin
-      )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
-        getFlowType()
-      )} -url ${eventData.pull_request.html_url} ${
-        getStartingProject() ? `-sp ${getStartingProject}` : ""
-      }`
-    );
-
-    logger.warn("Remember you need Node installed in the environment.");
-    logger.warn("The `GITHUB_TOKEN` has to be set in the environment.");
-    core.endGroup();
-  }
 }
 
 async function main() {

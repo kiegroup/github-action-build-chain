@@ -7,7 +7,7 @@ const {
   createOctokitInstance,
   getProcessEnvVariable,
   addLocalExecutionVariables
-} = require("./bin-utils");
+} = require("./utils/bin-utils");
 const { getArguments } = require("./arguments/arguments-constructor");
 require("dotenv").config();
 

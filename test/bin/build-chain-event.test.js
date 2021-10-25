@@ -2,8 +2,8 @@ const { main } = require("../../bin/build-chain-event");
 const {
   createOctokitInstance,
   getProcessEnvVariable
-} = require("../../bin/bin-utils");
-jest.mock("../../bin/bin-utils");
+} = require("../../bin/utils/bin-utils");
+jest.mock("../../bin/utils/bin-utils");
 const {
   isPullRequestFlowType,
   isFDFlowType,
@@ -30,6 +30,11 @@ jest.mock("fs-extra");
 
 require("dotenv").config();
 jest.mock("@actions/core");
+
+const {
+  printLocalCommand
+} = require("../../bin/utils/print-event-command-utils");
+jest.mock("../../bin/utils/print-event-command-utils");
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -72,6 +77,7 @@ test("buildChain test event pull request", async () => {
     process.env,
     eventData
   );
+  expect(printLocalCommand).toHaveBeenCalledWith(eventData);
 });
 
 test("buildChain test event fd", async () => {
@@ -112,6 +118,7 @@ test("buildChain test event fd", async () => {
     process.env,
     eventData
   );
+  expect(printLocalCommand).toHaveBeenCalledWith(eventData);
 });
 
 test("buildChain test event single", async () => {
@@ -153,6 +160,7 @@ test("buildChain test event single", async () => {
     process.env,
     eventData
   );
+  expect(printLocalCommand).toHaveBeenCalledWith(eventData);
 });
 
 test("buildChain test event none", async () => {
@@ -196,4 +204,5 @@ test("buildChain test event none", async () => {
   // Assert
   expect(pullRequestEventFlow).toHaveBeenCalledTimes(0);
   expect(fdEventFlow).toHaveBeenCalledTimes(0);
+  expect(printLocalCommand).toHaveBeenCalledWith(eventData);
 });

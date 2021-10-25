@@ -3,8 +3,8 @@ const {
   createOctokitInstance,
   getProcessEnvVariable,
   addLocalExecutionVariables
-} = require("../../bin/bin-utils");
-jest.mock("../../bin/bin-utils");
+} = require("../../bin/utils/bin-utils");
+jest.mock("../../bin/utils/bin-utils");
 const { getArguments } = require("../../bin/arguments/arguments-constructor");
 jest.mock("../../bin/arguments/arguments-constructor");
 jest.mock("../../src/lib/util/action-utils");

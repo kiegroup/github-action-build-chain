@@ -14,7 +14,7 @@ const {
 const {
   addLocalExecutionVariables,
   treatSkipProjectCheckout
-} = require("../bin-utils");
+} = require("../utils/bin-utils");
 
 async function execute(args, token, octokit) {
   if (args.build === "pr") {

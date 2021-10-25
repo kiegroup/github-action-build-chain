@@ -6,7 +6,7 @@ const { createCommonConfig } = require("../../../src/lib/flows/common/config");
 jest.mock("../../../src/lib/flows/common/config");
 const { start } = require("../../../src/lib/flows/pull-request-flow");
 jest.mock("../../../src/lib/flows/pull-request-flow");
-jest.mock("../../../bin/bin-utils");
+jest.mock("../../../bin/utils/bin-utils");
 jest.mock("../../../src/lib/fs-helper");
 
 afterEach(() => {

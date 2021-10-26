@@ -19,11 +19,12 @@
 
 ## Bugs:
 
-- windows error on joining folder https://github.com/kiegroup/github-action-build-chain/issues/153
-- issue #158 definition file URL improvements GROUP/BRANCH placeholders
-- add starting-project CLI argument to single flow type option
-- starting-project argument missing documentation
-- look up both current and project triggering mappings. issue #176
+- [issue 153] windows error on joining folder.
+- [issue 158] definition file URL improvements GROUP/BRANCH placeholders.
+- add starting-project CLI argument to single flow type option.
+- starting-project argument missing documentation.
+- [issue 176] look up both current and project triggering mappings.
+- [issue 137] To avoid getting branches for already closed PRs.
 
 # V2.5
 

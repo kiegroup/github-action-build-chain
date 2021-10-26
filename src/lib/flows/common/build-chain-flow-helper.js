@@ -176,7 +176,8 @@ async function checkoutProjectPullRequestFlow(
     const checkoutInfo = await getCheckoutInfo(
       context,
       node,
-      nodeTriggeringTheJob
+      nodeTriggeringTheJob,
+      true
     );
     if (checkoutInfo == undefined) {
       const msg = `[${node.project}] Trying to checking out ${node.project} into '${dir}'. It does not exist.`;
@@ -271,7 +272,8 @@ async function checkoutProjectBranchFlow(
     const checkoutInfo = await getCheckoutInfo(
       context,
       node,
-      nodeTriggeringTheJob
+      nodeTriggeringTheJob,
+      false
     );
 
     if (checkoutInfo == undefined) {
@@ -303,6 +305,45 @@ async function checkoutProjectBranchFlow(
   }
 }
 
+async function composeCheckoutInfo(
+  context,
+  group,
+  project,
+  branch,
+  targetGroup,
+  targetBranch,
+  targetProject,
+  isPullRequest,
+  checkMerge = true
+) {
+  const branchExists = await doesBranchExist(
+    context.octokit,
+    group,
+    project,
+    branch
+  );
+  const hasPullRequestValue =
+    branchExists && (isPullRequest || checkMerge)
+      ? await hasPullRequest(
+          context.octokit,
+          targetGroup,
+          targetProject,
+          branch,
+          context.config.github.author
+        )
+      : undefined;
+  return (!isPullRequest || hasPullRequestValue) && branchExists
+    ? {
+        project,
+        group,
+        branch,
+        targetGroup,
+        targetBranch,
+        merge: checkMerge ? hasPullRequestValue : false
+      }
+    : undefined;
+}
+
 /**
  * it gets the checkout information for the node argument based on event and node triggering the job information
  *
@@ -310,7 +351,12 @@ async function checkoutProjectBranchFlow(
  * @param {Object} node the node to obtain checkout info
  * @param {Object} nodeTriggeringTheJob the node triggering the job
  */
-async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
+async function getCheckoutInfo(
+  context,
+  node,
+  nodeTriggeringTheJob,
+  isPullRequest
+) {
   const sourceGroup = context.config.github.sourceGroup;
   const sourceBranch = context.config.github.sourceBranch;
   const targetGroup = node.repo.group;
@@ -329,64 +375,50 @@ async function getCheckoutInfo(context, node, nodeTriggeringTheJob) {
     targetProject,
     sourceGroup
   );
-  logger.info(
+  logger.debug(
     `[${targetGroup}/${targetProject}] Getting checkout Info. sourceProject: ${forkedProjectName} sourceGroup: ${sourceGroup}. sourceBranch: ${sourceBranch}. targetGroup: ${targetGroup}. targetBranch: ${targetBranch}. Mapping target: ${targetBranch}`
   );
-  return (await doesBranchExist(
-    context.octokit,
+
+  const sourceGroupSourceBranch = await composeCheckoutInfo(
+    context,
     sourceGroup,
     forkedProjectName,
-    sourceBranch
-  ))
-    ? {
-        project: forkedProjectName,
-        group: sourceGroup,
-        branch: sourceBranch,
-        targetGroup,
-        targetBranch,
-        merge: await hasPullRequest(
-          context.octokit,
-          targetGroup,
-          targetProject,
-          sourceBranch,
-          context.config.github.author
-        )
-      }
-    : (await doesBranchExist(
-        context.octokit,
-        targetGroup,
-        targetProject,
-        sourceBranch
-      ))
-    ? {
-        project: targetProject,
-        group: targetGroup,
-        branch: sourceBranch,
-        targetGroup,
-        targetBranch,
-        merge: await hasPullRequest(
-          context.octokit,
-          targetGroup,
-          targetProject,
-          sourceBranch,
-          context.config.github.author
-        )
-      }
-    : (await doesBranchExist(
-        context.octokit,
-        targetGroup,
-        targetProject,
-        targetBranch
-      ))
-    ? {
-        project: targetProject,
-        group: targetGroup,
-        branch: targetBranch,
-        targetGroup,
-        targetBranch,
-        merge: false
-      }
-    : undefined;
+    sourceBranch,
+    targetGroup,
+    targetBranch,
+    targetProject,
+    isPullRequest
+  );
+  if (sourceGroupSourceBranch) {
+    return sourceGroupSourceBranch;
+  }
+
+  const targetGroupSourceBranch = await composeCheckoutInfo(
+    context,
+    targetGroup,
+    targetProject,
+    sourceBranch,
+    targetGroup,
+    targetBranch,
+    targetProject,
+    isPullRequest
+  );
+  if (targetGroupSourceBranch) {
+    return targetGroupSourceBranch;
+  }
+
+  const targetGroupTargetBranch = await composeCheckoutInfo(
+    context,
+    targetGroup,
+    targetProject,
+    targetBranch,
+    targetGroup,
+    targetBranch,
+    targetProject,
+    false,
+    false
+  );
+  return targetGroupTargetBranch;
 }
 
 /**

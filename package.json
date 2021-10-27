@@ -20,7 +20,7 @@
     "ncc-build": "ncc build --minify bin/build-chain-event.js"
   },
   "git-pre-hooks": {
-    "pre-commit": "npm run prettier && npm run ncc-build && git add dist/index.js",
+    "pre-commit": "npm run lint && npm run prettier && npm run ncc-build && git add dist/index.js",
     "pre-push": "npm ci"
   },
   "dependencies": {

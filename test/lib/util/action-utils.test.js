@@ -192,4 +192,14 @@ describe("eventFlowTypeToCliFlowType", () => {
       expect(result).toEqual(testCase.expected);
     });
   });
+
+  test(`type: 'undefined' assertion error expected`, () => {
+    try {
+      eventFlowTypeToCliFlowType();
+    } catch (ex) {
+      expect(ex.message).toBe(
+        "flow type is not defined for eventFlowTypeToCliFlowType argument"
+      );
+    }
+  });
 });

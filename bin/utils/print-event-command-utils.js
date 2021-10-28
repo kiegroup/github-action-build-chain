@@ -4,7 +4,8 @@ const { logger } = require("../../src/lib/common");
 const {
   eventFlowTypeToCliFlowType,
   getDefinitionFile,
-  getStartingProject
+  getStartingProject,
+  getFlowType
 } = require("../../src/lib/util/action-utils");
 const core = require("@actions/core");
 const pkg = require("../../package.json");
@@ -18,9 +19,11 @@ function printLocalCommandPullRequest(eventData) {
   logger.info(
     `${Object.keys(
       pkg.bin
-    )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType()} -url ${
-      eventData.pull_request.html_url
-    }${getStartingProject() ? ` -sp ${getStartingProject()}` : ""}`
+    )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
+      getFlowType()
+    )} -url ${eventData.pull_request.html_url}${
+      getStartingProject() ? ` -sp ${getStartingProject()}` : ""
+    }`
   );
 }
 
@@ -34,11 +37,11 @@ function printLocalCommandPush(eventData) {
   logger.info(
     `${Object.keys(
       pkg.bin
-    )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType()} -p ${
-      eventData.repository.full_name
-    } -b ${eventData.ref.split("refs/heads/").pop()}${
-      getStartingProject() ? ` -sp ${getStartingProject()}` : ""
-    }`
+    )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
+      getFlowType()
+    )} -p ${eventData.repository.full_name} -b ${eventData.ref
+      .split("refs/heads/")
+      .pop()}${getStartingProject() ? ` -sp ${getStartingProject()}` : ""}`
   );
 }
 

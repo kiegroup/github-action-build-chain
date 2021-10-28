@@ -7,7 +7,8 @@ jest.mock("../../../src/lib/common");
 const {
   eventFlowTypeToCliFlowType,
   getDefinitionFile,
-  getStartingProject
+  getStartingProject,
+  getFlowType
 } = require("../../../src/lib/util/action-utils");
 jest.mock("../../../src/lib/util/action-utils");
 
@@ -33,6 +34,7 @@ describe("printLocalCommand pull request.", () => {
     printLocalCommand(eventData);
 
     // Assert
+    expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
       'build_action_bin_command -df "definitionFile.yaml" build flow-type -url pull_request_html_url'
     );
@@ -53,6 +55,7 @@ describe("printLocalCommand pull request.", () => {
     printLocalCommand(eventData);
 
     // Assert
+    expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
       'build_action_bin_command -df "definitionFile.yaml" build flow-type -url pull_request_html_url -sp starting-project-name'
     );
@@ -73,6 +76,7 @@ describe("printLocalCommand push.", () => {
     printLocalCommand(eventData);
 
     // Assert
+    expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
       'build_action_bin_command -df "definitionFile.yaml" build flow-type -p group_name/project_name -b main'
     );
@@ -92,6 +96,7 @@ describe("printLocalCommand push.", () => {
     printLocalCommand(eventData);
 
     // Assert
+    expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
       'build_action_bin_command -df "definitionFile.yaml" build flow-type -p group_name/project_name -b mainX -sp starting-project-name'
     );
@@ -110,6 +115,7 @@ describe("printLocalCommand push.", () => {
     printLocalCommand(eventData);
 
     // Assert
+    expect(getFlowType).toHaveBeenCalledTimes(0);
     expect(logger.warn).toHaveBeenCalledWith(
       "The event data is not prepared for CLI execution. Command can't be printed."
     );
@@ -128,6 +134,7 @@ describe("printLocalCommand push.", () => {
     printLocalCommand(eventData);
 
     // Assert
+    expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
       'build_action_bin_command -df "definitionFile.yaml" build flow-type -p group_name/project_name -b whatever -sp starting-project-name'
     );

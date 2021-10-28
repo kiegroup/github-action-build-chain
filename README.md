@@ -451,6 +451,8 @@ It's possible to use this tool locally, just follow this steps
 
 either `sudo` and `env GITHUB_TOKEN=...` are optional depending on your local setup.
 
+> Keep in mind: Whenever the tool is executed from a github check run, the `Printing local execution command` section is printed with the exact command you could copy/paste in order to reproduce it locally.
+
 **Arguments**
 
 - **\*-df**: the definition file, either a path to the filesystem o a URL to it. `-df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml`

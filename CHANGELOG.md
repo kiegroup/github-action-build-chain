@@ -4,7 +4,7 @@
 
 ## Enhancements:
 
-- `@kie/build-chain-configuration-reader` upgraded to `2.2.0`
+- `@kie/build-chain-configuration-reader` upgraded to `2.2.3`
 - definition version moved to 2.1
 - targetExpression mapping
 - branch flow from GA
@@ -16,6 +16,7 @@
 - print command: the tool will print the command to be copy pasted in order to execute in any environment
 - `logger-level` input added.
 - debug log improved
+- default value for placeholders
 
 ## Bugs:
 

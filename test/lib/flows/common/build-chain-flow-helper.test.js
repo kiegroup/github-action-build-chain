@@ -3,7 +3,8 @@ const {
   checkoutDefinitionTree,
   getPlaceHolders,
   getTarget,
-  getForkedProjectName
+  getForkedProjectName,
+  getPlaceHoldersDefaultValues
 } = require("../../../../src/lib/flows/common/build-chain-flow-helper");
 const {
   doesBranchExist: doesBranchExistMock,
@@ -1590,9 +1591,267 @@ describe("getPlaceHolders", () => {
       await getPlaceHolders(context, definitionFile);
     } catch (ex) {
       expect(ex.message).toBe(
-        "Definition file http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml does not exist for any case"
+        "Definition file http://whateverurl.domain/${GROUP}/${PROJECT_NAME}/${BRANCH}/file.yaml does not exist for any case. Not default values defined for placeholders."
       );
     }
+  });
+
+  test("url. single default value. Exists even before replacing default values", async () => {
+    // Arrange
+    const context = {
+      config: {
+        github: {
+          sourceGroup: "sGroup",
+          group: "tGroup",
+          project: "projectx",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        }
+      }
+    };
+    const definitionFile =
+      "http://whateverurl.domain/${GROUP:kiegroup}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+    checkUrlExist
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    // Act
+    const result = await getPlaceHolders(context, definitionFile);
+
+    // Assert
+    expect(checkUrlExist).toHaveBeenCalledTimes(3);
+    expect(result).toStrictEqual({
+      BRANCH: "sBranch",
+      GROUP: "tGroup",
+      PROJECT_NAME: "projectx"
+    });
+  });
+
+  test("url. multiple default value. Exists even before replacing default values", async () => {
+    // Arrange
+    const context = {
+      config: {
+        github: {
+          sourceGroup: "sGroup",
+          group: "tGroup",
+          project: "projectx",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        }
+      }
+    };
+    const definitionFile =
+      "http://whateverurl.domain/${GROUP:kiegroup}/${PROJECT_NAME:kogito-pipelines}/${BRANCH:main}/file.yaml";
+    checkUrlExist
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    // Act
+    const result = await getPlaceHolders(context, definitionFile);
+
+    // Assert
+    expect(checkUrlExist).toHaveBeenCalledTimes(3);
+    expect(result).toStrictEqual({
+      BRANCH: "sBranch",
+      GROUP: "tGroup",
+      PROJECT_NAME: "projectx"
+    });
+  });
+
+  test("url. single default value. Having to check default values. source source", async () => {
+    // Arrange
+    const context = {
+      config: {
+        github: {
+          sourceGroup: "sGroup",
+          group: "tGroup",
+          project: "projectx",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        }
+      }
+    };
+    const definitionFile =
+      "http://whateverurl.domain/${GROUP:kiegroup}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+    checkUrlExist
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    // Act
+    const result = await getPlaceHolders(context, definitionFile);
+
+    // Assert
+    expect(checkUrlExist).toHaveBeenCalledTimes(4);
+    expect(result).toStrictEqual({
+      BRANCH: "sBranch",
+      GROUP: "kiegroup",
+      PROJECT_NAME: "projectx"
+    });
+  });
+
+  test("url. single default value. Having to check default values. target target", async () => {
+    // Arrange
+    const context = {
+      config: {
+        github: {
+          sourceGroup: "sGroup",
+          group: "tGroup",
+          project: "projectx",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        }
+      }
+    };
+    const definitionFile =
+      "http://whateverurl.domain/${GROUP:kiegroup}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+    checkUrlExist
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    // Act
+    const result = await getPlaceHolders(context, definitionFile);
+
+    // Assert
+    expect(checkUrlExist).toHaveBeenCalledTimes(5);
+    expect(result).toStrictEqual({
+      BRANCH: "tBranch",
+      GROUP: "kiegroup",
+      PROJECT_NAME: "projectx"
+    });
+  });
+
+  test("url. single default value. Having to check default values. target source", async () => {
+    // Arrange
+    const context = {
+      config: {
+        github: {
+          sourceGroup: "sGroup",
+          group: "tGroup",
+          project: "projectx",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        }
+      }
+    };
+    const definitionFile =
+      "http://whateverurl.domain/${GROUP:kiegroup}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+    checkUrlExist
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    // Act
+    const result = await getPlaceHolders(context, definitionFile);
+
+    // Assert
+    expect(checkUrlExist).toHaveBeenCalledTimes(6);
+    expect(result).toStrictEqual({
+      BRANCH: "sBranch",
+      GROUP: "kiegroup",
+      PROJECT_NAME: "projectx"
+    });
+  });
+
+  test("url. single default value. Having to check default values. error", async () => {
+    // Arrange
+    const context = {
+      config: {
+        github: {
+          sourceGroup: "sGroup",
+          group: "tGroup",
+          project: "projectx",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        }
+      }
+    };
+    const definitionFile =
+      "http://whateverurl.domain/${GROUP:kiegroup}/${PROJECT_NAME}/${BRANCH}/file.yaml";
+    checkUrlExist
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false);
+    // Act
+    try {
+      await getPlaceHolders(context, definitionFile);
+    } catch (ex) {
+      expect(ex.message).toBe(
+        "Definition file http://whateverurl.domain/kiegroup/${PROJECT_NAME}/${BRANCH}/file.yaml does not exist for any case. Not default values defined for placeholders."
+      );
+    }
+    // Assert
+    expect(checkUrlExist).toHaveBeenCalledTimes(6);
+  });
+
+  test("url. multiple default value. Having to check default values. source source", async () => {
+    // Arrange
+    const context = {
+      config: {
+        github: {
+          sourceGroup: "sGroup",
+          group: "tGroup",
+          project: "projectx",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        }
+      }
+    };
+    const definitionFile =
+      "http://whateverurl.domain/${GROUP:kiegroup}/${PROJECT_NAME:kogito-pipelines}/${BRANCH:main}/file.yaml";
+    checkUrlExist
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false);
+    // Act
+    const result = await getPlaceHolders(context, definitionFile);
+
+    // Assert
+    expect(checkUrlExist).toHaveBeenCalledTimes(3);
+    expect(result).toStrictEqual({
+      BRANCH: "main",
+      GROUP: "kiegroup",
+      PROJECT_NAME: "kogito-pipelines"
+    });
+  });
+
+  test("url. multiple default value. Having to check default values. source source", async () => {
+    // Arrange
+    const context = {
+      config: {
+        github: {
+          sourceGroup: "sGroup",
+          group: "tGroup",
+          project: "projectx",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        }
+      }
+    };
+    const definitionFile =
+      "http://whateverurl.domain/${GROUP:kiegroup}/${PROJECT_NAME:kogito-pipelines}/${BRANCH}/file.yaml";
+    checkUrlExist
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    // Act
+    const result = await getPlaceHolders(context, definitionFile);
+
+    // Assert
+    expect(checkUrlExist).toHaveBeenCalledTimes(4);
+    expect(result).toStrictEqual({
+      BRANCH: "sBranch",
+      GROUP: "kiegroup",
+      PROJECT_NAME: "kogito-pipelines"
+    });
   });
 });
 
@@ -2406,5 +2665,90 @@ describe("getForkedProjectName", () => {
     expect(getRepositoryMock).toHaveBeenCalledTimes(1);
     expect(getForkedProjectMock).toHaveBeenCalledTimes(1);
     expect(result).toStrictEqual("projectXFroked");
+  });
+});
+
+describe("getPlaceHoldersDefaultValues", () => {
+  test("single placeholder with default value", () => {
+    // Arrange
+    const definitionFile =
+      "https://raw.githubusercontent.com/${GROUP:kiegroup}/${PROJECT_NAME}/${BRANCH}/.ci/pull-request-config.yaml";
+
+    // Act
+    const result = getPlaceHoldersDefaultValues(definitionFile);
+
+    // Assert
+    expect(result).not.toBeUndefined();
+    expect(Object.keys(result).length).toBe(1);
+    expect(result).toMatchObject({ GROUP: "kiegroup" });
+  });
+  test("multiple placeholder with default value", () => {
+    // Arrange
+    const definitionFile =
+      "https://raw.githubusercontent.com/${GROUP:kiegroup}/${PROJECT_NAME:drools}/${BRANCH:main}/.ci/pull-request-config.yaml";
+
+    // Act
+    const result = getPlaceHoldersDefaultValues(definitionFile);
+
+    // Assert
+    expect(result).not.toBeUndefined();
+    expect(result).toMatchObject({
+      GROUP: "kiegroup",
+      PROJECT_NAME: "drools",
+      BRANCH: "main"
+    });
+    expect(Object.keys(result).length).toBe(3);
+  });
+  test("no placeholders", () => {
+    // Arrange
+    const definitionFile =
+      "https://raw.githubusercontent.com/kiegroup/kogito-pipelines/main/.ci/pull-request-config.yaml";
+
+    // Act
+    const result = getPlaceHoldersDefaultValues(definitionFile);
+
+    // Assert
+    expect(result).not.toBeUndefined();
+    expect(result).toMatchObject({});
+    expect(Object.keys(result).length).toBe(0);
+  });
+  test("single placeholder with NO default value", () => {
+    // Arrange
+    const definitionFile =
+      "https://raw.githubusercontent.com/${GROUP}/kiegroup/stable/.ci/pull-request-config.yaml";
+
+    // Act
+    const result = getPlaceHoldersDefaultValues(definitionFile);
+
+    // Assert
+    expect(result).not.toBeUndefined();
+    expect(result).toMatchObject({});
+    expect(Object.keys(result).length).toBe(0);
+  });
+  test("multiple placeholder with NO default value", () => {
+    // Arrange
+    const definitionFile =
+      "https://raw.githubusercontent.com/${GROUP}/${PROJECT_NAME}/${BRANCH}/.ci/pull-request-config.yaml";
+
+    // Act
+    const result = getPlaceHoldersDefaultValues(definitionFile);
+
+    // Assert
+    expect(result).not.toBeUndefined();
+    expect(result).toMatchObject({});
+    expect(Object.keys(result).length).toBe(0);
+  });
+  test("placeholders with expression", () => {
+    // Arrange
+    const definitionFile =
+      "https://raw.githubusercontent.com/${GROUP}/${PROJECT_NAME}/%{process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1+7}.${n2}.${n3}`)}/.ci/pull-request-config.yaml";
+
+    // Act
+    const result = getPlaceHoldersDefaultValues(definitionFile);
+
+    // Assert
+    expect(result).not.toBeUndefined();
+    expect(result).toMatchObject({});
+    expect(Object.keys(result).length).toBe(0);
   });
 });

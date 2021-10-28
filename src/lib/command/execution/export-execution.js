@@ -52,7 +52,7 @@ function getExpression(command) {
 
 function getCommandArray(command) {
   const commandArray = command.match(/^export (\w+)=(.*)/);
-  if (commandArray.length != 3) {
+  if (commandArray.length !== 3) {
     throw new Error(
       `The export command ${command} is not properly defined. It should be something like "export VARIBLE=expression". Please fix it an try again.`
     );

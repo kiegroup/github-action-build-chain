@@ -533,7 +533,11 @@ async function getForkedProjectName(octokit, owner, project, wantedOwner) {
   }
 }
 
-async function getPlaceHoldersHelper(definitionFile, placeHolder, token) {
+async function doesDefinitionFilePlaceHolderExists(
+  definitionFile,
+  placeHolder,
+  token
+) {
   const url = treatUrl(definitionFile, placeHolder);
   const doesUrlExist = await checkUrlExist(url, token);
   doesUrlExist
@@ -543,19 +547,59 @@ async function getPlaceHoldersHelper(definitionFile, placeHolder, token) {
 }
 
 /**
+ * it composes an object with default values for placeholders
+ *
+ * @param {string} definitionFile the definition file url
+ */
+function getPlaceHoldersDefaultValues(definitionFile) {
+  const result = {};
+
+  const placeHolderExpression = /\${([^$]+)}/g;
+
+  let placeHolderMatch;
+  while ((placeHolderMatch = placeHolderExpression.exec(definitionFile))) {
+    const placeHolder = placeHolderMatch[1];
+    logger.debug(`Placeholder group found ${placeHolder}`);
+
+    const defaultValueExpression = /(.*):(.*)/g;
+    const defaultValueMatch = defaultValueExpression.exec(placeHolder);
+
+    logger.debug(`Placeholder value match. ${placeHolder}.`, defaultValueMatch);
+    if (defaultValueMatch !== null) {
+      logger.debug(
+        `Placeholder key and value. ${defaultValueMatch[1]}: ${defaultValueMatch[2]}`
+      );
+      result[defaultValueMatch[1]] = defaultValueMatch[2];
+    }
+  }
+
+  logger.debug(
+    `getPlaceHoldersDefaultValues. definitionFile: ${definitionFile}:`,
+    result
+  );
+  return result;
+}
+
+/**
  * it checks what's the proper URL to retrieve definition from in case a URL with ${} expression is defined. It will try sourceGroup/sourceBranch then targetGroup/sourceBranch and then targetGroup/targetBranch in this order.
  * @param {Object} context the context information
- * @param {Object} definitionFile the definition file path or URL
+ * @param {string} definitionFile the definition file path or URL
+ * @param {Object} defaulPlaceHolders default placeholders to be overwrite
  */
-async function getPlaceHolders(context, definitionFile) {
-  let placeHolders = {};
+async function getPlaceHolders(
+  context,
+  definitionFile,
+  defaulPlaceHolders = {}
+) {
+  let placeHolders = defaulPlaceHolders;
   if (definitionFile.startsWith("http") && definitionFile.includes("${")) {
     placeHolders = {
       GROUP: context.config.github.sourceGroup,
       PROJECT_NAME: context.config.github.project,
-      BRANCH: context.config.github.sourceBranch
+      BRANCH: context.config.github.sourceBranch,
+      ...defaulPlaceHolders
     };
-    const sourceUrl = await getPlaceHoldersHelper(
+    const sourceUrl = await doesDefinitionFilePlaceHolderExists(
       definitionFile,
       placeHolders,
       context.token
@@ -564,9 +608,10 @@ async function getPlaceHolders(context, definitionFile) {
       placeHolders = {
         GROUP: context.config.github.group,
         PROJECT_NAME: context.config.github.project,
-        BRANCH: context.config.github.targetBranch
+        BRANCH: context.config.github.targetBranch,
+        ...defaulPlaceHolders
       };
-      const targetTargetUrl = await getPlaceHoldersHelper(
+      const targetTargetUrl = await doesDefinitionFilePlaceHolderExists(
         definitionFile,
         placeHolders,
         context.token
@@ -575,17 +620,30 @@ async function getPlaceHolders(context, definitionFile) {
         placeHolders = {
           GROUP: context.config.github.group,
           PROJECT_NAME: context.config.github.project,
-          BRANCH: context.config.github.sourceBranch
+          BRANCH: context.config.github.sourceBranch,
+          ...defaulPlaceHolders
         };
-        const targetSourceUrl = await getPlaceHoldersHelper(
+        const targetSourceUrl = await doesDefinitionFilePlaceHolderExists(
           definitionFile,
           placeHolders,
           context.token
         );
         if (!targetSourceUrl) {
-          throw new Error(
-            `Definition file ${definitionFile} does not exist for any case`
-          );
+          placeHolders = getPlaceHoldersDefaultValues(definitionFile);
+          if (
+            ![null, undefined].includes(placeHolders) &&
+            Object.keys(placeHolders).length > 0
+          ) {
+            placeHolders = getPlaceHolders(
+              context,
+              treatUrl(definitionFile, placeHolders),
+              placeHolders
+            );
+          } else {
+            throw new Error(
+              `Definition file ${definitionFile} does not exist for any case. Not default values defined for placeholders.`
+            );
+          }
         }
       }
     }
@@ -622,5 +680,6 @@ module.exports = {
   getDir,
   getPlaceHolders,
   getTarget,
-  getForkedProjectName
+  getForkedProjectName,
+  getPlaceHoldersDefaultValues
 };

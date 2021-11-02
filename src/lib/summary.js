@@ -19,7 +19,7 @@ function printCheckoutInformation(checkoutInfo) {
         checkInfo
           ? `${checkInfo.group}/${checkInfo.project}:${checkInfo.branch}.${
               checkInfo.merge
-                ? ` It has been rebased onto ${checkInfo.targetGroup}/${checkInfo.project}:${checkInfo.targetBranch}`
+                ? ` It has been merged with ${checkInfo.targetGroup}/${checkInfo.project}:${checkInfo.targetBranch}`
                 : ""
             }`
           : `${project}: No checkout information`
@@ -33,7 +33,7 @@ function printCheckoutInformation(checkoutInfo) {
             checkInfo => `
   ${checkInfo.group}/${checkInfo.project}${
               checkInfo.merge
-                ? `. Rebased onto ${checkInfo.targetGroup}/${checkInfo.project}:${checkInfo.targetBranch}`
+                ? `. Merged with ${checkInfo.targetGroup}/${checkInfo.project}:${checkInfo.targetBranch}`
                 : ""
             }`
           )}`

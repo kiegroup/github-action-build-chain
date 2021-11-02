@@ -14,93 +14,15 @@ beforeEach(() => {
   spawn.mockImplementation(spawnMock);
 });
 
-test("fetch branch from remote repository. Default name", async () => {
+test("merge branch into current checkout", async () => {
   // Arrange
   const cwd = path.join(__dirname, "ws");
   const origin = path.join(__dirname, "origin");
   spawnMock.sequence.add(spawnMock.simple(0));
-  spawnMock.sequence.add(spawnMock.simple(0));
   // spawnMock.setDefault(spawnMock.simple(0));
 
   // Act
-  await git.fetchFromRemote(cwd, `file://${origin}`, "main");
-
-  // Assert
-  expect(spawnMock.calls.length).toBe(2);
-  const firstCall = spawnMock.calls[0];
-  const secondCall = spawnMock.calls[1];
-  expect(firstCall.command).toBe("git");
-  expect(secondCall.command).toBe("git");
-  expect(firstCall.args).toStrictEqual([
-    "-c",
-    "user.name=GitHub",
-    "-c",
-    "user.email=noreply@github.com",
-    "remote",
-    "add",
-    "upstream",
-    `file://${origin}`
-  ]);
-  expect(secondCall.args).toStrictEqual([
-    "-c",
-    "user.name=GitHub",
-    "-c",
-    "user.email=noreply@github.com",
-    "fetch",
-    "--quiet",
-    "--no-tags",
-    "upstream",
-    "main"
-  ]);
-});
-
-test("fetch branch from remote repository. No default name", async () => {
-  // Arrange
-  const cwd = path.join(__dirname, "ws");
-  const origin = path.join(__dirname, "origin");
-  spawnMock.sequence.add(spawnMock.simple(0));
-  spawnMock.sequence.add(spawnMock.simple(0));
-  // spawnMock.setDefault(spawnMock.simple(0));
-
-  // Act
-  await git.fetchFromRemote(cwd, `file://${origin}`, "main", "origin");
-
-  // Assert
-  expect(spawnMock.calls.length).toBe(2);
-  const firstCall = spawnMock.calls[0];
-  const secondCall = spawnMock.calls[1];
-  expect(firstCall.command).toBe("git");
-  expect(secondCall.command).toBe("git");
-  expect(firstCall.args).toStrictEqual([
-    "-c",
-    "user.name=GitHub",
-    "-c",
-    "user.email=noreply@github.com",
-    "remote",
-    "add",
-    "origin",
-    `file://${origin}`
-  ]);
-  expect(secondCall.args).toStrictEqual([
-    "-c",
-    "user.name=GitHub",
-    "-c",
-    "user.email=noreply@github.com",
-    "fetch",
-    "--quiet",
-    "--no-tags",
-    "origin",
-    "main"
-  ]);
-});
-
-test("rebase onto remote branch default remote", async () => {
-  // Arrange
-  const cwd = path.join(__dirname, "ws");
-  spawnMock.sequence.add(spawnMock.simple(0));
-
-  // Act
-  await git.rebase(cwd, "main");
+  await git.merge(cwd, `file://${origin}`, "main");
 
   // Assert
   expect(spawnMock.calls.length).toBe(1);
@@ -111,20 +33,19 @@ test("rebase onto remote branch default remote", async () => {
     "user.name=GitHub",
     "-c",
     "user.email=noreply@github.com",
-    "rebase",
-    "--quiet",
-    "--autosquash",
-    "upstream/main"
+    "pull",
+    `file://${origin}`,
+    "main"
   ]);
 });
 
-test("rebase onto remote branch diferent remote", async () => {
+test("rename branch", async () => {
   // Arrange
   const cwd = path.join(__dirname, "ws");
   spawnMock.sequence.add(spawnMock.simple(0));
 
   // Act
-  await git.rebase(cwd, "main", "origin");
+  await git.rename(cwd, "feature");
 
   // Assert
   expect(spawnMock.calls.length).toBe(1);
@@ -135,9 +56,8 @@ test("rebase onto remote branch diferent remote", async () => {
     "user.name=GitHub",
     "-c",
     "user.email=noreply@github.com",
-    "rebase",
-    "--quiet",
-    "--autosquash",
-    "origin/main"
+    "branch",
+    "--move",
+    "feature"
   ]);
 });

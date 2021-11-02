@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - 2.5
+    paths:
+      - 'package.json'
 
 jobs:
   build:

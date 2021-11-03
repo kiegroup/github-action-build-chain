@@ -8,7 +8,7 @@ async function archiveArtifacts(nodeTirggering, nodeArray, on) {
       ? `Archiving artifacts for ${nodesToArchive.map(node => node.project)}`
       : "No artifacts to archive"
   );
-
+  annotationer.notice("No artifacts to archive");
   await uploadNodes(nodesToArchive, on);
 }
 

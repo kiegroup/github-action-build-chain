@@ -24,8 +24,8 @@ function printLocalCommandPullRequest(eventData) {
     getStartingProject() ? ` -sp ${getStartingProject()}` : ""
   }`;
 
-  logger.info(command);
-  annotationer.notice("Local Command", command);
+  // logger.info(command);
+  // annotationer.notice("Local Command", command);
 }
 
 function printLocalCommandPush(eventData) {

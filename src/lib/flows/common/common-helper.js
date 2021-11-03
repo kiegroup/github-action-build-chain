@@ -118,9 +118,9 @@ async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
         await execute(cwd, commandTreated);
       } catch (e) {
         core.error(
-          `[Build Chain] [${project}] command failure. "${truncateString(
+          `[Build Chain] [${project}] [ERROR] "${truncateString(
             commandTreated,
-            30
+            50
           )}"`
         );
         throw new Error(
@@ -128,9 +128,9 @@ async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
         );
       }
       core.notice(
-        `[Build Chain] [${project}] command OK. "${truncateString(
+        `[Build Chain] [${project}] [OK] "${truncateString(
           commandTreated,
-          30
+          50
         )}"`
       );
       if (!options.skipStartGroup) {

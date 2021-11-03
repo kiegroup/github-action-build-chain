@@ -16,15 +16,16 @@ function printLocalCommandPullRequest(eventData) {
     eventData.pull_request
   );
 
-  logger.info(
-    `${Object.keys(
-      pkg.bin
-    )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
-      getFlowType()
-    )} -url ${eventData.pull_request.html_url}${
-      getStartingProject() ? ` -sp ${getStartingProject()}` : ""
-    }`
-  );
+  const command = `${Object.keys(
+    pkg.bin
+  )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
+    getFlowType()
+  )} -url ${eventData.pull_request.html_url}${
+    getStartingProject() ? ` -sp ${getStartingProject()}` : ""
+  }`;
+
+  logger.info(command);
+  core.notice(command);
 }
 
 function printLocalCommandPush(eventData) {

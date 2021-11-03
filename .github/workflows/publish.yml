@@ -6,7 +6,7 @@ on:
       - main
       - 2.5
     paths:
-      - 'package.json'
+      - "package.json"
 
 jobs:
   build:

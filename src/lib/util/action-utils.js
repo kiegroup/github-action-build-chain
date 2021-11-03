@@ -46,11 +46,11 @@ function isBranchFlowType() {
 }
 
 function eventFlowTypeToCliFlowType(flowType) {
-  // assert(
-  //   flowType,
-  //   "flow type is not defined for eventFlowTypeToCliFlowType argument"
-  // );
-  // logger.debug("eventFlowTypeToCliFlowType", flowType);
+  assert(
+    flowType,
+    "flow type is not defined for eventFlowTypeToCliFlowType argument"
+  );
+  logger.debug("eventFlowTypeToCliFlowType", flowType);
 
   switch (flowType) {
     case "pull-request":

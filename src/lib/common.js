@@ -18,6 +18,15 @@ function log(prefix, obj) {
   }
 }
 
+const annotationer = {
+  notice: (title, content) =>
+    core.notice(content, { title: `${getAnnotationsPrefix()} ${title}` }),
+  warning: (title, content) =>
+    core.warning(content, { title: `${getAnnotationsPrefix()} ${title}` }),
+  error: (title, content) =>
+    core.error(content, { title: `${getAnnotationsPrefix()} ${title}` })
+};
+
 const logger = {
   level: "info",
 
@@ -53,15 +62,6 @@ const logger = {
   isDebug: () => logger.level === "trace" || logger.level === "debug"
 };
 
-const annotationer = {
-  notice: (title, content) =>
-    core.notice(content, { title: `${getAnnotationsPrefix()} ${title}` }),
-  warning: (title, content) =>
-    core.warning(content, { title: `${getAnnotationsPrefix()} ${title}` }),
-  error: (title, content) =>
-    core.error(content, { title: `${getAnnotationsPrefix()} ${title}` })
-};
-
 function inspect(obj) {
   return util.inspect(obj, false, null, true);
 }
@@ -69,6 +69,6 @@ function inspect(obj) {
 module.exports = {
   ClientError,
   TimeoutError,
-  logger,
-  annotationer
+  annotationer,
+  logger
 };

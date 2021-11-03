@@ -15,7 +15,9 @@ function getFlowType() {
 }
 
 function getLoggerLevel() {
-  const loggerLevel = core.getInput("logger-level");
+  const loggerLevel = core.getInput("logger-level")
+    ? core.getInput("logger-level")
+    : "info";
   if (!["info", "trace", "debug"].includes(loggerLevel)) {
     throw new ClientError(`invalid 'logger-level' input: ${loggerLevel}`);
   }
@@ -44,11 +46,11 @@ function isBranchFlowType() {
 }
 
 function eventFlowTypeToCliFlowType(flowType) {
-  assert(
-    flowType,
-    "flow type is not defined for eventFlowTypeToCliFlowType argument"
-  );
-  logger.debug("eventFlowTypeToCliFlowType", flowType);
+  // assert(
+  //   flowType,
+  //   "flow type is not defined for eventFlowTypeToCliFlowType argument"
+  // );
+  // logger.debug("eventFlowTypeToCliFlowType", flowType);
 
   switch (flowType) {
     case "pull-request":

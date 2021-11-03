@@ -6,6 +6,7 @@ const {
   execute: bashExecute
 } = require("../../../../src/lib/command/execution/bash-execution");
 jest.mock("../../../../src/lib/command/execution/bash-execution");
+jest.mock("../../../../src/lib/common");
 
 test("execute simple export", async () => {
   // Arrange

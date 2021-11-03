@@ -5,6 +5,7 @@ const {
   run: uploadArtifacts
 } = require("../../../src/lib/artifacts/upload-artifacts");
 jest.mock("../../../src/lib/artifacts/upload-artifacts");
+jest.mock("../../../src/lib/common");
 
 afterEach(() => {
   jest.clearAllMocks();

@@ -6,6 +6,7 @@ const { findFilesToUpload } = require("../../../src/lib/artifacts/search");
 jest.mock("../../../src/lib/artifacts/search");
 jest.mock("@actions/core");
 jest.mock("@actions/artifact");
+jest.mock("../../../src/lib/common");
 
 afterEach(() => {
   jest.clearAllMocks();

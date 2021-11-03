@@ -5,6 +5,7 @@ const {
   executeBuildCommands
 } = require("../../../../src/lib/flows/common/common-helper");
 jest.mock("../../../../src/lib/flows/common/common-helper");
+jest.mock("../../../../src/lib/common");
 
 const { execute } = require("../../../../src/lib/flows/sections/post");
 

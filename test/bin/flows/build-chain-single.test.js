@@ -9,6 +9,7 @@ jest.mock("../../../src/lib/flows/single-flow");
 jest.mock("../../../bin/utils/bin-utils");
 jest.mock("fs-extra");
 jest.mock("../../../src/lib/fs-helper");
+jest.mock("../../../src/lib/common");
 
 afterEach(() => {
   jest.clearAllMocks();

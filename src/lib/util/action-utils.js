@@ -15,9 +15,8 @@ function getFlowType() {
 }
 
 function getLoggerLevel() {
-  const loggerLevel = core.getInput("logger-level")
-    ? core.getInput("logger-level")
-    : "info";
+  const loggerLevelInput = core.getInput("logger-level");
+  const loggerLevel = loggerLevelInput ? loggerLevelInput : "info";
   if (!["info", "trace", "debug"].includes(loggerLevel)) {
     throw new ClientError(`invalid 'logger-level' input: ${loggerLevel}`);
   }

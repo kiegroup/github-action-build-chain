@@ -15,6 +15,7 @@ treatCommand.mockImplementation(param => `${param} treated`);
 
 const { execute } = require("../../../../src/lib/command/command");
 jest.mock("../../../../src/lib/command/command");
+jest.mock("../../../../src/lib/common");
 
 jest.mock("@actions/core");
 

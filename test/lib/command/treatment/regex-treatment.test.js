@@ -1,6 +1,7 @@
 const {
   treat
 } = require("../../../../src/lib/command/treatment/regex-treatment");
+jest.mock("../../../../src/lib/common");
 
 test("treat", () => {
   // Act

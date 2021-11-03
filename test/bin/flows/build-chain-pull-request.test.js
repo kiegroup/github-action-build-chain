@@ -8,6 +8,7 @@ const { start } = require("../../../src/lib/flows/pull-request-flow");
 jest.mock("../../../src/lib/flows/pull-request-flow");
 jest.mock("../../../bin/utils/bin-utils");
 jest.mock("../../../src/lib/fs-helper");
+jest.mock("../../../src/lib/common");
 
 afterEach(() => {
   jest.clearAllMocks();

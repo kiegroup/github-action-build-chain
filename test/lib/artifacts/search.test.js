@@ -3,6 +3,7 @@ const io = require("@actions/io");
 const path = require("path");
 const { promises: fs } = require("fs");
 const { findFilesToUpload } = require("../../../src/lib/artifacts/search");
+jest.mock("../../../src/lib/common");
 
 const root = path.join(__dirname, "_temp", "search");
 const searchItem1Path = path.join(

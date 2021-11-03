@@ -25,6 +25,7 @@ jest.mock("../../../../src/lib/util/fs-util");
 
 const { checkUrlExist } = require("../../../../src/lib/util/http");
 jest.mock("../../../../src/lib/util/http");
+jest.mock("../../../../src/lib/common");
 
 afterEach(() => {
   jest.clearAllMocks();

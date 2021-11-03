@@ -1,4 +1,5 @@
 const { execute } = require("../../../src/lib/command/command");
+jest.mock("../../../src/lib/common");
 
 const {
   executeCommand

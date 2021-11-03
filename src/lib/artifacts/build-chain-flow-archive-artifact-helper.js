@@ -1,5 +1,5 @@
 const { run: uploadArtifacts } = require("./upload-artifacts");
-const { logger } = require("../common");
+const { logger, annotationer } = require("../common");
 
 async function archiveArtifacts(nodeTirggering, nodeArray, on) {
   const nodesToArchive = getNodesToArchive(nodeTirggering, nodeArray);
@@ -8,7 +8,7 @@ async function archiveArtifacts(nodeTirggering, nodeArray, on) {
       ? `Archiving artifacts for ${nodesToArchive.map(node => node.project)}`
       : "No artifacts to archive"
   );
-
+  annotationer.notice("No artifacts to archive");
   await uploadNodes(nodesToArchive, on);
 }
 
@@ -107,6 +107,19 @@ async function uploadNodes(nodesToArchive, on) {
         uploadResponse => uploadResponse.artifactName
       )}. Files (${failedFiles.length}): ${failedFiles}`
     );
+
+    if (totalUploadResponses.length) {
+      annotationer.notice(
+        `Artifacts archiving error. Total (${uploadedFiles.length})`,
+        uploadedFiles
+      );
+    }
+    if (failureUploadResponses.length) {
+      annotationer.error(
+        `Artifacts archiving error. Total (${failedFiles.length})`,
+        failedFiles
+      );
+    }
   });
 }
 

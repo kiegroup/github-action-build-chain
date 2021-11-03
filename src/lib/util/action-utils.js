@@ -15,11 +15,17 @@ function getFlowType() {
 }
 
 function getLoggerLevel() {
-  const loggerLevel = core.getInput("logger-level");
+  const loggerLevelInput = core.getInput("logger-level");
+  const loggerLevel = loggerLevelInput ? loggerLevelInput : "info";
   if (!["info", "trace", "debug"].includes(loggerLevel)) {
     throw new ClientError(`invalid 'logger-level' input: ${loggerLevel}`);
   }
   return loggerLevel;
+}
+
+function getAnnotationsPrefix() {
+  const annotationsPrefix = core.getInput("annotations-prefix");
+  return annotationsPrefix ? `[${annotationsPrefix}]` : "";
 }
 
 function isPullRequestFlowType() {
@@ -62,6 +68,7 @@ module.exports = {
   getStartingProject,
   getFlowType,
   getLoggerLevel,
+  getAnnotationsPrefix,
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,

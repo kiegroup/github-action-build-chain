@@ -17,6 +17,9 @@ inputs:
     description: "the log level. 'info' (default) | 'trace' | 'debug'"
     default: "info"
     required: false
+  annotations-prefix:
+    description: "The prefix to identify the annotations for different jobs running for the same Action"
+    required: false
 runs:
   using: "node12"
   main: "dist/index.js"

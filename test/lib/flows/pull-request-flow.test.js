@@ -19,6 +19,7 @@ jest.mock("../../../src/lib/flows/common/common-helper");
 jest.mock("@actions/core");
 const { printCheckoutInformation } = require("../../../src/lib/summary");
 jest.mock("../../../src/lib/summary");
+jest.mock("../../../src/lib/common");
 
 const {
   getTreeForProject,

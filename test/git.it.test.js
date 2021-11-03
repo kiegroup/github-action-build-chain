@@ -7,6 +7,7 @@ const forkedProjectListInfo = require("./resources/forked_projects_list_info.jso
 const forkedProjectListInfoEmpty = require("./resources/forked_projects_list_info_empty.json");
 const getRepositoryOk = require("./resources/get_project_ok.json");
 const getRepositoryNotFound = require("./resources/get_project_not_found.json");
+jest.mock("../src/lib/common");
 
 async function init(dir) {
   await fse.mkdirs(dir);

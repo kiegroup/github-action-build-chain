@@ -13,6 +13,8 @@ jest.mock("../../../../src/lib/command/execution/bash-execution", () => ({
   }
 }));
 
+jest.mock("../../../../src/lib/common");
+
 test("executeCommand bash", async () => {
   // Arrange
   const cwd = "cwd";

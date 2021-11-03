@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { logger } = require("../../src/lib/common");
+const { logger, annotationer } = require("../../src/lib/common");
 const {
   eventFlowTypeToCliFlowType,
   getDefinitionFile,
@@ -16,15 +16,16 @@ function printLocalCommandPullRequest(eventData) {
     eventData.pull_request
   );
 
-  logger.info(
-    `${Object.keys(
-      pkg.bin
-    )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
-      getFlowType()
-    )} -url ${eventData.pull_request.html_url}${
-      getStartingProject() ? ` -sp ${getStartingProject()}` : ""
-    }`
-  );
+  const command = `${Object.keys(
+    pkg.bin
+  )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
+    getFlowType()
+  )} -url ${eventData.pull_request.html_url}${
+    getStartingProject() ? ` -sp ${getStartingProject()}` : ""
+  }`;
+
+  logger.info(command);
+  annotationer.notice("Local Command", command);
 }
 
 function printLocalCommandPush(eventData) {

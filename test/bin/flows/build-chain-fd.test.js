@@ -7,6 +7,7 @@ jest.mock("../../../src/lib/flows/common/config");
 const { start } = require("../../../src/lib/flows/full-downstream-flow");
 jest.mock("../../../src/lib/flows/full-downstream-flow");
 jest.mock("../../../src/lib/fs-helper");
+jest.mock("../../../src/lib/common");
 
 afterEach(() => {
   jest.clearAllMocks();

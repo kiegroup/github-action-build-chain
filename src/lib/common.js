@@ -1,33 +1,41 @@
 const util = require("util");
-const process = require("process");
+const { getAnnotationsPrefix } = require("./util/action-utils");
+const core = require("@actions/core");
 
 class ClientError extends Error {}
 
 class TimeoutError extends Error {}
 
 function log(prefix, obj) {
-  if (process.env.NODE_ENV !== "test") {
-    const str = obj.map(o => (typeof o === "object" ? inspect(o) : o));
-    if (prefix) {
-      console.log.apply(console, [prefix, ...str]);
-    } else {
-      console.log.apply(console, str);
-    }
+  const str = obj.map(o => (typeof o === "object" ? inspect(o) : o));
+  if (prefix) {
+    console.log.apply(console, [prefix, ...str]);
+  } else {
+    console.log.apply(console, str);
   }
 }
+
+const annotationer = {
+  notice: (title, content) =>
+    core.notice(content, { title: `${getAnnotationsPrefix()} ${title}` }),
+  warning: (title, content) =>
+    core.warning(content, { title: `${getAnnotationsPrefix()} ${title}` }),
+  error: (title, content) =>
+    core.error(content, { title: `${getAnnotationsPrefix()} ${title}` })
+};
 
 const logger = {
   level: "info",
 
   trace: (...str) => {
     if (logger.level === "trace") {
-      log("[TRACE]", str);
+      log("[TRACE] ", str);
     }
   },
 
   debug: (...str) => {
     if (logger.isDebug()) {
-      log("[DEBUG]", str);
+      log("[DEBUG] ", str);
     }
   },
 
@@ -58,5 +66,6 @@ function inspect(obj) {
 module.exports = {
   ClientError,
   TimeoutError,
+  annotationer,
   logger
 };

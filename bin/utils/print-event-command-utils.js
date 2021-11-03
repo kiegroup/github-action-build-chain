@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { logger } = require("../../src/lib/common");
+const { logger, annotationer } = require("../../src/lib/common");
 const {
   eventFlowTypeToCliFlowType,
   getDefinitionFile,
@@ -25,7 +25,7 @@ function printLocalCommandPullRequest(eventData) {
   }`;
 
   logger.info(command);
-  core.notice(command, { title: "Local Command" });
+  annotationer.notice("Local Command", command);
 }
 
 function printLocalCommandPush(eventData) {

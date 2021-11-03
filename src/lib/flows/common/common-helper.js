@@ -1,4 +1,4 @@
-const { logger } = require("../../common");
+const { logger, annotationer } = require("../../common");
 const { execute } = require("../../command/command");
 const {
   treatCommand
@@ -116,12 +116,12 @@ async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
       try {
         await execute(cwd, commandTreated);
       } catch (e) {
-        core.error(commandTreated, { title: `[${project}] [ERROR]` });
+        annotationer.error(`[${project}] [Execution ERROR]`, commandTreated);
         throw new Error(
           `[${project}] error executing command '${commandTreated}'`
         );
       }
-      core.notice(commandTreated, { title: `[${project}] [OK]` });
+      annotationer.notice(`[${project}] [Execution OK]`, commandTreated);
       if (!options.skipStartGroup) {
         core.endGroup();
       }

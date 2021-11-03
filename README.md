@@ -123,6 +123,26 @@ See [action.yml](action.yml)
 
   > **_Note:_** You have to be sure the project tree to start building from, contains the project triggering the job.
 
+- **logger-level** (optional. 'info' by default): The log level. Possible values
+
+  - info
+  - trace
+  - debug
+
+  > ```
+  > logger-level: 'info'
+  > logger-level: 'debug'
+  > ```
+
+- **annotations-prefix** (optional. '' by default): The prefix to be shown on the Github Actions' Annotations title.
+
+  > ```
+  > annotations-prefix: "${{ matrix.java-version }}/${{ matrix.maven-version }}"
+  > annotations-prefix: "My Job Prefix"
+  > annotations-prefix: "Graddle Version ${{ matrix.gradle-version }}"
+  > annotations-prefix: "OS ${{ matrix.os }}"
+  > ```
+
 ## Pre/Post sections
 
 It is possible to define pre and post sections in the definition-file. The idea is to have the chance to execute something before (`pre`) or after (`post`) project checkout and build command execution.

@@ -17,6 +17,8 @@
 - `logger-level` input added.
 - debug log improved
 - default value for placeholders
+- important information posted to Annotations section
+- annotations-prefix input to identify the annotations per job
 
 ## Bugs:
 

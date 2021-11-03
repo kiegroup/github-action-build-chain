@@ -6,7 +6,8 @@ const {
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,
-  eventFlowTypeToCliFlowType
+  eventFlowTypeToCliFlowType,
+  getAnnotationsPrefix
 } = require("../../../src/lib/util/action-utils");
 
 const { getInput } = require("@actions/core");
@@ -40,6 +41,34 @@ test("getStartingProject", () => {
 
   // Assert
   expect(result).toEqual(expectedResult);
+});
+
+describe("getAnnotationsPrefix", () => {
+  test("defined", () => {
+    // Arrange
+    const expectedResult = "Java 8 Maven 3.8.1";
+    getInput.mockImplementationOnce(param =>
+      param === "annotations-prefix" ? expectedResult : undefined
+    );
+    // Act
+    const result = getAnnotationsPrefix();
+
+    // Assert
+    expect(result).toEqual(`[${expectedResult}]`);
+  });
+
+  test("undefined", () => {
+    // Arrange
+    const expectedResult = undefined;
+    getInput.mockImplementationOnce(param =>
+      param === "annotations-prefix" ? expectedResult : "ANY VALUE"
+    );
+    // Act
+    const result = getAnnotationsPrefix();
+
+    // Assert
+    expect(result).toEqual("");
+  });
 });
 
 describe("getLoggerLevel", () => {

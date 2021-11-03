@@ -25,7 +25,7 @@ function printLocalCommandPullRequest(eventData) {
   }`;
 
   logger.info(command);
-  core.notice(command);
+  core.notice(command, { title: "Local Command" });
 }
 
 function printLocalCommandPush(eventData) {

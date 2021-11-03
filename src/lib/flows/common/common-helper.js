@@ -3,7 +3,6 @@ const { execute } = require("../../command/command");
 const {
   treatCommand
 } = require("../../command/treatment/command-treatment-delegator");
-const { truncateString } = require("../../util/string-utils");
 const { getDir } = require("./build-chain-flow-helper");
 const core = require("@actions/core");
 
@@ -117,22 +116,12 @@ async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
       try {
         await execute(cwd, commandTreated);
       } catch (e) {
-        core.error(
-          `[Build Chain] [${project}] [ERROR] "${truncateString(
-            commandTreated,
-            50
-          )}"`
-        );
+        core.error(commandTreated, { title: `[${project}] [ERROR]` });
         throw new Error(
           `[${project}] error executing command '${commandTreated}'`
         );
       }
-      core.notice(
-        `[Build Chain] [${project}] [OK] "${truncateString(
-          commandTreated,
-          50
-        )}"`
-      );
+      core.notice(commandTreated, { title: `[${project}] [OK]` });
       if (!options.skipStartGroup) {
         core.endGroup();
       }

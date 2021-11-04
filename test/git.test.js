@@ -34,6 +34,7 @@ test("merge branch into current checkout", async () => {
     "-c",
     "user.email=noreply@github.com",
     "pull",
+    "--no-rebase",
     `file://${origin}`,
     "main"
   ]);

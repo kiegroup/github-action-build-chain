@@ -154,7 +154,7 @@ async function mergeCommits(dir, ref) {
 }
 
 async function merge(dir, repositoryUrl, branch) {
-  return await git(dir, "pull", repositoryUrl, branch);
+  return await git(dir, "pull", "--no-rebase", repositoryUrl, branch);
 }
 
 async function head(dir) {

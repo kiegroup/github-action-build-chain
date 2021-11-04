@@ -9,8 +9,8 @@ const {
 const {
   doesBranchExist: doesBranchExistMock,
   clone: cloneMock,
-  rebase: rebaseMock,
-  fetchFromRemote: fetchFromRemoteMock,
+  merge: mergeMock,
+  rename: renameMock,
   hasPullRequest: hasPullRequestMock,
   getForkedProject: getForkedProjectMock,
   getRepository: getRepositoryMock
@@ -434,36 +434,36 @@ describe("checkoutDefinitionTree", () => {
     // Act
     const result = await checkoutDefinitionTree(context, nodeChain);
     // Assert
-    expect(fetchFromRemoteMock).toHaveBeenCalledTimes(2);
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledTimes(2);
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
-      "URL_with_token/kiegroup/lienzo-core",
-      "tBranch"
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
     );
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_droolsjbpm_build_bootstrap",
-      "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
-      "tBranch"
-    );
-
-    expect(rebaseMock).toHaveBeenCalledTimes(2);
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_lienzo_core",
-      "tBranch"
-    );
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_droolsjbpm_build_bootstrap",
-      "tBranch"
+      "URL_with_token/sourceGroup/droolsjbpm-build-bootstrap-forked",
+      "sBranch"
     );
 
     expect(cloneMock).toHaveBeenCalledTimes(2);
     expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "URL_with_token/kiegroup/lienzo-core",
+      "folder/kiegroup_lienzo_core",
+      "tBranch"
+    );
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "tBranch"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(2);
+    expect(renameMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
       "sBranch"
     );
-    expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/droolsjbpm-build-bootstrap-forked",
+    expect(renameMock).toHaveBeenCalledWith(
       "folder/kiegroup_droolsjbpm_build_bootstrap",
       "sBranch"
     );
@@ -543,29 +543,29 @@ describe("checkoutDefinitionTree", () => {
     const result = await checkoutDefinitionTree(context, nodeChain);
 
     // Assert
-    expect(fetchFromRemoteMock).toHaveBeenCalledTimes(1);
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledTimes(1);
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
-      "URL_with_token/kiegroup/lienzo-core",
-      "tBranch"
-    );
-
-    expect(rebaseMock).toHaveBeenCalledTimes(1);
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_lienzo_core",
-      "tBranch"
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
     );
 
     expect(cloneMock).toHaveBeenCalledTimes(2);
     expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "URL_with_token/kiegroup/lienzo-core",
       "folder/kiegroup_lienzo_core",
-      "sBranch"
+      "tBranch"
     );
     expect(cloneMock).toHaveBeenCalledWith(
       "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
       "folder/kiegroup_droolsjbpm_build_bootstrap",
       "tBranch"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(1);
+    expect(renameMock).toHaveBeenCalledWith(
+      "folder/kiegroup_lienzo_core",
+      "sBranch"
     );
 
     expect(Object.keys(result).length).toBe(2);
@@ -639,36 +639,36 @@ describe("checkoutDefinitionTree", () => {
     const result = await checkoutDefinitionTree(context, nodeChain);
 
     // Assert
-    expect(fetchFromRemoteMock).toHaveBeenCalledTimes(2);
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledTimes(2);
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
-      "URL_with_token/kiegroup/lienzo-core",
-      "tBranch"
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
     );
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_droolsjbpm_build_bootstrap",
       "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
-      "tBranch"
-    );
-
-    expect(rebaseMock).toHaveBeenCalledTimes(2);
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_lienzo_core",
-      "tBranch"
-    );
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_droolsjbpm_build_bootstrap",
-      "tBranch"
+      "sBranch"
     );
 
     expect(cloneMock).toHaveBeenCalledTimes(2);
     expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "URL_with_token/kiegroup/lienzo-core",
       "folder/kiegroup_lienzo_core",
-      "sBranch"
+      "tBranch"
     );
     expect(cloneMock).toHaveBeenCalledWith(
       "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "tBranch"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(2);
+    expect(renameMock).toHaveBeenCalledWith(
+      "folder/kiegroup_lienzo_core",
+      "sBranch"
+    );
+    expect(renameMock).toHaveBeenCalledWith(
       "folder/kiegroup_droolsjbpm_build_bootstrap",
       "sBranch"
     );
@@ -744,33 +744,33 @@ describe("checkoutDefinitionTree", () => {
     const result = await checkoutDefinitionTree(context, nodeChain);
 
     // Assert
-    expect(fetchFromRemoteMock).toHaveBeenCalledTimes(2);
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledTimes(2);
+    expect(mergeMock).toHaveBeenCalledWith(
       "kiegroup_lienzo_core",
-      "URL_with_token/kiegroup/lienzo-core",
-      "tBranch"
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
     );
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledWith(
       "kiegroup_droolsjbpm_build_bootstrap",
       "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
-      "tBranch"
-    );
-
-    expect(rebaseMock).toHaveBeenCalledTimes(2);
-    expect(rebaseMock).toHaveBeenCalledWith("kiegroup_lienzo_core", "tBranch");
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "kiegroup_droolsjbpm_build_bootstrap",
-      "tBranch"
+      "sBranch"
     );
 
     expect(cloneMock).toHaveBeenCalledTimes(2);
     expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "URL_with_token/kiegroup/lienzo-core",
       "kiegroup_lienzo_core",
-      "sBranch"
+      "tBranch"
     );
     expect(cloneMock).toHaveBeenCalledWith(
       "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
+      "kiegroup_droolsjbpm_build_bootstrap",
+      "tBranch"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(2);
+    expect(renameMock).toHaveBeenCalledWith("kiegroup_lienzo_core", "sBranch");
+    expect(renameMock).toHaveBeenCalledWith(
       "kiegroup_droolsjbpm_build_bootstrap",
       "sBranch"
     );
@@ -847,29 +847,29 @@ describe("checkoutDefinitionTree", () => {
     const result = await checkoutDefinitionTree(context, nodeChain);
 
     // Assert
-    expect(fetchFromRemoteMock).toHaveBeenCalledTimes(1);
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledTimes(1);
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
-      "URL_with_token/kiegroup/lienzo-core",
-      "tBranch"
-    );
-
-    expect(rebaseMock).toHaveBeenCalledTimes(1);
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_lienzo_core",
-      "tBranch"
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
     );
 
     expect(cloneMock).toHaveBeenCalledTimes(2);
     expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "URL_with_token/kiegroup/lienzo-core",
       "folder/kiegroup_lienzo_core",
-      "sBranch"
+      "tBranch"
     );
     expect(cloneMock).toHaveBeenCalledWith(
       "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
       "folder/kiegroup_droolsjbpm_build_bootstrap",
       "tBranch"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(1);
+    expect(renameMock).toHaveBeenCalledWith(
+      "folder/kiegroup_lienzo_core",
+      "sBranch"
     );
 
     expect(Object.keys(result).length).toBe(2);
@@ -944,29 +944,29 @@ describe("checkoutDefinitionTree", () => {
     const result = await checkoutDefinitionTree(context, nodeChain);
 
     // Assert
-    expect(fetchFromRemoteMock).toHaveBeenCalledTimes(1);
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledTimes(1);
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
-      "URL_with_token/kiegroup/lienzo-core",
-      "tBranch"
-    );
-
-    expect(rebaseMock).toHaveBeenCalledTimes(1);
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_lienzo_core",
-      "tBranch"
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
     );
 
     expect(cloneMock).toHaveBeenCalledTimes(2);
     expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "URL_with_token/kiegroup/lienzo-core",
       "folder/kiegroup_lienzo_core",
-      "sBranch"
+      "tBranch"
     );
     expect(cloneMock).toHaveBeenCalledWith(
       "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
       "folder/kiegroup_droolsjbpm_build_bootstrap",
       "tBranch"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(1);
+    expect(renameMock).toHaveBeenCalledWith(
+      "folder/kiegroup_lienzo_core",
+      "sBranch"
     );
 
     expect(Object.keys(result).length).toBe(2);
@@ -1103,58 +1103,61 @@ describe("checkoutDefinitionTree", () => {
     const result = await checkoutDefinitionTree(context, nodeChain);
 
     // Assert
-    expect(fetchFromRemoteMock).toHaveBeenCalledTimes(8);
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledTimes(8);
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_optaplanner",
-      "URL_with_token/kiegroup/optaplanner",
-      "7.x"
+      "URL_with_token/sourceGroup/optaplanner-forked",
+      "sBranch"
     );
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_jbpm",
-      "URL_with_token/kiegroup/jbpm",
-      "main"
+      "URL_with_token/sourceGroup/jbpm-forked",
+      "sBranch"
     );
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_drools",
-      "URL_with_token/kiegroup/drools",
-      "main"
+      "URL_with_token/sourceGroup/drools-forked",
+      "sBranch"
     );
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
-      "URL_with_token/kiegroup/lienzo-core",
-      "main"
-    );
-
-    expect(rebaseMock).toHaveBeenCalledTimes(8);
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_optaplanner",
-      "7.x"
-    );
-    expect(rebaseMock).toHaveBeenCalledWith("folder/kiegroup_jbpm", "main");
-    expect(rebaseMock).toHaveBeenCalledWith("folder/kiegroup_drools", "main");
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_lienzo_core",
-      "main"
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
     );
 
     expect(cloneMock).toHaveBeenCalledTimes(8);
     expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/optaplanner-forked",
+      "URL_with_token/kiegroup/optaplanner",
+      "folder/kiegroup_optaplanner",
+      "7.x"
+    );
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/jbpm",
+      "folder/kiegroup_jbpm",
+      "main"
+    );
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/drools",
+      "folder/kiegroup_drools",
+      "main"
+    );
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/lienzo-core",
+      "folder/kiegroup_lienzo_core",
+      "main"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(8);
+    expect(renameMock).toHaveBeenCalledWith(
       "folder/kiegroup_optaplanner",
       "sBranch"
     );
-    expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/jbpm-forked",
-      "folder/kiegroup_jbpm",
-      "sBranch"
-    );
-    expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/drools-forked",
+    expect(renameMock).toHaveBeenCalledWith("folder/kiegroup_jbpm", "sBranch");
+    expect(renameMock).toHaveBeenCalledWith(
       "folder/kiegroup_drools",
       "sBranch"
     );
-    expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/lienzo-core-forked",
+    expect(renameMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
       "sBranch"
     );
@@ -1284,58 +1287,61 @@ describe("checkoutDefinitionTree", () => {
     const result = await checkoutDefinitionTree(context, nodeChain);
 
     // Assert
-    expect(fetchFromRemoteMock).toHaveBeenCalledTimes(8);
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledTimes(8);
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_optaplanner",
-      "URL_with_token/kiegroup/optaplanner",
-      "7.x"
+      "URL_with_token/sourceGroup/optaplanner-forked",
+      "sBranch"
     );
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_jbpm",
-      "URL_with_token/kiegroup/jbpm",
-      "main"
+      "URL_with_token/sourceGroup/jbpm-forked",
+      "sBranch"
     );
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_drools",
-      "URL_with_token/kiegroup/drools",
-      "main"
+      "URL_with_token/sourceGroup/drools-forked",
+      "sBranch"
     );
-    expect(fetchFromRemoteMock).toHaveBeenCalledWith(
+    expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
-      "URL_with_token/kiegroup/lienzo-core",
-      "main"
-    );
-
-    expect(rebaseMock).toHaveBeenCalledTimes(8);
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_optaplanner",
-      "7.x"
-    );
-    expect(rebaseMock).toHaveBeenCalledWith("folder/kiegroup_jbpm", "main");
-    expect(rebaseMock).toHaveBeenCalledWith("folder/kiegroup_drools", "main");
-    expect(rebaseMock).toHaveBeenCalledWith(
-      "folder/kiegroup_lienzo_core",
-      "main"
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
     );
 
     expect(cloneMock).toHaveBeenCalledTimes(8);
     expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/optaplanner-forked",
+      "URL_with_token/kiegroup/optaplanner",
+      "folder/kiegroup_optaplanner",
+      "7.x"
+    );
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/jbpm",
+      "folder/kiegroup_jbpm",
+      "main"
+    );
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/drools",
+      "folder/kiegroup_drools",
+      "main"
+    );
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/lienzo-core",
+      "folder/kiegroup_lienzo_core",
+      "main"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(8);
+    expect(renameMock).toHaveBeenCalledWith(
       "folder/kiegroup_optaplanner",
       "sBranch"
     );
-    expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/jbpm-forked",
-      "folder/kiegroup_jbpm",
-      "sBranch"
-    );
-    expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/drools-forked",
+    expect(renameMock).toHaveBeenCalledWith("folder/kiegroup_jbpm", "sBranch");
+    expect(renameMock).toHaveBeenCalledWith(
       "folder/kiegroup_drools",
       "sBranch"
     );
-    expect(cloneMock).toHaveBeenCalledWith(
-      "URL_with_token/sourceGroup/lienzo-core-forked",
+    expect(renameMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
       "sBranch"
     );

@@ -85,11 +85,6 @@ async function fetch(dir, branch) {
   );
 }
 
-async function fetchFromRemote(dir, url, branch, name = "upstream") {
-  await git(dir, "remote", "add", name, url);
-  await git(dir, "fetch", "--quiet", "--no-tags", name, branch);
-}
-
 async function fetchUntilMergeBase(dir, branch, timeout) {
   const maxTime = new Date().getTime() + timeout;
   const ref = `refs/remotes/origin/${branch}`;
@@ -170,14 +165,12 @@ async function sha(dir, branch) {
   return await git(dir, "show-ref", "-s", `refs/remotes/origin/${branch}`);
 }
 
-async function rebase(dir, branch, remote = "upstream") {
-  return await git(
-    dir,
-    "rebase",
-    "--quiet",
-    "--autosquash",
-    `${remote}/${branch}`
-  );
+async function rename(dir, branch) {
+  return await git(dir, "branch", "--move", branch);
+}
+
+async function rebase(dir, branch) {
+  return await git(dir, "rebase", "--quiet", "--autosquash", branch);
 }
 
 async function push(dir, force, branch) {
@@ -354,7 +347,6 @@ module.exports = {
   git,
   clone,
   fetch,
-  fetchFromRemote,
   fetchUntilMergeBase,
   fetchDeepen,
   mergeBase,
@@ -362,6 +354,7 @@ module.exports = {
   merge,
   head,
   sha,
+  rename,
   rebase,
   push,
   doesBranchExist,

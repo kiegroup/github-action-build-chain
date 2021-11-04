@@ -1,3 +1,4 @@
 *.diff
 dist/index.js
+dist/cli/index.js
 build_chain_20*/**/*

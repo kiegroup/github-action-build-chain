@@ -8,4 +8,4 @@ fix _(please add the issue ID if it exists)_
 - link 2
 - link 3 etc.
 
-> **_Note:_** Please, do not check `dist/index.js` changes. It is automatically generated.
+> **_Note:_** Please, do not check `dist/index.js` or/and `dist/cli/index.js` changes. It is automatically generated.

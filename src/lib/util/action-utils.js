@@ -1,5 +1,5 @@
 const core = require("@actions/core");
-const { ClientError, logger } = require("../common");
+const { ClientError } = require("../common");
 const assert = require("assert");
 
 function getDefinitionFile() {
@@ -49,7 +49,6 @@ function eventFlowTypeToCliFlowType(flowType) {
     flowType,
     "flow type is not defined for eventFlowTypeToCliFlowType argument"
   );
-  logger.debug("eventFlowTypeToCliFlowType", flowType);
 
   switch (flowType) {
     case "pull-request":

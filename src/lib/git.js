@@ -62,7 +62,6 @@ function git(cwd, ...args) {
  */
 async function getVersion() {
   const gitVersionCommandOutput = await git(".", "--version");
-  console.log("gitVersionCommandOutput", gitVersionCommandOutput);
   const match = gitVersionCommandOutput.match(/(\d+\.\d+(\.\d+)?)/);
   return match && match.length > 1 ? match[1] : undefined;
 }

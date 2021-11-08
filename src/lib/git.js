@@ -57,6 +57,16 @@ function git(cwd, ...args) {
   });
 }
 
+/**
+ * Gets the git version available in the system.
+ */
+async function getVersion() {
+  const gitVersionCommandOutput = await git(".", "--version");
+  console.log("gitVersionCommandOutput", gitVersionCommandOutput);
+  const match = gitVersionCommandOutput.match(/(\d+\.\d+(\.\d+)?)/);
+  return match && match.length > 1 ? match[1] : undefined;
+}
+
 async function clone(from, to, branch) {
   if (!fs.existsSync(to)) {
     await git(
@@ -360,5 +370,6 @@ module.exports = {
   doesBranchExist,
   hasPullRequest,
   getForkedProject,
-  getRepository
+  getRepository,
+  getVersion
 };

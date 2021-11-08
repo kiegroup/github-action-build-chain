@@ -49,7 +49,7 @@ async function main() {
   logger.level = getLoggerLevel();
   logger.debug(eventData);
 
-  printLocalCommand(eventData);
+  await printLocalCommand(eventData);
 
   const token = getProcessEnvVariable("GITHUB_TOKEN", false);
   const octokit = createOctokitInstance(token);

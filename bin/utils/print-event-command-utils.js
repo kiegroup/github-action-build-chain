@@ -7,6 +7,7 @@ const {
   getStartingProject,
   getFlowType
 } = require("../../src/lib/util/action-utils");
+const { getVersion: getGitVersion } = require("../../src/lib/git");
 const core = require("@actions/core");
 const pkg = require("../../package.json");
 
@@ -51,7 +52,7 @@ function printLocalCommandPush(eventData) {
  *
  * @param {Object} the JSON object for the event data
  */
-function printLocalCommand(eventData) {
+async function printLocalCommand(eventData) {
   core.startGroup(`Printing local execution command`);
   logger.info(
     "You can copy paste the following commands to locally execute build chain tool."
@@ -74,6 +75,16 @@ function printLocalCommand(eventData) {
     logger.error(ex);
   }
 
+  try {
+    logger.warn(
+      `Git Version: '${await getGitVersion()}'. Just be aware different git versions could produce different checkout results.`
+    );
+  } catch (e) {
+    logger.warn(
+      "Error getting git version. Please fill an issue on build-chain project.",
+      e
+    );
+  }
   logger.warn("Remember you need Node installed in the environment.");
   logger.warn("The `GITHUB_TOKEN` has to be set in the environment.");
 

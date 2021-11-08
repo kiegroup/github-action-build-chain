@@ -1,6 +1,12 @@
 # Changelog
 
-# V2.6 (next release)
+# V2.6.1
+
+## Enhancements:
+
+- Prints system git version
+
+# V2.6
 
 ## Enhancements:
 

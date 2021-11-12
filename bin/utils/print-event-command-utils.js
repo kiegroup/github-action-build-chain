@@ -19,7 +19,7 @@ function printLocalCommandPullRequest(eventData) {
 
   const command = `${Object.keys(
     pkg.bin
-  )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
+  )} -df '${getDefinitionFile()}' build ${eventFlowTypeToCliFlowType(
     getFlowType()
   )} -url ${eventData.pull_request.html_url}${
     getStartingProject() ? ` -sp ${getStartingProject()}` : ""
@@ -39,7 +39,7 @@ function printLocalCommandPush(eventData) {
   logger.info(
     `${Object.keys(
       pkg.bin
-    )} -df "${getDefinitionFile()}" build ${eventFlowTypeToCliFlowType(
+    )} -df '${getDefinitionFile()}' build ${eventFlowTypeToCliFlowType(
       getFlowType()
     )} -p ${eventData.repository.full_name} -b ${eventData.ref
       .split("refs/heads/")

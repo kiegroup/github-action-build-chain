@@ -36,7 +36,7 @@ describe("printLocalCommand pull request.", () => {
     // Assert
     expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      'build_action_bin_command -df "definitionFile.yaml" build flow-type -url pull_request_html_url'
+      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -url pull_request_html_url"
     );
   });
 
@@ -57,7 +57,7 @@ describe("printLocalCommand pull request.", () => {
     // Assert
     expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      'build_action_bin_command -df "definitionFile.yaml" build flow-type -url pull_request_html_url -sp starting-project-name'
+      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -url pull_request_html_url -sp starting-project-name"
     );
   });
 });
@@ -78,7 +78,7 @@ describe("printLocalCommand push.", () => {
     // Assert
     expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      'build_action_bin_command -df "definitionFile.yaml" build flow-type -p group_name/project_name -b main'
+      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -p group_name/project_name -b main"
     );
   });
 
@@ -98,7 +98,7 @@ describe("printLocalCommand push.", () => {
     // Assert
     expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      'build_action_bin_command -df "definitionFile.yaml" build flow-type -p group_name/project_name -b mainX -sp starting-project-name'
+      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -p group_name/project_name -b mainX -sp starting-project-name"
     );
   });
 
@@ -136,7 +136,7 @@ describe("printLocalCommand push.", () => {
     // Assert
     expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      'build_action_bin_command -df "definitionFile.yaml" build flow-type -p group_name/project_name -b whatever -sp starting-project-name'
+      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -p group_name/project_name -b whatever -sp starting-project-name"
     );
   });
 });

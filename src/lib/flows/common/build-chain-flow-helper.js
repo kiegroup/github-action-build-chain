@@ -647,6 +647,8 @@ async function getPlaceHolders(
         }
       }
     }
+  } else if (definitionFile.startsWith("http")) {
+    logger.info(`${definitionFile} exists, using it`);
   }
   return placeHolders;
 }

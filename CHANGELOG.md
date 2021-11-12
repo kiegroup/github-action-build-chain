@@ -6,6 +6,11 @@
 
 - Prints system git version
 
+## Bugs
+
+- printLocalCommand definition-file wrong quotes
+- the choosen definition file is not printed in case of all placeholders have default values
+
 # V2.6
 
 ## Enhancements:

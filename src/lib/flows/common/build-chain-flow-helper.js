@@ -7,6 +7,7 @@ const {
   getForkedProject,
   getRepository
 } = require("../../git");
+const { getRemoteSha } = require("../../service/git-service");
 const { logger } = require("../../common");
 const { treatUrl } = require("@kie/build-chain-configuration-reader");
 const { checkUrlExist } = require("../../util/http");
@@ -205,9 +206,19 @@ async function checkoutProjectPullRequestFlow(
  * @param {Object} dir the dir to check out
  */
 async function checkoutNode(context, node, checkoutInfo, dir) {
+  const sourceHash = await getRemoteSha(
+    `${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}`,
+    checkoutInfo.branch
+  );
+
   if (checkoutInfo.merge) {
+    const targetHash = await getRemoteSha(
+      `${context.config.github.serverUrl}/${node.project}`,
+      checkoutInfo.targetBranch
+    );
+
     logger.info(
-      `[${node.project}] Merging ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch} into ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}`
+      `[${node.project}] Checking out ${context.config.github.serverUrl}/${node.project}:${checkoutInfo.targetBranch} ${targetHash} and merging ${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch} ${sourceHash} into '${dir}'`
     );
     try {
       await clone(
@@ -244,7 +255,7 @@ async function checkoutNode(context, node, checkoutInfo, dir) {
   } else {
     try {
       logger.info(
-        `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}' into '${dir}'`
+        `[${node.project}] Checking out '${context.config.github.serverUrl}/${checkoutInfo.group}/${checkoutInfo.project}:${checkoutInfo.branch}' ${sourceHash} into '${dir}'`
       );
       await clone(
         `${context.config.github.serverUrlWithToken}/${checkoutInfo.group}/${checkoutInfo.project}`,

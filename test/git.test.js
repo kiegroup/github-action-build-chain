@@ -150,3 +150,36 @@ describe("version", () => {
     ]);
   });
 });
+
+describe("remoteSha", () => {
+  test("ok", async () => {
+    // Arrange
+    const repositoryUrl = "https://repositoryUrl";
+    const branch = "branchName";
+    spawnMock.sequence.add(
+      spawnMock.simple(
+        0,
+        "9a7f82f4b090a37a855aa582d2160951853a9141        refs/heads/main"
+      )
+    );
+    // Act
+    const result = await git.remoteSha(repositoryUrl, branch);
+
+    // Assert
+    expect(spawnMock.calls.length).toBe(1);
+    const firstCall = spawnMock.calls[0];
+    expect(firstCall.command).toBe("git");
+    expect(firstCall.args).toStrictEqual([
+      "-c",
+      "user.name=GitHub",
+      "-c",
+      "user.email=noreply@github.com",
+      "ls-remote",
+      repositoryUrl,
+      branch
+    ]);
+    expect(result).toBe(
+      "9a7f82f4b090a37a855aa582d2160951853a9141        refs/heads/main"
+    );
+  });
+});

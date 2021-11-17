@@ -27,6 +27,9 @@ const { checkUrlExist } = require("../../../../src/lib/util/http");
 jest.mock("../../../../src/lib/util/http");
 jest.mock("../../../../src/lib/common");
 
+const { getRemoteSha } = require("../../../../src/lib/service/git-service");
+jest.mock("../../../../src/lib/service/git-service");
+
 afterEach(() => {
   jest.clearAllMocks();
 });
@@ -434,6 +437,24 @@ describe("checkoutDefinitionTree", () => {
     // Act
     const result = await checkoutDefinitionTree(context, nodeChain);
     // Assert
+    expect(getRemoteSha).toHaveBeenCalledTimes(4);
+    expect(getRemoteSha).toHaveBeenCalledWith(
+      "URL/sourceGroup/lienzo-core-forked",
+      "sBranch"
+    );
+    expect(getRemoteSha).toHaveBeenCalledWith(
+      "URL/kiegroup/lienzo-core",
+      "tBranch"
+    );
+    expect(getRemoteSha).toHaveBeenCalledWith(
+      "URL/sourceGroup/droolsjbpm-build-bootstrap-forked",
+      "sBranch"
+    );
+    expect(getRemoteSha).toHaveBeenCalledWith(
+      "URL/kiegroup/droolsjbpm-build-bootstrap",
+      "tBranch"
+    );
+
     expect(mergeMock).toHaveBeenCalledTimes(2);
     expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",
@@ -543,6 +564,20 @@ describe("checkoutDefinitionTree", () => {
     const result = await checkoutDefinitionTree(context, nodeChain);
 
     // Assert
+    expect(getRemoteSha).toHaveBeenCalledTimes(3);
+    expect(getRemoteSha).toHaveBeenCalledWith(
+      "URL/sourceGroup/lienzo-core-forked",
+      "sBranch"
+    );
+    expect(getRemoteSha).toHaveBeenCalledWith(
+      "URL/kiegroup/lienzo-core",
+      "tBranch"
+    );
+    expect(getRemoteSha).toHaveBeenCalledWith(
+      "URL/kiegroup/droolsjbpm-build-bootstrap",
+      "tBranch"
+    );
+
     expect(mergeMock).toHaveBeenCalledTimes(1);
     expect(mergeMock).toHaveBeenCalledWith(
       "folder/kiegroup_lienzo_core",

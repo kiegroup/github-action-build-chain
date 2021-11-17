@@ -1,5 +1,11 @@
 # Changelog
 
+# V2.6.2
+
+## Enhancements:
+
+- Prints out the hashes during check out/merging process
+
 # V2.6.1
 
 ## Enhancements:

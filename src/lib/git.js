@@ -170,8 +170,18 @@ async function head(dir) {
   return await git(dir, "show-ref", "--head", "-s", "/HEAD");
 }
 
-async function sha(dir, branch) {
-  return await git(dir, "show-ref", "-s", `refs/remotes/origin/${branch}`);
+async function sha(dir, flags = "--format=%h") {
+  return await git(dir, "show", "-s", flags);
+}
+
+/**
+ * It retrieves the hash from a remote repository and branch
+ *
+ * @param {string} repositoryUrl the repository URL
+ * @param {string} branch the branch to get the hash from
+ */
+async function remoteSha(repositoryUrl, branch) {
+  return await git(".", "ls-remote", repositoryUrl, branch);
 }
 
 async function rename(dir, branch) {
@@ -363,6 +373,7 @@ module.exports = {
   merge,
   head,
   sha,
+  remoteSha,
   rename,
   rebase,
   push,

@@ -170,8 +170,8 @@ async function head(dir) {
   return await git(dir, "show-ref", "--head", "-s", "/HEAD");
 }
 
-async function sha(dir, flags = "--format=%h") {
-  return await git(dir, "show", "-s", flags);
+async function sha(dir, branch) {
+  return await git(dir, "show-ref", "-s", `refs/remotes/origin/${branch}`);
 }
 
 /**

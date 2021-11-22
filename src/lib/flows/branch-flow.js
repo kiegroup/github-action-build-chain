@@ -23,7 +23,6 @@ const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
 
 async function start(context, options = { skipExecution: false }) {
-  console.log("START");
   logger.debug("branch-flow.js options", options);
   const readerOptions = {
     urlPlaceHolders: await getPlaceHolders(
@@ -32,11 +31,7 @@ async function start(context, options = { skipExecution: false }) {
     ),
     token: context.token
   };
-  console.log("getPlaceHolders");
-
   logger.debug("branch-flow.js readerOptions", readerOptions);
-
-  console.log("executePre", context.config.github.inputs.definitionFile);
 
   if (!options.skipExecution) {
     await executePre(
@@ -56,8 +51,17 @@ async function start(context, options = { skipExecution: false }) {
         readerOptions
       )
     : getTree(context.config.github.inputs.definitionFile, readerOptions);
-  logger.debug("branch-flow.js definitionTree", definitionTree);
-
+  logger.debug(
+    "branch-flow.js definitionTree",
+    definitionTree,
+    context.config.github.inputs.definitionFile,
+    context.config.github.inputs.startingProject
+  );
+  if ([null, undefined].includes(definitionTree)) {
+    throw new Error(
+      `The definition tree is undefined. Does the project ${context.config.github.inputs.startingProject} exist into the definition file ${context.config.github.inputs.definitionFile}?`
+    );
+  }
   let nodeChain = await parentChainFromNode(definitionTree);
   logger.debug("branch-flow.js nodeChain", nodeChain);
 

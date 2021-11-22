@@ -1,5 +1,6 @@
 const { logger } = require("./common");
 const { getCommand } = require("./flows/common/common-helper");
+const prettyMilliseconds = require("pretty-ms");
 
 const groupBy = (checkoutInfo, key) => {
   return Object.values(checkoutInfo).reduce((acc, checkInfo) => {
@@ -98,7 +99,33 @@ function printExecutionPlan(nodeChain, projectTriggeringJob) {
   }
 }
 
+/**
+ *
+ * @param {object} executionResult. It is this format
+ *
+ * {
+ *   project: node.project,
+ *   result: "skipped",
+ *   time: 0
+ * }
+ */
+function printExecutionSummary(executionResult) {
+  logger.debug("summary.js executionSummary", executionResult);
+  if (executionResult && executionResult.length) {
+    logger.info("----------------------------------------------");
+    executionResult.forEach(result =>
+      logger.info(
+        `[${result.project}]. Execution Result: ${result.result}. Time: ${
+          result.time ? prettyMilliseconds(result.time) : "not defined"
+        }`
+      )
+    );
+    logger.info("----------------------------------------------");
+  }
+}
+
 module.exports = {
   printCheckoutInformation,
-  printExecutionPlan
+  printExecutionPlan,
+  printExecutionSummary
 };

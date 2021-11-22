@@ -12,6 +12,7 @@ async function executeBuild(
   projectTriggeringJob,
   options = {}
 ) {
+  const result = [];
   const projectTriggeringJobIndex = nodeChain.findIndex(
     node => node.project === projectTriggeringJob
   );
@@ -23,20 +24,39 @@ async function executeBuild(
     );
   }
   for await (const [index, node] of nodeChain.entries()) {
+    const start = process.hrtime();
     if (node.build && node.build.skip) {
+      result.push({
+        project: node.project,
+        result: "skipped",
+        time: 0
+      });
       logger.info(
         `Execution skip for ${node.project}. No command will be executed.`
       );
     } else {
+      let executionResult = "ok";
       const levelType =
         index < projectTriggeringJobIndex
           ? "upstream"
           : index == projectTriggeringJobIndex
           ? "current"
           : "downstream";
-      await executeNodeBuildCommands(rootFolder, node, levelType, options);
+      try {
+        await executeNodeBuildCommands(rootFolder, node, levelType, options);
+      } catch (e) {
+        executionResult = "error";
+        throw e;
+      } finally {
+        result.push({
+          project: node.project,
+          result: executionResult,
+          time: process.hrtime(start)[1] / 1000000
+        });
+      }
     }
   }
+  return result;
 }
 
 async function executeBuildSpecificCommand(
@@ -45,7 +65,11 @@ async function executeBuildSpecificCommand(
   command,
   options = {}
 ) {
+  const result = [];
+
   for await (const node of nodeChain) {
+    const start = process.hrtime();
+
     const dir = getDir(
       rootFolder,
       node.project,
@@ -53,8 +77,21 @@ async function executeBuildSpecificCommand(
         ? options.skipProjectCheckout.get(node.project)
         : undefined
     );
-    await executeBuildCommands(dir, command, node.project, options);
+    let executionResult = "ok";
+    try {
+      await executeBuildCommands(dir, command, node.project, options);
+    } catch (e) {
+      executionResult = "error";
+      throw e;
+    } finally {
+      result.push({
+        project: node.project,
+        result: executionResult,
+        time: process.hrtime(start)[1] / 1000000
+      });
+    }
   }
+  return result;
 }
 
 /**

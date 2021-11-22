@@ -314,7 +314,7 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
     executePost
   ).toHaveBeenCalledWith(
     "test/resources/build-config/build-config.yaml",
-    new Error("error executing command"),
+    false,
     { token: undefined, urlPlaceHolders: {} }
   );
 });

@@ -9,16 +9,21 @@ const {
 } = require("@kie/build-chain-configuration-reader");
 const core = require("@actions/core");
 const { logger } = require("../common");
-const { printCheckoutInformation } = require("../summary");
+const {
+  printCheckoutInformation,
+  printExecutionSummary
+} = require("../summary");
 const {
   executeBuild,
   executeBuildSpecificCommand
 } = require("./common/common-helper");
+const { isError } = require("../util/js-util");
 
 const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
 
 async function start(context, options = { skipExecution: false }) {
+  console.log("START");
   logger.debug("branch-flow.js options", options);
   const readerOptions = {
     urlPlaceHolders: await getPlaceHolders(
@@ -27,7 +32,11 @@ async function start(context, options = { skipExecution: false }) {
     ),
     token: context.token
   };
+  console.log("getPlaceHolders");
+
   logger.debug("branch-flow.js readerOptions", readerOptions);
+
+  console.log("executePre", context.config.github.inputs.definitionFile);
 
   if (!options.skipExecution) {
     await executePre(
@@ -85,20 +94,24 @@ async function start(context, options = { skipExecution: false }) {
           context.config.github.repository,
           options
         )
-          .then(() => true)
+          .then(e => e)
           .catch(e => e);
 
     await executePost(
       context.config.github.inputs.definitionFile,
-      executionResult,
+      !isError(executionResult),
       readerOptions
     );
 
-    if (executionResult !== true) {
+    if (isError(executionResult)) {
       logger.error(executionResult);
       throw new Error(
         `Command executions have failed, please review latest execution ${executionResult}`
       );
+    } else {
+      core.startGroup(`[Branch Flow] Execution Summary...`);
+      printExecutionSummary(executionResult);
+      core.endGroup();
     }
   } else {
     logger.info("Execution has been skipped.");

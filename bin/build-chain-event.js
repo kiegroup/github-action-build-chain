@@ -31,6 +31,7 @@ const fse = require("fs-extra");
 const { printLocalCommand } = require("./utils/print-event-command-utils");
 
 async function getEventData() {
+  logger.debug("getEventData", getProcessEnvVariable("GITHUB_EVENT_PATH"));
   let eventPath;
   try {
     eventPath = getProcessEnvVariable("GITHUB_EVENT_PATH");
@@ -41,19 +42,23 @@ async function getEventData() {
     throw e;
   }
   const eventDataStr = await fse.readFile(eventPath, "utf8");
-  return JSON.parse(eventDataStr);
+  const result = JSON.parse(eventDataStr);
+  logger.debug("getEventData result", result);
+  return result;
 }
 
 async function main() {
   const eventData = await getEventData();
+  logger.debug("eventData", eventData);
+  logger.debug("eventData", eventData);
   logger.level = getLoggerLevel();
-  logger.debug(eventData);
 
   await printLocalCommand(eventData);
 
   const token = getProcessEnvVariable("GITHUB_TOKEN", false);
   const octokit = createOctokitInstance(token);
 
+  logger.debug("getFlowType", getFlowType());
   if (isPullRequestFlowType()) {
     await pullRequestEventFlow(token, octokit, process.env, eventData);
   } else if (isFDFlowType()) {

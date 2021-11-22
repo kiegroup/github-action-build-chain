@@ -7,12 +7,17 @@ const {
   getOrderedListForProject
 } = require("@kie/build-chain-configuration-reader");
 
-const { printCheckoutInformation, printExecutionPlan } = require("../summary");
+const {
+  printCheckoutInformation,
+  printExecutionPlan,
+  printExecutionSummary
+} = require("../summary");
 const { logger } = require("../common");
 const core = require("@actions/core");
 const {
   archiveArtifacts
 } = require("../artifacts/build-chain-flow-archive-artifact-helper");
+const { isError } = require("../util/js-util");
 
 const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
@@ -88,7 +93,7 @@ async function start(
       projectTriggeringJob,
       options
     )
-      .then(() => true)
+      .then(e => e)
       .catch(e => e);
 
     if (options.isArchiveArtifacts) {
@@ -105,15 +110,19 @@ async function start(
 
     await executePost(
       context.config.github.inputs.definitionFile,
-      executionResult,
+      !isError(executionResult),
       readerOptions
     );
 
-    if (executionResult !== true) {
+    if (isError(executionResult)) {
       logger.error(executionResult);
       throw new Error(
         `Command executions have failed, please review latest execution ${executionResult}`
       );
+    } else {
+      core.startGroup(`[Full Downstream Flow] Execution Summary...`);
+      printExecutionSummary(executionResult);
+      core.endGroup();
     }
   } else {
     logger.info("Execution has been skipped.");

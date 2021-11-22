@@ -50,7 +50,6 @@ async function getEventData() {
 async function main() {
   const eventData = await getEventData();
   logger.debug("eventData", eventData);
-  logger.debug("eventData", eventData);
   logger.level = getLoggerLevel();
 
   await printLocalCommand(eventData);

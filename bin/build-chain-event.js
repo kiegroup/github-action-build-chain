@@ -31,7 +31,6 @@ const fse = require("fs-extra");
 const { printLocalCommand } = require("./utils/print-event-command-utils");
 
 async function getEventData() {
-  logger.debug("getEventData", getProcessEnvVariable("GITHUB_EVENT_PATH"));
   let eventPath;
   try {
     eventPath = getProcessEnvVariable("GITHUB_EVENT_PATH");
@@ -42,9 +41,7 @@ async function getEventData() {
     throw e;
   }
   const eventDataStr = await fse.readFile(eventPath, "utf8");
-  const result = JSON.parse(eventDataStr);
-  logger.debug("getEventData result", result);
-  return result;
+  return JSON.parse(eventDataStr);
 }
 
 async function main() {

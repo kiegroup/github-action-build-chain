@@ -5,6 +5,7 @@
 ## Enhancements:
 
 - Prints system git version
+- [issue 203] Prints execution summary
 
 ## Bugs
 

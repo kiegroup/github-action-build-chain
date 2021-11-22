@@ -1,4 +1,4 @@
-const { truncateString } = require("../../../src/lib/util/string-utils");
+const { truncateString } = require("../../../src/lib/util/string-util");
 
 afterEach(() => {
   jest.clearAllMocks();

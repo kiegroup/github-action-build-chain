@@ -46,14 +46,15 @@ async function getEventData() {
 
 async function main() {
   const eventData = await getEventData();
+  logger.debug("eventData", eventData);
   logger.level = getLoggerLevel();
-  logger.debug(eventData);
 
   await printLocalCommand(eventData);
 
   const token = getProcessEnvVariable("GITHUB_TOKEN", false);
   const octokit = createOctokitInstance(token);
 
+  logger.debug("getFlowType", getFlowType());
   if (isPullRequestFlowType()) {
     await pullRequestEventFlow(token, octokit, process.env, eventData);
   } else if (isFDFlowType()) {

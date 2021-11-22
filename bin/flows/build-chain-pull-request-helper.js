@@ -16,8 +16,14 @@ function prepareEnv(env, eventUrl, eventData) {
 function createGithubInformationObject(eventData, env) {
   logger.debug("eventData", eventData);
   return {
-    sourceGroup: eventData.pull_request.head.repo.full_name.split("/")[0],
-    author: eventData.pull_request.head.user.login,
+    sourceGroup: (eventData.pull_request
+      ? eventData.pull_request.head.repo
+      : eventData.repository
+    ).full_name.split("/")[0],
+    author: (eventData.pull_request
+      ? eventData.pull_request.head.user
+      : eventData.repository.owner
+    ).login,
     sourceRepository: eventData.repository
       ? eventData.repository.name
       : eventData.pull_request.repo

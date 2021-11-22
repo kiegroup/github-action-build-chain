@@ -7,7 +7,11 @@ const {
   getTreeForProject,
   parentChainFromNode
 } = require("@kie/build-chain-configuration-reader");
-const { printCheckoutInformation, printExecutionPlan } = require("../summary");
+const {
+  printCheckoutInformation,
+  printExecutionPlan,
+  printExecutionSummary
+} = require("../summary");
 const { logger } = require("../common");
 const core = require("@actions/core");
 const {
@@ -15,6 +19,7 @@ const {
 } = require("../artifacts/build-chain-flow-archive-artifact-helper");
 const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
+const { isError } = require("../util/js-util");
 
 async function start(
   context,
@@ -57,6 +62,12 @@ async function start(
   );
   logger.debug("pull-request-flow.js definitionTree", definitionTree);
 
+  if ([null, undefined].includes(definitionTree)) {
+    throw new Error(
+      `The definition tree is undefined. Does the project ${projectTriggeringJob} exist into the definition file ${context.config.github.inputs.definitionFile}?`
+    );
+  }
+
   const nodeChain = await parentChainFromNode(definitionTree);
   logger.debug("pull-request-flow.js nodeChain", nodeChain);
 
@@ -94,7 +105,7 @@ async function start(
       projectTriggeringJob,
       options
     )
-      .then(() => true)
+      .then(e => e)
       .catch(e => e);
 
     if (options.isArchiveArtifacts) {
@@ -102,7 +113,7 @@ async function start(
       await archiveArtifacts(
         nodeChain.find(node => node.project === projectTriggeringJob),
         nodeChain,
-        executionResult === true ? ["success", "always"] : ["failure", "always"]
+        isError(executionResult) ? ["failure", "always"] : ["success", "always"]
       );
       core.endGroup();
     } else {
@@ -111,15 +122,19 @@ async function start(
 
     await executePost(
       context.config.github.inputs.definitionFile,
-      executionResult,
+      !isError(executionResult),
       readerOptions
     );
 
-    if (executionResult !== true) {
+    if (isError(executionResult)) {
       logger.error(executionResult);
       throw new Error(
         `Command executions have failed, please review latest execution ${executionResult}`
       );
+    } else {
+      core.startGroup(`[Pull Request Flow] Execution Summary...`);
+      printExecutionSummary(executionResult);
+      core.endGroup();
     }
   } else {
     logger.info("Execution has been skipped.");

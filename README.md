@@ -70,6 +70,12 @@ Just defining the **build chain** flow in every project you want to trigger, the
 
 - It will archive artifacts in case `archive-artifacts-path` input is defined.
 
+### Branch flow
+
+- It checks out the whole tree from the `starting-project` project input and reads the workflow information from the YAML file triggering the job.
+
+- Once the projects from the branch are checked out, it will run as many commands are defined in `before`, `after` or root level properties from `build` section.
+
 ## How to add it to your project(s)
 
 It is just to add the step (replacing dependencies and commands):

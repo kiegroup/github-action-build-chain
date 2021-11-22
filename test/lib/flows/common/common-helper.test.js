@@ -51,7 +51,7 @@ test("executeBuild only current commands", async () => {
     .mockReturnValueOnce("c_folder");
 
   // Act
-  await executeBuild("folder", nodeChain, "b");
+  const result = await executeBuild("folder", nodeChain, "b");
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(3);
@@ -62,6 +62,14 @@ test("executeBuild only current commands", async () => {
   expect(execute).toHaveBeenCalledWith("a_folder", "a command treated");
   expect(execute).toHaveBeenCalledWith("b_folder", "b command treated");
   expect(execute).toHaveBeenCalledWith("c_folder", "c command treated");
+  expect(result).toMatchObject([
+    { project: "a", result: "ok" },
+    { project: "b", result: "ok" },
+    { project: "c", result: "ok" }
+  ]);
+  expect(typeof result[0].time).toBe("number");
+  expect(typeof result[1].time).toBe("number");
+  expect(typeof result[2].time).toBe("number");
 });
 
 test("executeBuild upstream commands", async () => {
@@ -101,7 +109,7 @@ test("executeBuild upstream commands", async () => {
     .mockReturnValueOnce("c_folder");
 
   // Act
-  await executeBuild("folder", nodeChain, "b");
+  const result = await executeBuild("folder", nodeChain, "b");
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(3);
@@ -115,6 +123,11 @@ test("executeBuild upstream commands", async () => {
   );
   expect(execute).toHaveBeenCalledWith("b_folder", "b command treated");
   expect(execute).toHaveBeenCalledWith("c_folder", "c command treated");
+  expect(result).toMatchObject([
+    { project: "a", result: "ok" },
+    { project: "b", result: "ok" },
+    { project: "c", result: "ok" }
+  ]);
 });
 
 test("executeBuild upstream/downstream commands", async () => {
@@ -157,7 +170,7 @@ test("executeBuild upstream/downstream commands", async () => {
     .mockReturnValueOnce("c_folder");
 
   // Act
-  await executeBuild("folder", nodeChain, "b");
+  const result = await executeBuild("folder", nodeChain, "b");
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(3);
@@ -174,6 +187,11 @@ test("executeBuild upstream/downstream commands", async () => {
     "c_folder",
     "c downstream command treated"
   );
+  expect(result).toMatchObject([
+    { project: "a", result: "ok" },
+    { project: "b", result: "ok" },
+    { project: "c", result: "ok" }
+  ]);
 });
 
 test("executeBuild skip", async () => {
@@ -215,7 +233,7 @@ test("executeBuild skip", async () => {
   getDir.mockReturnValueOnce("a_folder").mockReturnValueOnce("c_folder");
 
   // Act
-  await executeBuild("folder", nodeChain, "b");
+  const result = await executeBuild("folder", nodeChain, "b");
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(2);
@@ -230,6 +248,11 @@ test("executeBuild skip", async () => {
     "c_folder",
     "c downstream command treated"
   );
+  expect(result).toMatchObject([
+    { project: "a", result: "ok" },
+    { project: "b", result: "skipped" },
+    { project: "c", result: "ok" }
+  ]);
 });
 
 test("executeBuildSpecificCommand", async () => {
@@ -272,7 +295,11 @@ test("executeBuildSpecificCommand", async () => {
     .mockReturnValueOnce("c_folder");
 
   // Act
-  await executeBuildSpecificCommand("folder", nodeChain, "command x");
+  const result = await executeBuildSpecificCommand(
+    "folder",
+    nodeChain,
+    "command x"
+  );
 
   // Assert
   expect(treatCommand).toHaveBeenCalledTimes(3);
@@ -283,6 +310,12 @@ test("executeBuildSpecificCommand", async () => {
   expect(execute).toHaveBeenCalledWith("a_folder", "command x treated");
   expect(execute).toHaveBeenCalledWith("b_folder", "command x treated");
   expect(execute).toHaveBeenCalledWith("c_folder", "command x treated");
+
+  expect(result).toMatchObject([
+    { project: "a", result: "ok" },
+    { project: "b", result: "ok" },
+    { project: "c", result: "ok" }
+  ]);
 });
 
 test("executeBuild nodeChain not containing project triggering the job", async () => {
@@ -311,8 +344,8 @@ test("executeBuild nodeChain not containing project triggering the job", async (
 
   // Act
   try {
-    await executeBuild("folder", nodeChain, "projectx");
-    expect(true).toEqual(false);
+    const result = await executeBuild("folder", nodeChain, "projectx");
+    expect(result).toEqual(false);
   } catch (ex) {
     expect(ex.message).toBe(
       `The chain ${nodeChain.map(
@@ -350,7 +383,7 @@ test("executeBuild only current commands with options", async () => {
     .mockReturnValueOnce("c_folder");
 
   // Act
-  await executeBuild("folder", nodeChain, "b", {
+  const result = await executeBuild("folder", nodeChain, "b", {
     optionx: "awesome option"
   });
 
@@ -369,4 +402,10 @@ test("executeBuild only current commands with options", async () => {
   expect(execute).toHaveBeenCalledWith("a_folder", "a command treated");
   expect(execute).toHaveBeenCalledWith("b_folder", "b command treated");
   expect(execute).toHaveBeenCalledWith("c_folder", "c command treated");
+
+  expect(result).toMatchObject([
+    { project: "a", result: "ok" },
+    { project: "b", result: "ok" },
+    { project: "c", result: "ok" }
+  ]);
 });

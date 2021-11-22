@@ -74,12 +74,7 @@ Just defining the **build chain** flow in every project you want to trigger, the
 
 - It checks out the whole tree from the `starting-project` project input and reads the workflow information from the YAML file triggering the job.
 
-  - It merges the TARGET_GROUP:PROJECT:TARGET_BRANCH into the SOURCE_GROUP:PROJECT:SOURCE_BRANCH from the pull request triggering the job.
-    > **_Warning:_** It will fail in case it can't be done automatically, properly informing to please resolve conflicts.
-
-- Once the project from the event is checked out, it will run as many commands are defined in `before`, `after` or root level properties from `build` section.
-
-- It will archive artifacts in case `archive-artifacts-path` input is defined.
+- Once the projects from the branch are checked out, it will run as many commands are defined in `before`, `after` or root level properties from `build` section.
 
 ## How to add it to your project(s)
 

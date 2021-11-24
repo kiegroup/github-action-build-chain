@@ -15,7 +15,10 @@ jest.mock(
   "../../../src/lib/artifacts/build-chain-flow-archive-artifact-helper"
 );
 
-const { executeBuild } = require("../../../src/lib/flows/common/common-helper");
+const {
+  executeBuild,
+  getExecutionResultError
+} = require("../../../src/lib/flows/common/common-helper");
 jest.mock("../../../src/lib/flows/common/common-helper");
 jest.mock("@actions/core");
 const { printCheckoutInformation } = require("../../../src/lib/summary");
@@ -70,12 +73,14 @@ test("start no parent dependencies. project triggering the job", async () => {
       rootFolder: "folder"
     }
   };
+  const executionResult = [{ project, result: "ok" }];
 
   getPlaceHolders.mockResolvedValueOnce({});
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
-  executeBuild.mockResolvedValueOnce(true);
+  executeBuild.mockResolvedValueOnce(executionResult);
+  getExecutionResultError.mockReturnValueOnce(undefined);
 
   // Act
   await start(context, { isArchiveArtifacts: true });
@@ -164,12 +169,14 @@ test("start no parent dependencies. project triggering the job. isArchiveArtifac
       rootFolder: "folder"
     }
   };
+  const executionResult = [{ project, result: "ok" }];
 
   getPlaceHolders.mockResolvedValueOnce({});
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
-  executeBuild.mockResolvedValueOnce(true);
+  executeBuild.mockResolvedValueOnce(executionResult);
+  getExecutionResultError.mockReturnValueOnce(undefined);
 
   // Act
   await start(context, { isArchiveArtifacts: false });
@@ -253,14 +260,17 @@ test("start no parent dependencies. project triggering the job. Execute Exceptio
       rootFolder: "folder"
     }
   };
+  const executionResult = [
+    { project, result: "error", error: "Error: error executing command" }
+  ];
 
   getPlaceHolders.mockResolvedValueOnce({});
   getTreeForProject.mockResolvedValueOnce(definitionTree);
   checkoutDefinitionTree.mockResolvedValueOnce(checkoutInfo);
   getDir.mockReturnValueOnce("kiegroup/lienzo_core");
-  executeBuild.mockImplementationOnce(async () => {
-    throw new Error("error executing command");
-  });
+  executeBuild.mockResolvedValueOnce(executionResult);
+  getExecutionResultError.mockReturnValueOnce(executionResult[0]);
+
   // Act
   try {
     await start(context, { isArchiveArtifacts: true });

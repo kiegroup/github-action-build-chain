@@ -2,7 +2,10 @@ const {
   checkoutDefinitionTree,
   getPlaceHolders
 } = require("./common/build-chain-flow-helper");
-const { executeBuild } = require("./common/common-helper");
+const {
+  executeBuild,
+  getExecutionResultError
+} = require("./common/common-helper");
 const {
   getTreeForProject,
   parentChainFromNode
@@ -19,7 +22,6 @@ const {
 } = require("../artifacts/build-chain-flow-archive-artifact-helper");
 const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
-const { isError } = require("../util/js-util");
 
 async function start(
   context,
@@ -104,37 +106,38 @@ async function start(
       nodeChain,
       projectTriggeringJob,
       options
-    )
-      .then(e => e)
-      .catch(e => e);
+    );
+    const executionResultError = getExecutionResultError(executionResult);
 
     if (options.isArchiveArtifacts) {
       core.startGroup(`[Pull Request Flow] Archiving artifacts...`);
       await archiveArtifacts(
         nodeChain.find(node => node.project === projectTriggeringJob),
         nodeChain,
-        isError(executionResult) ? ["failure", "always"] : ["success", "always"]
+        !executionResultError ? ["success", "always"] : ["failure", "always"]
       );
       core.endGroup();
     } else {
       logger.info("Archive artifact won't be executed");
     }
 
+    core.startGroup(`[Pull Request Flow] Execution Summary...`);
+    printExecutionSummary(executionResult);
+    core.endGroup();
+
     await executePost(
       context.config.github.inputs.definitionFile,
-      !isError(executionResult),
+      !executionResultError,
       readerOptions
     );
 
-    if (isError(executionResult)) {
-      logger.error(executionResult);
+    if (executionResultError) {
+      logger.error(executionResultError && executionResultError.error);
       throw new Error(
-        `Command executions have failed, please review latest execution ${executionResult}`
+        `Command executions have failed, please review latest execution ${
+          executionResultError && executionResultError.error
+        }`
       );
-    } else {
-      core.startGroup(`[Pull Request Flow] Execution Summary...`);
-      printExecutionSummary(executionResult);
-      core.endGroup();
     }
   } else {
     logger.info("Execution has been skipped.");

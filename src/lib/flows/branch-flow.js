@@ -15,9 +15,9 @@ const {
 } = require("../summary");
 const {
   executeBuild,
-  executeBuildSpecificCommand
+  executeBuildSpecificCommand,
+  getExecutionResultError
 } = require("./common/common-helper");
-const { isError } = require("../util/js-util");
 
 const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
@@ -90,32 +90,32 @@ async function start(context, options = { skipExecution: false }) {
           options.command,
           options
         )
-          .then(() => true)
-          .catch(e => e)
       : await executeBuild(
           context.config.rootFolder,
           nodeChain,
           context.config.github.repository,
           options
-        )
-          .then(e => e)
-          .catch(e => e);
+        );
+
+    const executionResultError = getExecutionResultError(executionResult);
+
+    core.startGroup(`[Branch Flow] Execution Summary...`);
+    printExecutionSummary(executionResult);
+    core.endGroup();
 
     await executePost(
       context.config.github.inputs.definitionFile,
-      !isError(executionResult),
+      !executionResultError,
       readerOptions
     );
 
-    if (isError(executionResult)) {
-      logger.error(executionResult);
+    if (executionResultError) {
+      logger.error(executionResultError && executionResultError.error);
       throw new Error(
-        `Command executions have failed, please review latest execution ${executionResult}`
+        `Command executions have failed, please review latest execution ${
+          executionResultError && executionResultError.error
+        }`
       );
-    } else {
-      core.startGroup(`[Branch Flow] Execution Summary...`);
-      printExecutionSummary(executionResult);
-      core.endGroup();
     }
   } else {
     logger.info("Execution has been skipped.");

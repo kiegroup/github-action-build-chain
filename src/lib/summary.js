@@ -116,11 +116,19 @@ function printExecutionSummary(executionResult) {
     executionResult.forEach(result =>
       logger.info(
         `[${result.project}]. Execution Result: ${result.result}. Time: ${
-          result.time ? prettyMilliseconds(result.time) : "not defined"
+          result.time
+            ? `${prettyMilliseconds(result.time)}${
+                result.time >= 1000 ? ` (${Math.round(result.time)} ms)` : ""
+              }`
+            : "not defined"
         }`
       )
     );
     logger.info("----------------------------------------------");
+  } else {
+    logger.info(
+      "The execution does not contain any information to print about"
+    );
   }
 }
 

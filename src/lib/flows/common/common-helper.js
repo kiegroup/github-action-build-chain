@@ -4,6 +4,7 @@ const {
   treatCommand
 } = require("../../command/treatment/command-treatment-delegator");
 const { getDir } = require("./build-chain-flow-helper");
+const { hrtimeToMs } = require("../../util/js-util");
 const core = require("@actions/core");
 
 async function executeBuild(
@@ -36,6 +37,7 @@ async function executeBuild(
       );
     } else {
       let executionResult = "ok";
+      let error = undefined;
       const levelType =
         index < projectTriggeringJobIndex
           ? "upstream"
@@ -46,12 +48,14 @@ async function executeBuild(
         await executeNodeBuildCommands(rootFolder, node, levelType, options);
       } catch (e) {
         executionResult = "error";
-        throw e;
+        error = e;
+        break;
       } finally {
         result.push({
           project: node.project,
           result: executionResult,
-          time: process.hrtime(start)[1] / 1000000
+          time: hrtimeToMs(start),
+          error
         });
       }
     }
@@ -78,16 +82,19 @@ async function executeBuildSpecificCommand(
         : undefined
     );
     let executionResult = "ok";
+    let error = undefined;
     try {
       await executeBuildCommands(dir, command, node.project, options);
     } catch (e) {
       executionResult = "error";
-      throw e;
+      error = e;
+      break;
     } finally {
       result.push({
         project: node.project,
         result: executionResult,
-        time: process.hrtime(start)[1] / 1000000
+        time: hrtimeToMs(start),
+        error
       });
     }
   }
@@ -155,7 +162,7 @@ async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
       } catch (e) {
         annotationer.error(`[${project}] [Execution ERROR]`, commandTreated);
         throw new Error(
-          `[${project}] error executing command '${commandTreated}'`
+          `[${project}] error executing command: '${commandTreated}'. Message: ${e}`
         );
       }
       annotationer.notice(`[${project}] [Execution OK]`, commandTreated);
@@ -166,9 +173,17 @@ async function executeBuildCommands(cwd, buildCommands, project, options = {}) {
   }
 }
 
+function getExecutionResultError(executionResult) {
+  if (executionResult && executionResult.length) {
+    return executionResult.find(er => er.result === "error");
+  }
+  return undefined;
+}
+
 module.exports = {
   executeBuild,
   executeBuildSpecificCommand,
   executeBuildCommands,
-  getCommand
+  getCommand,
+  getExecutionResultError
 };

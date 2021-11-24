@@ -376,10 +376,10 @@ describe("printExecutionSummary", () => {
       "[kiegroup/projectX]. Execution Result: ok. Time: 100ms"
     );
     expect(logger.info).toHaveBeenCalledWith(
-      "[kiegroup/projectY]. Execution Result: ok. Time: 1s"
+      "[kiegroup/projectY]. Execution Result: ok. Time: 1s (1000 ms)"
     );
     expect(logger.info).toHaveBeenCalledWith(
-      "[kiegroup/projectZ]. Execution Result: ok. Time: 16m 40s"
+      "[kiegroup/projectZ]. Execution Result: ok. Time: 16m 40s (1000000 ms)"
     );
   });
 
@@ -400,10 +400,10 @@ describe("printExecutionSummary", () => {
       "[kiegroup/projectX]. Execution Result: ok. Time: 100ms"
     );
     expect(logger.info).toHaveBeenCalledWith(
-      "[kiegroup/projectY]. Execution Result: ok. Time: 1s"
+      "[kiegroup/projectY]. Execution Result: ok. Time: 1s (1000 ms)"
     );
     expect(logger.info).toHaveBeenCalledWith(
-      "[kiegroup/projectZ]. Execution Result: not ok. Time: 16m 40s"
+      "[kiegroup/projectZ]. Execution Result: not ok. Time: 16m 40s (1000000 ms)"
     );
   });
 
@@ -428,7 +428,7 @@ describe("printExecutionSummary", () => {
       "[kiegroup/projectY]. Execution Result: ok. Time: not defined"
     );
     expect(logger.info).toHaveBeenCalledWith(
-      "[kiegroup/projectZ]. Execution Result: ok. Time: 16m 40s"
+      "[kiegroup/projectZ]. Execution Result: ok. Time: 16m 40s (1000000 ms)"
     );
     expect(logger.info).toHaveBeenCalledWith(
       "[kiegroup/projectZA]. Execution Result: ok. Time: 1ms"

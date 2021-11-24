@@ -1,24 +1,24 @@
-const { isError } = require("../../../src/lib/util/js-util");
+const { hrtimeToMs } = require("../../../src/lib/util/js-util");
 
-afterEach(() => {
-  jest.clearAllMocks();
-});
+describe("hrtimeToMs", () => {
+  test("ok no end defined", () => {
+    const start = process.hrtime();
+    const result = hrtimeToMs(start);
 
-describe("isError", () => {
-  test("Object Error", () => {
-    const result = isError(new Error("whatever"));
-
-    expect(result).toBe(true);
+    expect(result).toBeLessThan(1);
   });
-  test("Object Error", () => {
-    class OwnError extends Error {}
-    const result = isError(new OwnError("whatever"));
 
-    expect(result).toBe(true);
+  test("ok end defined. Zero nano seconds", () => {
+    const end = [3, 0];
+    const result = hrtimeToMs(undefined, end);
+
+    expect(result).toBe(3000);
   });
-  test("Object Error", () => {
-    const result = isError("whatever");
 
-    expect(result).toBe(false);
+  test("ok end defined. Zero seconds", () => {
+    const end = [0, 2000000 * 1000];
+    const result = hrtimeToMs(undefined, end);
+
+    expect(result).toBe(2000);
   });
 });

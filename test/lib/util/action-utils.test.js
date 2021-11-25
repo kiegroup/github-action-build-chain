@@ -307,20 +307,26 @@ describe("additionalFlagsToCLI", () => {
     {
       additionalFlag:
         "--additionalFlag1;-additionalFlag2 element one , element two,    element three",
-      expected: "--additionalFlag1 -additionalFlag2 element one , element two,    element three"
+      expected:
+        "--additionalFlag1 -additionalFlag2 element one , element two,    element three"
     },
     {
       additionalFlag:
         "--additionalFlag1; -additionalFlag2 element one , element two,    element three",
-      expected: "--additionalFlag1  -additionalFlag2 element one , element two,    element three"
+      expected:
+        "--additionalFlag1  -additionalFlag2 element one , element two,    element three"
     },
     {
-      additionalFlag: "--additionalFlag1;--additionalFlag2;--additionalFlag3;--additionalFlag4",
-      expected: "--additionalFlag1 --additionalFlag2 --additionalFlag3 --additionalFlag4"
+      additionalFlag:
+        "--additionalFlag1;--additionalFlag2;--additionalFlag3;--additionalFlag4",
+      expected:
+        "--additionalFlag1 --additionalFlag2 --additionalFlag3 --additionalFlag4"
     },
     {
-      additionalFlag: "--additionalFlag1; --additionalFlag2;--additionalFlag3; --additionalFlag4",
-      expected: "--additionalFlag1  --additionalFlag2 --additionalFlag3  --additionalFlag4"
+      additionalFlag:
+        "--additionalFlag1; --additionalFlag2;--additionalFlag3; --additionalFlag4",
+      expected:
+        "--additionalFlag1  --additionalFlag2 --additionalFlag3  --additionalFlag4"
     }
   ];
 

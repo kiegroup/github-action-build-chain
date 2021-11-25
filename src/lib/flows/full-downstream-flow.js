@@ -58,7 +58,6 @@ async function start(
     projectTriggeringJob,
     readerOptions
   );
-  logger.debug("full-downstream-flow.js nodeChain", nodeChain);
 
   if (!options.skipExecution) {
     core.startGroup(`[Full Downstream Flow] Execution Plan...`);

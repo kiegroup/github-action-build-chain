@@ -57,7 +57,6 @@ async function start(
     : getTree(context.config.github.inputs.definitionFile, readerOptions);
   logger.debug(
     "branch-flow.js definitionTree",
-    definitionTree,
     context.config.github.inputs.definitionFile,
     context.config.github.inputs.startingProject
   );
@@ -73,11 +72,7 @@ async function start(
         readerOptions
       )
     : await parentChainFromNode(definitionTree);
-  logger.debug(
-    "branch-flow.js nodeChain",
-    nodeChain,
-    `isFullDownStream: ${options.isFullDownStream}`
-  );
+  logger.debug(`isFullDownStream: ${options.isFullDownStream}`);
 
   logger.info(
     `Tree for project ${

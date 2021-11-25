@@ -6,7 +6,7 @@ const {
   getTreeForProject,
   getTree,
   parentChainFromNode,
-  getOrderedListForProject
+  getOrderedListForTree
 } = require("@kie/build-chain-configuration-reader");
 const core = require("@actions/core");
 const { logger } = require("../common");
@@ -66,9 +66,8 @@ async function start(
     );
   }
   let nodeChain = options.isFullDownStream
-    ? await getOrderedListForProject(
+    ? await getOrderedListForTree(
         context.config.github.inputs.definitionFile,
-        context.config.github.inputs.startingProject,
         readerOptions
       )
     : await parentChainFromNode(definitionTree);

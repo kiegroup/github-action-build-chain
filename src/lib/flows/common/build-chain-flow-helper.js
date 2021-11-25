@@ -40,7 +40,6 @@ async function checkoutDefinitionTreeParallel(
 ) {
   const nodeTriggeringTheJob = getNodeTriggeringJob(context, nodeChain);
   logger.debug("nodeTriggeringTheJob", nodeTriggeringTheJob);
-
   return Promise.all(
     nodeChain.map(async node => {
       try {

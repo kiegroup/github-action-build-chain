@@ -5,13 +5,18 @@ const {
   eventFlowTypeToCliFlowType,
   getDefinitionFile,
   getStartingProject,
-  getFlowType
+  getFlowType,
+  additionalFlagsToCLI,
+  getAdditionalFlags
 } = require("../../src/lib/util/action-utils");
 const { getVersion: getGitVersion } = require("../../src/lib/git");
 const core = require("@actions/core");
 const pkg = require("../../package.json");
 
-function printLocalCommandPullRequest(eventData) {
+function printLocalCommandPullRequest(
+  eventData,
+  additionalFlags = additionalFlagsToCLI(getAdditionalFlags())
+) {
   logger.debug(
     "printLocalCommandPullRequest. pull_request:",
     eventData.pull_request
@@ -23,13 +28,16 @@ function printLocalCommandPullRequest(eventData) {
     getFlowType()
   )} -url ${eventData.pull_request.html_url}${
     getStartingProject() ? ` -sp ${getStartingProject()}` : ""
-  }`;
+  } ${additionalFlags}`;
 
   logger.info(command);
   annotationer.notice("Local Command", command);
 }
 
-function printLocalCommandPush(eventData) {
+function printLocalCommandPush(
+  eventData,
+  additionalFlags = additionalFlagsToCLI(getAdditionalFlags())
+) {
   logger.debug(
     "printLocalCommandPush. Full name:",
     eventData.repository.full_name
@@ -43,14 +51,16 @@ function printLocalCommandPush(eventData) {
       getFlowType()
     )} -p ${eventData.repository.full_name} -b ${eventData.ref
       .split("refs/heads/")
-      .pop()}${getStartingProject() ? ` -sp ${getStartingProject()}` : ""}`
+      .pop()}${
+      getStartingProject() ? ` -sp ${getStartingProject()}` : ""
+    } ${additionalFlags}`
   );
 }
 
 /**
  * prints the local command to be copy pasted by the users
  *
- * @param {Object} the JSON object for the event data
+ * @param {Object} eventData JSON object for the event data
  */
 async function printLocalCommand(eventData) {
   core.startGroup(`Printing local execution command`);

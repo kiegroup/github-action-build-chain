@@ -35,6 +35,12 @@ function branchArguments(subParser) {
   skipParallelCheckout(parser);
   skipCheckout(parser);
   skipExecution(parser);
+  parser.add_argument("--fullDownstream", {
+    action: "store_true",
+    help:
+      "Checks out and execute the whole tree instead of the upstream build. It mocks a full downstream execution but for a branch execution. (fasle by default)."
+  });
+
   parser.add_argument("-p", "-project", {
     nargs: 1,
     required: true,

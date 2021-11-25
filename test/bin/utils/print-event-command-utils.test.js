@@ -8,7 +8,8 @@ const {
   eventFlowTypeToCliFlowType,
   getDefinitionFile,
   getStartingProject,
-  getFlowType
+  getFlowType,
+  additionalFlagsToCLI
 } = require("../../../src/lib/util/action-utils");
 jest.mock("../../../src/lib/util/action-utils");
 
@@ -29,6 +30,7 @@ describe("printLocalCommand pull request.", () => {
     };
     getDefinitionFile.mockReturnValueOnce("definitionFile.yaml");
     eventFlowTypeToCliFlowType.mockReturnValueOnce("flow-type");
+    additionalFlagsToCLI.mockReturnValueOnce("");
 
     // Act
     printLocalCommand(eventData);
@@ -36,7 +38,27 @@ describe("printLocalCommand pull request.", () => {
     // Assert
     expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -url pull_request_html_url"
+      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -url pull_request_html_url "
+    );
+  });
+
+  test("basic additionalFlags", () => {
+    // Arrange
+    const eventData = {
+      pull_request: { html_url: "pull_request_html_url" }
+    };
+    const additionalFlags = "additionalFlags value";
+    getDefinitionFile.mockReturnValueOnce("definitionFile.yaml");
+    eventFlowTypeToCliFlowType.mockReturnValueOnce("flow-type");
+    additionalFlagsToCLI.mockReturnValueOnce(additionalFlags);
+
+    // Act
+    printLocalCommand(eventData);
+
+    // Assert
+    expect(getFlowType).toHaveBeenCalledTimes(1);
+    expect(logger.info).toHaveBeenCalledWith(
+      `build_action_bin_command -df 'definitionFile.yaml' build flow-type -url pull_request_html_url ${additionalFlags}`
     );
   });
 
@@ -50,6 +72,7 @@ describe("printLocalCommand pull request.", () => {
     getStartingProject
       .mockReturnValueOnce("starting-project-name")
       .mockReturnValueOnce("starting-project-name");
+    additionalFlagsToCLI.mockReturnValueOnce("");
 
     // Act
     printLocalCommand(eventData);
@@ -57,7 +80,7 @@ describe("printLocalCommand pull request.", () => {
     // Assert
     expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -url pull_request_html_url -sp starting-project-name"
+      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -url pull_request_html_url -sp starting-project-name "
     );
   });
 });
@@ -71,6 +94,7 @@ describe("printLocalCommand push.", () => {
     };
     getDefinitionFile.mockReturnValueOnce("definitionFile.yaml");
     eventFlowTypeToCliFlowType.mockReturnValueOnce("flow-type");
+    additionalFlagsToCLI.mockReturnValueOnce("");
 
     // Act
     printLocalCommand(eventData);
@@ -78,7 +102,28 @@ describe("printLocalCommand push.", () => {
     // Assert
     expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -p group_name/project_name -b main"
+      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -p group_name/project_name -b main "
+    );
+  });
+
+  test("basic additionalFlags", () => {
+    // Arrange
+    const eventData = {
+      repository: { full_name: "group_name/project_name" },
+      ref: "refs/heads/main"
+    };
+    const additionalFlags = "additional flags value";
+    getDefinitionFile.mockReturnValueOnce("definitionFile.yaml");
+    eventFlowTypeToCliFlowType.mockReturnValueOnce("flow-type");
+    additionalFlagsToCLI.mockReturnValueOnce(additionalFlags);
+
+    // Act
+    printLocalCommand(eventData);
+
+    // Assert
+    expect(getFlowType).toHaveBeenCalledTimes(1);
+    expect(logger.info).toHaveBeenCalledWith(
+      `build_action_bin_command -df 'definitionFile.yaml' build flow-type -p group_name/project_name -b main ${additionalFlags}`
     );
   });
 
@@ -91,6 +136,7 @@ describe("printLocalCommand push.", () => {
     getDefinitionFile.mockReturnValueOnce("definitionFile.yaml");
     eventFlowTypeToCliFlowType.mockReturnValueOnce("flow-type");
     getStartingProject.mockReturnValue("starting-project-name");
+    additionalFlagsToCLI.mockReturnValueOnce("");
 
     // Act
     printLocalCommand(eventData);
@@ -98,7 +144,7 @@ describe("printLocalCommand push.", () => {
     // Assert
     expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -p group_name/project_name -b mainX -sp starting-project-name"
+      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -p group_name/project_name -b mainX -sp starting-project-name "
     );
   });
 
@@ -110,6 +156,7 @@ describe("printLocalCommand push.", () => {
     };
     getDefinitionFile.mockReturnValueOnce("definitionFile.yaml");
     eventFlowTypeToCliFlowType.mockReturnValueOnce("flow-type");
+    additionalFlagsToCLI.mockReturnValueOnce("");
 
     // Act
     printLocalCommand(eventData);
@@ -129,6 +176,7 @@ describe("printLocalCommand push.", () => {
     };
     getDefinitionFile.mockReturnValueOnce("definitionFile.yaml");
     eventFlowTypeToCliFlowType.mockReturnValueOnce("flow-type");
+    additionalFlagsToCLI.mockReturnValueOnce("");
 
     // Act
     printLocalCommand(eventData);
@@ -136,7 +184,7 @@ describe("printLocalCommand push.", () => {
     // Assert
     expect(getFlowType).toHaveBeenCalledTimes(1);
     expect(logger.info).toHaveBeenCalledWith(
-      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -p group_name/project_name -b whatever -sp starting-project-name"
+      "build_action_bin_command -df 'definitionFile.yaml' build flow-type -p group_name/project_name -b whatever -sp starting-project-name "
     );
   });
 });

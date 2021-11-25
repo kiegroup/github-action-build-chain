@@ -19,9 +19,15 @@ async function execute(
   env,
   githubInformation,
   rootFolder,
-  options = {}
+  options = {},
+  overwriteConfig = {}
 ) {
-  const config = await createCommonConfig(githubInformation, rootFolder, env);
+  const config = await createCommonConfig(
+    githubInformation,
+    rootFolder,
+    env,
+    overwriteConfig
+  );
   const context = { token, octokit, config };
   logger.debug(
     "build-chain-pull-branch.js. githubInformation",
@@ -37,7 +43,7 @@ async function execute(
  * @param {Object} octokit octokit instance
  * @param {Object} env proces.env
  */
-async function executeFromEvent(token, octokit, env) {
+async function executeFromEvent(token, octokit, env, options = {}) {
   const groupName = env["GITHUB_REPOSITORY_OWNER"];
   const project = env["GITHUB_REPOSITORY"];
 
@@ -46,10 +52,25 @@ async function executeFromEvent(token, octokit, env) {
     author: groupName,
     sourceRepository: project
   };
+  const overwriteConfig = options.b
+    ? {
+        sourceBranch: options.b,
+        targetBranch: options.b
+      }
+    : {};
 
-  await execute(token, octokit, env, githubInformation, undefined, {
-    isArchiveArtifacts: true
-  });
+  await execute(
+    token,
+    octokit,
+    env,
+    githubInformation,
+    undefined,
+    {
+      isArchiveArtifacts: true,
+      ...options
+    },
+    overwriteConfig
+  );
 }
 
 /**
@@ -91,6 +112,7 @@ async function executeLocally(
   env["GITHUB_HEAD_REF"] = branch;
   env["GITHUB_BASE_REF"] = branch;
   env["GITHUB_REPOSITORY"] = project;
+
   const githubInformation = {
     sourceGroup: groupName,
     author: groupName,

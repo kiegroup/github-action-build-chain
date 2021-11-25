@@ -5,7 +5,8 @@ const {
 const {
   getTreeForProject,
   getTree,
-  parentChainFromNode
+  parentChainFromNode,
+  getOrderedListForProject
 } = require("@kie/build-chain-configuration-reader");
 const core = require("@actions/core");
 const { logger } = require("../common");
@@ -22,7 +23,10 @@ const {
 const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
 
-async function start(context, options = { skipExecution: false }) {
+async function start(
+  context,
+  options = { skipExecution: false, isFullDownStream: false }
+) {
   logger.debug("branch-flow.js options", options);
   const readerOptions = {
     urlPlaceHolders: await getPlaceHolders(
@@ -62,8 +66,18 @@ async function start(context, options = { skipExecution: false }) {
       `The definition tree is undefined. Does the project ${context.config.github.inputs.startingProject} exist into the definition file ${context.config.github.inputs.definitionFile}?`
     );
   }
-  let nodeChain = await parentChainFromNode(definitionTree);
-  logger.debug("branch-flow.js nodeChain", nodeChain);
+  let nodeChain = options.isFullDownStream
+    ? await getOrderedListForProject(
+        context.config.github.inputs.definitionFile,
+        context.config.github.inputs.startingProject,
+        readerOptions
+      )
+    : await parentChainFromNode(definitionTree);
+  logger.debug(
+    "branch-flow.js nodeChain",
+    nodeChain,
+    `isFullDownStream: ${options.isFullDownStream}`
+  );
 
   logger.info(
     `Tree for project ${

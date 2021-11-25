@@ -10,7 +10,12 @@ function getInputs() {
   };
 }
 
-async function createCommonConfig(eventData, rootFolder, env) {
+async function createCommonConfig(
+  eventData,
+  rootFolder,
+  env,
+  overwriteConfig = {}
+) {
   async function parseGitHub(eventData, env) {
     return {
       serverUrl: getServerUrl(env["GITHUB_SERVER_URL"]), // https://github.com
@@ -40,7 +45,8 @@ async function createCommonConfig(eventData, rootFolder, env) {
       groupProject: env["GITHUB_REPOSITORY"],
       workflowName: env["GITHUB_WORKFLOW"], // Build Chain
       ref: env["GITHUB_REF"], // refs/pull/1/merge'
-      inputs: getInputs()
+      inputs: getInputs(),
+      ...overwriteConfig
     };
   }
   return {

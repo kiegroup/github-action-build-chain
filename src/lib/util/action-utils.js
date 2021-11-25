@@ -14,6 +14,10 @@ function getFlowType() {
   return core.getInput("flow-type");
 }
 
+function getAdditionalFlags() {
+  return core.getInput("additional-flags");
+}
+
 function getLoggerLevel() {
   const loggerLevelInput = core.getInput("logger-level");
   const loggerLevel = loggerLevelInput ? loggerLevelInput : "info";
@@ -58,8 +62,51 @@ function eventFlowTypeToCliFlowType(flowType) {
     case "full-downstream":
       return "fd";
     default:
-      return undefined;
+      return flowType;
   }
+}
+
+function additionalFlagsToCLI(additionalFlags) {
+  return additionalFlags ? additionalFlags.replace(/;/g, " ").trim() : "";
+}
+
+function additionalFlagsToOptions(additionalFlags) {
+  if (
+    [null, undefined].includes(additionalFlags) ||
+    additionalFlags.trim() === ""
+  ) {
+    return {};
+  }
+
+  const treatValue = value =>
+    value.split(",").length === 1
+      ? value.trim()
+      : value.split(",").map(item => item.trim());
+
+  return additionalFlags
+    .trim()
+    .split(";")
+    .reduce((acc, additionalFlag) => {
+      const additionalFlagTrimmed = additionalFlag.trim();
+      const isBooleanFlag = additionalFlagTrimmed.startsWith("--");
+
+      const elementKey = isBooleanFlag
+        ? additionalFlagTrimmed.substring(2)
+        : additionalFlagTrimmed.substring(
+            1,
+            additionalFlagTrimmed.indexOf(" ")
+          );
+      const elementValue = isBooleanFlag
+        ? true
+        : treatValue(
+            additionalFlagTrimmed.substring(
+              additionalFlagTrimmed.indexOf(" ") + 1
+            )
+          );
+
+      acc[elementKey] = elementValue;
+      return acc;
+    }, {});
 }
 
 module.exports = {
@@ -68,9 +115,12 @@ module.exports = {
   getFlowType,
   getLoggerLevel,
   getAnnotationsPrefix,
+  getAdditionalFlags,
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,
   isBranchFlowType,
-  eventFlowTypeToCliFlowType
+  eventFlowTypeToCliFlowType,
+  additionalFlagsToCLI,
+  additionalFlagsToOptions
 };

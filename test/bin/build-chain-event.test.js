@@ -8,7 +8,8 @@ const {
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,
-  getFlowType
+  getFlowType,
+  additionalFlagsToOptions
 } = require("../../src/lib/util/action-utils");
 jest.mock("../../src/lib/util/action-utils");
 
@@ -65,6 +66,7 @@ test("buildChain test event pull request", async () => {
   getProcessEnvVariable.mockReturnValueOnce("githubtoken");
   createOctokitInstance.mockReturnValueOnce(octokitMockInstance);
   isPullRequestFlowType.mockReturnValueOnce(true);
+  additionalFlagsToOptions.mockReturnValueOnce({ optionx: "valuex" });
 
   // Act
   await main();
@@ -75,7 +77,8 @@ test("buildChain test event pull request", async () => {
     "githubtoken",
     octokitMockInstance,
     process.env,
-    eventData
+    eventData,
+    { optionx: "valuex" }
   );
   expect(printLocalCommand).toHaveBeenCalledWith(eventData);
 });
@@ -105,6 +108,7 @@ test("buildChain test event fd", async () => {
   createOctokitInstance.mockReturnValueOnce(octokitMockInstance);
   isPullRequestFlowType.mockReturnValueOnce(false);
   isFDFlowType.mockReturnValueOnce(true);
+  additionalFlagsToOptions.mockReturnValueOnce({ optionx: "valuex" });
 
   // Act
   await main();
@@ -116,7 +120,8 @@ test("buildChain test event fd", async () => {
     "githubtoken",
     octokitMockInstance,
     process.env,
-    eventData
+    eventData,
+    { optionx: "valuex" }
   );
   expect(printLocalCommand).toHaveBeenCalledWith(eventData);
 });
@@ -147,6 +152,7 @@ test("buildChain test event single", async () => {
   isPullRequestFlowType.mockReturnValueOnce(false);
   isFDFlowType.mockReturnValueOnce(false);
   isSingleFlowType.mockReturnValueOnce(true);
+  additionalFlagsToOptions.mockReturnValueOnce({ option1: "value1" });
 
   // Act
   await main();
@@ -158,7 +164,8 @@ test("buildChain test event single", async () => {
     "githubtoken",
     octokitMockInstance,
     process.env,
-    eventData
+    eventData,
+    { option1: "value1" }
   );
   expect(printLocalCommand).toHaveBeenCalledWith(eventData);
 });

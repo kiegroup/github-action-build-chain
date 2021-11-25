@@ -35,9 +35,10 @@ async function execute(token, octokit, env, eventData, rootFolder, options) {
  * @param {Object} env proces.env
  * @param {Object} the JSON object for the event data
  */
-async function executeFromEvent(token, octokit, env, eventData) {
+async function executeFromEvent(token, octokit, env, eventData, options = {}) {
   await execute(token, octokit, env, eventData, undefined, {
-    isArchiveArtifacts: true
+    isArchiveArtifacts: true,
+    ...options
   });
 }
 

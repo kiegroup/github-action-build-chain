@@ -33,6 +33,7 @@ async function execute(
     "build-chain-pull-branch.js. githubInformation",
     githubInformation
   );
+  logger.debug("build-chain-pull-branch.js. options", options);
   logger.debug("build-chain-pull-branch.js. config", config);
   await start(context, options);
 }

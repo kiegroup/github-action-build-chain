@@ -25,7 +25,7 @@ const { execute: executePost } = require("./sections/post");
 
 async function start(
   context,
-  options = { skipExecution: false, isFullDownStream: false }
+  options = { skipExecution: false, fullDownstream: false }
 ) {
   logger.debug("branch-flow.js options", options);
   const readerOptions = {
@@ -65,13 +65,13 @@ async function start(
       `The definition tree is undefined. Does the project ${context.config.github.inputs.startingProject} exist into the definition file ${context.config.github.inputs.definitionFile}?`
     );
   }
-  let nodeChain = options.isFullDownStream
+  let nodeChain = options.fullDownstream
     ? await getOrderedListForTree(
         context.config.github.inputs.definitionFile,
         readerOptions
       )
     : await parentChainFromNode(definitionTree);
-  logger.debug(`isFullDownStream: ${options.isFullDownStream}`);
+  logger.debug(`fullDownstream: ${options.fullDownstream}`);
 
   logger.info(
     `Tree for project ${

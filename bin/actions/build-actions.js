@@ -99,7 +99,7 @@ async function execute(args, token, octokit) {
         skipProjectCheckout: treatSkipProjectCheckout(args.spc),
         skipParallelCheckout: args.skipParallelCheckout,
         skipCheckout: args.skipCheckout,
-        isFullDownStream: args.fullDownstream
+        fullDownstream: args.fullDownstream
       }
     );
   }

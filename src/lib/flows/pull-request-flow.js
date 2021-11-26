@@ -62,7 +62,6 @@ async function start(
     projectTriggeringJob,
     readerOptions
   );
-  logger.debug("pull-request-flow.js definitionTree", definitionTree);
 
   if ([null, undefined].includes(definitionTree)) {
     throw new Error(
@@ -71,7 +70,6 @@ async function start(
   }
 
   const nodeChain = await parentChainFromNode(definitionTree);
-  logger.debug("pull-request-flow.js nodeChain", nodeChain);
 
   if (!options.skipExecution) {
     core.startGroup(`[Pull Request Flow] Execution Plan...`);

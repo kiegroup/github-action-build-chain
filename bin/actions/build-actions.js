@@ -98,7 +98,8 @@ async function execute(args, token, octokit) {
         replaceExArray: args.cct,
         skipProjectCheckout: treatSkipProjectCheckout(args.spc),
         skipParallelCheckout: args.skipParallelCheckout,
-        skipCheckout: args.skipCheckout
+        skipCheckout: args.skipCheckout,
+        fullProjectDependencyTree: args.fullProjectDependencyTree
       }
     );
   }

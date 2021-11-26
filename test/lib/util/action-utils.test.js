@@ -2,12 +2,15 @@ const {
   getDefinitionFile,
   getStartingProject,
   getFlowType,
+  getAdditionalFlags,
   getLoggerLevel,
   isPullRequestFlowType,
   isFDFlowType,
   isSingleFlowType,
   eventFlowTypeToCliFlowType,
-  getAnnotationsPrefix
+  getAnnotationsPrefix,
+  additionalFlagsToCLI,
+  additionalFlagsToOptions
 } = require("../../../src/lib/util/action-utils");
 
 const { getInput } = require("@actions/core");
@@ -110,6 +113,20 @@ test("getFlowType", () => {
   );
   // Act
   const result = getFlowType();
+
+  // Assert
+  expect(result).toEqual(expectedResult);
+});
+
+test("getAdditionalFlags", () => {
+  // Arrange
+  const expectedResult =
+    "--fullProjectDependencyTree;-cct (mvn .*)||$1 -s settings.xml";
+  getInput.mockImplementationOnce(param =>
+    param === "additional-flags" ? expectedResult : undefined
+  );
+  // Act
+  const result = getAdditionalFlags();
 
   // Assert
   expect(result).toEqual(expectedResult);
@@ -230,5 +247,177 @@ describe("eventFlowTypeToCliFlowType", () => {
         "flow type is not defined for eventFlowTypeToCliFlowType argument"
       );
     }
+  });
+});
+
+describe("additionalFlagsToCLI", () => {
+  const testCases = [
+    {
+      additionalFlag: undefined,
+      expected: ""
+    },
+    {
+      additionalFlag: null,
+      expected: ""
+    },
+    {
+      additionalFlag: "",
+      expected: ""
+    },
+    {
+      additionalFlag: "    ",
+      expected: ""
+    },
+    {
+      additionalFlag: "--additionalFlag1",
+      expected: "--additionalFlag1"
+    },
+    {
+      additionalFlag: "-additionalFlag1 one",
+      expected: "-additionalFlag1 one"
+    },
+    {
+      additionalFlag: "-additionalFlag1  element one ",
+      expected: "-additionalFlag1  element one"
+    },
+    {
+      additionalFlag: "  -additionalFlag1  element one ",
+      expected: "-additionalFlag1  element one"
+    },
+    {
+      additionalFlag: "-additionalFlag1 one,two,three",
+      expected: "-additionalFlag1 one,two,three"
+    },
+    {
+      additionalFlag:
+        "-additionalFlag1 element one , element two,    element three",
+      expected: "-additionalFlag1 element one , element two,    element three"
+    },
+    {
+      additionalFlag: "--additionalFlag1;--additionalFlag2",
+      expected: "--additionalFlag1 --additionalFlag2"
+    },
+    {
+      additionalFlag: "--additionalFlag1; --additionalFlag2",
+      expected: "--additionalFlag1  --additionalFlag2"
+    },
+    {
+      additionalFlag: "--additionalFlag1;--additionalFlag1",
+      expected: "--additionalFlag1 --additionalFlag1"
+    },
+    {
+      additionalFlag:
+        "--additionalFlag1;-additionalFlag2 element one , element two,    element three",
+      expected:
+        "--additionalFlag1 -additionalFlag2 element one , element two,    element three"
+    },
+    {
+      additionalFlag:
+        "--additionalFlag1; -additionalFlag2 element one , element two,    element three",
+      expected:
+        "--additionalFlag1  -additionalFlag2 element one , element two,    element three"
+    },
+    {
+      additionalFlag:
+        "--additionalFlag1;--additionalFlag2;--additionalFlag3;--additionalFlag4",
+      expected:
+        "--additionalFlag1 --additionalFlag2 --additionalFlag3 --additionalFlag4"
+    },
+    {
+      additionalFlag:
+        "--additionalFlag1; --additionalFlag2;--additionalFlag3; --additionalFlag4",
+      expected:
+        "--additionalFlag1  --additionalFlag2 --additionalFlag3  --additionalFlag4"
+    }
+  ];
+
+  testCases.forEach(testCase => {
+    test(`flag/s: '${testCase.additionalFlag}'`, () => {
+      const result = additionalFlagsToCLI(testCase.additionalFlag);
+      expect(result).toStrictEqual(testCase.expected);
+    });
+  });
+});
+
+describe("additionalFlagsToOptions", () => {
+  const testCases = [
+    {
+      additionalFlag: undefined,
+      expected: {}
+    },
+    {
+      additionalFlag: null,
+      expected: {}
+    },
+    {
+      additionalFlag: "",
+      expected: {}
+    },
+    {
+      additionalFlag: "    ",
+      expected: {}
+    },
+    {
+      additionalFlag: "--additionalFlag1",
+      expected: { additionalFlag1: true }
+    },
+    {
+      additionalFlag: "-additionalFlag1 one",
+      expected: { additionalFlag1: "one" }
+    },
+    {
+      additionalFlag: "-additionalFlag1  element one ",
+      expected: { additionalFlag1: "element one" }
+    },
+    {
+      additionalFlag: "  -additionalFlag1  element one ",
+      expected: { additionalFlag1: "element one" }
+    },
+    {
+      additionalFlag: "-additionalFlag1 one,two,three",
+      expected: { additionalFlag1: ["one", "two", "three"] }
+    },
+    {
+      additionalFlag:
+        "-additionalFlag1 element one , element two,    element three",
+      expected: {
+        additionalFlag1: ["element one", "element two", "element three"]
+      }
+    },
+    {
+      additionalFlag: "--additionalFlag1;--additionalFlag2",
+      expected: { additionalFlag1: true, additionalFlag2: true }
+    },
+    {
+      additionalFlag: "--additionalFlag1; --additionalFlag2",
+      expected: { additionalFlag1: true, additionalFlag2: true }
+    },
+    {
+      additionalFlag: "--additionalFlag1;--additionalFlag1",
+      expected: { additionalFlag1: true }
+    },
+    {
+      additionalFlag:
+        "--additionalFlag1;-additionalFlag2 element one , element two,    element three",
+      expected: {
+        additionalFlag1: true,
+        additionalFlag2: ["element one", "element two", "element three"]
+      }
+    },
+    {
+      additionalFlag:
+        "--additionalFlag1; -additionalFlag2 element one , element two,    element three",
+      expected: {
+        additionalFlag1: true,
+        additionalFlag2: ["element one", "element two", "element three"]
+      }
+    }
+  ];
+
+  testCases.forEach(testCase => {
+    test(`flag/s: '${testCase.additionalFlag}'`, () => {
+      const result = additionalFlagsToOptions(testCase.additionalFlag);
+      expect(result).toStrictEqual(testCase.expected);
+    });
   });
 });

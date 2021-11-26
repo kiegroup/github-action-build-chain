@@ -19,7 +19,9 @@ const {
   isSingleFlowType,
   isBranchFlowType,
   getFlowType,
-  getLoggerLevel
+  getLoggerLevel,
+  additionalFlagsToOptions,
+  getAdditionalFlags
 } = require("../src/lib/util/action-utils");
 const {
   createOctokitInstance,
@@ -49,20 +51,24 @@ async function main() {
   logger.debug("eventData", eventData);
   logger.level = getLoggerLevel();
 
+  const additionalFlags = getAdditionalFlags();
+  const options = additionalFlagsToOptions(additionalFlags);
+  logger.debug("options", options, additionalFlags);
   await printLocalCommand(eventData);
 
   const token = getProcessEnvVariable("GITHUB_TOKEN", false);
   const octokit = createOctokitInstance(token);
 
   logger.debug("getFlowType", getFlowType());
+
   if (isPullRequestFlowType()) {
-    await pullRequestEventFlow(token, octokit, process.env, eventData);
+    await pullRequestEventFlow(token, octokit, process.env, eventData, options);
   } else if (isFDFlowType()) {
-    await fdbEventFlow(token, octokit, process.env, eventData);
+    await fdbEventFlow(token, octokit, process.env, eventData, options);
   } else if (isSingleFlowType()) {
-    await singleEventFlow(token, octokit, process.env, eventData);
+    await singleEventFlow(token, octokit, process.env, eventData, options);
   } else if (isBranchFlowType()) {
-    await branchEventFlow(token, octokit, process.env);
+    await branchEventFlow(token, octokit, process.env, options);
   } else {
     throw new Error(
       `flow type input value '${getFlowType()}' is not supported. Please check documentation.`

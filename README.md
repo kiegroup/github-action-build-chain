@@ -149,6 +149,17 @@ See [action.yml](action.yml)
   > annotations-prefix: "OS ${{ matrix.os }}"
   > ```
 
+- **additional-flags** (optional. '' by default): The chance to define additional flags for the execution, as it is done on the CLI side. Just semicolon (;) separated, like '--skipParallelCheckout;--skipExecution;-cct (mvn .\*)||\$1 -s settings.xml'.
+
+  > ```
+  > additional-flags: "--fullProjectDependencyTree"
+  > additional-flags: "--fullProjectDependencyTree;--skipParallelCheckout"
+  > additional-flags: "--skipParallelCheckout; --fullProjectDependencyTree"
+  > additional-flags: "--skipParallelCheckout; -cct (mvn .*)||$1 -s settings.xml"
+  > ```
+
+  > **_Note:_** It has a limitation, the flag values can't contain semicolons (;), otherwise it will be treated as a new flag.
+
 ## Pre/Post sections
 
 It is possible to define pre and post sections in the definition-file. The idea is to have the chance to execute something before (`pre`) or after (`post`) project checkout and build command execution.
@@ -559,6 +570,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
 - **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
 - **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checout information will be printed anyway. E.g. `--skipCheckout`
+- **--fullProjectDependencyTree**: Checks out and execute the whole tree instead of the upstream build (fasle by default). E.g. `--fullProjectDependencyTree`
 
 Examples:
 

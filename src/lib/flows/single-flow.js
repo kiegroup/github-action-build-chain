@@ -55,7 +55,6 @@ async function start(
     projectTriggeringJob,
     readerOptions
   );
-  logger.debug("single-flow.js definitionTree", definitionTree);
   if ([null, undefined].includes(definitionTree)) {
     throw new Error(
       `The definition tree is undefined. Does the project ${projectTriggeringJob} exist into the definition file ${context.config.github.inputs.definitionFile}?`

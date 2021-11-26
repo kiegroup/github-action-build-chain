@@ -1,6 +1,6 @@
 {
   "name": "@kie/build-chain-action",
-  "version": "2.3.28",
+  "version": "2.3.29",
   "description": "Library to execute commands based on github projects dependencies.",
   "main": "dist/build-chain-cli.js",
   "author": "Enrique Mingorance Cano <emingora@redhat.com>",
@@ -34,6 +34,7 @@
     "dotenv": "^8.2.0",
     "fs-extra": "^9.0.0",
     "js-yaml": "^3.14.0",
+    "node-xlsx": "^0.17.2",
     "pretty-ms": "^7.0.1",
     "tmp": "^0.2.1"
   },

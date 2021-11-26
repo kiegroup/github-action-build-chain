@@ -1,6 +1,10 @@
 const { logger } = require("./common");
 const { getCommand } = require("./flows/common/common-helper");
 const prettyMilliseconds = require("pretty-ms");
+const { formatDate } = require("./util/date-util");
+
+const xlsx = require("node-xlsx");
+const fs = require("fs");
 
 const groupBy = (checkoutInfo, key) => {
   return Object.values(checkoutInfo).reduce((acc, checkInfo) => {
@@ -132,8 +136,48 @@ function printExecutionSummary(executionResult) {
   }
 }
 
+/**
+ *
+ * @param {Object} executionResult the object representing the execution result
+ * @param {string} filePath the path to save the file (remember to add the extension)
+ * @param {string}} sheetName the sheet name, otherwise the current date
+ */
+function saveExecutionSummaryToXlsxFile(
+  executionResult,
+  filePath,
+  sheetName = `${formatDate(new Date())}`
+) {
+  if (executionResult) {
+    const executionResultToRows = executionResult.map(result => [
+      result.project,
+      result.result,
+      Math.round(result.time),
+      prettyMilliseconds(result.time),
+      result.command
+    ]);
+
+    const sheetData = [
+      ["Project", "Result", "Time (ms)", "Time (pretty)", "Command/s"],
+      ...executionResultToRows
+    ];
+
+    const buffer = xlsx.build([{ name: sheetName, data: sheetData }], {
+      "!cols": [
+        { wch: 30 },
+        { wch: 10 },
+        { wch: 10 },
+        { wch: 20 },
+        { wch: 100 }
+      ]
+    });
+
+    fs.writeFileSync(filePath, buffer);
+  }
+}
+
 module.exports = {
   printCheckoutInformation,
   printExecutionPlan,
-  printExecutionSummary
+  printExecutionSummary,
+  saveExecutionSummaryToXlsxFile
 };

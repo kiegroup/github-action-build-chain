@@ -1,10 +1,17 @@
+const { logger } = require("../src/lib/common");
+
+const xlsx = require("node-xlsx");
+jest.mock("node-xlsx");
+
+const fs = require("fs");
+
+jest.mock("../src/lib/common");
 const {
   printCheckoutInformation,
   printExecutionPlan,
-  printExecutionSummary
+  printExecutionSummary,
+  saveExecutionSummaryToXlsxFile
 } = require("../src/lib/summary");
-const { logger } = require("../src/lib/common");
-jest.mock("../src/lib/common");
 
 afterEach(() => {
   jest.clearAllMocks();
@@ -433,5 +440,124 @@ describe("printExecutionSummary", () => {
     expect(logger.info).toHaveBeenCalledWith(
       "[kiegroup/projectZA]. Execution Result: ok. Time: 1ms"
     );
+  });
+});
+
+describe("saveExecutionSummaryToXlsxFile", () => {
+  test("undefined", async () => {
+    // Arrange
+    const writeFileSyncSpy = jest.spyOn(fs, "writeFileSync");
+    const executionResult = undefined;
+
+    // Act
+    saveExecutionSummaryToXlsxFile(executionResult, "pathx", "sheetName");
+
+    // Assert
+    expect(xlsx.build).toHaveBeenCalledTimes(0);
+    expect(writeFileSyncSpy).toHaveBeenCalledTimes(0);
+  });
+  test("happy path", async () => {
+    // Arrange
+    const writeFileSyncSpy = jest
+      .spyOn(fs, "writeFileSync")
+      .mockImplementationOnce(() => {});
+
+    const executionResult = [
+      { project: "kiegroup/projectX", result: "ok1", time: 101, command: "X" },
+      { project: "kiegroup/projectY", result: "ok2", time: 1000, command: "Y" },
+      {
+        project: "kiegroup/projectZ",
+        result: "ok3",
+        time: 100000,
+        command: "Z"
+      }
+    ];
+    xlsx.build.mockReturnValueOnce("buffer data");
+
+    // Act
+    saveExecutionSummaryToXlsxFile(executionResult, "pathx", "sheetName");
+
+    // Assert
+    expect(xlsx.build).toHaveBeenCalledTimes(1);
+    expect(xlsx.build).toHaveBeenCalledWith(
+      [
+        {
+          name: "sheetName",
+          data: [
+            ["Project", "Result", "Time (ms)", "Time (pretty)", "Command/s"],
+            ["kiegroup/projectX", "ok1", 101, "101ms", "X"],
+            ["kiegroup/projectY", "ok2", 1000, "1s", "Y"],
+            ["kiegroup/projectZ", "ok3", 100000, "1m 40s", "Z"]
+          ]
+        }
+      ],
+      {
+        "!cols": [
+          { wch: 30 },
+          { wch: 10 },
+          { wch: 10 },
+          { wch: 20 },
+          { wch: 100 }
+        ]
+      }
+    );
+    expect(writeFileSyncSpy).toHaveBeenCalledWith("pathx", "buffer data");
+  });
+
+  test("array commands", async () => {
+    // Arrange
+    const writeFileSyncSpy = jest
+      .spyOn(fs, "writeFileSync")
+      .mockImplementationOnce(() => {});
+    const executionResult = [
+      {
+        project: "kiegroup/projectX",
+        result: "ok1",
+        time: 101,
+        command: ["X1", "X2"]
+      },
+      {
+        project: "kiegroup/projectY",
+        result: "ok2",
+        time: 1000,
+        command: ["Y1", "Y2"]
+      },
+      {
+        project: "kiegroup/projectZ",
+        result: "ok3",
+        time: 100000,
+        command: ["Z1", "Z2"]
+      }
+    ];
+    xlsx.build.mockReturnValueOnce("buffer data");
+
+    // Act
+    saveExecutionSummaryToXlsxFile(executionResult, "pathx2", "sheetName");
+
+    // Assert
+    expect(xlsx.build).toHaveBeenCalledTimes(1);
+    expect(xlsx.build).toHaveBeenCalledWith(
+      [
+        {
+          name: "sheetName",
+          data: [
+            ["Project", "Result", "Time (ms)", "Time (pretty)", "Command/s"],
+            ["kiegroup/projectX", "ok1", 101, "101ms", ["X1", "X2"]],
+            ["kiegroup/projectY", "ok2", 1000, "1s", ["Y1", "Y2"]],
+            ["kiegroup/projectZ", "ok3", 100000, "1m 40s", ["Z1", "Z2"]]
+          ]
+        }
+      ],
+      {
+        "!cols": [
+          { wch: 30 },
+          { wch: 10 },
+          { wch: 10 },
+          { wch: 20 },
+          { wch: 100 }
+        ]
+      }
+    );
+    expect(writeFileSyncSpy).toHaveBeenCalledWith("pathx2", "buffer data");
   });
 });

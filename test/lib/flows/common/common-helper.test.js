@@ -65,9 +65,9 @@ describe("executeBuild", () => {
     expect(execute).toHaveBeenCalledWith("b_folder", "b command treated");
     expect(execute).toHaveBeenCalledWith("c_folder", "c command treated");
     expect(result).toMatchObject([
-      { project: "a", result: "ok" },
-      { project: "b", result: "ok" },
-      { project: "c", result: "ok" }
+      { project: "a", result: "ok", command: ["a command"] },
+      { project: "b", result: "ok", command: ["b command"] },
+      { project: "c", result: "ok", command: ["c command"] }
     ]);
     expect(typeof result[0].time).toBe("number");
     expect(typeof result[1].time).toBe("number");
@@ -126,9 +126,9 @@ describe("executeBuild", () => {
     expect(execute).toHaveBeenCalledWith("b_folder", "b command treated");
     expect(execute).toHaveBeenCalledWith("c_folder", "c command treated");
     expect(result).toMatchObject([
-      { project: "a", result: "ok" },
-      { project: "b", result: "ok" },
-      { project: "c", result: "ok" }
+      { project: "a", result: "ok", command: ["a upstream command"] },
+      { project: "b", result: "ok", command: ["b command"] },
+      { project: "c", result: "ok", command: ["c command"] }
     ]);
   });
 
@@ -190,9 +190,9 @@ describe("executeBuild", () => {
       "c downstream command treated"
     );
     expect(result).toMatchObject([
-      { project: "a", result: "ok" },
-      { project: "b", result: "ok" },
-      { project: "c", result: "ok" }
+      { project: "a", result: "ok", command: ["a upstream command"] },
+      { project: "b", result: "ok", command: ["b command"] },
+      { project: "c", result: "ok", command: ["c downstream command"] }
     ]);
   });
 

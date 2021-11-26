@@ -12,7 +12,8 @@ const core = require("@actions/core");
 const { logger } = require("../common");
 const {
   printCheckoutInformation,
-  printExecutionSummary
+  printExecutionSummary,
+  saveExecutionSummaryToXlsxFile
 } = require("../summary");
 const {
   executeBuild,
@@ -22,6 +23,8 @@ const {
 
 const { execute: executePre } = require("./sections/pre");
 const { execute: executePost } = require("./sections/post");
+const { run: uploadArtifacts } = require("../artifacts/upload-artifacts");
+const path = require("path");
 
 async function start(
   context,
@@ -111,6 +114,14 @@ async function start(
 
     core.startGroup(`[Branch Flow] Execution Summary...`);
     printExecutionSummary(executionResult);
+    if (options.isArchiveArtifacts) {
+      const filePath = path.join(
+        __dirname,
+        "build-chain-execution-summary.xlsx"
+      );
+      saveExecutionSummaryToXlsxFile(executionResult, filePath);
+      await uploadArtifacts(filePath, ["always"]);
+    }
     core.endGroup();
 
     await executePost(

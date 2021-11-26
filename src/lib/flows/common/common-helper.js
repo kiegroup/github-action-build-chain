@@ -38,6 +38,7 @@ async function executeBuild(
     } else {
       let executionResult = "ok";
       let error = undefined;
+      let executedCommand = undefined;
       const levelType =
         index < projectTriggeringJobIndex
           ? "upstream"
@@ -45,7 +46,12 @@ async function executeBuild(
           ? "current"
           : "downstream";
       try {
-        await executeNodeBuildCommands(rootFolder, node, levelType, options);
+        executedCommand = await executeNodeBuildCommands(
+          rootFolder,
+          node,
+          levelType,
+          options
+        );
       } catch (e) {
         executionResult = "error";
         error = e;
@@ -55,7 +61,8 @@ async function executeBuild(
           project: node.project,
           result: executionResult,
           time: hrtimeToMs(start),
-          error
+          error,
+          command: executedCommand
         });
       }
     }
@@ -94,7 +101,8 @@ async function executeBuildSpecificCommand(
         project: node.project,
         result: executionResult,
         time: hrtimeToMs(start),
-        error
+        error,
+        command
       });
     }
   }
@@ -113,6 +121,7 @@ async function executeNodeBuildCommands(
   levelType,
   options = {}
 ) {
+  const executedCommands = [];
   const dir = getDir(
     rootFolder,
     node.project,
@@ -121,27 +130,28 @@ async function executeNodeBuildCommands(
       : undefined
   );
   if (node.build["build-command"].before) {
-    await executeBuildCommands(
-      dir,
-      getCommand(node.build["build-command"].before, levelType),
-      node.project,
-      options
+    const beforeCommand = getCommand(
+      node.build["build-command"].before,
+      levelType
     );
+    executedCommands.push(beforeCommand);
+    await executeBuildCommands(dir, beforeCommand, node.project, options);
   }
-  await executeBuildCommands(
-    dir,
-    getCommand(node.build["build-command"], levelType),
-    node.project,
-    options
-  );
+
+  const currentCommand = getCommand(node.build["build-command"], levelType);
+  executedCommands.push(currentCommand);
+  await executeBuildCommands(dir, currentCommand, node.project, options);
+
   if (node.build["build-command"].after) {
-    await executeBuildCommands(
-      dir,
-      getCommand(node.build["build-command"].after, levelType),
-      node.project,
-      options
+    const afterCommand = getCommand(
+      node.build["build-command"].after,
+      levelType
     );
+    executedCommands.push(afterCommand);
+    await executeBuildCommands(dir, afterCommand, node.project, options);
   }
+
+  return executedCommands;
 }
 
 function getCommand(buildCommand, levelType) {

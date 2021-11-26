@@ -76,6 +76,8 @@ Just defining the **build chain** flow in every project you want to trigger, the
 
 - Once the projects from the branch are checked out, it will run as many commands are defined in `before`, `after` or root level properties from `build` section.
 
+- The flow will archive (in case the archiving is not skipped) a spreadsheet with the execution summary.
+
 ## How to add it to your project(s)
 
 It is just to add the step (replacing dependencies and commands):

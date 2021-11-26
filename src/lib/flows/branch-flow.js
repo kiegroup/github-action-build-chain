@@ -115,12 +115,15 @@ async function start(
     core.startGroup(`[Branch Flow] Execution Summary...`);
     printExecutionSummary(executionResult);
     if (options.isArchiveArtifacts) {
-      const filePath = path.join(
-        __dirname,
-        "build-chain-execution-summary.xlsx"
-      );
+      const filePath = path.join(__dirname, "execution-summary.xlsx");
       saveExecutionSummaryToXlsxFile(executionResult, filePath);
-      await uploadArtifacts(filePath, ["always"]);
+      await uploadArtifacts(
+        {
+          paths: [{ path: filePath, on: "always" }],
+          name: "Build Chain Execution Summary"
+        },
+        ["always"]
+      );
     }
     core.endGroup();
 

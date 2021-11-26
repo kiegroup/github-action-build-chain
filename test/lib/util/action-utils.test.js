@@ -120,7 +120,8 @@ test("getFlowType", () => {
 
 test("getAdditionalFlags", () => {
   // Arrange
-  const expectedResult = "--fullDownstream;-cct (mvn .*)||$1 -s settings.xml";
+  const expectedResult =
+    "--fullProjectDependencyTree;-cct (mvn .*)||$1 -s settings.xml";
   getInput.mockImplementationOnce(param =>
     param === "additional-flags" ? expectedResult : undefined
   );

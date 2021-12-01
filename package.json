@@ -7,7 +7,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "private": false,
   "bin": {
-    "build-chain-action": "./bin/build-chain-cli.js"
+    "build-chain-action": "./src/bin/build-chain-cli.js"
   },
   "scripts": {
     "test": "jest",
@@ -17,7 +17,7 @@
     "prettier-write": "prettier --write .",
     "lint-final": "npm run prettier && npm run lint",
     "prepublish": "npm run lint && npm run test",
-    "ncc-build": "ncc build --minify bin/build-chain-event.js"
+    "ncc-build": "ncc build --minify src/bin/build-chain-event.js"
   },
   "git-pre-hooks": {
     "pre-commit": "npm run lint && npm run prettier && npm run ncc-build && git add dist/index.js",

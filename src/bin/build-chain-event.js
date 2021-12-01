@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { ClientError, logger } = require("../src/lib/common");
+const { ClientError, logger } = require("..//lib/common");
 const {
   executeFromEvent: pullRequestEventFlow
 } = require("./flows/build-chain-pull-request");
@@ -22,7 +22,7 @@ const {
   getLoggerLevel,
   additionalFlagsToOptions,
   getAdditionalFlags
-} = require("../src/lib/util/action-utils");
+} = require("..//lib/util/action-utils");
 const {
   createOctokitInstance,
   getProcessEnvVariable

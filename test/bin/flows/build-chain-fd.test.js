@@ -1,7 +1,7 @@
 const {
   executeFromEvent,
   executeLocally
-} = require("../../../bin/flows/build-chain-full-downstream");
+} = require("../../../src/bin/flows/build-chain-full-downstream");
 const { createCommonConfig } = require("../../../src/lib/flows/common/config");
 jest.mock("../../../src/lib/flows/common/config");
 const { start } = require("../../../src/lib/flows/full-downstream-flow");

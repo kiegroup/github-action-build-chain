@@ -1,4 +1,4 @@
-const { logger, ClientError } = require("../../src/lib/common");
+const { logger, ClientError } = require("../..//lib/common");
 
 const GITHUB_URL_REGEXP = /^https:\/\/github.com\/([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;
 const GIT_URL_REGEXP = /^(https?:\/\/.*\/)([^/]+)\/([^/]+)\/(pull|tree)\/([^ ]+)$/;

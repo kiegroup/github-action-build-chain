@@ -1,14 +1,14 @@
-const { logger } = require("../../src/lib/common");
+const { logger } = require("../..//lib/common");
 const {
   prepareEnv,
   createGithubInformationObject,
   getEvent
 } = require("./build-chain-pull-request-helper");
-const { start } = require("../../src/lib/flows/full-downstream-flow");
-const { createCommonConfig } = require("../../src/lib/flows/common/config");
+const { start } = require("../..//lib/flows/pull-request-flow");
+const { createCommonConfig } = require("../..//lib/flows/common/config");
 
 /**
- * Executes full downstream flow
+ * Executes pull request flow
  * @param {String} token the token to communicate to github
  * @param {Object} octokit octokit instance
  * @param {Object} env proces.env
@@ -21,10 +21,10 @@ async function execute(token, octokit, env, eventData, rootFolder, options) {
   const config = await createCommonConfig(githubInformation, rootFolder, env);
   const context = { token, octokit, config };
   logger.debug(
-    "build-chain-pull-full-downstream.js. githubInformation",
+    "build-chain-pull-request.js. githubInformation",
     githubInformation
   );
-  logger.debug("build-chain-pull-full-downstream.js. config", config);
+  logger.debug("build-chain-pull-request.js. config", config);
   await start(context, options);
 }
 

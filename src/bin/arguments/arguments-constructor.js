@@ -2,7 +2,7 @@ const { ArgumentParser } = require("argparse");
 const { getArguments: getBuildArguments } = require("./build-arguments");
 const { getArguments: getToolsArguments } = require("./tools-arguments");
 const { getDefaultRootFolder } = require("../utils/bin-utils");
-const pkg = require("../../package.json");
+const pkg = require("../../../package.json");
 
 function getArguments() {
   const parser = new ArgumentParser({

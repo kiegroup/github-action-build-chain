@@ -1,19 +1,23 @@
-const { main } = require("../../bin/build-chain-cli");
+const { main } = require("../../src/bin/build-chain-cli");
 const {
   createOctokitInstance,
   getProcessEnvVariable,
   addLocalExecutionVariables
-} = require("../../bin/utils/bin-utils");
-jest.mock("../../bin/utils/bin-utils");
-const { getArguments } = require("../../bin/arguments/arguments-constructor");
-jest.mock("../../bin/arguments/arguments-constructor");
+} = require("../../src/bin/utils/bin-utils");
+jest.mock("../../src/bin/utils/bin-utils");
+const {
+  getArguments
+} = require("../../src/bin/arguments/arguments-constructor");
+jest.mock("../../src/bin/arguments/arguments-constructor");
 jest.mock("../../src/lib/util/action-utils");
 
-const { execute: executeBuild } = require("../../bin/actions/build-actions");
-jest.mock("../../bin/actions/build-actions");
+const {
+  execute: executeBuild
+} = require("../../src/bin/actions/build-actions");
+jest.mock("../../src/bin/actions/build-actions");
 
-const { execute: executeTools } = require("../../bin/actions/tools-action");
-jest.mock("../../bin/actions/tools-action");
+const { execute: executeTools } = require("../../src/bin/actions/tools-action");
+jest.mock("../../src/bin/actions/tools-action");
 
 require("dotenv").config();
 

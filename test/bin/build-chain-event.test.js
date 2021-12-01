@@ -1,9 +1,9 @@
-const { main } = require("../../bin/build-chain-event");
+const { main } = require("../../src/bin/build-chain-event");
 const {
   createOctokitInstance,
   getProcessEnvVariable
-} = require("../../bin/utils/bin-utils");
-jest.mock("../../bin/utils/bin-utils");
+} = require("../../src/bin/utils/bin-utils");
+jest.mock("../../src/bin/utils/bin-utils");
 const {
   isPullRequestFlowType,
   isFDFlowType,
@@ -15,16 +15,16 @@ jest.mock("../../src/lib/util/action-utils");
 
 const {
   executeFromEvent: pullRequestEventFlow
-} = require("../../bin/flows/build-chain-pull-request");
-jest.mock("../../bin/flows/build-chain-pull-request");
+} = require("../../src/bin/flows/build-chain-pull-request");
+jest.mock("../../src/bin/flows/build-chain-pull-request");
 const {
   executeFromEvent: fdEventFlow
-} = require("../../bin/flows/build-chain-full-downstream");
-jest.mock("../../bin/flows/build-chain-full-downstream");
+} = require("../../src/bin/flows/build-chain-full-downstream");
+jest.mock("../../src/bin/flows/build-chain-full-downstream");
 const {
   executeFromEvent: singleEventFlow
-} = require("../../bin/flows/build-chain-single");
-jest.mock("../../bin/flows/build-chain-single");
+} = require("../../src/bin/flows/build-chain-single");
+jest.mock("../../src/bin/flows/build-chain-single");
 
 const { readFile } = require("fs-extra");
 jest.mock("fs-extra");
@@ -34,8 +34,8 @@ jest.mock("@actions/core");
 
 const {
   printLocalCommand
-} = require("../../bin/utils/print-event-command-utils");
-jest.mock("../../bin/utils/print-event-command-utils");
+} = require("../../src/bin/utils/print-event-command-utils");
+jest.mock("../../src/bin/utils/print-event-command-utils");
 
 afterEach(() => {
   jest.clearAllMocks();

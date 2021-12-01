@@ -1,7 +1,7 @@
 const {
   getOrderedListForTree
 } = require("@kie/build-chain-configuration-reader");
-const { logger } = require("../../src/lib/common");
+const { logger } = require("../..//lib/common");
 
 async function execute(args) {
   if (args.tools === "project-list") {

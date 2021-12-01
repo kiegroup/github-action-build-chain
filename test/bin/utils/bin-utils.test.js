@@ -1,4 +1,6 @@
-const { treatSkipProjectCheckout } = require("../../../bin/utils/bin-utils");
+const {
+  treatSkipProjectCheckout
+} = require("../../../src/bin/utils/bin-utils");
 
 test("treatSkipProjectCheckout empty", () => {
   // Arrange

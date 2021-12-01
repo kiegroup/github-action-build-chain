@@ -1,12 +1,12 @@
 const {
   executeFromEvent,
   executeLocally
-} = require("../../../bin/flows/build-chain-single");
+} = require("../../../src/bin/flows/build-chain-single");
 const { createCommonConfig } = require("../../../src/lib/flows/common/config");
 jest.mock("../../../src/lib/flows/common/config");
 const { start } = require("../../../src/lib/flows/single-flow");
 jest.mock("../../../src/lib/flows/single-flow");
-jest.mock("../../../bin/utils/bin-utils");
+jest.mock("../../../src/bin/utils/bin-utils");
 jest.mock("fs-extra");
 jest.mock("../../../src/lib/fs-helper");
 jest.mock("../../../src/lib/common");

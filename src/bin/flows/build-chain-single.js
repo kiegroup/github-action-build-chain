@@ -1,11 +1,11 @@
-const { logger } = require("../../src/lib/common");
+const { logger } = require("../..//lib/common");
 const {
   prepareEnv,
   createGithubInformationObject,
   getEvent
 } = require("./build-chain-pull-request-helper");
-const { start } = require("../../src/lib/flows/single-flow");
-const { createCommonConfig } = require("../../src/lib/flows/common/config");
+const { start } = require("../..//lib/flows/single-flow");
+const { createCommonConfig } = require("../..//lib/flows/common/config");
 
 /**
  * Executes single flow

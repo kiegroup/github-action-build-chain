@@ -1,8 +1,8 @@
 const process = require("process");
 
 const { Octokit } = require("@octokit/rest");
-const { ClientError } = require("../../src/lib/common");
-const { formatDate } = require("../../src/lib/util/date-util");
+const { ClientError } = require("../..//lib/common");
+const { formatDate } = require("../..//lib/util/date-util");
 require("dotenv").config();
 
 /**

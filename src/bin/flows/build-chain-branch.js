@@ -1,6 +1,6 @@
-const { logger } = require("../../src/lib/common");
-const { start } = require("../../src/lib/flows/branch-flow");
-const { createCommonConfig } = require("../../src/lib/flows/common/config");
+const { logger } = require("../..//lib/common");
+const { start } = require("../..//lib/flows/branch-flow");
+const { createCommonConfig } = require("../..//lib/flows/common/config");
 const assert = require("assert");
 
 /**

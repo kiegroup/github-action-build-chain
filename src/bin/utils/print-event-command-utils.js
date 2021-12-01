@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { logger, annotationer } = require("../../src/lib/common");
+const { logger, annotationer } = require("../..//lib/common");
 const {
   eventFlowTypeToCliFlowType,
   getDefinitionFile,
@@ -8,10 +8,10 @@ const {
   getFlowType,
   additionalFlagsToCLI,
   getAdditionalFlags
-} = require("../../src/lib/util/action-utils");
-const { getVersion: getGitVersion } = require("../../src/lib/git");
+} = require("../..//lib/util/action-utils");
+const { getVersion: getGitVersion } = require("../..//lib/git");
 const core = require("@actions/core");
-const pkg = require("../../package.json");
+const pkg = require("../../../package.json");
 
 function printLocalCommandPullRequest(
   eventData,

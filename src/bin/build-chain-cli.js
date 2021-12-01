@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { ClientError, logger } = require("../src/lib/common");
+const { ClientError, logger } = require("..//lib/common");
 const { execute: executeBuild } = require("./actions/build-actions");
 const { execute: executeTools } = require("./actions/tools-action");
 const {

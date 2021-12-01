@@ -1,6 +1,6 @@
 const {
   printLocalCommand
-} = require("../../../bin/utils/print-event-command-utils");
+} = require("../../../src/bin/utils/print-event-command-utils");
 const { logger } = require("../../../src/lib/common");
 jest.mock("../../../src/lib/common");
 

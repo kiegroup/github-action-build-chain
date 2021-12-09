@@ -667,7 +667,7 @@ async function getPlaceHolders(
 function cloneNode(rootFolder, node, sourceFolder) {
   if (node.build && node.build.clone) {
     logger.info(
-      `[${node.project}] Clonning folder ${sourceFolder} into ${node.build.clone}`
+      `[${node.project}] Cloning folder ${sourceFolder} into ${node.build.clone}`
     );
     const clonedFolders = copyNodeFolder(
       rootFolder,
@@ -675,7 +675,7 @@ function cloneNode(rootFolder, node, sourceFolder) {
       node.build.clone
     );
     logger.info(
-      `[${node.project}] Clonned folder ${sourceFolder} into ${clonedFolders}`
+      `[${node.project}] Cloned folder ${sourceFolder} into ${clonedFolders}`
     );
   }
 }

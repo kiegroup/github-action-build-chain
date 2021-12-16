@@ -1430,7 +1430,11 @@ describe("getPlaceHolders", () => {
     const result = await getPlaceHolders(context, definitionFile);
 
     // Assert
-    expect(result).toStrictEqual({});
+    expect(result).toStrictEqual({
+      BRANCH: "sBranch",
+      GROUP: "sGroup",
+      PROJECT_NAME: "projectx"
+    });
   });
 
   test("url no ${} expression", async () => {
@@ -1451,7 +1455,11 @@ describe("getPlaceHolders", () => {
     const result = await getPlaceHolders(context, definitionFile);
 
     // Assert
-    expect(result).toStrictEqual({});
+    expect(result).toStrictEqual({
+      BRANCH: "sBranch",
+      GROUP: "sGroup",
+      PROJECT_NAME: "projectx"
+    });
   });
 
   test("url. source group and branch ok", async () => {

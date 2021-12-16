@@ -7,6 +7,7 @@
 - Prints system git version
 - [issue 203] Prints execution summary
 - additional-flags input
+- [ISSUE 103] be able to access definition file from private repositories
 
 ## Bugs
 

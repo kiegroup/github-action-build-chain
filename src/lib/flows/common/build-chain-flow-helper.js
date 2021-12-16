@@ -595,14 +595,16 @@ async function getPlaceHolders(
   definitionFile,
   defaulPlaceHolders = {}
 ) {
-  let placeHolders = defaulPlaceHolders;
+  let placeHolders =
+    context && context.config && context.config.github
+      ? {
+          GROUP: context.config.github.sourceGroup,
+          PROJECT_NAME: context.config.github.project,
+          BRANCH: context.config.github.sourceBranch,
+          ...defaulPlaceHolders
+        }
+      : { ...defaulPlaceHolders };
   if (definitionFile.startsWith("http") && definitionFile.includes("${")) {
-    placeHolders = {
-      GROUP: context.config.github.sourceGroup,
-      PROJECT_NAME: context.config.github.project,
-      BRANCH: context.config.github.sourceBranch,
-      ...defaulPlaceHolders
-    };
     const sourceUrl = await doesDefinitionFilePlaceHolderExists(
       definitionFile,
       placeHolders,

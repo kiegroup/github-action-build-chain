@@ -494,12 +494,16 @@ function getTarget(
 }
 
 function getMappingInfo(currentProject, mapping, sourceBranch) {
+  const excludeFilter = (exclude, project) =>
+    [null, undefined, []].includes(exclude) || !exclude.includes(project);
   if (mapping) {
     // The exact match has precedence over the regex
-    const foundMappingEqual = mapping.filter(e => e.source === sourceBranch);
-    const foundMappingRegex = mapping.filter(e =>
-      sourceBranch.match(new RegExp(`^${e.source}$`))
-    );
+    const foundMappingEqual = mapping
+      .filter(e => excludeFilter(e.exclude, currentProject))
+      .filter(e => e.source === sourceBranch);
+    const foundMappingRegex = mapping
+      .filter(e => excludeFilter(e.exclude, currentProject))
+      .filter(e => sourceBranch.match(new RegExp(`^${e.source}$`)));
     const foundMapping =
       foundMappingEqual && foundMappingEqual.length
         ? foundMappingEqual

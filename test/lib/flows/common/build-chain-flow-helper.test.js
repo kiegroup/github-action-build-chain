@@ -2613,6 +2613,96 @@ describe("getTarget", () => {
     // Assert
     expect(result).toStrictEqual("main.*");
   });
+  describe("exclude", () => {
+    const projectTriggeringTheJobMappingExclude = {
+      dependencies: {
+        default: [
+          {
+            source: "7.x",
+            target: "main",
+            exclude: "projectB"
+          }
+        ],
+        projectB: [
+          {
+            source: "8.x",
+            target: "main"
+          }
+        ]
+      },
+      dependant: {
+        default: [
+          {
+            source: "main",
+            target: "7.x"
+          },
+          {
+            source: "8.x",
+            target: "9.x"
+          }
+        ]
+      }
+    };
+
+    const currentProjectMappingExclude = {
+      dependencies: {
+        default: [
+          {
+            source: "8.x",
+            target: "branchX"
+          }
+        ]
+      },
+      dependant: {
+        default: [
+          {
+            source: "branchY",
+            target: "8.x"
+          }
+        ],
+        projectB: [
+          {
+            source: "branchX",
+            target: "9.x"
+          }
+        ]
+      }
+    };
+
+    test("dependency default exclude. matching branch", () => {
+      // Arrange
+      const projectTriggeringTheJob = "projectA";
+      const currentProject = "projectB";
+      const targetBranch = "7.x";
+      // Act
+      const result = getTarget(
+        projectTriggeringTheJob,
+        projectTriggeringTheJobMappingExclude,
+        currentProject,
+        currentProjectMappingExclude,
+        targetBranch
+      );
+      // Assert
+      expect(result).toStrictEqual("7.x");
+    });
+
+    test("dependency default exclude. not matching branch", () => {
+      // Arrange
+      const projectTriggeringTheJob = "projectA";
+      const currentProject = "projectB";
+      const targetBranch = "8.x";
+      // Act
+      const result = getTarget(
+        projectTriggeringTheJob,
+        projectTriggeringTheJobMappingExclude,
+        currentProject,
+        currentProjectMappingExclude,
+        targetBranch
+      );
+      // Assert
+      expect(result).toStrictEqual("main");
+    });
+  });
 });
 
 describe("getForkedProjectName", () => {

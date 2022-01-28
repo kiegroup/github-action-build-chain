@@ -57,7 +57,7 @@ async function start(
         context.config.github.inputs.startingProject,
         readerOptions
       )
-    : getTree(context.config.github.inputs.definitionFile, readerOptions);
+    : await getTree(context.config.github.inputs.definitionFile, readerOptions);
   logger.debug(
     "branch-flow.js definitionTree",
     context.config.github.inputs.definitionFile,

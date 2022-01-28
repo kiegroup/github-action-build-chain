@@ -8,6 +8,7 @@
 - [issue 203] Prints execution summary
 - additional-flags input
 - [ISSUE 103] be able to access definition file from private repositories
+- [ISSUE 216] remove -project flag from build branch command
 
 ## Bugs
 

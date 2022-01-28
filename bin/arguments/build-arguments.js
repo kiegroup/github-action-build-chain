@@ -29,7 +29,7 @@ function branchArguments(subParser) {
   const parser = subParser.add_parser("branch", {
     help: "branch flow. It will build projects based on their branches"
   });
-  startingProjectArgument(parser);
+  startingProjectArgument(parser, true);
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
   skipParallelCheckout(parser);
@@ -39,13 +39,6 @@ function branchArguments(subParser) {
     action: "store_true",
     help:
       "Checks out and execute the whole tree instead of the upstream build. It mocks a full downstream execution but for a branch execution. (fasle by default)."
-  });
-
-  parser.add_argument("-p", "-project", {
-    nargs: 1,
-    required: true,
-    help:
-      "the project (one which is defined in dependencies file) to start the build"
   });
   parser.add_argument("-b", "-branch", {
     nargs: 1,
@@ -99,9 +92,10 @@ function urlArgument(parser) {
   });
 }
 
-function startingProjectArgument(parser) {
+function startingProjectArgument(parser, required = false) {
   parser.add_argument("-sp", "-starting-project", {
     nargs: 1,
+    required: required,
     help:
       "the project (one which is defined in dependencies file) to start building from"
   });
@@ -126,7 +120,7 @@ function skipProjectCheckout(parser) {
 function skipParallelCheckout(parser) {
   parser.add_argument("--skipParallelCheckout", {
     action: "store_true",
-    help: "Checkout the project sequencially."
+    help: "Checkout the project sequentially."
   });
 }
 

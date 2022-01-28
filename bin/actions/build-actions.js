@@ -90,7 +90,7 @@ async function execute(args, token, octokit) {
       process.env,
       args.folder[0],
       args.g ? args.g[0] : undefined,
-      args.p[0],
+      args.sp[0],
       args.b[0],
       {
         command: args.c ? args.c[0] : undefined,

@@ -511,7 +511,7 @@ To choose between `pr`, `fd` or `single`
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
-- **skipParallelCheckout**: Checkout the project sequencially.
+- **skipParallelCheckout**: Checkout the project sequentially.
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
 - **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
 - **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checout information will be printed anyway. E.g. `--skipCheckout`
@@ -529,7 +529,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
-- **skipParallelCheckout**: Checkout the project sequencially.
+- **skipParallelCheckout**: Checkout the project sequentially.
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
 - **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
 - **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checout information will be printed anyway. E.g. `--skipCheckout`
@@ -547,7 +547,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
-- **skipParallelCheckout**: Checkout the project sequencially.
+- **skipParallelCheckout**: Checkout the project sequentially.
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
 - **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
 - **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checout information will be printed anyway. E.g. `--skipCheckout`
@@ -562,14 +562,13 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 
 **Arguments**:
 
-- **\*-p, -project**: The project name to execute flow from. It has to match with one defined in "definition-file". E.g. `-p=kiegroup/drools`
+- **\*-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
 - **\*-b, -branch**: The branch to get projects. E.g. `-b=main`
 - **-g** (group from project argument): The group to take projects. In case you want to build projects from a different group than the one defined in "definition file". E.g. `-g=Ginxo`
 - **-c, -command**: A command to execute for all the projects, no matter what's defined in "definition file". E.g. `-c="mvn clean"`
 - **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
-- **skipParallelCheckout**: Checkout the project sequencially.
-- **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
+- **skipParallelCheckout**: Checkout the project sequentially.
 - **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
 - **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checout information will be printed anyway. E.g. `--skipCheckout`
 - **--fullProjectDependencyTree**: Checks out and execute the whole tree instead of the upstream build (fasle by default). E.g. `--fullProjectDependencyTree`

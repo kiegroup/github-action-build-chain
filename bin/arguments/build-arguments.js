@@ -20,6 +20,7 @@ function pullRequestArguments(subParser) {
   startingProjectArgument(parser);
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
+  skipProjectExecution(parser);
   skipParallelCheckout(parser);
   skipCheckout(parser);
   skipExecution(parser);
@@ -33,6 +34,7 @@ function branchArguments(subParser) {
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
   skipParallelCheckout(parser);
+  skipProjectExecution(parser);
   skipCheckout(parser);
   skipExecution(parser);
   parser.add_argument("--fullProjectDependencyTree", {
@@ -66,6 +68,7 @@ function fdArguments(subParser) {
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
   skipParallelCheckout(parser);
+  skipProjectExecution(parser);
   skipCheckout(parser);
   skipExecution(parser);
 }
@@ -79,6 +82,7 @@ function singleArguments(subParser) {
   customCommandTreatmentArgument(parser);
   skipProjectCheckout(parser);
   skipParallelCheckout(parser);
+  skipProjectExecution(parser);
   skipCheckout(parser);
   skipExecution(parser);
 }
@@ -135,6 +139,14 @@ function skipExecution(parser) {
   parser.add_argument("--skipExecution", {
     action: "store_true",
     help: "Skips the execution and archiving steps."
+  });
+}
+
+function skipProjectExecution(parser) {
+  parser.add_argument("-spe", "-skip-project-execution", {
+    nargs: "*",
+    action: "append",
+    help: "Projects to skip execution."
   });
 }
 

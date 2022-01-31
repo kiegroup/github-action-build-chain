@@ -576,3 +576,58 @@ describe("getExecutionResultError", () => {
     expect(result).toStrictEqual({ project: "c", result: "error" });
   });
 });
+
+describe("executeBuildSpecificParameters", () => {
+  test("skip multiple projects execution", async () => {
+    // Arrange
+    const nodeChain = [
+      {
+        project: "a",
+        build: {
+          "build-command": { current: "a command" }
+        }
+      },
+      {
+        project: "b",
+        build: {
+          "build-command": { current: "b command" }
+        }
+      },
+      {
+        project: "c",
+        build: {
+          "build-command": { current: "c command" }
+        }
+      },
+      {
+        project: "d",
+        build: {
+          "build-command": { current: "d command" }
+        }
+      }
+    ];
+    getDir.mockReturnValueOnce("a_folder").mockReturnValueOnce("d_folder");
+    const args = {
+      skipProjectExecution: ["b", "c"]
+    };
+
+    // Act
+    const result = await executeBuild("folder", nodeChain, "a", args);
+
+    // Assert
+    expect(treatCommand).toHaveBeenCalledTimes(2);
+    expect(treatCommand).toHaveBeenCalledWith("a command", args);
+    expect(treatCommand).toHaveBeenCalledWith("d command", args);
+    expect(execute).toHaveBeenCalledTimes(2);
+    expect(execute).toHaveBeenCalledWith("a_folder", "a command treated");
+    expect(execute).not.toHaveBeenCalledWith("b_folder", expect.any(String));
+    expect(execute).not.toHaveBeenCalledWith("c_folder", expect.any(String));
+    expect(execute).toHaveBeenCalledWith("d_folder", "d command treated");
+    expect(result).toMatchObject([
+      { project: "a", result: "ok", command: ["a command"] },
+      { project: "b", result: "skipped" },
+      { project: "c", result: "skipped" },
+      { project: "d", result: "ok", command: ["d command"] }
+    ]);
+  });
+});

@@ -33,6 +33,7 @@ async function execute(args, token, octokit) {
       {
         replaceExArray: args.cct,
         skipProjectCheckout: treatSkipProjectCheckout(args.spc),
+        skipProjectExecution: args.spe,
         skipParallelCheckout: args.skipParallelCheckout,
         skipCheckout: args.skipCheckout,
         skipExecution: args.skipExecution
@@ -55,6 +56,7 @@ async function execute(args, token, octokit) {
       {
         replaceExArray: args.cct,
         skipProjectCheckout: treatSkipProjectCheckout(args.spc),
+        skipProjectExecution: args.spe,
         skipParallelCheckout: args.skipParallelCheckout,
         skipCheckout: args.skipCheckout,
         skipExecution: args.skipExecution
@@ -71,6 +73,7 @@ async function execute(args, token, octokit) {
       {
         replaceExArray: args.cct,
         skipProjectCheckout: treatSkipProjectCheckout(args.spc),
+        skipProjectExecution: args.spe,
         skipParallelCheckout: args.skipParallelCheckout,
         skipCheckout: args.skipCheckout,
         skipExecution: args.skipExecution
@@ -97,6 +100,7 @@ async function execute(args, token, octokit) {
         skipExecution: args.skipExecution,
         replaceExArray: args.cct,
         skipProjectCheckout: treatSkipProjectCheckout(args.spc),
+        skipProjectExecution: args.spe,
         skipParallelCheckout: args.skipParallelCheckout,
         skipCheckout: args.skipCheckout,
         fullProjectDependencyTree: args.fullProjectDependencyTree

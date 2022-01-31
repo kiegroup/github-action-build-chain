@@ -26,7 +26,11 @@ async function executeBuild(
   }
   for await (const [index, node] of nodeChain.entries()) {
     const start = process.hrtime();
-    if (node.build && node.build.skip) {
+    if (
+      (options.skipProjectExecution &&
+        options.skipProjectExecution.includes(node.project)) ||
+      (node.build && node.build.skip)
+    ) {
       result.push({
         project: node.project,
         result: "skipped",

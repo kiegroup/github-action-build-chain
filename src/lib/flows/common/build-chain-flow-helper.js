@@ -8,7 +8,10 @@ const {
   getRepository
 } = require("../../git");
 const { logger } = require("../../common");
-const { treatUrl } = require("@kie/build-chain-configuration-reader");
+const {
+  treatUrl,
+  getBaseBranch
+} = require("@kie/build-chain-configuration-reader");
 const { checkUrlExist } = require("../../util/http");
 const { getNodeTriggeringJob } = require("../../util/chain-util");
 const { copyNodeFolder } = require("../../util/fs-util");
@@ -365,7 +368,7 @@ async function getCheckoutInfo(
   const sourceBranch = context.config.github.sourceBranch;
   const targetGroup = node.repo.group;
   const targetProject = node.repo.name;
-  const targetBranch = getTarget(
+  const targetBranch = getBaseBranch(
     nodeTriggeringTheJob.project,
     nodeTriggeringTheJob.mapping,
     node.project,
@@ -423,102 +426,6 @@ async function getCheckoutInfo(
     false
   );
   return targetGroupTargetBranch;
-}
-
-/**
- * it returns back the target object based on the mapping object
- * @param {String} projectTriggeringTheJob the project name of the project triggering the job
- * @param {Object} projectTriggeringTheJobMapping the mapping object of the project triggering the job
- * @param {String} currentProject the project name of the current project
- * @param {Object} currentProjectMapping the mappinf object of the current project
- * @param {String} targetBranch the target branch
- */
-function getTarget(
-  projectTriggeringTheJob,
-  projectTriggeringTheJobMapping,
-  currentProject,
-  currentProjectMapping,
-  targetBranch
-) {
-  // If the current project it the project triggering the job there's no mapping
-
-  if (currentProject !== projectTriggeringTheJob) {
-    // If the current project has been excluded from the mapping, there's no mapping
-    if (
-      projectTriggeringTheJobMapping &&
-      (projectTriggeringTheJobMapping.exclude
-        ? !projectTriggeringTheJobMapping.exclude.includes(currentProject)
-        : true)
-    ) {
-      // The mapping is either taken from the project mapping or from the default one
-      const mapping =
-        getMappingInfo(
-          currentProject,
-          projectTriggeringTheJobMapping.dependencies[currentProject],
-          targetBranch
-        ) ||
-        getMappingInfo(
-          currentProject,
-          projectTriggeringTheJobMapping.dependencies.default,
-          targetBranch
-        );
-      if (mapping) {
-        return mapping.target;
-      }
-      // If the current project has a mapping and the source matched with the targetBranch then this mapping is taken
-    }
-    if (
-      currentProjectMapping &&
-      currentProjectMapping.dependant &&
-      (currentProjectMapping.exclude
-        ? !currentProjectMapping.exclude.includes(projectTriggeringTheJob)
-        : true)
-    ) {
-      const mapping =
-        getMappingInfo(
-          currentProject,
-          currentProjectMapping.dependant[projectTriggeringTheJob],
-          targetBranch
-        ) ||
-        getMappingInfo(
-          currentProject,
-          currentProjectMapping.dependant.default,
-          targetBranch
-        );
-      if (mapping) {
-        return mapping.target;
-      }
-    }
-  }
-  return targetBranch;
-}
-
-function getMappingInfo(currentProject, mapping, sourceBranch) {
-  const excludeFilter = (exclude, project) =>
-    [null, undefined, []].includes(exclude) || !exclude.includes(project);
-  if (mapping) {
-    // The exact match has precedence over the regex
-    const foundMappingEqual = mapping
-      .filter(e => excludeFilter(e.exclude, currentProject))
-      .filter(e => e.source === sourceBranch);
-    const foundMappingRegex = mapping
-      .filter(e => excludeFilter(e.exclude, currentProject))
-      .filter(e => sourceBranch.match(new RegExp(`^${e.source}$`)));
-    const foundMapping =
-      foundMappingEqual && foundMappingEqual.length
-        ? foundMappingEqual
-        : foundMappingRegex;
-    if (foundMapping.length) {
-      const found = foundMapping[0];
-      if (foundMapping.length > 1) {
-        logger.warn(
-          `The mapping for ${currentProject} has a duplication for source branch ${sourceBranch}. First matching ${found.target} will be used.`
-        );
-      }
-      return found;
-    }
-  }
-  return undefined;
 }
 
 function getDir(rootFolder, project, skipCheckoutProjectFolder = undefined) {
@@ -691,7 +598,6 @@ module.exports = {
   getCheckoutInfo,
   getDir,
   getPlaceHolders,
-  getTarget,
   getForkedProjectName,
   getPlaceHoldersDefaultValues
 };

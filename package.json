@@ -1,6 +1,6 @@
 {
   "name": "@kie/build-chain-action",
-  "version": "2.3.32",
+  "version": "2.3.33",
   "description": "Library to execute commands based on github projects dependencies.",
   "main": "dist/build-chain-cli.js",
   "author": "Enrique Mingorance Cano <emingora@redhat.com>",
@@ -28,7 +28,7 @@
     "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.0",
     "@actions/glob": "^0.1.0",
-    "@kie/build-chain-configuration-reader": "^2.2.4",
+    "@kie/build-chain-configuration-reader": "^2.2.5",
     "@octokit/rest": "^17.6.0",
     "argparse": "^2.0.1",
     "dotenv": "^8.2.0",

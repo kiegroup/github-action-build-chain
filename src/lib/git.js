@@ -217,13 +217,27 @@ async function doesBranchExist(octokit, owner, repo, branch) {
  * @param {Object} octokit instance
  * @param {String} owner the repo owner or group
  * @param {String} repo the repository name
- * @param {String} branch the branch of the pull request to look for
- * @param {String} fromAuthor the pull request author
+ * @param {String} sourceBranch the branch of the pull request to look for
+ * @param {String} sourceOwner the pull request author
+ * @param {String} sourceRepo the source owner or group
  */
-async function hasPullRequest(octokit, owner, repo, branch, fromAuthor) {
+async function hasPullRequest(
+  octokit,
+  owner,
+  repo,
+  sourceBranch,
+  sourceOwner,
+  sourceRepo
+) {
   return (
-    (await hasForkPullRequest(octokit, owner, repo, branch, fromAuthor)) ||
-    (await hasOriginPullRequest(octokit, owner, repo, branch))
+    (await hasForkPullRequest(
+      octokit,
+      owner,
+      repo,
+      sourceBranch,
+      sourceOwner,
+      sourceRepo
+    )) || (await hasOriginPullRequest(octokit, owner, repo, sourceBranch))
   );
 }
 
@@ -232,25 +246,37 @@ async function hasPullRequest(octokit, owner, repo, branch, fromAuthor) {
  * @param {Object} octokit instance
  * @param {String} owner the repo owner or group
  * @param {String} repo the repository name
- * @param {String} branch the branch of the pull request to look for
- * @param {String} fromAuthor the pull request author
+ * @param {String} sourceBranch the branch of the pull request to look for
+ * @param {String} sourceOwner the pull request author
+ * @param {String} sourceRepo the source repository name
  */
-async function hasForkPullRequest(octokit, owner, repo, branch, fromAuthor) {
+async function hasForkPullRequest(
+  octokit,
+  owner,
+  repo,
+  sourceBranch,
+  sourceOwner,
+  sourceRepo
+) {
   assert(owner, "owner is not defined");
   assert(repo, "repo is not defined");
-  assert(branch, "branch is not defined");
-  assert(fromAuthor, "fromAuthor is not defined");
+  assert(sourceBranch, "sourceBranch is not defined");
+  assert(sourceOwner, "sourceOwner is not defined");
+  assert(
+    sourceRepo,
+    `sourceRepo is not defined for ${sourceOwner}:${sourceBranch}`
+  );
   try {
     const { status, data } = await octokit.pulls.list({
       owner,
       repo,
       state: "open",
-      head: `${fromAuthor}:${branch}`
+      head: `${sourceOwner}/${sourceRepo}:${sourceBranch}`
     });
     return status == 200 && data.length > 0;
   } catch (e) {
     logger.error(
-      `Error getting pull request list from https://api.github.com/repos/${owner}/${repo}/pulls?head=${fromAuthor}:${branch}&state=open'".`
+      `Error getting pull request list from https://api.github.com/repos/${owner}/${repo}/pulls?head=${sourceOwner}/${sourceRepo}:${sourceBranch}&state=open'".`
     );
     throw e;
   }

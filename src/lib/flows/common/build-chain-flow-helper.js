@@ -314,10 +314,10 @@ async function checkoutProjectBranchFlow(
 
 async function composeCheckoutInfo(
   context,
-  group,
-  project,
-  branch,
-  targetGroup,
+  sourceOwner,
+  sourceProject,
+  sourceBranch,
+  targetOwner,
   targetBranch,
   targetProject,
   isPullRequest,
@@ -325,26 +325,27 @@ async function composeCheckoutInfo(
 ) {
   const branchExists = await doesBranchExist(
     context.octokit,
-    group,
-    project,
-    branch
+    sourceOwner,
+    sourceProject,
+    sourceBranch
   );
   const hasPullRequestValue =
     branchExists && (isPullRequest || checkMerge)
       ? await hasPullRequest(
           context.octokit,
-          targetGroup,
+          targetOwner,
           targetProject,
-          branch,
-          context.config.github.author
+          sourceBranch,
+          context.config.github.author,
+          sourceProject
         )
       : undefined;
   return (!isPullRequest || hasPullRequestValue) && branchExists
     ? {
-        project,
-        group,
-        branch,
-        targetGroup,
+        project: sourceProject,
+        group: sourceOwner,
+        branch: sourceBranch,
+        targetGroup: targetOwner,
         targetBranch,
         merge: checkMerge ? hasPullRequestValue : false
       }

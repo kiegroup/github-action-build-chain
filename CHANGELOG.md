@@ -15,6 +15,7 @@
 
 - printLocalCommand definition-file wrong quotes
 - the choosen definition file is not printed in case of all placeholders have default values
+- [ISSUE 221] `hasForkPullRequest` head from `${fromAuthor}:${branch}` to `${sourceOwner}/${sourceRepo}:${sourceBranch}`
 
 # V2.6
 

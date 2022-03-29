@@ -144,7 +144,7 @@ test("hasPullRequest origin true", async () => {
         return owner === "ownerx" &&
           repo === "repox" &&
           state === "open" &&
-          head === "authorx:branchx"
+          head === "authorx/sourceRepo:branchx"
           ? { status: 200, data: prInfo }
           : undefined;
       })
@@ -156,7 +156,8 @@ test("hasPullRequest origin true", async () => {
     "ownerx",
     "repox",
     "branchx",
-    "authorx"
+    "authorx",
+    "sourceRepo"
   );
 
   expect(result).toBe(true);
@@ -170,7 +171,7 @@ test("hasPullRequest forked true", async () => {
         return owner === "ownerx" &&
           repo === "repox" &&
           state === "open" &&
-          head === "authorx:branchx"
+          head === "authorx/sourceRepo:branchx"
           ? { status: 200, data: prInfoEmpty }
           : owner === "ownerx" &&
             repo === "repox" &&
@@ -187,7 +188,8 @@ test("hasPullRequest forked true", async () => {
     "ownerx",
     "repox",
     "branchx",
-    "authorx"
+    "authorx",
+    "sourceRepo"
   );
 
   expect(result).toBe(true);
@@ -201,7 +203,7 @@ test("hasPullRequest false", async () => {
         return owner === "ownerx" &&
           repo === "repox" &&
           state === "open" &&
-          head === "authorx:branchx"
+          head === "authorx/sourceRepo:branchx"
           ? { status: 200, data: prInfoEmpty }
           : owner === "ownerx" &&
             repo === "repox" &&
@@ -218,7 +220,8 @@ test("hasPullRequest false", async () => {
     "ownerx",
     "repox",
     "branchx",
-    "authorx"
+    "authorx",
+    "sourceRepo"
   );
 
   expect(result).toBe(false);

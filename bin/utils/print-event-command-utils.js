@@ -49,9 +49,7 @@ function printLocalCommandPush(
       pkg.bin
     )} -df '${getDefinitionFile()}' build ${eventFlowTypeToCliFlowType(
       getFlowType()
-    )} -p ${eventData.repository.full_name} -b ${eventData.ref
-      .split("refs/heads/")
-      .pop()}${
+    )} -b ${eventData.ref.split("refs/heads/").pop()}${
       getStartingProject() ? ` -sp ${getStartingProject()}` : ""
     } ${additionalFlags}`
   );

@@ -618,6 +618,29 @@ The definition files are read thanks to [build-chain-configuration-reader](https
 
 ## Github limitations
 
+### Using secrets fro a forked project Action
+
+According to documentation, see [Workflows in forked repositories](https://docs.github.com/en/github-ae@latest/actions/using-workflows/events-that-trigger-workflows#workflows-in-forked-repositories)
+
+> **_Note:_** With the exception of GITHUB_TOKEN, secrets are not passed to the runner when a workflow is triggered from a forked repository. The GITHUB_TOKEN has read-only permissions in forked repositories.
+
+Nothing but `GITHUB_TOKEN` secret can be used from a forked project Github Action workflow. So cases like this will store nothing on `${{ env.GITHUB_TOKEN_GOOD_BAD }}`, `${{ env.CIFS_ZID_USER }}` or `${{ env.CIFS_ZID_KEY }}` but it will properly store `GITHUB_TOKEN` on `${{ env.GITHUB_TOKEN_GOOD}}`
+```
+      - name: "Run build-chain"
+        id: build-chain
+        uses: kiegroup/github-action-build-chain@main
+        with:
+          definition-file: whatever-the-file-url/path
+        env:
+          GITHUB_TOKEN_GOOD_BAD: "${{ secrets.MY_GH_TOKEN }}"
+          GITHUB_TOKEN_GOOD: "${{ secrets.GITHUB_TOKEN }}"
+          CIFS_ZID_USER: "${{ secrets.CIFS_ZID_USER }}"
+          CIFS_ZID_KEY: "${{ secrets.CIFS_ZID_KEY }}"
+```
+
+> **_Note:_** Just remember this is not a problem from the tool itself but a limitation from Github Actions in order to avoid exposing sensitive information.
+
+
 ### inputs usage in runs.image from action.yml
 
 > Just in case you are interested in adapting this code or in case you want to create your own tool.

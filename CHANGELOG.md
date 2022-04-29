@@ -10,6 +10,7 @@
 - [ISSUE 103] be able to access definition file from private repositories
 - [ISSUE 216] remove -project flag from build branch command
 - [ISSUE 217] add skip project execution (spe) feature
+- [ISSUE 225] add secrets information for forked projects
 
 ## Bugs
 

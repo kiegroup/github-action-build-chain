@@ -618,7 +618,7 @@ The definition files are read thanks to [build-chain-configuration-reader](https
 
 ## Github limitations
 
-### Using secrets fro a forked project Action
+### Using secrets on a forked project Github Action
 
 According to documentation, see [Workflows in forked repositories](https://docs.github.com/en/github-ae@latest/actions/using-workflows/events-that-trigger-workflows#workflows-in-forked-repositories)
 

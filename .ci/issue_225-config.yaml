@@ -1,8 +1,0 @@
-version: "2.1"
-
-dependencies:
-  - project: kiegroup/droolsjbpm-build-bootstrap
-
-default:
-  build-command:
-    current: mvn ${{ env.MVN_GOAL }}

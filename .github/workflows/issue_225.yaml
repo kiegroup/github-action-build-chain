@@ -50,7 +50,7 @@ jobs:
         uses: kiegroup/droolsjbpm-build-bootstrap/.ci/actions/build-chain@main
         with:
           definition-file: https://raw.githubusercontent.com/Ginxo/github-action-build-chain/main/.ci/issue_225-config.yaml
-          starting-project: ${{ github.event.inputs.starting-project }}
+          starting-project: kiegroup/droolsjbpm-build-bootstrap
           annotations-prefix: ${{ runner.os }}-${{ github.event.inputs.java-version }}/${{ github.event.inputs.maven-version }}
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           flow-type: branch

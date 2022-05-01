@@ -47,10 +47,10 @@ jobs:
           maven-version: ${{ github.event.inputs.maven-version }}
           cache-key-prefix: ${{ runner.os }}-${{ github.event.inputs.java-version }}-maven${{ github.event.inputs.maven-version }}
       - name: Build Chain
-        uses: kiegroup/droolsjbpm-build-bootstrap/.ci/actions/build-chain@main
+        uses: Ginxo/github-action-build-chain@issue_228
         with:
           definition-file: https://raw.githubusercontent.com/Ginxo/github-action-build-chain/main/.ci/issue_225-config.yaml
-          starting-project: kiegroup/droolsjbpm-build-bootstrap
+          starting-project: ${{ github.event.inputs.starting-project }}
           annotations-prefix: ${{ runner.os }}-${{ github.event.inputs.java-version }}/${{ github.event.inputs.maven-version }}
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           flow-type: branch

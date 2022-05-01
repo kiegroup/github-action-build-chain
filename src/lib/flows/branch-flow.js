@@ -106,7 +106,7 @@ async function start(
       : await executeBuild(
           context.config.rootFolder,
           nodeChain,
-          context.config.github.repository,
+          context.config.github.inputs.startingProject,
           options
         );
 

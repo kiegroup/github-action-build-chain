@@ -453,7 +453,68 @@ Considering the projects hierarchy:
 
 You can check how to define build definition files from [Build Chain Configuration Reader documentation](https://github.com/kiegroup/build-chain-configuration-reader)
 
-// TO BE DOCUMENTED
+### Mapping
+Let's suppose 
+
+```
+- project: E
+  dependencies:
+    - project: D
+  mapping:
+    dependencies:
+      default:
+        - source: 7.x
+          target: main
+      C:
+        - source: main
+          target: 7.x
+        - source: 7.x
+          target: 7.x
+      D:
+        - source: main
+          target: 7.x
+        - source: 7.x
+          target: 7.x
+    dependant:
+      default:
+        - source: main
+          target: 7.x
+    exclude:
+      - A
+      - B
+```
+
+#### mapping.dependencies
+
+It is used to define branch mapping between E and its dependencies in case `E` is `startingProject`/`projectTriggeringTheJob`. 
+
+In case the `E:7.x` branch build or PR is triggered for this `7.x` target branch:
+
+- A: no mapping at all, so `7.x` (straight mapping) (since it is excluded)
+- B: no mapping at all, so `7.x` (straight mapping) (since it is excluded)
+- C:`7.x` (due to `mapping.dependencies.C` source `7.x` mapping)
+- D:`7.x` (due to `mapping.dependencies.D` source `7.x` mapping)
+- The rest (F,G,H,...): `main` (since `mapping.dependencies.default` mapping defined for source: `7.x`)
+
+In case the `E:main` branch build or PR is triggered for this `main` target branch:
+
+- A: no mapping at all, so `main` (straight mapping) (since it is excluded)
+- B: no mapping at all, so `main` (straight mapping) (since it is excluded)
+- C:`7.x` (due to `mapping.dependencies.C` source `main` mapping)
+- D:`7.x` (due to `mapping.dependencies.C` source `main` mapping)
+- The rest (F,G,H,...): `main` (since there's no mapping defined for default main branch)
+
+In case the `E:anyotherbranch` branch build or PR is triggered for this `anyotherbranch` target branch (being `anyotherbranch` whatever the branch name, except `7.x` or `main`):
+
+- No mapping at all, just straight mapping to `anyotherbranch`. 
+
+
+#### mapping.dependant
+
+It is used to define branch mapping between the rest of the projects and project A in case `E` is NOT `startingProject`/`projectTriggeringTheJob`. 
+
+In case the `A:7.x` or any other (except `main`) branch build or PR is triggered -> `E:7.x` will be taken (since there's not `mapping.dependant` for `7.x` source)
+In case the `A:main` branch build or PR is triggered -> `E:7.x` (due to `mapping.dependant.default` mapping)
 
 ## Docker build
 

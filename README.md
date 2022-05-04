@@ -117,7 +117,7 @@ See [action.yml](action.yml)
 
 - **flow-type** (optional. 'pull-request' by default): The flow you want to execute. Possible values
 
-  - pull-request: executes the pull reques flow
+  - pull-request: executes the pull request flow
   - fdb: executes the full downstream flow
   - branch: executes the tool for a specific branch
   - single: executes the tool for a single project
@@ -147,7 +147,7 @@ See [action.yml](action.yml)
   > ```
   > annotations-prefix: "${{ matrix.java-version }}/${{ matrix.maven-version }}"
   > annotations-prefix: "My Job Prefix"
-  > annotations-prefix: "Graddle Version ${{ matrix.gradle-version }}"
+  > annotations-prefix: "Gradle Version ${{ matrix.gradle-version }}"
   > annotations-prefix: "OS ${{ matrix.os }}"
   > ```
 
@@ -225,7 +225,7 @@ post:
 
 ## Archiving Artifacts
 
-The archive artifacts algorithm is basically copied from [actions/upload-artifact project](https://github.com/actions/upload-artifact) and (manually) transpile to javascript. The usage is basically the same (the inputs are different named adding `archive-artifacts` prefix and the [Conditional Artifact Upload](https://github.com/actions/upload-artifact#conditional-artifact-upload) is not enabled), so why do we include this `archive artifacts` mechanism in this tool if it's already implemented by another tool? well, because this treats the archive artifacts mechanism for the whole build chain, so in case you define an `archive-artifacts-path` in a different project from the chain, all of them will be uploaded. If you are wondering if you are able to use `actions/upload-artifact` instead of the one we propose, the answer is 'yes', just take into consideration the artifacts will be archived based on the definition from the project triggering the job.
+The archive artifacts algorithm is basically copied from [actions/upload-artifact project](https://github.com/actions/upload-artifact) and (manually) transpiled to javascript. The usage is basically the same (the inputs are different named adding `archive-artifacts` prefix and the [Conditional Artifact Upload](https://github.com/actions/upload-artifact#conditional-artifact-upload) is not enabled), so why do we include this `archive artifacts` mechanism in this tool if it's already implemented by another tool? well, because this treats the archive artifacts mechanism for the whole build chain, so in case you define an `archive-artifacts-path` in a different project from the chain, all of them will be uploaded. If you are wondering if you are able to use `actions/upload-artifact` instead of the one we propose, the answer is 'yes', just take into consideration the artifacts will be archived based on the definition from the project triggering the job.
 
 The `archive-artifacts-path` input brings you the chance to specify if the path will be uploaded in case of build success (default), in case of failure or always for every single path. For example specifying something like `path/to/artifact/world.txt@failure` will archive `path/to/artifact/world.txt` in case of execution failure. You can check [Upload for different execution results](https://github.com/actions/upload-artifact#upload-for-different-execution-results).
 
@@ -300,7 +300,7 @@ If multiple paths are provided as input, the least common ancestor of all the se
 
 Relative and absolute file paths are both allowed. Relative paths are rooted against the current working directory. Paths that begin with a wildcard character should be quoted to avoid being interpreted as YAML aliases.
 
-The [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) package is used internally to handle most of the logic around uploading an artifact. There is extra documentation around upload limitations and behavior in the toolkit repo that is worth checking out.
+The [@actions/artifact](https://github.com/actions/toolkit/tree/main/packages/artifact) package is used internally to handle most of the logic around uploading an artifact. There is extra documentation around upload limitations and behavior in the toolkit repository that is worth checking out.
 
 ### Customization if no files are found
 
@@ -366,8 +366,8 @@ archive-artifacts:
 The idea of the property `dependencies` is to allow to define from the project triggering the job which artifacts you want to archive from the whole chain. Possible values:
 
 - `none` no artifact from its dependencies will be uploaded, no matter what the dependencies projects define.
-- `all` all artifacts from its dependencies will be uploaded, dependending on what the dependencies define.
-- `list of projects` define which of the projects in the chain will be treated to upload artifacts, dependending on what the dependencies define.
+- `all` all artifacts from its dependencies will be uploaded, depending on what the dependencies define.
+- `list of projects` define which of the projects in the chain will be treated to upload artifacts, depending on what the dependencies define.
 
 ```yaml
 archive-artifacts:
@@ -422,7 +422,7 @@ will clone the `group/projectx` in the `ROOT_FOLDER/PROJECT_FOLDER` and addition
 
 ### Zipped Artifact Downloads
 
-During a workflow run, files are uploaded and downloaded indivdually using the `upload-artifact` and `download-artifact` actions. However, when a workflow run finishes and an artifact is downloaded from either the UI or through the [download api](https://developer.github.com/v3/actions/artifacts/#download-an-artifact), a zip is dynamically created with all the file contents that were uploaded. There is currently no way to download artifacts after a workflow run finishes in a format other than a zip or to download artifact contents individually. One of the consequences of this limitation is that if a zip is uploaded during a workflow run and then downloaded from the UI, there will be a double zip created.
+During a workflow run, files are uploaded and downloaded individually using the `upload-artifact` and `download-artifact` actions. However, when a workflow run finishes and an artifact is downloaded from either the UI or through the [download api](https://developer.github.com/v3/actions/artifacts/#download-an-artifact), a zip is dynamically created with all the file contents that were uploaded. There is currently no way to download artifacts after a workflow run finishes in a format other than a zip or to download artifact contents individually. One of the consequences of this limitation is that if a zip is uploaded during a workflow run and then downloaded from the UI, there will be a double zip created.
 
 ### Permission Loss
 
@@ -434,7 +434,7 @@ During a workflow run, files are uploaded and downloaded indivdually using the `
 
 ## Execution environment
 
-The environment execution definition is part of the worklfow (the `.yml` file) and it depends on the commands you require to execute. If you require to execute maven commands you will have to add the `actions/setup-java@v1` with its java version, or in case you need python commands `actions/setup-python` is the one. You can find differente examples in https://github.com/YOURGROUP/YOURPROJECT/actions/new.
+The environment execution definition is part of the workflow (the `.yml` file) and it depends on the commands you require to execute. If you require to execute maven commands you will have to add the `actions/setup-java@v1` with its java version, or in case you need python commands `actions/setup-python` is the one. You can find different examples in https://github.com/YOURGROUP/YOURPROJECT/actions/new.
 
 It could be the case where you require a very specific environment to execute your stuff as it is the case for [python3-cekit](https://github.com/kiegroup/github-action-build-chain/tree/python3-cekit). Feel free to propose the environment you need as a pull request to this project:
 
@@ -514,7 +514,7 @@ To choose between `pr`, `fd` or `single`
 - **skipParallelCheckout**: Checkout the project sequentially.
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
 - **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
-- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checout information will be printed anyway. E.g. `--skipCheckout`
+- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checkout information will be printed anyway. E.g. `--skipCheckout`
 
 Examples:
 
@@ -532,7 +532,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **skipParallelCheckout**: Checkout the project sequentially.
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
 - **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
-- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checout information will be printed anyway. E.g. `--skipCheckout`
+- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checkout information will be printed anyway. E.g. `--skipCheckout`
 
 Examples:
 
@@ -550,7 +550,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **skipParallelCheckout**: Checkout the project sequentially.
 - **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
 - **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
-- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checout information will be printed anyway. E.g. `--skipCheckout`
+- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checkout information will be printed anyway. E.g. `--skipCheckout`
 
 Examples:
 
@@ -570,7 +570,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
 - **skipParallelCheckout**: Checkout the project sequentially.
 - **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
-- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checout information will be printed anyway. E.g. `--skipCheckout`
+- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checkout information will be printed anyway. E.g. `--skipCheckout`
 - **--fullProjectDependencyTree**: Checks out and execute the whole tree instead of the upstream build (fasle by default). E.g. `--fullProjectDependencyTree`
 
 Examples:
@@ -611,7 +611,7 @@ So basically at left side of `||` you define the regular expression where you wa
 
 The definition files are read thanks to [build-chain-configuration-reader](https://github.com/kiegroup/build-chain-configuration-reader) library so in case you want to modify something from there it's easier if you just [npm link](https://docs.npmjs.com/cli/link) it:
 
-- clone repo and browse to the folder
+- clone repository and browse to the folder
 - `npm install` it
 - (`sudo`) `npm link`
 - and then from this project folder execute `npm link @kie/build-chain-configuration-reader`

@@ -15,6 +15,8 @@ jobs:
       uses: warchant/setup-sonar-scanner@v3
     - name: coverage report
       uses: actions/setup-node@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         # node 12 support is deprecated in sonar
         node-version: 14

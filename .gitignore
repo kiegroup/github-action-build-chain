@@ -6,3 +6,5 @@ test/**/_temp/**/*
 build_chain_20*/**/*
 yarn.lock
 /project-dependencies.yaml
+coverage/
+test-report.xml

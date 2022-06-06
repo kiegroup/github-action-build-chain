@@ -389,7 +389,7 @@ describe("getCheckoutInfo", () => {
 });
 
 describe("checkoutDefinitionTree", () => {
-  test("checkoutDefinitionTree", async () => {
+  test("checkoutDefinitionTree parallel", async () => {
     // Arrange
     const nodeChain = [
       {
@@ -482,6 +482,414 @@ describe("checkoutDefinitionTree", () => {
     );
     expect(Object.values(result)[1]).toStrictEqual({
       project: "droolsjbpm-build-bootstrap-forked",
+      group: "sourceGroup",
+      branch: "sBranch",
+      targetGroup: "kiegroup",
+      targetBranch: "tBranch",
+      merge: true
+    });
+  });
+
+  test("checkoutDefinitionTree parallel and skip checking out a repo", async () => {
+    // Arrange
+    const nodeChain = [
+      {
+        project: "kiegroup/lienzo-core",
+        children: [],
+        parents: [],
+        repo: { group: "kiegroup", name: "lienzo-core" },
+        build: { "build-command": [] },
+        mapping: undefined
+      },
+      {
+        project: "kiegroup/droolsjbpm-build-bootstrap",
+        dependencies: [],
+        children: [],
+        parents: [],
+        repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+        build: { "build-command": [] }
+      },
+      {
+        project: "kiegroup/lock-treatment-tool",
+        dependencies: [],
+        children: [],
+        parents: [],
+        repo: { group: "kiegroup", name: "lock-treatment-tool" },
+        build: { "build-command": [] }
+      }
+    ];
+
+    const context = {
+      config: {
+        github: {
+          serverUrl: "URL",
+          serverUrlWithToken: "URL_with_token",
+          sourceGroup: "sourceGroup",
+          author: "author",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        },
+        rootFolder: "folder"
+      }
+    };
+
+    const skipProjectCheckout = new Map(
+      Object.entries({ "kiegroup/lock-treatment-tool": true })
+    );
+
+    const options = {
+      skipProjectCheckout,
+      skipParallelCheckout: false
+    };
+
+    const flow = "pr";
+
+    getForkedProjectMock
+      .mockResolvedValueOnce({ name: "lienzo-core-forked" })
+      .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" })
+      .mockResolvedValueOnce({ name: "lock-treatment-tool-forked" });
+
+    doesBranchExistMock
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true);
+
+    hasPullRequestMock
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true);
+
+    getNodeTriggeringJob.mockReturnValueOnce(nodeChain[0]);
+
+    // Act
+    const result = await checkoutDefinitionTree(
+      context,
+      nodeChain,
+      flow,
+      options
+    );
+    // Assert
+    expect(mergeMock).toHaveBeenCalledTimes(2);
+    expect(mergeMock).toHaveBeenCalledWith(
+      "folder/kiegroup_lienzo_core",
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
+    );
+    expect(mergeMock).toHaveBeenCalledWith(
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "URL_with_token/sourceGroup/droolsjbpm-build-bootstrap-forked",
+      "sBranch"
+    );
+
+    expect(cloneMock).toHaveBeenCalledTimes(2);
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/lienzo-core",
+      "folder/kiegroup_lienzo_core",
+      "tBranch"
+    );
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "tBranch"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(2);
+    expect(renameMock).toHaveBeenCalledWith(
+      "folder/kiegroup_lienzo_core",
+      "sBranch"
+    );
+    expect(renameMock).toHaveBeenCalledWith(
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "sBranch"
+    );
+
+    expect(Object.keys(result).length).toBe(3);
+    expect(Object.keys(result)[0]).toStrictEqual("kiegroup/lienzo-core");
+    expect(Object.values(result)[0]).toStrictEqual({
+      project: "lienzo-core-forked",
+      group: "sourceGroup",
+      branch: "sBranch",
+      targetGroup: "kiegroup",
+      targetBranch: "tBranch",
+      merge: true
+    });
+    expect(Object.keys(result)[1]).toStrictEqual(
+      "kiegroup/droolsjbpm-build-bootstrap"
+    );
+    expect(Object.values(result)[1]).toStrictEqual({
+      project: "droolsjbpm-build-bootstrap-forked",
+      group: "sourceGroup",
+      branch: "sBranch",
+      targetGroup: "kiegroup",
+      targetBranch: "tBranch",
+      merge: true
+    });
+
+    expect(Object.keys(result)[2]).toStrictEqual(
+      "kiegroup/lock-treatment-tool"
+    );
+    expect(Object.values(result)[2]).toStrictEqual({
+      project: "lock-treatment-tool-forked",
+      group: "sourceGroup",
+      branch: "sBranch",
+      targetGroup: "kiegroup",
+      targetBranch: "tBranch",
+      merge: true
+    });
+  });
+
+  test("checkoutDefinitionTree sequential", async () => {
+    // Arrange
+    const nodeChain = [
+      {
+        project: "kiegroup/lienzo-core",
+        children: [],
+        parents: [],
+        repo: { group: "kiegroup", name: "lienzo-core" },
+        build: { "build-command": [] },
+        mapping: undefined
+      },
+      {
+        project: "kiegroup/droolsjbpm-build-bootstrap",
+        dependencies: [],
+        children: [],
+        parents: [],
+        repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+        build: { "build-command": [] }
+      }
+    ];
+
+    const context = {
+      config: {
+        github: {
+          serverUrl: "URL",
+          serverUrlWithToken: "URL_with_token",
+          sourceGroup: "sourceGroup",
+          author: "author",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        },
+        rootFolder: "folder"
+      }
+    };
+
+    const options = { skipParallelCheckout: true };
+    const flow = "pr";
+
+    getForkedProjectMock
+      .mockResolvedValueOnce({ name: "lienzo-core-forked" })
+      .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" });
+    doesBranchExistMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+    hasPullRequestMock.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
+    getNodeTriggeringJob.mockReturnValueOnce(nodeChain[0]);
+
+    // Act
+    const result = await checkoutDefinitionTree(
+      context,
+      nodeChain,
+      flow,
+      options
+    );
+
+    // Assert
+    expect(mergeMock).toHaveBeenCalledTimes(2);
+    expect(mergeMock).toHaveBeenCalledWith(
+      "folder/kiegroup_lienzo_core",
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
+    );
+    expect(mergeMock).toHaveBeenCalledWith(
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "URL_with_token/sourceGroup/droolsjbpm-build-bootstrap-forked",
+      "sBranch"
+    );
+
+    expect(cloneMock).toHaveBeenCalledTimes(2);
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/lienzo-core",
+      "folder/kiegroup_lienzo_core",
+      "tBranch"
+    );
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "tBranch"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(2);
+    expect(renameMock).toHaveBeenCalledWith(
+      "folder/kiegroup_lienzo_core",
+      "sBranch"
+    );
+    expect(renameMock).toHaveBeenCalledWith(
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "sBranch"
+    );
+
+    expect(Object.keys(result).length).toBe(2);
+    expect(Object.keys(result)[0]).toStrictEqual("kiegroup/lienzo-core");
+    expect(Object.values(result)[0]).toStrictEqual({
+      project: "lienzo-core-forked",
+      group: "sourceGroup",
+      branch: "sBranch",
+      targetGroup: "kiegroup",
+      targetBranch: "tBranch",
+      merge: true
+    });
+    expect(Object.keys(result)[1]).toStrictEqual(
+      "kiegroup/droolsjbpm-build-bootstrap"
+    );
+    expect(Object.values(result)[1]).toStrictEqual({
+      project: "droolsjbpm-build-bootstrap-forked",
+      group: "sourceGroup",
+      branch: "sBranch",
+      targetGroup: "kiegroup",
+      targetBranch: "tBranch",
+      merge: true
+    });
+  });
+
+  test("checkoutDefinitionTree sequential and skip checking out a repo", async () => {
+    // Arrange
+    const nodeChain = [
+      {
+        project: "kiegroup/lienzo-core",
+        children: [],
+        parents: [],
+        repo: { group: "kiegroup", name: "lienzo-core" },
+        build: { "build-command": [] },
+        mapping: undefined
+      },
+      {
+        project: "kiegroup/droolsjbpm-build-bootstrap",
+        dependencies: [],
+        children: [],
+        parents: [],
+        repo: { group: "kiegroup", name: "droolsjbpm-build-bootstrap" },
+        build: { "build-command": [] }
+      },
+      {
+        project: "kiegroup/lock-treatment-tool",
+        dependencies: [],
+        children: [],
+        parents: [],
+        repo: { group: "kiegroup", name: "lock-treatment-tool" },
+        build: { "build-command": [] }
+      }
+    ];
+
+    const context = {
+      config: {
+        github: {
+          serverUrl: "URL",
+          serverUrlWithToken: "URL_with_token",
+          sourceGroup: "sourceGroup",
+          author: "author",
+          sourceBranch: "sBranch",
+          targetBranch: "tBranch"
+        },
+        rootFolder: "folder"
+      }
+    };
+
+    const skipProjectCheckout = new Map(
+      Object.entries({ "kiegroup/lock-treatment-tool": true })
+    );
+
+    const options = {
+      skipProjectCheckout,
+      skipParallelCheckout: true
+    };
+
+    const flow = "pr";
+
+    getForkedProjectMock
+      .mockResolvedValueOnce({ name: "lienzo-core-forked" })
+      .mockResolvedValueOnce({ name: "droolsjbpm-build-bootstrap-forked" })
+      .mockResolvedValueOnce({ name: "lock-treatment-tool-forked" });
+
+    doesBranchExistMock
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true);
+
+    hasPullRequestMock
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true)
+      .mockResolvedValueOnce(true);
+
+    getNodeTriggeringJob.mockReturnValueOnce(nodeChain[0]);
+
+    // Act
+    const result = await checkoutDefinitionTree(
+      context,
+      nodeChain,
+      flow,
+      options
+    );
+
+    // Assert
+    expect(mergeMock).toHaveBeenCalledTimes(2);
+    expect(mergeMock).toHaveBeenCalledWith(
+      "folder/kiegroup_lienzo_core",
+      "URL_with_token/sourceGroup/lienzo-core-forked",
+      "sBranch"
+    );
+    expect(mergeMock).toHaveBeenCalledWith(
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "URL_with_token/sourceGroup/droolsjbpm-build-bootstrap-forked",
+      "sBranch"
+    );
+
+    expect(cloneMock).toHaveBeenCalledTimes(2);
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/lienzo-core",
+      "folder/kiegroup_lienzo_core",
+      "tBranch"
+    );
+    expect(cloneMock).toHaveBeenCalledWith(
+      "URL_with_token/kiegroup/droolsjbpm-build-bootstrap",
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "tBranch"
+    );
+
+    expect(renameMock).toHaveBeenCalledTimes(2);
+    expect(renameMock).toHaveBeenCalledWith(
+      "folder/kiegroup_lienzo_core",
+      "sBranch"
+    );
+    expect(renameMock).toHaveBeenCalledWith(
+      "folder/kiegroup_droolsjbpm_build_bootstrap",
+      "sBranch"
+    );
+
+    expect(Object.keys(result).length).toBe(3);
+    expect(Object.keys(result)[0]).toStrictEqual("kiegroup/lienzo-core");
+    expect(Object.values(result)[0]).toStrictEqual({
+      project: "lienzo-core-forked",
+      group: "sourceGroup",
+      branch: "sBranch",
+      targetGroup: "kiegroup",
+      targetBranch: "tBranch",
+      merge: true
+    });
+    expect(Object.keys(result)[1]).toStrictEqual(
+      "kiegroup/droolsjbpm-build-bootstrap"
+    );
+    expect(Object.values(result)[1]).toStrictEqual({
+      project: "droolsjbpm-build-bootstrap-forked",
+      group: "sourceGroup",
+      branch: "sBranch",
+      targetGroup: "kiegroup",
+      targetBranch: "tBranch",
+      merge: true
+    });
+
+    expect(Object.keys(result)[2]).toStrictEqual(
+      "kiegroup/lock-treatment-tool"
+    );
+    expect(Object.values(result)[2]).toStrictEqual({
+      project: "lock-treatment-tool-forked",
       group: "sourceGroup",
       branch: "sBranch",
       targetGroup: "kiegroup",

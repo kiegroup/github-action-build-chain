@@ -6,7 +6,9 @@ const root = path.join(__dirname, "_temp", "fs-util");
 
 beforeAll(async () => {
   // clear temp directory
-  fs.rmdirSync(root, { recursive: true, force: true });
+  if (fs.existsSync(root)) {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
   fs.mkdirSync(path.join(root, "folder-a", "folder-b", "folder-c1"), {
     recursive: true
   });

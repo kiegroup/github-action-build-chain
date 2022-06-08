@@ -454,7 +454,8 @@ Considering the projects hierarchy:
 You can check how to define build definition files from [Build Chain Configuration Reader documentation](https://github.com/kiegroup/build-chain-configuration-reader)
 
 ### Mapping
-Let's suppose 
+
+Let's suppose
 
 ```
 - project: E
@@ -486,7 +487,7 @@ Let's suppose
 
 #### mapping.dependencies
 
-It is used to define branch mapping between E and its dependencies in case `E` is `startingProject`/`projectTriggeringTheJob`. 
+It is used to define branch mapping between E and its dependencies in case `E` is `startingProject`/`projectTriggeringTheJob`.
 
 In case the `E:7.x` branch build or PR is triggered for this `7.x` target branch:
 
@@ -506,12 +507,11 @@ In case the `E:main` branch build or PR is triggered for this `main` target bran
 
 In case the `E:anyotherbranch` branch build or PR is triggered for this `anyotherbranch` target branch (being `anyotherbranch` whatever the branch name, except `7.x` or `main`):
 
-- No mapping at all, just straight mapping to `anyotherbranch`. 
-
+- No mapping at all, just straight mapping to `anyotherbranch`.
 
 #### mapping.dependant
 
-It is used to define branch mapping between the rest of the projects and project A in case `E` is NOT `startingProject`/`projectTriggeringTheJob`. 
+It is used to define branch mapping between the rest of the projects and project A in case `E` is NOT `startingProject`/`projectTriggeringTheJob`.
 
 In case the `A:7.x` or any other (except `main`) branch build or PR is triggered -> `E:7.x` will be taken (since there's not `mapping.dependant` for `7.x` source)
 In case the `A:main` branch build or PR is triggered -> `E:7.x` (due to `mapping.dependant.default` mapping)
@@ -686,6 +686,7 @@ According to documentation, see [Workflows in forked repositories](https://docs.
 > **_Note:_** With the exception of GITHUB_TOKEN, secrets are not passed to the runner when a workflow is triggered from a forked repository. The GITHUB_TOKEN has read-only permissions in forked repositories.
 
 Nothing but `GITHUB_TOKEN` secret can be used from a forked project Github Action workflow. So cases like this will store nothing on `${{ env.GITHUB_TOKEN_GOOD_BAD }}`, `${{ env.CIFS_ZID_USER }}` or `${{ env.CIFS_ZID_KEY }}` but it will properly store `GITHUB_TOKEN` on `${{ env.GITHUB_TOKEN_GOOD}}`
+
 ```
       - name: "Run build-chain"
         id: build-chain
@@ -700,7 +701,6 @@ Nothing but `GITHUB_TOKEN` secret can be used from a forked project Github Actio
 ```
 
 > **_Note:_** Just remember this is not a problem from the tool itself but a limitation from Github Actions in order to avoid exposing sensitive information.
-
 
 ### inputs usage in runs.image from action.yml
 

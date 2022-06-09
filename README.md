@@ -12,6 +12,23 @@ You can check [Usage example](#usage-example).
 
 Just defining the **build chain** flow in every project you want to trigger, the tool will get build information from `dependency-file` input and will execute every command from every project in a single github action.
 
+Table of content
+----------------
+
+* **[Github Action Build Chain](#github-action-build-chain)**
+* **[Build Chain Flows](#build-chain-flows)**
+* **[How to add it to your project(s)](#how-to-add-it-to-your-projects)**
+* **[Input Fields](#input-fields)**
+* **[Pre/Post sections](#prepost-sections)**
+* **[Archiving Artifacts](#archiving-artifacts)**
+* **[How to clone project in more than one folder](#how-to-clone-project-in-more-than-one-folder)**
+* **[Execution environment](#execution-environment)**
+* **[Usage example](#usage-example)**
+* **[Execution](#execution)**
+* **[About Commands to Execute](#about-commands-to-execute)**
+* **[Limitations](#limitations)**
+
+
 ## Allowed configuration files versions
 
 - 2.1
@@ -418,19 +435,6 @@ Another example would be:
 
 will clone the `group/projectx` in the `ROOT_FOLDER/PROJECT_FOLDER` and additionally will clone the project folder to `ROOT_FOLDER/PROJECT_FOLDER/another-folder`
 
-# Limitations
-
-### Zipped Artifact Downloads
-
-During a workflow run, files are uploaded and downloaded individually using the `upload-artifact` and `download-artifact` actions. However, when a workflow run finishes and an artifact is downloaded from either the UI or through the [download api](https://developer.github.com/v3/actions/artifacts/#download-an-artifact), a zip is dynamically created with all the file contents that were uploaded. There is currently no way to download artifacts after a workflow run finishes in a format other than a zip or to download artifact contents individually. One of the consequences of this limitation is that if a zip is uploaded during a workflow run and then downloaded from the UI, there will be a double zip created.
-
-### Permission Loss
-
-:exclamation: File permissions are not maintained during artifact upload :exclamation: For example, if you make a file executable using `chmod` and then upload that file, post-download the file is no longer guaranteed to be set as an executable.
-
-### Case Insensitive Uploads
-
-:exclamation: File uploads are case insensitive :exclamation: If you upload `A.txt` and `a.txt` with the same root path, only a single file will be saved and available during download.
 
 ## Execution environment
 
@@ -677,6 +681,33 @@ The definition files are read thanks to [build-chain-configuration-reader](https
 - (`sudo`) `npm link`
 - and then from this project folder execute `npm link @kie/build-chain-configuration-reader`
 
+## About Commands to Execute
+
+Just consider the library used behind the scenes in order to execute commands is [@actions/exec](https://github.com/actions/toolkit/tree/main/packages/exec), this library has a limitation at https://github.com/actions/toolkit/blob/b5f31bb5a25d129441c294fc81ba7f92f3e978ba/packages/exec/src/exec.ts#L27 where it tries to decide the "tool" to be executed, so in case you need to execute bash or windows commands like conditionals you should use it like this
+
+### Bash
+`bash -c "my command"`
+`bash -c  "if true; then echo 'it's TRUE'; else echo 'it's FALSE'; fi"`
+
+### Windows
+`cmd /c "my command"`
+
+> **_Note:_** thanks to https://github.com/actions/toolkit/issues/461#issuecomment-743750804
+
+# Limitations
+
+### Zipped Artifact Downloads
+
+During a workflow run, files are uploaded and downloaded individually using the `upload-artifact` and `download-artifact` actions. However, when a workflow run finishes and an artifact is downloaded from either the UI or through the [download api](https://developer.github.com/v3/actions/artifacts/#download-an-artifact), a zip is dynamically created with all the file contents that were uploaded. There is currently no way to download artifacts after a workflow run finishes in a format other than a zip or to download artifact contents individually. One of the consequences of this limitation is that if a zip is uploaded during a workflow run and then downloaded from the UI, there will be a double zip created.
+
+### Permission Loss
+
+:exclamation: File permissions are not maintained during artifact upload :exclamation: For example, if you make a file executable using `chmod` and then upload that file, post-download the file is no longer guaranteed to be set as an executable.
+
+### Case Insensitive Uploads
+
+:exclamation: File uploads are case insensitive :exclamation: If you upload `A.txt` and `a.txt` with the same root path, only a single file will be saved and available during download.
+
 ## Github limitations
 
 ### Using secrets on a forked project Github Action
@@ -708,17 +739,3 @@ Nothing but `GITHUB_TOKEN` secret can be used from a forked project Github Actio
 
 It's not possible to use expressions like `image: "docker://kie-group:github-action-build-chain:{{ inputs.build-chain-build-system }}"`. This way it would be easy to dynamically select image to run with a simple `with` input from flow yml file and we could skip errors like [matrix in uses](#matrix-in-uses).
 Just because of this we have to maintain different Dockerfile definitions in different branches and to tag every branch for every version we release like `python3-cekit-v1`.
-
-### Contributors
-
-<table>
-<tr>
-    <td align="center">
-        <a href=https://github.com/ginxo>
-            <img src=https://avatars2.githubusercontent.com/u/25130444?v=4 width="100;" style="border-radius:50%;align-items:center;justify-content:center;overflow:hidden;" alt=Ginxo/>
-            <br />
-            <sub style="font-size:14px"><b>Ginxo</b></sub>
-        </a>
-    </td>
-</tr>
-</table>

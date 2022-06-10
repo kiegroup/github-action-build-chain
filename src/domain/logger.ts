@@ -1,21 +1,17 @@
-import * as util from 'util';
+import * as util from "util";
 
 export class Logger {
-  log(prefix: string, obj: any) {
-    const str = obj.map((o: any) => (typeof o === 'object' ? this.inspect(o) : o));
-    if (prefix) {
-      console.log.apply(console, [prefix, ...str]);
-    } else {
-      console.log.apply(console, str);
-    }
+  log(prefix: string, obj: unknown[]) {
+    const str = obj.map((o: unknown) => (typeof o === "object" ? this.inspect(o) : o));
+    // eslint-disable-next-line
+    console.log.apply(console, [prefix ?? [], ...str]);
   }
 
   emptyLine() {
-    this.log('', []);
+    this.log("", []);
   }
 
-  private inspect(obj: any) {
+  private inspect(obj: unknown) {
     return util.inspect(obj, false, null, true);
   }
-
 }

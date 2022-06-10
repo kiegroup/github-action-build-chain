@@ -1,4 +1,4 @@
-import { AbstractLoggerService } from '@bc/service/logger/abstract-logger-service';
+import { AbstractLoggerService } from "@bc/service/logger/abstract-logger-service";
 
 export class CLILoggerService extends AbstractLoggerService {
 
@@ -11,6 +11,6 @@ export class CLILoggerService extends AbstractLoggerService {
   }
 
   startGroup(message: string): void {
-    super.logger.log('#', message);
+    super.logger.log("#", message);
   }
 }

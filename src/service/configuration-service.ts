@@ -1,5 +1,5 @@
-import { Configuration } from '@bc/domain/configuration';
-import { EntryPoint } from '@bc/domain/entry-point';
+import { Configuration } from "@bc/domain/configuration";
+import { EntryPoint } from "@bc/domain/entry-point";
 
 export class ConfigurationService {
 

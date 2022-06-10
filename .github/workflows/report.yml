@@ -2,6 +2,7 @@ on:
   push:
     branches:
       - main
+      - typescript/main
 
 name: coverage report
 

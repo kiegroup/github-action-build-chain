@@ -2,72 +2,36 @@
   "name": "@kie/build-chain-action",
   "version": "2.3.35",
   "description": "Library to execute commands based on github projects dependencies.",
-  "main": "dist/build-chain-cli.js",
-  "author": "Enrique Mingorance Cano <emingora@redhat.com>",
-  "license": "SEE LICENSE IN LICENSE",
+  "main": "./build/cli-runner.js",
+  "author": "",
+  "license": "ISC",
   "private": false,
   "bin": {
-    "build-chain-action": "./bin/build-chain-cli.js"
+    "build-chain-action": "./build/cli-runner.js"
   },
   "scripts": {
     "test": "jest",
-    "test:report": "npm test -- --coverage --testResultsProcessor=jest-sonar-reporter",
-    "locktt": "locktt",
-    "lint": "eslint .",
-    "prettier": "prettier -l src/** test/**/*.js",
-    "prettier-write": "prettier --write .",
-    "lint-final": "npm run prettier && npm run lint",
-    "prepublish": "npm run lint && npm run test",
-    "ncc-build": "ncc build --minify bin/build-chain-event.js"
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "npm run lint -- --fix"
   },
-  "git-pre-hooks": {
-    "pre-commit": "npm run lint && npm run prettier && npm run ncc-build && git add dist/index.js",
-    "pre-push": "npm ci"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiegroup/github-action-build-chain.git"
   },
-  "dependencies": {
-    "@actions/artifact": "^0.3.5",
-    "@actions/core": "^1.6.0",
-    "@actions/exec": "^1.1.0",
-    "@actions/glob": "^0.1.0",
-    "@kie/build-chain-configuration-reader": "^2.2.5",
-    "@octokit/rest": "^17.6.0",
-    "argparse": "^2.0.1",
-    "dotenv": "^8.2.0",
-    "fs-extra": "^9.0.0",
-    "js-yaml": "^3.14.0",
-    "node-xlsx": "^0.17.2",
-    "pretty-ms": "^7.0.1",
-    "tmp": "^0.2.1"
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/kiegroup/github-action-build-chain/issues"
   },
+  "homepage": "https://github.com/kiegroup/github-action-build-chain#readme",
   "devDependencies": {
-    "@zeit/ncc": "^0.22.3",
-    "eslint": "^7.10.0",
-    "eslint-config-google": "^0.14.0",
-    "eslint-config-prettier": "^6.11.0",
-    "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.22.0",
-    "eslint-plugin-jest": "^23.19.0",
-    "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^3.1.4",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
-    "git-pre-hooks": "^1.2.1",
-    "jest": "^25.5.1",
-    "jest-sonar-reporter": "^2.0.0",
-    "mock-spawn": "^0.2.6",
-    "prettier": "^2.0.5"
-  },
-  "jest": {
-    "testEnvironment": "node",
-    "modulePathIgnorePatterns": [
-      "locally_execution/"
-    ]
-  },
-  "prettier": {
-    "trailingComma": "none",
-    "arrowParens": "avoid"
-  },
-  "engines": {
-    "node": ">= 12.18.0"
+    "@actions/core": "^1.8.2",
+    "@types/jest": "^28.1.1",
+    "@types/node": "^17.0.41",
+    "@typescript-eslint/eslint-plugin": "^5.27.1",
+    "@typescript-eslint/parser": "^5.27.1",
+    "eslint": "^8.17.0",
+    "ts-jest": "^28.0.4",
+    "ts-node": "^10.8.1",
+    "typescript": "^4.7.3"
   }
 }

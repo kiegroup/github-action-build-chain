@@ -1,3 +1,6 @@
+// TODO: Shift import 'reflect-metadata' to the actual entrypoint file whenever it's ready
+import 'reflect-metadata';
+
 import { Configuration } from "@bc/domain/configuration";
 import { EntryPoint } from "@bc/domain/entry-point";
 

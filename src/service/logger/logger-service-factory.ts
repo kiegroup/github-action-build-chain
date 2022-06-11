@@ -3,6 +3,7 @@ import { ConfigurationService } from "@bc/service/configuration-service";
 import { EntryPoint } from "@bc/domain/entry-point";
 import { CLILoggerService } from "@bc/service/logger/cli-logger-service";
 import { GithubActionLoggerService } from "@bc/service/logger/github-action-logger-service";
+import { Container } from "typedi";
 
 export class LoggerServiceFactory {
 
@@ -10,7 +11,7 @@ export class LoggerServiceFactory {
 
   public static getInstance(): LoggerService {
     if (!LoggerServiceFactory.instance) {
-      switch (ConfigurationService.getInstance().configuration.entryPoint) {
+      switch (Container.get(ConfigurationService).configuration?.entryPoint) {
         case EntryPoint.CLI:
           LoggerServiceFactory.instance = new CLILoggerService();
           break;
@@ -18,9 +19,13 @@ export class LoggerServiceFactory {
           LoggerServiceFactory.instance = new GithubActionLoggerService();
           break;
         default:
-          throw new Error(`No LoggerService defined for ${ConfigurationService.getInstance().configuration.entryPoint}`);
+          throw new Error(`No LoggerService defined for ${Container.get(ConfigurationService).configuration?.entryPoint}`);
       }
     }
     return LoggerServiceFactory.instance;
+  }
+
+  public static clearInstance(): void {
+    LoggerServiceFactory.instance = undefined;
   }
 }

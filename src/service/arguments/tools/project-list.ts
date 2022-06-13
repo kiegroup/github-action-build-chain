@@ -1,0 +1,20 @@
+import { Command } from "commander";
+import { CommandConstructor } from "@bc/service/arguments/command-constructor";
+import { ParsedOptions } from "@bc/service/arguments/parsed-options";
+import { CLIActionType, ToolType } from "@bc/domain/cli";
+
+/**
+ * Create command parser for project list tool
+ * @implements {CommandConstructor}
+ */
+export class ProjectListCommand implements CommandConstructor {
+    createCommand(): Command {
+        const program = new Command(`${CLIActionType.TOOLS} ${ToolType.PROJECT_LIST}`);
+        program
+            .description("Prints a ordered  by precendence list of projects")
+            .option("-s, --skipGroup <group_names...>", "Remove group from project list", )
+            .action((options) => ParsedOptions.setOpts(options));
+            
+        return program;
+    }
+}

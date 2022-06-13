@@ -8,5 +8,7 @@ const config: Config.InitialOptions = {
   moduleNameMapper: {
     "^@bc/(.*)$": "<rootDir>/src/$1",
   },
+  clearMocks: true,
+  resetMocks: true
 };
 export default config;

@@ -8,7 +8,7 @@ export class GithubActionLoggerService extends AbstractLoggerService {
   }
 
   endGroup(): void {
-    super.logger.emptyLine();
+    core.endGroup();
   }
 
   startGroup(message: string): void {

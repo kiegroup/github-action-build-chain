@@ -1,23 +1,63 @@
+import "reflect-metadata";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
-import { ConfigurationService } from "@bc/service/configuration-service";
-
-jest.mock("@bc/service/configuration-service")
+import { CLILoggerService } from "@bc/service/logger/cli-logger-service";
+import { EntryPoint } from "@bc/domain/entry-point";
+import { GithubActionLoggerService } from "@bc/service/logger/github-action-logger-service";
+import { Container } from "typedi";
+import { constants } from "@bc/domain/constants";
 
 describe("logger factory getInstance", () => {
-
-  beforeEach(() => {
-    // assign the mock jest.fn() to static method
-    ConfigurationService.getInstance = jest.impl;
+  afterEach(() => {
+    LoggerServiceFactory.clearInstance();
   });
 
   test("CLI", () => {
     // Arrange
-    consfigurationServiceMock.
+    Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
+
     // Act
     const result = LoggerServiceFactory.getInstance();
 
     // Assert
-    expect(ConfigurationService.getInstance()).toHaveBeenCalledTimes(1);
-    // expect(result).toBeInstanceOf(CLILoggerService);
+    expect(result).toBeInstanceOf(CLILoggerService);
   });
+
+  test("Github", () => {
+    // Arrange
+    Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
+
+    // Act
+    const result = LoggerServiceFactory.getInstance();
+
+    // Assert
+    expect(result).toBeInstanceOf(GithubActionLoggerService);
+  });
+
+  test("Configuration undefined", () => {
+    // Arrange
+    Container.set(constants.CONTAINER.ENTRY_POINT, undefined);
+
+    // Act
+    try {
+      LoggerServiceFactory.getInstance();
+      expect(true).toBe(false);
+    } catch (ex: unknown) {
+      expect((ex as Error).message).toBe("No LoggerService defined for undefined");
+    }
+  });
+
+  test("Error", () => {
+    // Arrange
+    Container.set(constants.CONTAINER.ENTRY_POINT, 3);
+
+    // Act
+    try {
+      LoggerServiceFactory.getInstance();
+      expect(true).toBe(false);
+    } catch (ex: unknown) {
+      expect((ex as Error).message).toBe("No LoggerService defined for 3");
+    }
+  });
+
 });
+

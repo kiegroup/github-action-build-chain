@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "@actions/core": "^1.8.2",
+    "commander": "^9.3.0",
     "reflect-metadata": "^0.1.13",
     "typedi": "^0.10.0"
   }

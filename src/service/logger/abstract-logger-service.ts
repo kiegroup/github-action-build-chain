@@ -29,6 +29,10 @@ export abstract class AbstractLoggerService implements LoggerService {
     this._logger.log("[WARN]", message);
   }
 
+  public error(message: string): void {
+    this._logger.log("[ERROR]", message);
+  }
+
   get logger(): Logger {
     return this._logger;
   }

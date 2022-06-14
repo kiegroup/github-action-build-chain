@@ -1,4 +1,4 @@
-import { Logger } from "@bc/domain/logger";
+import { Logger } from "@bc/service/logger/logger";
 import { LoggerService } from "@bc/service/logger/logger-service";
 
 export abstract class AbstractLoggerService implements LoggerService {

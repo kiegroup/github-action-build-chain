@@ -1,21 +1,19 @@
 import "reflect-metadata";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { CLILoggerService } from "@bc/service/logger/cli-logger-service";
-import { Container } from "typedi";
-import { ConfigurationService } from "@bc/service/configuration-service";
 import { EntryPoint } from "@bc/domain/entry-point";
 import { GithubActionLoggerService } from "@bc/service/logger/github-action-logger-service";
+import { Container } from "typedi";
+import { constants } from "@bc/domain/constants";
 
 describe("logger factory getInstance", () => {
-  const configurationGetterSpy = jest.spyOn(Container.get(ConfigurationService), "configuration", "get");
-
   afterEach(() => {
     LoggerServiceFactory.clearInstance();
   });
 
   test("CLI", () => {
     // Arrange
-    configurationGetterSpy.mockReturnValueOnce({ entryPoint: EntryPoint.CLI });
+    Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
 
     // Act
     const result = LoggerServiceFactory.getInstance();
@@ -26,7 +24,7 @@ describe("logger factory getInstance", () => {
 
   test("Github", () => {
     // Arrange
-    configurationGetterSpy.mockReturnValueOnce({ entryPoint: EntryPoint.GITHUB_EVENT });
+    Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
 
     // Act
     const result = LoggerServiceFactory.getInstance();
@@ -37,7 +35,7 @@ describe("logger factory getInstance", () => {
 
   test("Configuration undefined", () => {
     // Arrange
-    configurationGetterSpy.mockReturnValueOnce(undefined);
+    Container.set(constants.CONTAINER.ENTRY_POINT, undefined);
 
     // Act
     try {
@@ -50,14 +48,14 @@ describe("logger factory getInstance", () => {
 
   test("Error", () => {
     // Arrange
-    configurationGetterSpy.mockReturnValueOnce({ entryPoint: 3 });
+    Container.set(constants.CONTAINER.ENTRY_POINT, 3);
 
     // Act
     try {
       LoggerServiceFactory.getInstance();
       expect(true).toBe(false);
     } catch (ex: unknown) {
-      expect((ex as Error).message).toBe("No LoggerService defined for undefined");
+      expect((ex as Error).message).toBe("No LoggerService defined for 3");
     }
   });
 

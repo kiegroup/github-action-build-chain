@@ -25,6 +25,14 @@ export class MainCommandFactory {
         return this.setConfig(program, options);
     }
 
+    /**
+     * Configure the command line parser instance according to the options passed
+     * Updates the instance to not to throw any error and suppress output
+     * Useful for testing
+     * @param program command line parser
+     * @param options additional options to configure program instance
+     * @returns {Command} configured command line parser
+     */
     private static setConfig(program: Command, options?: { exitOverride?: boolean, suppressOutput?: boolean }): Command {
         if (options?.exitOverride) {
             program.exitOverride();

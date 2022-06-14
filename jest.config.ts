@@ -1,6 +1,6 @@
 import type { Config } from "@jest/types";
 // Sync object
-const config: Config.InitialOptions = {
+const jestConfig: Config.InitialOptions = {
   verbose: true,
   transform: {
     "^.+\\.tsx?$": "ts-jest",
@@ -11,4 +11,4 @@ const config: Config.InitialOptions = {
   clearMocks: true,
   resetMocks: true
 };
-export default config;
+export default jestConfig;

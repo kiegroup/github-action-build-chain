@@ -1,5 +1,3 @@
-import * as util from "util";
-
 export class Logger {
   log(prefix: string, ...str: string[]) {
     // eslint-disable-next-line no-console

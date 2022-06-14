@@ -77,7 +77,7 @@ describe("cli logger service", () => {
 
     // Assert
     expect(Logger.prototype.log).toHaveBeenCalledTimes(0);
-    expect(core.startGroup("whatever the message"));
+    expect(core.startGroup).toHaveBeenCalledWith("whatever the message");
   });
 
   test("endGroup", () => {
@@ -89,6 +89,6 @@ describe("cli logger service", () => {
 
     // Assert
     expect(Logger.prototype.log).toHaveBeenCalledTimes(0);
-    expect(core.endGroup());
+    expect(core.endGroup).toHaveBeenCalledTimes(1);
   });
 });

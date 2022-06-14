@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { BashExecutor } from "@bc/service/executor/bash-executor";
+import { BashExecutor } from "@bc/service/command/executor/bash-executor";
 import { Container } from "typedi";
 import * as exec from "@actions/exec";
 jest.mock("@actions/exec");

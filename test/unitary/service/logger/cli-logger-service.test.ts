@@ -1,6 +1,7 @@
 import { CLILoggerService } from "@bc/service/logger/cli-logger-service";
-/* eslint-disable no-console */
-console.log = jest.fn();
+import { Logger } from "@bc/service/logger/logger";
+
+jest.mock("@bc/service/logger/logger");
 
 describe("cli logger service", () => {
   test("info", () => {
@@ -11,8 +12,8 @@ describe("cli logger service", () => {
     loggerService.info("whatever the message");
 
     // Assert
-    expect(console.log).toHaveBeenCalledTimes(1);
-    expect(console.log).toBeCalledWith("[INFO]", "whatever the message");
+    expect(Logger.prototype.log).toHaveBeenCalledTimes(1);
+    expect(Logger.prototype.log).toBeCalledWith("[INFO]", "whatever the message");
   });
 
   test("trace", () => {
@@ -23,8 +24,8 @@ describe("cli logger service", () => {
     loggerService.trace("whatever the message");
 
     // Assert
-    expect(console.log).toHaveBeenCalledTimes(1);
-    expect(console.log).toBeCalledWith("[TRACE]", "whatever the message");
+    expect(Logger.prototype.log).toHaveBeenCalledTimes(1);
+    expect(Logger.prototype.log).toBeCalledWith("[TRACE]", "whatever the message");
   });
 
   test("warn", () => {
@@ -35,8 +36,8 @@ describe("cli logger service", () => {
     loggerService.warn("whatever the message");
 
     // Assert
-    expect(console.log).toHaveBeenCalledTimes(1);
-    expect(console.log).toBeCalledWith("[WARN]", "whatever the message");
+    expect(Logger.prototype.log).toHaveBeenCalledTimes(1);
+    expect(Logger.prototype.log).toBeCalledWith("[WARN]", "whatever the message");
   });
 
   test("debug", () => {
@@ -47,8 +48,20 @@ describe("cli logger service", () => {
     loggerService.debug("whatever the message");
 
     // Assert
-    expect(console.log).toHaveBeenCalledTimes(1);
-    expect(console.log).toBeCalledWith("[DEBUG]", "whatever the message");
+    expect(Logger.prototype.log).toHaveBeenCalledTimes(1);
+    expect(Logger.prototype.log).toBeCalledWith("[DEBUG]", "whatever the message");
+  });
+
+  test("error", () => {
+    // Arrange
+    const loggerService = new CLILoggerService();
+
+    // Act
+    loggerService.error("whatever the message");
+
+    // Assert
+    expect(Logger.prototype.log).toHaveBeenCalledTimes(1);
+    expect(Logger.prototype.log).toBeCalledWith("[ERROR]", "whatever the message");
   });
 
   test("startGroup", () => {
@@ -59,8 +72,8 @@ describe("cli logger service", () => {
     loggerService.startGroup("whatever the message");
 
     // Assert
-    expect(console.log).toHaveBeenCalledTimes(1);
-    expect(console.log).toBeCalledWith("#", "whatever the message");
+    expect(Logger.prototype.log).toHaveBeenCalledTimes(1);
+    expect(Logger.prototype.log).toBeCalledWith("#", "whatever the message");
   });
 
   test("endGroup", () => {
@@ -71,7 +84,6 @@ describe("cli logger service", () => {
     loggerService.endGroup();
 
     // Assert
-    expect(console.log).toHaveBeenCalledTimes(1);
-    expect(console.log).toBeCalledWith("", "");
+    expect(Logger.prototype.emptyLine).toHaveBeenCalledTimes(1);
   });
 });

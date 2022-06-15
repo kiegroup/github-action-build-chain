@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { GithubActionLoggerService } from "@bc/service/logger/github-action-logger-service";
 import * as core from "@actions/core";
 import { Logger } from "@bc/service/logger/logger";

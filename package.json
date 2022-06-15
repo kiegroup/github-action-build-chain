@@ -30,6 +30,7 @@
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
     "eslint": "^8.17.0",
+    "jest": "^28.1.1",
     "jest-sonar-reporter": "^2.0.0",
     "ts-jest": "^28.0.4",
     "ts-node": "^10.8.1",

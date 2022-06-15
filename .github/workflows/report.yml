@@ -24,7 +24,7 @@ jobs:
       - run: sonar-scanner
           -Dsonar.organization=kiegroup
           -Dsonar.projectKey=github-action-build-chain
-          -Dsonar.projectName=Build Chain
+          -Dsonar.projectName="Build Chain"
           -Dsonar.sources=$GITHUB_WORKSPACE
           -Dsonar.host.url=${{ secrets.SONAR_URL }}
           -Dsonar.login=${{ secrets.SONAR_TOKEN }}

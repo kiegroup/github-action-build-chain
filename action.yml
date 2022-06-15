@@ -1,5 +1,5 @@
 name: "Github action build chain. Cross-repo builds"
-author: "Enrique Mingorance Cano <emingora@redhat.com>, Shubh Bapna <sbapna@redhat.com"
+author: "Enrique Mingorance Cano <emingora@redhat.com>, Shubh Bapna <sbapna@redhat.com>"
 description: |
   Github action build chain is a tool to build multiple projects from different repositories in a single action.
 inputs:

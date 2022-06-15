@@ -6,17 +6,17 @@ import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory"
 @Service()
 export class RegexCommandTreatment implements CommandTreatment {
 
-  treat(command: string, options: TreatmentOptions): string {
+  public treat(command: string, options: TreatmentOptions): string {
     if (options.replaceExpressions) {
-      LoggerServiceFactory.getInstance().info(`[REGEX COMMAND REPLACEMENT] Replacing command: \`${command}\` by expressions: '${options.replaceExpressions}'`);
+      LoggerServiceFactory.getInstance().info(`[${RegexCommandTreatment.name}] Replacing command: \`${command}\` by expressions: '${options.replaceExpressions}'`);
       const result = options.replaceExpressions.reduce(
         (acc, replaceEx) => this.treatReplaceEx(acc, replaceEx),
         command,
       );
       LoggerServiceFactory.getInstance().info(
         result === command
-          ? `[REGEX COMMAND REPLACEMENT] No replacement for \`${command}\``
-          : `[REGEX COMMAND REPLACEMENT] Replaced to: \`${result}\``,
+          ? `[${RegexCommandTreatment.name}] No replacement for \`${command}\``
+          : `[${RegexCommandTreatment.name}] Replaced to: \`${result}\``,
       );
       return result;
     } else {

@@ -12,9 +12,8 @@ export class ProjectListCommand implements CommandConstructor {
         const program = new Command(`${CLIActionType.TOOLS} ${ToolType.PROJECT_LIST}`);
         program
             .description("Prints a ordered  by precendence list of projects")
-            .option("-s, --skipGroup <group_names...>", "Remove group from project list", )
-            .action((options) => ParsedOptions.setOpts(options));
-            
+            .option("-s, --skipGroup <group_names...>", "Remove group from project list");
+                    
         return program;
     }
 }

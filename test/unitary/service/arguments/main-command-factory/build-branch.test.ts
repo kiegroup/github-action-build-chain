@@ -1,21 +1,22 @@
 import { BuildActionType, CLIActionType } from "@bc/domain/cli";
-import { MainCommandFactory } from "@bc/service/arguments/main-command";
+import { MainCommandFactory } from "@bc/service/arguments/main-command-factory";
 import { ParsedOptions } from "@bc/service/arguments/parsed-options";
-import { formatDate } from "@bc/service/utils/date";
+import { formatDate } from "@bc/utils/date";
 import { Command, CommanderError } from "commander";
 
 let program: Command;
-let startProject: string, definitionFile: string, branch: string;
+
+ // Define required arguments to be reused for each test
+const startProject: string = "test";
+const definitionFile: string = "/path/to/file";
+const branch: string = "main";
+
+// command to be executed
 const command = `${CLIActionType.BUILD} ${BuildActionType.BRANCH}`;
 
 beforeEach(() => {
     // Construct the a fresh instance of the cli each time
     program = MainCommandFactory.getCommand({exitOverride: true, suppressOutput: true});
-
-    // Define required arguments to be reused for each test
-    startProject = "test";
-    definitionFile = "/path/to/file";
-    branch = "main";
 });
 
 describe("build branch flow cli", () => {
@@ -40,28 +41,14 @@ describe("build branch flow cli", () => {
         expect(cmd.action).toBe(BuildActionType.BRANCH);
     });
 
-    test("missing required options", () => { 
-        try{
-            // missing definition file
-            program.parse([command, "-p", startProject, "-b", branch], { from: "user" });
-        } catch (err) {
-            expect(err).toBeInstanceOf(CommanderError);
-            if (err instanceof CommanderError) {
-                expect(err.code).toBe("commander.missingMandatoryOptionValue");
-            }
-        }
-        try{
-            // missing start project
-            program.parse([command, "-f", definitionFile, "-b", branch], { from: "user" });
-        } catch (err) {
-            expect(err).toBeInstanceOf(CommanderError);
-            if (err instanceof CommanderError) {
-                expect(err.code).toBe("commander.missingMandatoryOptionValue");
-            }
-        }
-        try{
-            // missing branch
-            program.parse([command, "-f", definitionFile, "-p", startProject], { from: "user" });
+    // check for missing required options
+    test.each([
+        ["definition file", [command, "-p", startProject, "-b", branch]],
+        ["starting project", [command, "-f", definitionFile, "-b", branch]],
+        ["branch", [command, "-f", definitionFile, "-p", startProject]]
+    ])("missing %p", (title: string, cmd: string[]) => {
+        try {
+            program.parse(cmd, { from: "user" });
         } catch (err) {
             expect(err).toBeInstanceOf(CommanderError);
             if (err instanceof CommanderError) {
@@ -73,12 +60,15 @@ describe("build branch flow cli", () => {
     test("optional arguments", () => {
         const token = "abc";
         const outputFolder = "qaz";
-        const replace = "abc||def";
+        const customCommandTreatment = "abc||def";
         const skipCheckout = ["pr1", "pr2"];
+        const commandOption = ["cmd1", "cmd2"];
+        const group = "gr1";
 
         program.parse([command, "-f", definitionFile, "-p", startProject, "-t", token, "-b", branch,
-                        "-o", outputFolder, "-r", replace, "--skipCheckout", ...skipCheckout, "--debug", 
-                        "--skipParallelCheckout", "--skipExecution", "--fullProjectDependencyTree"], { from: "user" });
+                        "-o", outputFolder, "-c", customCommandTreatment, "--skipCheckout", ...skipCheckout, 
+                        "-g", group, "-m", ...commandOption, "--debug", "--skipParallelCheckout", 
+                        "--skipExecution", "--fullProjectDependencyTree"], { from: "user" });
         
         // check all the required options and optional options are set correctly
         const option = ParsedOptions.getOpts();
@@ -90,9 +80,12 @@ describe("build branch flow cli", () => {
         expect(option.fullProjectDependencyTree).toBe(true);
         expect(option.startProject).toBe(startProject);
         expect(option.token).toBe(token);
-        expect(option.replace).toBe(replace);
+        expect(option.customCommandTreatment).toBe(customCommandTreatment);
         expect(option.skipCheckout).toStrictEqual(skipCheckout);
         expect(option.branch).toBe(branch);
+        expect(option.group).toBe(group);
+        expect(option.command).toStrictEqual(commandOption);
+
 
 
         // check that the executed command info is set correctly

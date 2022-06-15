@@ -1,20 +1,21 @@
 import { BuildActionType, CLIActionType } from "@bc/domain/cli";
-import { MainCommandFactory } from "@bc/service/arguments/main-command";
+import { MainCommandFactory } from "@bc/service/arguments/main-command-factory";
 import { ParsedOptions } from "@bc/service/arguments/parsed-options";
-import { formatDate } from "@bc/service/utils/date";
+import { formatDate } from "@bc/utils/date";
 import { Command, CommanderError } from "commander";
 
 let program: Command;
-let url: string, definitionFile: string;
+
+// Define required arguments to be reused for each test
+const url: string = "test.com";
+const definitionFile: string = "/path/to/file";
+
+// Command to be executed
 const command = `${CLIActionType.BUILD} ${BuildActionType.FULL_DOWNSTREAM}`;
 
 beforeEach(() => {
     // Construct the a fresh instance of the cli each time
     program = MainCommandFactory.getCommand({exitOverride: true, suppressOutput: true});
-
-    // Define required arguments to be reused for each test
-    url = "test.com";
-    definitionFile = "/path/to/file";
 });
 
 describe("build full downstream pull request flow cli", () => {
@@ -37,19 +38,13 @@ describe("build full downstream pull request flow cli", () => {
         expect(cmd.action).toBe(BuildActionType.FULL_DOWNSTREAM);
     });
 
-    test("missing required options", () => { 
-        try{
-            // missing definition file
-            program.parse([command, "-u", url], { from: "user" });
-        } catch (err) {
-            expect(err).toBeInstanceOf(CommanderError);
-            if (err instanceof CommanderError) {
-                expect(err.code).toBe("commander.missingMandatoryOptionValue");
-            }
-        }
-        try{
-            // missing url
-            program.parse([command, "-f", definitionFile], { from: "user" });
+    // check for missing required options
+    test.each([
+        ["definition file", [command, "-u", url]],
+        ["url", [command, "-f", definitionFile]],
+    ])("missing %p", (title: string, cmd: string[]) => {
+        try {
+            program.parse(cmd, { from: "user" });
         } catch (err) {
             expect(err).toBeInstanceOf(CommanderError);
             if (err instanceof CommanderError) {
@@ -62,11 +57,11 @@ describe("build full downstream pull request flow cli", () => {
         const startProject = "xyz";
         const token = "abc";
         const outputFolder = "qaz";
-        const replace = "abc||def";
+        const customCommandTreatment = "abc||def";
         const skipCheckout = ["pr1", "pr2"];
 
         program.parse([command, "-f", definitionFile, "-u", url, "-p", startProject, "-t", 
-                        token, "-o", outputFolder, "-r", replace, "--skipCheckout", ...skipCheckout,
+                        token, "-o", outputFolder, "-c", customCommandTreatment, "--skipCheckout", ...skipCheckout,
                         "--debug", "--skipParallelCheckout", "--skipExecution"], { from: "user" });
         
         // check all the required options and optional options are set correctly
@@ -79,7 +74,7 @@ describe("build full downstream pull request flow cli", () => {
         expect(option.skipParallelCheckout).toBe(true);
         expect(option.startProject).toBe(startProject);
         expect(option.token).toBe(token);
-        expect(option.replace).toBe(replace);
+        expect(option.customCommandTreatment).toBe(customCommandTreatment);
         expect(option.skipCheckout).toStrictEqual(skipCheckout);
 
         // check that the executed command info is set correctly

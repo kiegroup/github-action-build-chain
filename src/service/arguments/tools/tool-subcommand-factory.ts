@@ -6,7 +6,7 @@ import { ParsedOptions } from "@bc/service/arguments/parsed-options";
 
 
 /**
- * A factory to construct command line parsers for all the different kind of build flows
+ * A factory to construct command line parsers for all the different kind of tools
  */
 export class ToolSubCommandFactory {
     /**
@@ -20,18 +20,19 @@ export class ToolSubCommandFactory {
             case ToolType.PROJECT_LIST:
                 commandFactory = new ProjectListCommand();
                 break;
-            
             default:
                 throw new Error(`No command constructor specified for ${toolType}`);
         }
         
-        const cmd: Command = commandFactory.createCommand();
-        cmd.action((options) => {
-            ParsedOptions.setOpts(options);
-            ParsedOptions.setExecutedCommand({command: CLIActionType.TOOLS, action: toolType});
-        });
+        return commandFactory.createCommand()
+            .requiredOption("-f, --defintionFile <path_or_url>", "The definition file, either a path to the filesystem or a URL to it")
+            .option("-t, --token <token>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
+            .option("-d, --debug", "Set debugging mode to true", false)
+            .action((options) => {
+                ParsedOptions.setOpts(options);
+                ParsedOptions.setExecutedCommand({command: CLIActionType.TOOLS, action: toolType});
+            });
         
-        return cmd;
     }
 
     /**

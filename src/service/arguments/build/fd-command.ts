@@ -1,19 +1,14 @@
-import { Command } from "commander";
-import { CommandConstructor } from "@bc/service/arguments/command-constructor";
-import { CLIActionType, BuildActionType } from "@bc/domain/cli";
+import { BuildActionType } from "@bc/domain/cli";
+import { AbstractPullRequestCommand } from "@bc/service/arguments/build/abstract-pr-command";
 
 /**
  * Create full downstream flow sub-subcommand for build subcommand
  * @implements {CommandConstructor}
  */
-export class FullDownstreamCommand implements CommandConstructor {
-    createCommand(): Command {
-        const program = new Command(`${CLIActionType.BUILD} ${BuildActionType.FULL_DOWNSTREAM}`);
-        program
-            .description('Execute full downstream build chain workflow')
-            .requiredOption('-u, --url <event_url>', 'full downstream event url')
-            .option('-p, --startProject <project>', 'The project to start the build from');    
-                    
-        return program;
+export class FullDownstreamCommand extends AbstractPullRequestCommand {
+    constructor () {
+        const description: string = "Execute full downstream build chain workflow";
+        const type: BuildActionType = BuildActionType.FULL_DOWNSTREAM;
+        super(description, type)
     }
 }

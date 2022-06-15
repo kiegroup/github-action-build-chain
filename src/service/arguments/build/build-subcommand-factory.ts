@@ -5,7 +5,7 @@ import { BranchCommand } from "@bc/service/arguments/build/branch-command";
 import { CrossPullRequestCommand } from "@bc/service/arguments/build/cross-pr-command";
 import { FullDownstreamCommand } from "@bc/service/arguments/build/fd-command";
 import { SinglePullRequestCommand } from "@bc/service/arguments/build/single-pr-command";
-import { formatDate } from "@bc/service/utils/date";
+import { formatDate } from "@bc/utils/date";
 import { ParsedOptions } from "@bc/service/arguments/parsed-options";
 
 /**
@@ -36,23 +36,20 @@ export class BuildSubCommandFactory {
                 throw new Error(`No command constructor specified for ${buildType}`);
         }
 
-        let cmd: Command = commandFactory.createCommand();
-        cmd
-            .requiredOption('-f, --defintionFile <path_or_url>', 'The definition file, either a path to the filesystem or a URL to it')
-            .option('-o, --outputFolder <path>', 'The folder path to store projects. Default is of the format "build_chain_yyyymmddHHMMss"', 
+        return commandFactory.createCommand()
+            .requiredOption("-f, --defintionFile <path_or_url>", "The definition file, either a path to the filesystem or a URL to it")
+            .option("-o, --outputFolder <path>", "The folder path to store projects. Default is of the format 'build_chain_yyyymmddHHMMss'", 
                 `build_chain_${formatDate(new Date())}`)
-            .option('-t, --token <token>', 'The GITHUB_TOKEN. It can be set as an environment variable instead')
-            .option('-d, --debug', 'Set debugging mode to true', false)
-            .option('--skipExecution', 'A flag to skip execution and artifacts archiving', false)
-            .option('--skipParallelCheckout', 'Checkout the project sequentially', false)
-            .option('-r, --replace <RegEx||ReplacementEx>', 'Regex defines the regular expression for what you want to replace with the ReplacementEx')
-            .option('--skipCheckout <projects...>', 'A list of projects to skip checkout')
+            .option("-t, --token <token>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
+            .option("-d, --debug", "Set debugging mode to true", false)
+            .option("--skipExecution", "A flag to skip execution and artifacts archiving", false)
+            .option("--skipParallelCheckout", "Checkout the project sequentially", false)
+            .option("-c, --customCommandTreatment <RegEx||ReplacementEx>", "Regex defines the regular expression for what you want to replace with the ReplacementEx")
+            .option("--skipCheckout <projects...>", "A list of projects to skip checkout")
             .action((options) => {
                     ParsedOptions.setOpts(options);
                     ParsedOptions.setExecutedCommand({command: CLIActionType.BUILD, action: buildType});
             });
-        
-        return cmd;
     }
 
     /**

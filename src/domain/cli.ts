@@ -12,7 +12,7 @@ export enum BuildActionType {
     BRANCH = "branch"
 }
 
-/** Defines all the types of build flows */
+/** Defines all the types of tools available */
 export enum ToolType {
     PROJECT_LIST = "project-list",
 }

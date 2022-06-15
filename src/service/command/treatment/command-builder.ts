@@ -2,27 +2,21 @@ import { CommandTreatment } from "@bc/service/command/treatment/command-treatmen
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 
 export class CommandBuilder {
-  private content: string;
-  private readonly command: string;
+  private treatedCommand: string;
   private readonly options: TreatmentOptions;
 
   constructor(command: string, options: TreatmentOptions) {
-    this.command = command;
+    this.treatedCommand = command;
     this.options = options;
-    this.content = "";
   }
 
   public treat(commandTreatment: CommandTreatment): CommandBuilder {
-    return this.append(commandTreatment.treat(this.command, this.options));
-  }
-
-  private append(additionalContent: string): CommandBuilder {
-    this.content = `${this.content}${additionalContent}`;
+    this.treatedCommand = commandTreatment.treat(this.treatedCommand, this.options);
     return this;
   }
 
   public build(): string {
-    return this.content;
+    return this.treatedCommand;
   }
 
 }

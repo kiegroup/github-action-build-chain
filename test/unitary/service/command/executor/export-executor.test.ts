@@ -96,5 +96,18 @@ describe("Export Command Executor", () => {
     );
     expect(CLILoggerService.prototype.warn).toHaveBeenCalledTimes(0);
   });
+
+  test("no export command", async () => {
+    // Arrange
+    const exportCommandExecutor = Container.get(ExportExecutor);
+
+    // Act
+    try {
+      await exportCommandExecutor.execute("whatever the command", "whateverthepath");
+      expect(false).toBe(true);
+    } catch (ex: unknown) {
+      expect((ex as Error).message).toBe("The export command whatever the command is not properly defined. It should be something like \"export VARIBLE=expression\". Please fix it an try again.");
+    }
+  });
 });
 

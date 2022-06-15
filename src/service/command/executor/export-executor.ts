@@ -7,12 +7,8 @@ export class ExportExecutor implements CommandExecutor {
 
   async execute(command: string, cwd?: string): Promise<void> {
     const expressionCommand = new ExpressionCommand(command);
-    if (expressionCommand.variable && expressionCommand.expression) {
-      process.env[expressionCommand.variable] = await this.executeExpression(expressionCommand.expression, cwd);
-      LoggerServiceFactory.getInstance().debug(`The variable \`${expressionCommand.variable}\` has been set to the env with the value \`${process.env[expressionCommand.variable]}\``);
-    } else {
-      LoggerServiceFactory.getInstance().warn(`No variable or expression for command \`${command}\``);
-    }
+    process.env[expressionCommand.variable] = await this.executeExpression(expressionCommand.expression, cwd);
+    LoggerServiceFactory.getInstance().debug(`The variable \`${expressionCommand.variable}\` has been set to the env with the value \`${process.env[expressionCommand.variable]}\``);
   }
 
   private async executeExpression(expression: string, cwd?: string): Promise<string> {
@@ -37,7 +33,7 @@ export class ExportExecutor implements CommandExecutor {
 
 class ExpressionCommand {
   _variable: string;
-  _expression?: string;
+  _expression: string;
 
   constructor(command: string) {
     const commandArray = this.getCommandArray(command);
@@ -59,7 +55,7 @@ class ExpressionCommand {
     return this._variable;
   }
 
-  get expression(): string | undefined {
+  get expression(): string {
     return this._expression;
   }
 }

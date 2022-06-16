@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-empty-function */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { AbstractLoggerService } from "@bc/service/logger/abstract-logger-service";
 
 export class TestLoggerService extends AbstractLoggerService {

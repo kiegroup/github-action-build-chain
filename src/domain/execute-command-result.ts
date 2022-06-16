@@ -1,4 +1,6 @@
 export interface ExecuteCommandResult {
+  startingDate?: number;
+  endingDate?: number;
   time: number;
   result: ExecutionResult;
   errorMessage?: string;
@@ -6,5 +8,5 @@ export interface ExecuteCommandResult {
 }
 
 export enum ExecutionResult {
-  OK, NOT_OK
+  OK, NOT_OK, SKIP
 }

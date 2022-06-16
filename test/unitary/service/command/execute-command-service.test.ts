@@ -2,7 +2,7 @@ import { ExecuteCommandService } from "@bc/service/command/execute-command-servi
 import { CommandTreatmentDelegator } from "@bc/service/command/treatment/command-treatment-delegator";
 import { CommandExecutorDelegator } from "@bc/service/command/executor/command-executor-delegator";
 import { ConfigurationService } from "@bc/service/configuration-service";
-import { ExecutionResult } from "@bc/domain/execute-command-result.";
+import { ExecutionResult } from "@bc/domain/execute-command-result";
 
 jest.mock("@bc/service/command/treatment/command-treatment-delegator");
 jest.mock("@bc/service/command/executor/command-executor-delegator");

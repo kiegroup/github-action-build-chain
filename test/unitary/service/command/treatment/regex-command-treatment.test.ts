@@ -3,9 +3,9 @@ import { RegexCommandTreatment } from "@bc/service/command/treatment/regex-comma
 import { Container } from "typedi";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
-import { CLILoggerService } from "@bc/service/logger/cli-logger-service";
+import { TestLoggerService } from "@bc/service/logger/__mocks__/test-logger-service";
 
-jest.mock("@bc/service/logger/cli-logger-service");
+jest.mock("@bc/service/logger/logger-service-factory");
 
 describe("RegexCommandTreatment", () => {
   Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
@@ -25,6 +25,6 @@ describe("RegexCommandTreatment", () => {
 
     // Assert
     expect(result).toBe(expected);
-    expect(CLILoggerService.prototype.info).toHaveBeenCalledTimes(times);
+    expect(TestLoggerService.prototype.info).toHaveBeenCalledTimes(times);
   });
 });

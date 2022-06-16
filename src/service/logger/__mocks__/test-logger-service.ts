@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import { AbstractLoggerService } from "@bc/service/logger/abstract-logger-service";
 
 export class TestLoggerService extends AbstractLoggerService {
@@ -7,10 +8,23 @@ export class TestLoggerService extends AbstractLoggerService {
   }
 
   endGroup(): void {
-    super.logger.emptyLine();
   }
 
   startGroup(message: string): void {
-    super.logger.log("#", message);
+  }
+
+  public debug(message: string): void {
+  }
+
+  public info(message: string): void {
+  }
+
+  public trace(message: string): void {
+  }
+
+  public warn(message: string): void {
+  }
+
+  public error(message: string): void {
   }
 }

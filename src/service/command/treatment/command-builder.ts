@@ -3,9 +3,9 @@ import { TreatmentOptions } from "@bc/domain/treatment-options";
 
 export class CommandBuilder {
   private treatedCommand: string;
-  private readonly options: TreatmentOptions;
+  private readonly options?: TreatmentOptions;
 
-  constructor(command: string, options: TreatmentOptions) {
+  constructor(command: string, options?: TreatmentOptions) {
     this.treatedCommand = command;
     this.options = options;
   }

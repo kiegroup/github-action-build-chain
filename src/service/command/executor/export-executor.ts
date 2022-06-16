@@ -3,7 +3,7 @@ import { Service } from "typedi";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 
 @Service()
-export class ExportExecutor implements CommandExecutor {
+export class ExportExecutor {
 
   async execute(command: string, cwd?: string): Promise<void> {
     const expressionCommand = new ExpressionCommand(command);

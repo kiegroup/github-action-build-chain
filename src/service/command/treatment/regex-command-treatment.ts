@@ -6,8 +6,8 @@ import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory"
 @Service()
 export class RegexCommandTreatment implements CommandTreatment {
 
-  public treat(command: string, options: TreatmentOptions): string {
-    if (options.replaceExpressions) {
+  public treat(command: string, options?: TreatmentOptions): string {
+    if (options?.replaceExpressions) {
       LoggerServiceFactory.getInstance().info(`[${RegexCommandTreatment.name}] Replacing command: \`${command}\` by expressions: '${options.replaceExpressions}'`);
       const result = options.replaceExpressions.reduce(
         (acc, replaceEx) => this.treatReplaceEx(acc, replaceEx),

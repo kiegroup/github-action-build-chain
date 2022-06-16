@@ -21,7 +21,7 @@ export class CommandTreatmentDelegator {
 
   }
 
-  public treatCommand(command: string, options: TreatmentOptions): string {
+  public treatCommand(command: string, options?: TreatmentOptions): string {
     return new CommandBuilder(command, options)
       .treat(this._environmentCommandTreatment)
       .treat(this._mavenCommandTreatment)

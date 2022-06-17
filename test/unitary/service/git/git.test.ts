@@ -4,9 +4,10 @@ import { Git } from "@bc/service/git/git";
 import { spawnSync } from "child_process";
 import fs from "fs";
 import path from "path";
-import { setup, teardown, RepoFile, RepoDetails } from "../../../setup/repository-setup";
+import { RepoFile, RepoDetails } from "../../../setup/mock-github-types";
 import Container from "typedi";
 import { assert } from "console";
+import { MockGithub } from "../../../setup/mock-github";
 
 let git: Git;
 let cwd: string;
@@ -14,10 +15,11 @@ let currentBranch: string;
 let pushedBranches: string[];
 let localBranches: string[];
 let files: RepoFile[];
+const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "setup");
 
 beforeAll(async () => {
     //setup
-    const repoDetails: RepoDetails = (await setup(path.join(__dirname, "config.json")))[0];
+    const repoDetails: RepoDetails = (await mockGithub.setup())[0];
     cwd = repoDetails.path;
     currentBranch = repoDetails.branch;
     pushedBranches = repoDetails.pushedBranches;
@@ -35,7 +37,7 @@ beforeAll(async () => {
 });
 
 afterAll(() => {
-    teardown();
+    mockGithub.teardown();
 });
 
 beforeEach(() => {
@@ -79,10 +81,6 @@ test.each([
 
 test("fetch", async () => {
     await expect(git.fetch(cwd, currentBranch)).resolves.not.toThrowError();
-});
-
-test("fetchDeepen", async () => {
-    await expect(git.fetchDeepen(cwd)).resolves.not.toThrowError();
 });
 
 test("getCommonAncestor",async () => {
@@ -197,5 +195,39 @@ test.each([
     // use git cherry to verify this commit was pushed
     const output = spawnSync("git", ["cherry", "-v"], { cwd }).stdout.toString();
     expect(output.includes(expressionToTest)).toBe(false);
+});
+
+test.each([
+    ["branch exists", true, ["testgroup", "repoA", "main"]],
+    ["branch does not exist", false, ["testgroup", "repoA", "non_existent_branch"]],
+    ["repo does not exist", false, ["testgroup", "non-existant-repo", "main"]]
+])("doesBranchExist %p", async (title:string, branchExists: boolean, args: string[]) => {
+    await expect(git.doesBranchExist(args[0], args[1], args[2])).resolves.toBe(branchExists);
+});
+
+test.each([
+    ["success: origin", true, ["testgroup", "repoA", "sbranch"]],
+    ["success: fork", true, ["testgroup", "repoA", "sbranch", "testgroup-forked", "repoA-forked"]],
+    ["failure: origin", false, ["testgroup", "repoA", "tbranch"]],
+    ["failure: fork", false, ["testgroup", "repoA", "tbranch", "testgroup-forked", "repoA-forked"]]
+])("hasPullRequest %p", async (title:string, hasPR: boolean, args: string[]) => {
+    if (args.length < 4)
+        {await expect(git.hasPullRequest(args[0], args[1], args[2])).resolves.toBe(hasPR);}
+    else
+        {await expect(git.hasPullRequest(args[0], args[1], args[2], { sourceOwner: args[3], sourceRepo: args[4] })).resolves.toBe(hasPR);}
+
+});
+
+test.each([
+    ["success: same source and target owner", true, ["target1", "target1", "repoA"]],
+    ["failure: same source and target owner", false, ["target2", "target2", "repoA"]],
+    ["success: different source and target owner", true, ["target3", "source", "repoA"]],
+    ["failure: different source and target owner", false, ["target4", "source", "repoA"]]
+])("getSourceProjectName %p", async (title:string, testForSuccess: boolean, args: string[]) => {
+    if (testForSuccess) {
+        await expect(git.getSourceProjectName(args[0], args[1], args[2])).resolves.toBe(args[2]);
+    } else {
+        await expect(git.getSourceProjectName(args[0], args[1], args[2])).rejects.toThrowError();
+    }
 });
 

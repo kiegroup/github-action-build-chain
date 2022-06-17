@@ -4,17 +4,20 @@ import fs from "fs";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { GitExecutorResult } from "simple-git/dist/src/lib/types";
-import { TimeoutError } from "@bc/domain/errors";
+import { NotFoundError } from "@bc/domain/errors";
+import { Octokit } from "@octokit/rest";
+import { OctokitFactory } from "@bc/service/git/octokit";
 
 type GitErrorHandlerFunction = (error: Buffer | Error | undefined, result: Omit<GitExecutorResult, "rejection">) => Buffer | Error | undefined;
 
 @Service()
 export class Git {
     private readonly logger: LoggerService;
-    private readonly FETCH_DEPTH: string = "10";
+    private readonly octokit: Octokit;
 
     constructor () {
         this.logger = LoggerServiceFactory.getInstance();
+        this.octokit = OctokitFactory.getOctokitInstance();
     }
 
     /**
@@ -23,29 +26,33 @@ export class Git {
      * @return {SimpleGit} git instance
      */
     private git(cwd?: string, errorHandler?: GitErrorHandlerFunction): SimpleGit {
-        const config = ["user.name=GitHub", "user.email=noreply@github.com"];
         if (cwd && errorHandler) {
             return simpleGit({
-                config,
                 baseDir: cwd,
                 errors(error, result) {
                     return errorHandler(error, result);
                 }
-            });
+            })
+            .addConfig("user.name", "Github")
+            .addConfig("user.email", "noreply@github.com");
         } else if (cwd) {
             return simpleGit({
-                config,
                 baseDir: cwd,
-            });
+            })
+            .addConfig("user.name", "Github")
+            .addConfig("user.email", "noreply@github.com");
         } else if (errorHandler) {
             return simpleGit({
-                config,
                 errors(error, result) {
                     return errorHandler(error, result);
                 }
-            });
+            })
+            .addConfig("user.name", "Github")
+            .addConfig("user.email", "noreply@github.com");
         }
-        return simpleGit();
+        return simpleGit()
+                        .addConfig("user.name", "Github")
+                        .addConfig("user.email", "noreply@github.com");
     }
     
     /**
@@ -81,15 +88,6 @@ export class Git {
     async fetch(cwd: string, branch: string) {
         await this.git(cwd).fetch("origin", branch, ["--quiet"]);
     }
-
-    /**
-     * Git fetch from a particular branch with fetch depth of 10
-     * @param cwd repository in which fetch should be performed
-     * @param branch fetch from the given branch
-     */
-     async fetchDeepen(cwd: string) {
-        await this.git(cwd).fetch("origin", ["--quiet", "--deepen", this.FETCH_DEPTH]);
-    }
     
     /**
      * Gets the most recent common ancestor for the given branches or commits
@@ -112,22 +110,7 @@ export class Git {
             }
             if (error) {return error;}
             return Buffer.concat([...result.stdOut, ...result.stdErr]);
-        };
-        /**
-         * TODO: Check whether new code matches the original functionality
-         * 
-         * Code from original codebase:
-         * while (todo.length > 1) {
-         *   const base = await this.git(cwd, errorHandler).raw("merge-base", todo[0], todo[1]);
-         *   todo = [base].concat(todo.slice(2));
-         *  }
-         * From what i understood, this part finds the common ancestor of the first 2 refs, then it finds the common ancestor between
-         * the common ancestor found before and the next ref and keeps on doing this until there are no more refs.
-         * In other words, it is trying to find the common ancestor of all the refs.
-         * 
-         * Alternate implementation: Use --octopus flag (https://git-scm.com/docs/git-merge-base)
-         */
-        
+        };        
         return (await this.git(cwd, errorHandler).raw("merge-base", "--octopus", ...refs)).trim();
     }
 
@@ -206,39 +189,108 @@ export class Git {
         await this.git(cwd).push("origin", branch, options);
     }
 
-    async fetchUntilMergeBase(cwd: string, branch: string, timeout: number) {
-        const maxTime = new Date().getTime() + timeout;
-        const ref = `refs/remotes/origin/${branch}`;
-        while (new Date().getTime() < maxTime) {
-            const base = await this.getCommonAncestor(cwd, "HEAD", ref);
-            if (base) {
-                const bases = [base];
-                const parents = await this.getReachableParentCommits(cwd, ref);
-                let fetchMore = false;
-                for (const parent of parents) {
-                    const b = await this.getCommonAncestor(cwd, parent, ref);
-                    if (b) {
-                        if (!bases.includes(b)) {
-                            bases.push(b);
-                        }
-                    } else {
-                        // we found a commit which does not have a common ancestor with
-                        // the branch we want to merge, so we need to fetch more
-                        fetchMore = true;
-                        break;
-                    }
-                }
-                if (!fetchMore) {
-                    const commonBase = await this.getCommonAncestor(cwd, ...bases);
-                    if (!commonBase) {
-                      throw new Error(`failed to find common base for ${bases}`);
-                    }
-                    return commonBase;
-                }
-            }
-            await this.fetchDeepen(cwd);
+    /**
+     * Check whether the given branch exists for the given repo and owner
+     * @param owner repo owner
+     * @param repo repo name
+     * @param branch branch that we need to check for existence
+     * @returns whether branch exists or not
+     */
+    async doesBranchExist(owner: string, repo: string, branch: string): Promise<boolean> {
+        try {
+            await this.octokit.repos.getBranch({ owner, repo, branch });
+            return true;
+        } catch (err) {
+            this.logger.warn(
+                `project github.com/${owner}/${repo}:${branch} does not exist. It's not necessarily an error.`
+            );
+            return false;
         }
-        throw new TimeoutError();
     }
 
+    /**
+     * Checks whether the given repo has any open pull requests for a given head ref
+     * @param owner repo owner
+     * @param repo repo name
+     * @param head head ref
+     * @returns whether there is any open pull request
+     */
+    private async _hasPullRequest(owner: string, repo: string, head: string): Promise<boolean> {
+        try {
+            const { status, data } = await this.octokit.pulls.list({
+                owner,
+                repo,
+                state: "open",
+                head
+            });
+            return status === 200 && data.length > 0;
+        } catch(err) {
+            this.logger.error(
+                `Error getting pull request list from https://api.github.com/repos/${owner}/${repo}/pulls?head=${head}&state=open'".`
+            );
+            throw err;
+        }
+    }
+
+    /**
+     * Checks whether the given repo has any open pull requests for a given head branch either in the forked repo or in the original repo
+     * @param owner repo owner
+     * @param repo repo name
+     * @param headBranch source/head branch
+     * @param source Object containing information on sourceOwner (owner of the forked repo) and (sourceRepo name of the forked repo)
+     * @returns whether there is any open pull request
+     */
+    async hasPullRequest(owner: string, repo: string, headBranch: string, source?: {sourceOwner: string, sourceRepo: string}): Promise<boolean> {
+        // check for PRs from the repo itself
+        const promises = [this._hasPullRequest(owner, repo, `${owner}:${headBranch}`)];
+
+        // check for PRs from the forked repo
+        if (source) {promises.push(this._hasPullRequest(owner, repo, `${source.sourceOwner}/${source.sourceRepo}:${headBranch}`));}
+        return (await Promise.all(promises)).reduce((finalResult: boolean, result: boolean) => (finalResult || result), false);
+    }
+
+    /**
+     * Possible replacement of getRepository, getForkedProject and build-chain-flow-helper,js/getForkedProjectName
+     * 
+     * getForkedProjectName basically gets the name if source and target owner are same. Otherwise it finds all the forked projects
+     * for target owner's repo and returns the name of the forked project whose owner is source owner
+     */
+    /**
+     * Returns the project name of the forked repo
+     * @param targetOwner the actual owner of the given repo
+     * @param sourceOwner the owner of the forked repo
+     * @param repo repo name
+     * @returns project name of the forked repo
+     */
+    async getSourceProjectName(targetOwner: string, sourceOwner: string, repo: string): Promise<string> {
+        try {
+            // ensure that repo exists
+            if (targetOwner === sourceOwner) {
+                await this.octokit.repos.get({
+                    owner: sourceOwner,
+                    repo
+                });
+                return repo;
+            } else {
+                // find repo from fork list
+                for await (const response of this.octokit.paginate.iterator(
+                    this.octokit.repos.listForks,
+                    {
+                        owner: targetOwner,
+                        repo
+                    }
+                )){
+                    const forkedRepo = response.data.find(project => project.owner.login === sourceOwner);
+                    if (forkedRepo) {return forkedRepo.name;}
+                }
+                
+                throw new NotFoundError();
+            }
+        } catch(err) {
+            this.logger.error(
+                `Error getting project name for ${targetOwner}/${repo} with owner ${sourceOwner}`
+            );
+            throw err;
+        }
+    }
 }

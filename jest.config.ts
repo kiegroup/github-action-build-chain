@@ -9,6 +9,7 @@ const jestConfig: Config.InitialOptions = {
     "^@bc/(.*)$": "<rootDir>/src/$1",
   },
   clearMocks: true,
-  resetMocks: true
+  resetMocks: true,
+  testPathIgnorePatterns: ["test/setup"]
 };
 export default jestConfig;

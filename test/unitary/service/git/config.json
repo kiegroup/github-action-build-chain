@@ -1,0 +1,26 @@
+{
+    "repositories": {
+        "repoA": {
+            "pushedBranches": ["sbranch", "tbranch"],
+            "localBranches": ["lbranch"],
+            "currentBranch": "main",
+            "history": [
+                {
+                    "action": "push",
+                    "branch": "main",
+                    "remote":  "origin"
+                },
+                {
+                    "action": "push",
+                    "branch": "sbranch",
+                    "remote":  "origin"
+                },
+                {
+                    "action": "push",
+                    "branch": "tbranch",
+                    "remote":  "origin"
+                }
+            ]
+        }
+    }
+}

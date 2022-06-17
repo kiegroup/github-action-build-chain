@@ -46,9 +46,10 @@ export class ExecuteCommandService {
     for await (const command of commands.values()) {
       if (skipExecution) {
         result.executeCommandResults?.push({
+          startingDate: Date.now(),
+          endingDate: Date.now(),
           command,
           result: ExecutionResult.SKIP,
-          time: 0,
         });
       } else {
         const treatedCommand = this._commandTreatmentDelegator.treatCommand(command, this._configurationService.configuration?.treatmentOptions);

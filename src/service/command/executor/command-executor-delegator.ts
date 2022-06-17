@@ -18,29 +18,30 @@ export class CommandExecutorDelegator {
 
   public async executeCommand(command: string, cwd?: string): Promise<ExecuteCommandResult> {
     const startHrTime = process.hrtime();
-    const startingDate = Date.now();
+    let result: ExecuteCommandResult = {
+      startingDate: Date.now(),
+      command: command,
+    };
 
     try {
       this.isExport(command) ? await this._exportExecutor.execute(command, cwd) : await this._bashExecutor.execute(command, cwd);
-      return {
-        startingDate,
-        endingDate: Date.now(),
-        time: this.hrtimeToMs(startHrTime),
+      result = {
+        ...result,
         result: ExecutionResult.OK,
-        command: command,
       };
     } catch (ex) {
       const errorMessage = (ex instanceof Error) ? ex.message : "unknown";
       LoggerServiceFactory.getInstance().error(`Error executing command ${command}. ${errorMessage}`);
-      return {
-        startingDate,
-        endingDate: Date.now(),
-        time: this.hrtimeToMs(startHrTime),
+      result = {
+        ...result,
         result: ExecutionResult.NOT_OK,
         errorMessage,
-        command: command,
       };
     }
+    return {
+      ...result,
+      time: this.hrtimeToMs(startHrTime),
+    };
   }
 
   private isExport(command: string): boolean {

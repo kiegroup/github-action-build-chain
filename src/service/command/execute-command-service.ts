@@ -33,6 +33,8 @@ export class ExecuteCommandService {
       const commands = this.getNodeCommands(node, executionPhase, this._configurationService.getNodeExecutionLevel(node, nodes));
       if (commands?.length) {
         result.push(await this.executeNodeCommands(node, commands, this._configurationService.skipExecution(node), cwd));
+      } else {
+        result.push({ node });
       }
     }
     return result;
@@ -44,24 +46,20 @@ export class ExecuteCommandService {
       executeCommandResults: [],
     };
     for await (const command of commands.values()) {
-      if (skipExecution) {
-        result.executeCommandResults?.push({
+      result.executeCommandResults?.push(skipExecution ?
+        {
           startingDate: Date.now(),
           endingDate: Date.now(),
           command,
           result: ExecutionResult.SKIP,
-        });
-      } else {
-        const treatedCommand = this._commandTreatmentDelegator.treatCommand(command, this._configurationService.configuration?.treatmentOptions);
-        result.executeCommandResults?.push(await this.executeCommand(treatedCommand, cwd));
-      }
+        } : await this.executeCommand(command, cwd));
     }
     return result;
   }
 
   private getNodeCommands(node: Node, executionPhase: ExecutionPhase, nodeExecutionLevel: NodeExecutionLevel): string[] | undefined {
     const commands = node[`${executionPhase}`];
-    const levelCommands = commands ? commands[`${nodeExecutionLevel}`] ?? commands[`${NodeExecutionLevel.CURRENT}`] : undefined;
+    const levelCommands = commands ? commands[`${nodeExecutionLevel}`].length ? commands[`${nodeExecutionLevel}`] : commands[`${NodeExecutionLevel.CURRENT}`] : undefined;
     if (!commands) {
       LoggerServiceFactory.getInstance().debug(`No commands defined for project ${node.project} and phase ${executionPhase}`);
     } else if (!levelCommands || !levelCommands.length) {

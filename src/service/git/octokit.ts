@@ -7,7 +7,7 @@ import Container from "typedi";
  * Singleton factory for octokit instance
  */
 export class OctokitFactory {
-    private static octokit: Octokit;
+    private static octokit?: Octokit;
 
     /**
      * Get the initialized octokit instance and initialize it if not done yet.
@@ -31,9 +31,17 @@ export class OctokitFactory {
                     });
                     break;
                 default:
-                    throw new Error(`No LoggerService defined for ${entryPoint}`);
+                    throw new Error(`No octokit defined for ${entryPoint}`);
             }
         }
         return this.octokit;
     }
+
+    /**
+     * Clear out the octokit instance
+     */
+    public static clearOctokitInstance() {
+        this.octokit = undefined;
+    }
+    
 }

@@ -10,6 +10,6 @@ const jestConfig: Config.InitialOptions = {
   },
   clearMocks: true,
   resetMocks: true,
-  testPathIgnorePatterns: ["test/setup"]
+  coveragePathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/test/"]
 };
 export default jestConfig;

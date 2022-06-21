@@ -38,6 +38,10 @@ beforeAll(async () => {
 
 afterAll(() => {
     mockGithub.teardown();
+
+    // remove local config changes to git
+    spawnSync("git", ["config", "--unset", "user.name"]);
+    spawnSync("git", ["config", "--unset", "user.email"]);
 });
 
 beforeEach(() => {

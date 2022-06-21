@@ -46,13 +46,15 @@ export class MockGithub {
         const upstreamGit: SimpleGit = simpleGit(upstreamPath);
 
         await Promise.all([
-            originGit.init(true), // initialize origin as a git repository
-            upstreamGit.init(true), // initialize upstream as a git repository
+            originGit.addConfig("user.name", "Github").addConfig("user.email", "noreply@github.com").init(true, ["-b", "main"]), // initialize origin as a git repository
+            upstreamGit.addConfig("user.name", "Github").addConfig("user.email", "noreply@github.com").init(true, ["-b", "main"]), // initialize upstream as a git repository
             fs.writeFileSync(path.join(repoPath, ".gitignore"), "remote") // add remote to gitignore of the repository so that upstream and origin aren't pushed
         ]);
 
         // initialize the repository and add origin, upstream and perform first push on main
-        await git.init()
+        await git.addConfig("user.name", "Github")
+                    .addConfig("user.email", "noreply@github.com")
+                    .init(["-b", "main"])
                     .addRemote("origin", originPath)
                     .addRemote("upstream", upstreamPath)
                     .add(".")

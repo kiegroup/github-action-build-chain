@@ -39,8 +39,8 @@ export class MainCommandFactory {
         }
         if (options?.suppressOutput) {
             program.configureOutput({
-              writeOut: () => {},
-              writeErr: () => {}
+              writeOut: () => undefined,
+              writeErr: () => undefined
             });
         }
         return program;

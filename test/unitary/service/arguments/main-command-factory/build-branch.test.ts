@@ -7,9 +7,9 @@ import { Command, CommanderError } from "commander";
 let program: Command;
 
  // Define required arguments to be reused for each test
-const startProject: string = "test";
-const definitionFile: string = "/path/to/file";
-const branch: string = "main";
+const startProject = "test";
+const definitionFile = "/path/to/file";
+const branch = "main";
 
 // command to be executed
 const command = `${CLIActionType.BUILD} ${BuildActionType.BRANCH}`;
@@ -65,9 +65,9 @@ describe("build branch flow cli", () => {
         const commandOption = ["cmd1", "cmd2"];
         const group = "gr1";
 
-        program.parse([command, "-f", definitionFile, "-p", startProject, "-t", token, "-b", branch,
-                        "-o", outputFolder, "-c", customCommandTreatment, "--skipCheckout", ...skipCheckout, 
-                        "-g", group, "-m", ...commandOption, "--debug", "--skipParallelCheckout", 
+        program.parse([command, "-f", definitionFile, "-p", startProject, "--token", token, "-b", branch,
+                        "-o", outputFolder, "-t", customCommandTreatment, "--skipCheckout", ...skipCheckout, 
+                        "-g", group, "-c", ...commandOption, "--debug", "--skipParallelCheckout", 
                         "--skipExecution", "--fullProjectDependencyTree"], { from: "user" });
         
         // check all the required options and optional options are set correctly

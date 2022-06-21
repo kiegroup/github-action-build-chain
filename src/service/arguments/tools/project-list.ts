@@ -1,6 +1,5 @@
 import { Command } from "commander";
 import { CommandConstructor } from "@bc/service/arguments/command-constructor";
-import { ParsedOptions } from "@bc/service/arguments/parsed-options";
 import { CLIActionType, ToolType } from "@bc/domain/cli";
 
 /**

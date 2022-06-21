@@ -7,8 +7,8 @@ import { Command, CommanderError } from "commander";
 let program: Command;
 
 // Define required arguments to be reused for each test
-const url: string = "test.com";
-const definitionFile: string = "/path/to/file";
+const url = "test.com";
+const definitionFile = "/path/to/file";
 
 // Command to be executed
 const command = `${CLIActionType.BUILD} ${BuildActionType.FULL_DOWNSTREAM}`;
@@ -60,8 +60,8 @@ describe("build full downstream pull request flow cli", () => {
         const customCommandTreatment = "abc||def";
         const skipCheckout = ["pr1", "pr2"];
 
-        program.parse([command, "-f", definitionFile, "-u", url, "-p", startProject, "-t", 
-                        token, "-o", outputFolder, "-c", customCommandTreatment, "--skipCheckout", ...skipCheckout,
+        program.parse([command, "-f", definitionFile, "-u", url, "-p", startProject, "--token", 
+                        token, "-o", outputFolder, "-t", customCommandTreatment, "--skipCheckout", ...skipCheckout,
                         "--debug", "--skipParallelCheckout", "--skipExecution"], { from: "user" });
         
         // check all the required options and optional options are set correctly

@@ -9,7 +9,7 @@ let program: Command;
 const command = `${CLIActionType.TOOLS} ${ToolType.PROJECT_LIST}`;
 
 // Define required arguments to be reused for each test
-const definitionFile: string = "/path/to/file";
+const definitionFile = "/path/to/file";
 
 beforeEach(() => {
     // Construct the a fresh instance of the cli each time
@@ -49,7 +49,7 @@ describe("build single pull request flow cli", () => {
         const skipGroup = ["gr1", "gr2"];
         const token = "abc";
 
-        program.parse([command, "-f", definitionFile, "-t", 
+        program.parse([command, "-f", definitionFile, "--token", 
                         token, "-s", ...skipGroup, "-d"], { from: "user" });
         
         // check all the required options and optional options are set correctly

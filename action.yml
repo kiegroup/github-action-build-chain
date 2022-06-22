@@ -1,0 +1,31 @@
+name: "Github action build chain. Cross-repo builds"
+author: "Enrique Mingorance Cano <emingora@redhat.com>, Shubh Bapna <sbapna@redhat.com>"
+description: |
+  Github action build chain is a tool to build multiple projects from different repositories in a single action.
+inputs:
+  definition-file:
+    description: "the file where the build chain is defined. It can a file in the same repository (relative path) or a URL"
+    required: true
+  flow-type:
+    description: "the flow to execute, it can be 'pull-request', 'full-downstream', 'single' or 'branch'"
+    default: "pull-request"
+    required: false
+  starting-project:
+    description: "the project to start flow from. By default is the project triggering the job"
+    required: false
+  additional-flags:
+    description: "The chance to define additional flags for the execution, as it is done on the CLI side. Just semicolon (;) separated, like '--skipParallelCheckout;--skipExecution;-cct (mvn .*)||$1 -s settings.xml'"
+    required: false
+  logger-level:
+    description: "the log level. 'info' (default) | 'trace' | 'debug'"
+    default: "info"
+    required: false
+  annotations-prefix:
+    description: "The prefix to identify the annotations for different jobs running for the same Action"
+    required: false
+runs:
+  using: "node14"
+  main: "dist/index.js"
+branding:
+  icon: "box"
+  color: "red"

@@ -169,17 +169,24 @@ describe("executeChainCommands", () => {
   });
 
   test.each([
-    [ExecutionPhase.BEFORE, NodeExecutionLevel.UPSTREAM, false, [[["project1 before upstream 1", undefined]], [["project2 before upstream 1", undefined]], [["project3 before current 1", undefined]]]],
-    [ExecutionPhase.BEFORE, NodeExecutionLevel.CURRENT, false, [[["project1 before current 1", undefined], ["project1 before current 2", undefined]], [["project2 before current 1", undefined], ["project2 before current 2", undefined]], [["project3 before current 1", undefined]]]],
-    [ExecutionPhase.BEFORE, NodeExecutionLevel.DOWNSTREAM, false, [[["project1 before downstream 1", undefined], ["project1 before downstream 2", undefined], ["project1 before downstream 3", undefined]], [["project2 before downstream 1", undefined], ["project2 before downstream 2", undefined], ["project2 before downstream 3", undefined]], [["project3 before current 1", undefined]]]],
-    [ExecutionPhase.CURRENT, NodeExecutionLevel.UPSTREAM, false, [[["project1 commands upstream 1", undefined]], [["project2 commands upstream 1", undefined]], [["project3 commands current 1", undefined], ["project3 commands current 2", undefined]]]],
-    [ExecutionPhase.CURRENT, NodeExecutionLevel.CURRENT, false, [[["project1 commands current 1", undefined], ["project1 commands current 2", undefined]], [["project2 commands current 1", undefined], ["project2 commands current 2", undefined]], [["project3 commands current 1", undefined], ["project3 commands current 2", undefined]]]],
-    [ExecutionPhase.CURRENT, NodeExecutionLevel.DOWNSTREAM, false, [[["project1 commands downstream 1", undefined], ["project1 commands downstream 2", undefined], ["project1 commands downstream 3", undefined]], [["project2 commands downstream 1", undefined], ["project2 commands downstream 2", undefined], ["project2 commands downstream 3", undefined]], [["project3 commands current 1", undefined], ["project3 commands current 2", undefined]]]],
-    [ExecutionPhase.AFTER, NodeExecutionLevel.UPSTREAM, false, [[["project1 after upstream 1", undefined]], [["project2 after upstream 1", undefined]], [["project3 after current 1", undefined], ["project3 after current 2", undefined], ["project3 after current 3", undefined]]]],
-    [ExecutionPhase.AFTER, NodeExecutionLevel.CURRENT, false, [[["project1 after current 1", undefined], ["project1 after current 2", undefined]], [["project2 after current 1", undefined], ["project2 after current 2", undefined]], [["project3 after current 1", undefined], ["project3 after current 2", undefined], ["project3 after current 3", undefined]]]],
-    [ExecutionPhase.AFTER, NodeExecutionLevel.DOWNSTREAM, false, [[["project1 after downstream 1", undefined], ["project1 after downstream 2", undefined], ["project1 after downstream 3", undefined]], [["project2 after downstream 1", undefined], ["project2 after downstream 2", undefined], ["project2 after downstream 3", undefined]], [["project3 after current 1", undefined], ["project3 after current 2", undefined], ["project3 after current 3", undefined]]]],
-    [ExecutionPhase.AFTER, NodeExecutionLevel.DOWNSTREAM, true, [[["project1 after downstream 1", undefined], ["project1 after downstream 2", undefined], ["project1 after downstream 3", undefined]], [["project2 after downstream 1", undefined], ["project2 after downstream 2", undefined], ["project2 after downstream 3", undefined]], [["project3 after current 1", undefined], ["project3 after current 2", undefined], ["project3 after current 3", undefined]]]],
-  ])("nodes. %p %p skipExecution %p", async (executionPhase: ExecutionPhase, nodeExecutionLevel: NodeExecutionLevel, skipExecution: boolean, expectedCalls: (string | undefined)[][][]) => {
+    [ExecutionPhase.BEFORE, NodeExecutionLevel.UPSTREAM, false, undefined, [[{ command: "project1 before upstream 1" }], [{ command: "project2 before upstream 1" }], [{ command: "project3 before current 1" }]]],
+    [ExecutionPhase.BEFORE, NodeExecutionLevel.UPSTREAM, false, "whateverThePath", [[{
+      command: "project1 before upstream 1",
+      cwd: "whateverThePath",
+    }], [{ command: "project2 before upstream 1", cwd: "whateverThePath" }], [{
+      command: "project3 before current 1",
+      cwd: "whateverThePath",
+    }]]],
+    [ExecutionPhase.BEFORE, NodeExecutionLevel.CURRENT, false, undefined, [[{ command: "project1 before current 1" }, { command: "project1 before current 2" }], [{ command: "project2 before current 1" }, { command: "project2 before current 2" }], [{ command: "project3 before current 1" }]]],
+    [ExecutionPhase.BEFORE, NodeExecutionLevel.DOWNSTREAM, false, undefined, [[{ command: "project1 before downstream 1" }, { command: "project1 before downstream 2" }, { command: "project1 before downstream 3" }], [{ command: "project2 before downstream 1" }, { command: "project2 before downstream 2" }, { command: "project2 before downstream 3" }], [{ command: "project3 before current 1" }]]],
+    [ExecutionPhase.CURRENT, NodeExecutionLevel.UPSTREAM, false, undefined, [[{ command: "project1 commands upstream 1" }], [{ command: "project2 commands upstream 1" }], [{ command: "project3 commands current 1" }, { command: "project3 commands current 2" }]]],
+    [ExecutionPhase.CURRENT, NodeExecutionLevel.CURRENT, false, undefined, [[{ command: "project1 commands current 1" }, { command: "project1 commands current 2" }], [{ command: "project1 commands current 1" }, { command: "project1 commands current 2" }], [{ command: "project3 commands current 1" }, { command: "project3 commands current 2" }]]],
+    [ExecutionPhase.CURRENT, NodeExecutionLevel.DOWNSTREAM, false, undefined, [[{ command: "project1 commands downstream 1" }, { command: "project1 commands downstream 2" }, { command: "project1 commands downstream 3" }], [{ command: "project2 commands downstream 1" }, { command: "project2 commands downstream 2" }, { command: "project2 commands downstream 3" }], [{ command: "project3 commands current 1" }, { command: "project3 commands current 2" }]]],
+    [ExecutionPhase.AFTER, NodeExecutionLevel.UPSTREAM, false, undefined, [[{ command: "project1 after upstream 1" }], [{ command: "project2 after upstream 1" }], [{ command: "project3 after current 1" }, { command: "project3 after current 2" }, { command: "project3 after current 3" }]]],
+    [ExecutionPhase.AFTER, NodeExecutionLevel.CURRENT, false, undefined, [[{ command: "project1 after current 1" }, { command: "project1 after current 2" }], [{ command: "project2 after current 1" }, { command: "project2 after current 2" }], [{ command: "project3 after current 1" }, { command: "project3 after current 2" }, { command: "project3 after current 3" }]]],
+    [ExecutionPhase.AFTER, NodeExecutionLevel.DOWNSTREAM, false, undefined, [[{ command: "project1 after downstream 1" }, { command: "project1 after downstream 2" }, { command: "project1 after downstream 3" }], [{ command: "project2 after downstream 1" }, { command: "project2 after downstream 2" }, { command: "project2 after downstream 3" }], [{ command: "project3 after current 1" }, { command: "project3 after current 2" }, { command: "project3 after current 3" }]]],
+    [ExecutionPhase.AFTER, NodeExecutionLevel.DOWNSTREAM, false, undefined, [[{ command: "project1 after downstream 1" }, { command: "project1 after downstream 2" }, { command: "project1 after downstream 3" }], [{ command: "project2 after downstream 1" }, { command: "project2 after downstream 2" }, { command: "project2 after downstream 3" }], [{ command: "project3 after current 1" }, { command: "project3 after current 2" }, { command: "project3 after current 3" }]]],
+  ])("nodes. %p %p skipExecution %p", async (executionPhase: ExecutionPhase, nodeExecutionLevel: NodeExecutionLevel, skipExecution: boolean, cwd: string | undefined, expectedCalls: ({ command: string, cwd?: string })[][]) => {
     // Arrange
     const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, true);
     const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, true);
@@ -195,18 +202,19 @@ describe("executeChainCommands", () => {
     (ConfigurationService.prototype.getNodeExecutionLevel as jest.Mocked<jest.Mock>).mockReturnValue(nodeExecutionLevel);
     (ConfigurationService.prototype.skipExecution as jest.Mocked<jest.Mock>).mockReturnValue(skipExecution);
 
-    const expectedNumberOfCalls = skipExecution ? 0 : expectedCalls.reduce((length: number, calls: (string | undefined)[][]) => length + calls.length, 0);
+    const expectedNumberOfCalls = skipExecution ? 0 : expectedCalls.reduce((length: number, calls: ({ command: string, cwd?: string })[]) => length + calls.length, 0);
 
     const executeCommandService = new ExecuteCommandService(commandTreatmentDelegator, commandExecutorDelegator, configurationService);
 
     // Act
-    const result = await executeCommandService.executeChainCommands(nodes, executionPhase);
+    const result = await executeCommandService.executeChainCommands(nodes, executionPhase, cwd);
 
     // Assert
     expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledTimes(expectedNumberOfCalls);
     expect(commandTreatmentDelegator.treatCommand).toHaveBeenCalledTimes(expectedNumberOfCalls);
     if (!skipExecution) {
-      expectedCalls.forEach(node => node.forEach(call => expect(commandTreatmentDelegator.treatCommand).toHaveBeenCalledWith(call[0], call[1])));
+      expectedCalls.forEach(node => node.forEach(call => expect(commandTreatmentDelegator.treatCommand).toHaveBeenCalledWith(call.command, undefined)));
+      expectedCalls.forEach(node => node.forEach(call => expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledWith(undefined, call.cwd)));
     }
     expect(TestLoggerService.prototype.debug).toHaveBeenCalledTimes(2);
     expect(TestLoggerService.prototype.debug).toHaveBeenCalledWith(`No commands defined for project project4 and phase ${executionPhase}`);
@@ -217,7 +225,7 @@ describe("executeChainCommands", () => {
         startingDate: expect.any(Number),
         endingDate: expect.any(Number),
         result: ExecutionResult.SKIP,
-        command: ec[0],
+        command: ec.command,
       })) : expectedCalls[index].map(() => ({
         startingDate: 1,
         endingDate: 2,

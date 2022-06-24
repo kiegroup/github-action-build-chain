@@ -1,4 +1,4 @@
-import { Inject, Service } from "typedi";
+import { Service } from "typedi";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
 import { CommandTreatmentDelegator } from "@bc/service/command/treatment/command-treatment-delegator";
 import { ConfigurationService } from "@bc/service/configuration-service";

@@ -3,6 +3,7 @@ import { BashExecutor } from "@bc/service/command/executor/bash-executor";
 import { ExportExecutor } from "@bc/service/command/executor/export-executor";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
+import { hrtimeToMs } from "@bc/utils/date";
 
 @Service()
 export class CommandExecutorDelegator {
@@ -35,16 +36,11 @@ export class CommandExecutorDelegator {
     }
     return {
       ...result,
-      time: this.hrtimeToMs(startHrTime),
+      time: hrtimeToMs(startHrTime),
     };
   }
 
   private isExport(command: string): boolean {
     return command.trim().match(/^export .*=/) !== null;
   }
-
-  private hrtimeToMs(startHrTime: [number, number], endHrTime: [number, number] = process.hrtime(startHrTime)): number {
-    return endHrTime[0] * 1000 + endHrTime[1] / 1000000;
-  }
-
 }

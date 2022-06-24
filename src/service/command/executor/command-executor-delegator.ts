@@ -7,13 +7,8 @@ import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory"
 @Service()
 export class CommandExecutorDelegator {
 
-  private _bashExecutor: BashExecutor;
-  private _exportExecutor: ExportExecutor;
-
-  constructor(bashExecutor: BashExecutor,
-              exportExecutor: ExportExecutor) {
-    this._bashExecutor = bashExecutor;
-    this._exportExecutor = exportExecutor;
+  constructor(private _bashExecutor: BashExecutor,
+              private _exportExecutor: ExportExecutor) {
   }
 
   public async executeCommand(command: string, cwd?: string): Promise<ExecuteCommandResult> {

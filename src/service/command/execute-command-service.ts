@@ -1,4 +1,4 @@
-import { Service } from "typedi";
+import { Inject, Service } from "typedi";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
 import { CommandTreatmentDelegator } from "@bc/service/command/treatment/command-treatment-delegator";
 import { ConfigurationService } from "@bc/service/configuration-service";
@@ -12,14 +12,9 @@ import { ExecutionPhase } from "@bc/domain/execution-phase";
 @Service()
 export class ExecuteCommandService {
 
-  private _commandTreatmentDelegator: CommandTreatmentDelegator;
-  private _configurationService: ConfigurationService;
-  private _commandExecutorDelegator: CommandExecutorDelegator;
-
-  constructor(commandTreatmentDelegator: CommandTreatmentDelegator, commandExecutorDelegator: CommandExecutorDelegator, configurationService: ConfigurationService) {
-    this._commandTreatmentDelegator = commandTreatmentDelegator;
-    this._configurationService = configurationService;
-    this._commandExecutorDelegator = commandExecutorDelegator;
+  constructor(private _commandTreatmentDelegator: CommandTreatmentDelegator,
+              private _commandExecutorDelegator: CommandExecutorDelegator,
+              private _configurationService: ConfigurationService) {
   }
 
   public async executeCommand(command: string, cwd?: string): Promise<ExecuteCommandResult> {
@@ -29,7 +24,7 @@ export class ExecuteCommandService {
 
   public async executeChainCommands(nodes: Node[], executionPhase: ExecutionPhase, cwd?: string): Promise<ExecuteNodeResult[]> {
     const result: ExecuteNodeResult[] = [];
-    for await (const node of nodes.values()) {
+    for (const node of nodes.values()) {
       const commands = this.getNodeCommands(node, executionPhase, this._configurationService.getNodeExecutionLevel(node, nodes));
       if (commands?.length) {
         result.push(await this.executeNodeCommands(node, commands, this._configurationService.skipExecution(node), cwd));

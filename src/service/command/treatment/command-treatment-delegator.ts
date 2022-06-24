@@ -8,17 +8,9 @@ import { RegexCommandTreatment } from "@bc/service/command/treatment/regex-comma
 @Service()
 export class CommandTreatmentDelegator {
 
-  private _environmentCommandTreatment: EnvironmentCommandTreatment;
-  private _mavenCommandTreatment: MavenCommandTreatment;
-  private _regexCommandTreatment: RegexCommandTreatment;
-
-  constructor(environmentCommandTreatment: EnvironmentCommandTreatment,
-              mavenCommandTreatment: MavenCommandTreatment,
-              regexCommandTreatment: RegexCommandTreatment) {
-    this._environmentCommandTreatment = environmentCommandTreatment;
-    this._mavenCommandTreatment = mavenCommandTreatment;
-    this._regexCommandTreatment = regexCommandTreatment;
-
+  constructor(private _environmentCommandTreatment: EnvironmentCommandTreatment,
+              private _mavenCommandTreatment: MavenCommandTreatment,
+              private _regexCommandTreatment: RegexCommandTreatment) {
   }
 
   public treatCommand(command: string, options?: TreatmentOptions): string {

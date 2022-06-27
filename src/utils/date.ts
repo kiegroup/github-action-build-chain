@@ -6,5 +6,9 @@
 function formatDate(date: Date): string {
     return `${date.getFullYear()}${date.getMonth()}${date.getDate()}${date.getHours()}${date.getMinutes()}${date.getSeconds()}`;
 }
+
+function hrtimeToMs(startHrTime: [number, number], endHrTime: [number, number] = process.hrtime(startHrTime)): number {
+    return endHrTime[0] * 1000 + endHrTime[1] / 1000000;
+}
   
-export { formatDate };
+export { formatDate, hrtimeToMs };

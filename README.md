@@ -27,6 +27,7 @@ Table of content
 * **[Execution](#execution)**
 * **[About Commands to Execute](#about-commands-to-execute)**
 * **[Limitations](#limitations)**
+* **[System Requirements](#system-requirements)**
 
 
 ## Allowed configuration files versions
@@ -739,3 +740,9 @@ Nothing but `GITHUB_TOKEN` secret can be used from a forked project Github Actio
 
 It's not possible to use expressions like `image: "docker://kie-group:github-action-build-chain:{{ inputs.build-chain-build-system }}"`. This way it would be easy to dynamically select image to run with a simple `with` input from flow yml file and we could skip errors like [matrix in uses](#matrix-in-uses).
 Just because of this we have to maintain different Dockerfile definitions in different branches and to tag every branch for every version we release like `python3-cekit-v1`.
+
+# System Requirements
+
+* **Git** >=2.28
+* **NodeJS** >= 14
+

@@ -1,4 +1,4 @@
-import { BuildActionType } from "@bc/domain/cli";
+import { FlowType } from "@bc/domain/inputs";
 import { AbstractPullRequestCommand } from "@bc/service/arguments/cli/build/abstract-pr-command";
 
 /**
@@ -8,7 +8,7 @@ import { AbstractPullRequestCommand } from "@bc/service/arguments/cli/build/abst
 export class SinglePullRequestCommand extends AbstractPullRequestCommand {
     constructor () {
         const description: string = "Execute single pull request build chain workflow";
-        const type: BuildActionType = BuildActionType.SINGLE_PULL_REQUEST;
+        const type: FlowType = FlowType.SINGLE_PULL_REQUEST;
         super(description, type)
     }
 }

@@ -1,4 +1,4 @@
-import { BuildActionType } from "@bc/domain/cli";
+import { FlowType } from "@bc/domain/inputs";
 import { AbstractPullRequestCommand } from "@bc/service/arguments/cli/build/abstract-pr-command";
 
 /**
@@ -8,7 +8,7 @@ import { AbstractPullRequestCommand } from "@bc/service/arguments/cli/build/abst
 export class CrossPullRequestCommand extends AbstractPullRequestCommand {
     constructor () {
         const description: string = "Execute cross pull request build chain workflow";
-        const type: BuildActionType = BuildActionType.CROSS_PULL_REQUEST;
+        const type: FlowType = FlowType.CROSS_PULL_REQUEST;
         super(description, type)
     }
 }

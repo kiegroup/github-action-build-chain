@@ -1,12 +1,13 @@
-import { BuildActionType, CLIActionType } from "@bc/domain/cli";
+import { CLIActionType } from "@bc/domain/cli";
+import { FlowType } from "@bc/domain/inputs";
 import { CommandConstructor } from "@bc/service/arguments/cli/command-constructor";
 import { Command } from "commander";
 
 export abstract class AbstractPullRequestCommand implements CommandConstructor {
     private readonly description: string;
-    private readonly type: BuildActionType;
+    private readonly type: FlowType;
 
-    constructor(description: string, type: BuildActionType){
+    constructor(description: string, type: FlowType){
         this.description = description;
         this.type = type;
     }

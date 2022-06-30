@@ -1,4 +1,4 @@
-import { BuildActionType, CLIActionType } from "@bc/domain/cli";
+import { CLIActionType } from "@bc/domain/cli";
 import { Command } from 'commander';
 import { CommandConstructor } from "@bc/service/arguments/cli/command-constructor";
 import { BranchCommand } from "@bc/service/arguments/cli/build/branch-command";
@@ -8,6 +8,7 @@ import { SinglePullRequestCommand } from "@bc/service/arguments/cli/build/single
 import { formatDate } from "@bc/utils/date";
 import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
 import Container from "typedi";
+import { FlowType } from "@bc/domain/inputs";
 
 /**
  * A factory to construct command line parsers for all the different kind of build flows
@@ -18,19 +19,19 @@ export class BuildSubCommandFactory {
      * @param buildType Type of command for which the parser has to be constructed
      * @returns {Command} Returns command parser object or throws an error if the cmd is not defined
      */
-    static getCommand(buildType: BuildActionType): Command {
+    static getCommand(buildType: FlowType): Command {
         let commandFactory: CommandConstructor;
         switch (buildType) {
-            case BuildActionType.CROSS_PULL_REQUEST:
+            case FlowType.CROSS_PULL_REQUEST:
                 commandFactory = new CrossPullRequestCommand();
                 break;
-            case BuildActionType.SINGLE_PULL_REQUEST:
+            case FlowType.SINGLE_PULL_REQUEST:
                 commandFactory = new SinglePullRequestCommand();
                 break;
-            case BuildActionType.FULL_DOWNSTREAM:
+            case FlowType.FULL_DOWNSTREAM:
                 commandFactory = new FullDownstreamCommand();
                 break;
-            case BuildActionType.BRANCH:
+            case FlowType.BRANCH:
                 commandFactory = new BranchCommand();
                 break;        
             default:
@@ -59,7 +60,7 @@ export class BuildSubCommandFactory {
      */
     static getAllCommands(): Command[] {
         return Object
-                    .keys(BuildActionType)
-                    .map((buildType) => this.getCommand(BuildActionType[buildType as keyof typeof BuildActionType]));
+                    .keys(FlowType)
+                    .map((buildType) => this.getCommand(FlowType[buildType as keyof typeof FlowType]));
     }
 }

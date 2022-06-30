@@ -1,10 +1,10 @@
-import { InputValues } from "@bc/domain/inputs";
+import { defaultInputValues, InputValues, LoggerLevel } from "@bc/domain/inputs";
 import { Service } from "typedi";
 
 @Service()
 export class ParsedInputs {
     // store parsed options
-    private _inputs: InputValues = {};
+    private _inputs: InputValues = defaultInputValues;
 
     /**
      * Getter for parsed options
@@ -20,5 +20,6 @@ export class ParsedInputs {
      */
     updateInputs(updatedInputs: InputValues) {
         this._inputs = {...this.inputs, ...updatedInputs};
+        if (updatedInputs.debug) {this._inputs = {...this._inputs, loggerLevel: LoggerLevel.DEBUG};}
     }
 }

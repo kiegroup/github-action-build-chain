@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { CommandConstructor } from "@bc/service/arguments/cli/command-constructor";
-import { CLIActionType, BuildActionType } from "@bc/domain/cli";
+import { CLIActionType } from "@bc/domain/cli";
+import { FlowType } from "@bc/domain/inputs";
 
 /**
  * Create branch flow sub-subcommand for build subcommand
@@ -8,7 +9,7 @@ import { CLIActionType, BuildActionType } from "@bc/domain/cli";
  */
 export class BranchCommand implements CommandConstructor {
     createCommand(): Command {
-        const program = new Command(`${CLIActionType.BUILD} ${BuildActionType.BRANCH}`);
+        const program = new Command(`${CLIActionType.BUILD} ${FlowType.BRANCH}`);
         program
             .description("Execute branch build chain workflow")
             .requiredOption("-p, --startProject <project>", "The project to start the build from")

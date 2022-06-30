@@ -1,10 +1,11 @@
 import "reflect-metadata";
-import { BuildActionType, CLIActionType } from "@bc/domain/cli";
+import { CLIActionType } from "@bc/domain/cli";
 import { MainCommandFactory } from "@bc/service/arguments/cli/main-command-factory";
 import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
 import { formatDate } from "@bc/utils/date";
 import { Command, CommanderError } from "commander";
 import Container from "typedi";
+import { FlowType } from "@bc/domain/inputs";
 
 let program: Command;
 
@@ -13,7 +14,7 @@ const url = "test.com";
 const definitionFile = "/path/to/file";
 
 // Command to be executed
-const command = `${CLIActionType.BUILD} ${BuildActionType.SINGLE_PULL_REQUEST}`;
+const command = `${CLIActionType.BUILD} ${FlowType.SINGLE_PULL_REQUEST}`;
 const parsedInputs = Container.get(ParsedInputs);
 
 beforeEach(() => {
@@ -36,7 +37,7 @@ describe("build single pull request flow cli", () => {
 
         // check that the executed command info is set correctly
         expect(option.CLICommand).toBe(CLIActionType.BUILD);
-        expect(option.CLISubCommand).toBe(BuildActionType.SINGLE_PULL_REQUEST);
+        expect(option.CLISubCommand).toBe(FlowType.SINGLE_PULL_REQUEST);
     });
 
     // check for missing required options
@@ -80,6 +81,6 @@ describe("build single pull request flow cli", () => {
 
         // check that the executed command info is set correctly
         expect(option.CLICommand).toBe(CLIActionType.BUILD);
-        expect(option.CLISubCommand).toBe(BuildActionType.SINGLE_PULL_REQUEST);
+        expect(option.CLISubCommand).toBe(FlowType.SINGLE_PULL_REQUEST);
     });
 });

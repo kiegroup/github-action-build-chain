@@ -5,7 +5,7 @@ import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
 import { formatDate } from "@bc/utils/date";
 import { Command, CommanderError } from "commander";
 import Container from "typedi";
-import { FlowType } from "@bc/domain/inputs";
+import { FlowType, LoggerLevel } from "@bc/domain/inputs";
 
 let program: Command;
 
@@ -34,6 +34,7 @@ describe("build cross pull request flow cli", () => {
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.outputFolder).toMatch(new RegExp(`^build_chain_${formatDate(new Date()).slice(0, -2)}\\d\\d`));
         expect(option.debug).toBe(false);
+        expect(option.loggerLevel).toBe(LoggerLevel.INFO);
         expect(option.skipExecution).toBe(false);
         expect(option.skipParallelCheckout).toBe(false);
 
@@ -74,6 +75,7 @@ describe("build cross pull request flow cli", () => {
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.outputFolder).toBe(outputFolder);
         expect(option.debug).toBe(true);
+        expect(option.loggerLevel).toBe(LoggerLevel.DEBUG);
         expect(option.skipExecution).toBe(true);
         expect(option.skipParallelCheckout).toBe(true);
         expect(option.startProject).toBe(startProject);

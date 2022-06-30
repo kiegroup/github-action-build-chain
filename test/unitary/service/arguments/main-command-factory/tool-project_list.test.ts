@@ -4,6 +4,7 @@ import { MainCommandFactory } from "@bc/service/arguments/cli/main-command-facto
 import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
 import { Command, CommanderError } from "commander";
 import Container from "typedi";
+import { LoggerLevel } from "@bc/domain/inputs";
 
 let program: Command;
 
@@ -27,6 +28,7 @@ describe("build single pull request flow cli", () => {
         const option = parsedInputs.inputs;        
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.debug).toBe(false);
+        expect(option.loggerLevel).toBe(LoggerLevel.INFO);
 
         // check that the executed command info is set correctly
         expect(option.CLICommand).toBe(CLIActionType.TOOLS);
@@ -59,6 +61,7 @@ describe("build single pull request flow cli", () => {
         expect(option.skipGroup).toStrictEqual(skipGroup);
         expect(option.token).toBe(token);
         expect(option.debug).toBe(true);
+        expect(option.loggerLevel).toBe(LoggerLevel.DEBUG);
 
         // check that the executed command info is set correctly
         expect(option.CLICommand).toBe(CLIActionType.TOOLS);

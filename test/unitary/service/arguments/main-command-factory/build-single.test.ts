@@ -1,8 +1,10 @@
+import "reflect-metadata";
 import { BuildActionType, CLIActionType } from "@bc/domain/cli";
-import { MainCommandFactory } from "@bc/service/arguments/main-command-factory";
-import { ParsedOptions } from "@bc/service/arguments/parsed-options";
+import { MainCommandFactory } from "@bc/service/arguments/cli/main-command-factory";
+import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
 import { formatDate } from "@bc/utils/date";
 import { Command, CommanderError } from "commander";
+import Container from "typedi";
 
 let program: Command;
 
@@ -12,6 +14,7 @@ const definitionFile = "/path/to/file";
 
 // Command to be executed
 const command = `${CLIActionType.BUILD} ${BuildActionType.SINGLE_PULL_REQUEST}`;
+const parsedInputs = Container.get(ParsedInputs);
 
 beforeEach(() => {
     // Construct the a fresh instance of the cli each time
@@ -23,7 +26,7 @@ describe("build single pull request flow cli", () => {
         program.parse([command, "-f", definitionFile, "-u", url], { from: "user" });
         
         // check all the required options are set and all the optional ones have the right default value if any
-        const option = ParsedOptions.getOpts();        
+        const option = parsedInputs.inputs;        
         expect(option.url).toBe(url);
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.outputFolder).toMatch(new RegExp(`^build_chain_${formatDate(new Date()).slice(0, -2)}\\d\\d`));
@@ -32,9 +35,8 @@ describe("build single pull request flow cli", () => {
         expect(option.skipParallelCheckout).toBe(false);
 
         // check that the executed command info is set correctly
-        const cmd = ParsedOptions.getExecutedCommand();
-        expect(cmd.command).toBe(CLIActionType.BUILD);
-        expect(cmd.action).toBe(BuildActionType.SINGLE_PULL_REQUEST);
+        expect(option.CLICommand).toBe(CLIActionType.BUILD);
+        expect(option.CLISubCommand).toBe(BuildActionType.SINGLE_PULL_REQUEST);
     });
 
     // check for missing required options
@@ -64,7 +66,7 @@ describe("build single pull request flow cli", () => {
                         "--debug", "--skipParallelCheckout", "--skipExecution"], { from: "user" });
         
         // check all the required options and optional options are set correctly
-        const option = ParsedOptions.getOpts();
+        const option = parsedInputs.inputs;
         expect(option.url).toBe(url);
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.outputFolder).toBe(outputFolder);
@@ -77,8 +79,7 @@ describe("build single pull request flow cli", () => {
         expect(option.skipCheckout).toStrictEqual(skipCheckout);
 
         // check that the executed command info is set correctly
-        const cmd = ParsedOptions.getExecutedCommand();
-        expect(cmd.command).toBe(CLIActionType.BUILD);
-        expect(cmd.action).toBe(BuildActionType.SINGLE_PULL_REQUEST);
+        expect(option.CLICommand).toBe(CLIActionType.BUILD);
+        expect(option.CLISubCommand).toBe(BuildActionType.SINGLE_PULL_REQUEST);
     });
 });

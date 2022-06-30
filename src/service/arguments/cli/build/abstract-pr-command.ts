@@ -1,5 +1,5 @@
 import { BuildActionType, CLIActionType } from "@bc/domain/cli";
-import { CommandConstructor } from "@bc/service/arguments/command-constructor";
+import { CommandConstructor } from "@bc/service/arguments/cli/command-constructor";
 import { Command } from "commander";
 
 export abstract class AbstractPullRequestCommand implements CommandConstructor {

@@ -1,5 +1,5 @@
 import { BuildActionType } from "@bc/domain/cli";
-import { AbstractPullRequestCommand } from "@bc/service/arguments/build/abstract-pr-command";
+import { AbstractPullRequestCommand } from "@bc/service/arguments/cli/build/abstract-pr-command";
 
 /**
  * Create cross pull request flow sub-subcommand for build subcommand

@@ -1,12 +1,13 @@
 import { BuildActionType, CLIActionType } from "@bc/domain/cli";
 import { Command } from 'commander';
-import { CommandConstructor } from "@bc/service/arguments/command-constructor";
-import { BranchCommand } from "@bc/service/arguments/build/branch-command";
-import { CrossPullRequestCommand } from "@bc/service/arguments/build/cross-pr-command";
-import { FullDownstreamCommand } from "@bc/service/arguments/build/fd-command";
-import { SinglePullRequestCommand } from "@bc/service/arguments/build/single-pr-command";
+import { CommandConstructor } from "@bc/service/arguments/cli/command-constructor";
+import { BranchCommand } from "@bc/service/arguments/cli/build/branch-command";
+import { CrossPullRequestCommand } from "@bc/service/arguments/cli/build/cross-pr-command";
+import { FullDownstreamCommand } from "@bc/service/arguments/cli/build/fd-command";
+import { SinglePullRequestCommand } from "@bc/service/arguments/cli/build/single-pr-command";
 import { formatDate } from "@bc/utils/date";
-import { ParsedOptions } from "@bc/service/arguments/parsed-options";
+import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
+import Container from "typedi";
 
 /**
  * A factory to construct command line parsers for all the different kind of build flows
@@ -47,8 +48,8 @@ export class BuildSubCommandFactory {
             .option("-t, --customCommandTreatment <RegEx||ReplacementEx>", "Regex defines the regular expression for what you want to replace with the ReplacementEx")
             .option("--skipCheckout <projects...>", "A list of projects to skip checkout")
             .action((options) => {
-                    ParsedOptions.setOpts(options);
-                    ParsedOptions.setExecutedCommand({command: CLIActionType.BUILD, action: buildType});
+                const parsedInputs = Container.get(ParsedInputs);
+                parsedInputs.updateInputs({...options, CLICommand: CLIActionType.BUILD, CLISubCommand: buildType});
             });
     }
 

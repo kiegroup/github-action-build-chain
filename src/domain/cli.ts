@@ -21,4 +21,4 @@ export enum ToolType {
 export type ExecutedCommand = {
     command: CLIActionType,
     action: BuildActionType | ToolType
-}
+} | Record<string, never>

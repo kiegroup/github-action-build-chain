@@ -1,7 +1,9 @@
+import "reflect-metadata";
 import { CLIActionType, ToolType } from "@bc/domain/cli";
-import { MainCommandFactory } from "@bc/service/arguments/main-command-factory";
-import { ParsedOptions } from "@bc/service/arguments/parsed-options";
+import { MainCommandFactory } from "@bc/service/arguments/cli/main-command-factory";
+import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
 import { Command, CommanderError } from "commander";
+import Container from "typedi";
 
 let program: Command;
 
@@ -10,6 +12,7 @@ const command = `${CLIActionType.TOOLS} ${ToolType.PROJECT_LIST}`;
 
 // Define required arguments to be reused for each test
 const definitionFile = "/path/to/file";
+const parsedInputs = Container.get(ParsedInputs);
 
 beforeEach(() => {
     // Construct the a fresh instance of the cli each time
@@ -21,14 +24,13 @@ describe("build single pull request flow cli", () => {
         program.parse([command, "-f", definitionFile], { from: "user" });
 
         // check all the required options are set and all the optional ones have the right default value if any
-        const option = ParsedOptions.getOpts();        
+        const option = parsedInputs.inputs;        
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.debug).toBe(false);
 
         // check that the executed command info is set correctly
-        const cmd = ParsedOptions.getExecutedCommand();
-        expect(cmd.command).toBe(CLIActionType.TOOLS);
-        expect(cmd.action).toBe(ToolType.PROJECT_LIST);
+        expect(option.CLICommand).toBe(CLIActionType.TOOLS);
+        expect(option.CLISubCommand).toBe(ToolType.PROJECT_LIST);
     });
 
     // check for missing required options
@@ -53,14 +55,13 @@ describe("build single pull request flow cli", () => {
                         token, "-s", ...skipGroup, "-d"], { from: "user" });
         
         // check all the required options and optional options are set correctly
-        const option = ParsedOptions.getOpts();
+        const option = parsedInputs.inputs;
         expect(option.skipGroup).toStrictEqual(skipGroup);
         expect(option.token).toBe(token);
         expect(option.debug).toBe(true);
 
         // check that the executed command info is set correctly
-        const cmd = ParsedOptions.getExecutedCommand();
-        expect(cmd.command).toBe(CLIActionType.TOOLS);
-        expect(cmd.action).toBe(ToolType.PROJECT_LIST);
+        expect(option.CLICommand).toBe(CLIActionType.TOOLS);
+        expect(option.CLISubCommand).toBe(ToolType.PROJECT_LIST);
     });
 });

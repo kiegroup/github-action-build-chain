@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { CommandConstructor } from "@bc/service/arguments/command-constructor";
+import { CommandConstructor } from "@bc/service/arguments/cli/command-constructor";
 import { CLIActionType, ToolType } from "@bc/domain/cli";
 
 /**

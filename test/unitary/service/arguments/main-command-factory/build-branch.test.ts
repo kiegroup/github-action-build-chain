@@ -1,8 +1,10 @@
+import "reflect-metadata";
 import { BuildActionType, CLIActionType } from "@bc/domain/cli";
-import { MainCommandFactory } from "@bc/service/arguments/main-command-factory";
-import { ParsedOptions } from "@bc/service/arguments/parsed-options";
+import { MainCommandFactory } from "@bc/service/arguments/cli/main-command-factory";
+import { ParsedInputs } from "@bc/service/inputs/parsed-inputs"; 
 import { formatDate } from "@bc/utils/date";
 import { Command, CommanderError } from "commander";
+import Container from "typedi";
 
 let program: Command;
 
@@ -13,6 +15,7 @@ const branch = "main";
 
 // command to be executed
 const command = `${CLIActionType.BUILD} ${BuildActionType.BRANCH}`;
+const parsedInputs = Container.get(ParsedInputs);
 
 beforeEach(() => {
     // Construct the a fresh instance of the cli each time
@@ -25,7 +28,7 @@ describe("build branch flow cli", () => {
         program.parse([command, "-f", definitionFile, "-p", startProject, "-b", branch], { from: "user" });
         
         // check all the required options are set and all the optional ones have the right default value if any
-        const option = ParsedOptions.getOpts();        
+        const option = parsedInputs.inputs;        
         expect(option.startProject).toBe(startProject);
         expect(option.branch).toBe(branch);
         expect(option.defintionFile).toBe(definitionFile);
@@ -36,9 +39,8 @@ describe("build branch flow cli", () => {
         expect(option.fullProjectDependencyTree).toBe(false);
 
         // check that the executed command info is set correctly
-        const cmd = ParsedOptions.getExecutedCommand();
-        expect(cmd.command).toBe(CLIActionType.BUILD);
-        expect(cmd.action).toBe(BuildActionType.BRANCH);
+        expect(option.CLICommand).toBe(CLIActionType.BUILD);
+        expect(option.CLISubCommand).toBe(BuildActionType.BRANCH);
     });
 
     // check for missing required options
@@ -71,7 +73,7 @@ describe("build branch flow cli", () => {
                         "--skipExecution", "--fullProjectDependencyTree"], { from: "user" });
         
         // check all the required options and optional options are set correctly
-        const option = ParsedOptions.getOpts();
+        const option = parsedInputs.inputs;
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.outputFolder).toBe(outputFolder);
         expect(option.debug).toBe(true);
@@ -89,8 +91,7 @@ describe("build branch flow cli", () => {
 
 
         // check that the executed command info is set correctly
-        const cmd = ParsedOptions.getExecutedCommand();
-        expect(cmd.command).toBe(CLIActionType.BUILD);
-        expect(cmd.action).toBe(BuildActionType.BRANCH);
+        expect(option.CLICommand).toBe(CLIActionType.BUILD);
+        expect(option.CLISubCommand).toBe(BuildActionType.BRANCH);
     });
 });

@@ -5,7 +5,15 @@ import Container from "typedi";
 import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
 import { InvalidInput } from "@bc/domain/errors";
 
+/**
+ * Parses all inputs from github action workflow files
+ */
 export class ActionArguments {
+    /**
+     * Converts user input to corresponding FlowType enum
+     * @param flowType value for "flow-type" input
+     * @returns corresponding enum
+     */
     private getFlowType(flowType: string): FlowType {
         switch (flowType) {
             case "pull-request":
@@ -21,6 +29,11 @@ export class ActionArguments {
         }
     }
 
+    /**
+     * Converts user input to corresponding LoggerLevel enum
+     * @param logLevel value for "logger-level" input
+     * @returns corresponding enum
+     */
     private getLoggerLevel(logLevel: string): LoggerLevel {
         switch (logLevel) {
             case "info":
@@ -35,6 +48,11 @@ export class ActionArguments {
         }
     }
 
+    /**
+     * Gets and sets the any additional flags defined in the workflow
+     * @param additionaFlags "additional flags for the execution, as it is done on the CLI side. Just semicolon (;) separated, like '--skipParallelCheckout;--skipExecution;-cct (mvn .*)||$1 -s settings.xml'"
+     * @returns parsed option values
+     */
     private getAdditionalFlags(additionaFlags: string): OptionValues {
         if (additionaFlags === "") {return {};}
         const flags: OptionValues = {};
@@ -52,6 +70,9 @@ export class ActionArguments {
         return flags;
     }
     
+    /**
+     * Gets the actual input from github action event and sets it in parsed input object
+     */
     parseInput() {
         const input: InputValues = {
             definitionFile: core.getInput("definition-file"),

@@ -9,12 +9,19 @@ export enum FlowType {
     BRANCH = "branch"
 }
 
+
+/**
+ * Defines the available level of logs
+ */
 export enum LoggerLevel {
     INFO,
     TRACE,
     DEBUG
 }
 
+/**
+ * Defines all parsed input values for cli and github action
+ */
 export interface InputValues extends OptionValues {
     definitionFile: string,
     flowType?: FlowType,
@@ -29,6 +36,9 @@ export interface InputValues extends OptionValues {
     customCommandTreatment?: string
 }
 
+/**
+ * Default value used for initialization
+ */
 export const defaultInputValues: Readonly<InputValues> = {
     definitionFile: "",
     skipExecution: false,

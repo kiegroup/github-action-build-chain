@@ -1,8 +1,11 @@
 import { Command } from "commander";
-import { CommandConstructor } from "@bc/service/arguments/command-constructor";
+import { CommandConstructor } from "@bc/service/arguments/cli/command-constructor";
 import { CLIActionType, ToolType } from "@bc/domain/cli";
-import { ProjectListCommand } from "@bc/service/arguments/tools/project-list";
-import { ParsedOptions } from "@bc/service/arguments/parsed-options";
+import { ProjectListCommand } from "@bc/service/arguments/cli/tools/project-list";
+import { InputService } from "@bc/service/inputs/input-service";
+import Container from "typedi";
+import { LoggerLevel } from "@bc/domain/inputs";
+
 
 
 /**
@@ -29,8 +32,10 @@ export class ToolSubCommandFactory {
             .option("-t, --token <token>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
             .option("-d, --debug", "Set debugging mode to true", false)
             .action((options) => {
-                ParsedOptions.setOpts(options);
-                ParsedOptions.setExecutedCommand({command: CLIActionType.TOOLS, action: toolType});
+                const parsedInputs = Container.get(InputService);
+                if (options.debug) { options.loggerLevel = LoggerLevel.DEBUG; }
+                delete options.debug;
+                parsedInputs.updateInputs({...options, CLICommand: CLIActionType.TOOLS, CLISubCommand: toolType});
             });
         
     }

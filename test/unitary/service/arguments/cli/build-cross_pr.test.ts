@@ -1,8 +1,11 @@
-import { BuildActionType, CLIActionType } from "@bc/domain/cli";
-import { MainCommandFactory } from "@bc/service/arguments/main-command-factory";
-import { ParsedOptions } from "@bc/service/arguments/parsed-options";
+import "reflect-metadata";
+import { CLIActionType } from "@bc/domain/cli";
+import { MainCommandFactory } from "@bc/service/arguments/cli/main-command-factory";
+import { InputService } from "@bc/service/inputs/input-service"; 
 import { formatDate } from "@bc/utils/date";
 import { Command, CommanderError } from "commander";
+import Container from "typedi";
+import { FlowType, LoggerLevel } from "@bc/domain/inputs";
 
 let program: Command;
 
@@ -11,30 +14,32 @@ const url = "test.com";
 const definitionFile = "/path/to/file";
 
 // Command to be executed
-const command = `${CLIActionType.BUILD} ${BuildActionType.SINGLE_PULL_REQUEST}`;
+const command = `${CLIActionType.BUILD} ${FlowType.CROSS_PULL_REQUEST}`;
+const parsedInputs = Container.get(InputService);
+
 
 beforeEach(() => {
     // Construct the a fresh instance of the cli each time
     program = MainCommandFactory.getCommand({exitOverride: true, suppressOutput: true});
 });
 
-describe("build single pull request flow cli", () => {
+describe("build cross pull request flow cli", () => {
+
     test("only required options", () => {
         program.parse([command, "-f", definitionFile, "-u", url], { from: "user" });
         
         // check all the required options are set and all the optional ones have the right default value if any
-        const option = ParsedOptions.getOpts();        
+        const option = parsedInputs.inputs;        
         expect(option.url).toBe(url);
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.outputFolder).toMatch(new RegExp(`^build_chain_${formatDate(new Date()).slice(0, -2)}\\d\\d`));
-        expect(option.debug).toBe(false);
+        expect(option.loggerLevel).toBe(LoggerLevel.INFO);
         expect(option.skipExecution).toBe(false);
         expect(option.skipParallelCheckout).toBe(false);
 
         // check that the executed command info is set correctly
-        const cmd = ParsedOptions.getExecutedCommand();
-        expect(cmd.command).toBe(CLIActionType.BUILD);
-        expect(cmd.action).toBe(BuildActionType.SINGLE_PULL_REQUEST);
+        expect(option.CLICommand).toBe(CLIActionType.BUILD);
+        expect(option.CLISubCommand).toBe(FlowType.CROSS_PULL_REQUEST);
     });
 
     // check for missing required options
@@ -64,11 +69,11 @@ describe("build single pull request flow cli", () => {
                         "--debug", "--skipParallelCheckout", "--skipExecution"], { from: "user" });
         
         // check all the required options and optional options are set correctly
-        const option = ParsedOptions.getOpts();
+        const option = parsedInputs.inputs;
         expect(option.url).toBe(url);
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.outputFolder).toBe(outputFolder);
-        expect(option.debug).toBe(true);
+        expect(option.loggerLevel).toBe(LoggerLevel.DEBUG);
         expect(option.skipExecution).toBe(true);
         expect(option.skipParallelCheckout).toBe(true);
         expect(option.startProject).toBe(startProject);
@@ -77,8 +82,7 @@ describe("build single pull request flow cli", () => {
         expect(option.skipCheckout).toStrictEqual(skipCheckout);
 
         // check that the executed command info is set correctly
-        const cmd = ParsedOptions.getExecutedCommand();
-        expect(cmd.command).toBe(CLIActionType.BUILD);
-        expect(cmd.action).toBe(BuildActionType.SINGLE_PULL_REQUEST);
+        expect(option.CLICommand).toBe(CLIActionType.BUILD);
+        expect(option.CLISubCommand).toBe(FlowType.CROSS_PULL_REQUEST);
     });
 });

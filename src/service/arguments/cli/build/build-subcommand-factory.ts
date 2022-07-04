@@ -1,12 +1,14 @@
-import { BuildActionType, CLIActionType } from "@bc/domain/cli";
+import { CLIActionType } from "@bc/domain/cli";
 import { Command } from 'commander';
-import { CommandConstructor } from "@bc/service/arguments/command-constructor";
-import { BranchCommand } from "@bc/service/arguments/build/branch-command";
-import { CrossPullRequestCommand } from "@bc/service/arguments/build/cross-pr-command";
-import { FullDownstreamCommand } from "@bc/service/arguments/build/fd-command";
-import { SinglePullRequestCommand } from "@bc/service/arguments/build/single-pr-command";
+import { CommandConstructor } from "@bc/service/arguments/cli/command-constructor";
+import { BranchCommand } from "@bc/service/arguments/cli/build/branch-command";
+import { CrossPullRequestCommand } from "@bc/service/arguments/cli/build/cross-pr-command";
+import { FullDownstreamCommand } from "@bc/service/arguments/cli/build/fd-command";
+import { SinglePullRequestCommand } from "@bc/service/arguments/cli/build/single-pr-command";
 import { formatDate } from "@bc/utils/date";
-import { ParsedOptions } from "@bc/service/arguments/parsed-options";
+import { InputService } from "@bc/service/inputs/input-service";
+import Container from "typedi";
+import { FlowType, LoggerLevel } from "@bc/domain/inputs";
 
 /**
  * A factory to construct command line parsers for all the different kind of build flows
@@ -17,19 +19,19 @@ export class BuildSubCommandFactory {
      * @param buildType Type of command for which the parser has to be constructed
      * @returns {Command} Returns command parser object or throws an error if the cmd is not defined
      */
-    static getCommand(buildType: BuildActionType): Command {
+    static getCommand(buildType: FlowType): Command {
         let commandFactory: CommandConstructor;
         switch (buildType) {
-            case BuildActionType.CROSS_PULL_REQUEST:
+            case FlowType.CROSS_PULL_REQUEST:
                 commandFactory = new CrossPullRequestCommand();
                 break;
-            case BuildActionType.SINGLE_PULL_REQUEST:
+            case FlowType.SINGLE_PULL_REQUEST:
                 commandFactory = new SinglePullRequestCommand();
                 break;
-            case BuildActionType.FULL_DOWNSTREAM:
+            case FlowType.FULL_DOWNSTREAM:
                 commandFactory = new FullDownstreamCommand();
                 break;
-            case BuildActionType.BRANCH:
+            case FlowType.BRANCH:
                 commandFactory = new BranchCommand();
                 break;        
             default:
@@ -47,8 +49,10 @@ export class BuildSubCommandFactory {
             .option("-t, --customCommandTreatment <RegEx||ReplacementEx>", "Regex defines the regular expression for what you want to replace with the ReplacementEx")
             .option("--skipCheckout <projects...>", "A list of projects to skip checkout")
             .action((options) => {
-                    ParsedOptions.setOpts(options);
-                    ParsedOptions.setExecutedCommand({command: CLIActionType.BUILD, action: buildType});
+                const parsedInputs = Container.get(InputService);
+                if (options.debug) options.loggerLevel = LoggerLevel.DEBUG;
+                delete options.debug;
+                parsedInputs.updateInputs({...options, CLICommand: CLIActionType.BUILD, CLISubCommand: buildType});
             });
     }
 
@@ -58,7 +62,7 @@ export class BuildSubCommandFactory {
      */
     static getAllCommands(): Command[] {
         return Object
-                    .keys(BuildActionType)
-                    .map((buildType) => this.getCommand(BuildActionType[buildType as keyof typeof BuildActionType]));
+                    .keys(FlowType)
+                    .map((buildType) => this.getCommand(FlowType[buildType as keyof typeof FlowType]));
     }
 }

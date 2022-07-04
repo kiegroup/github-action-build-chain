@@ -13,6 +13,17 @@ inputs:
   starting-project:
     description: "the project to start flow from. By default is the project triggering the job"
     required: false
+  skip-execution:
+    description: "skips execution and artifacts archiving"
+    default: false
+    required: false
+  skip-parallel-checkout:
+    description: "Checkout the project sequentially or parallely"
+    default: false
+    required: false
+  custom-command-treatment:
+    description: "<RegEx||ReplacementEx> Regex defines the regular expression for what you want to replace with the ReplacementEx"
+    required: false
   additional-flags:
     description: "The chance to define additional flags for the execution, as it is done on the CLI side. Just semicolon (;) separated, like '--skipParallelCheckout;--skipExecution;-cct (mvn .*)||$1 -s settings.xml'"
     required: false

@@ -1,5 +1,5 @@
-import { BuildSubCommandFactory } from "@bc/service/arguments/build/build-subcommand-factory";
-import { ToolSubCommandFactory } from "@bc/service/arguments/tools/tool-subcommand-factory";
+import { BuildSubCommandFactory } from "@bc/service/arguments/cli/build/build-subcommand-factory";
+import { ToolSubCommandFactory } from "@bc/service/arguments/cli/tools/tool-subcommand-factory";
 import { Command } from "commander";
 
 

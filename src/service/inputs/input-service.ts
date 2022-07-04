@@ -1,4 +1,4 @@
-import { defaultInputValues, InputValues, LoggerLevel } from "@bc/domain/inputs";
+import { defaultInputValues, InputValues } from "@bc/domain/inputs";
 import { Service } from "typedi";
 
 @Service()
@@ -20,6 +20,5 @@ export class InputService {
      */
     updateInputs(updatedInputs: InputValues) {
         this._inputs = {...this.inputs, ...updatedInputs};
-        if (updatedInputs.debug) {this._inputs = {...this._inputs, loggerLevel: LoggerLevel.DEBUG};}
     }
 }

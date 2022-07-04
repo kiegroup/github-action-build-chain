@@ -8,7 +8,7 @@ import { SinglePullRequestCommand } from "@bc/service/arguments/cli/build/single
 import { formatDate } from "@bc/utils/date";
 import { InputService } from "@bc/service/inputs/input-service";
 import Container from "typedi";
-import { FlowType } from "@bc/domain/inputs";
+import { FlowType, LoggerLevel } from "@bc/domain/inputs";
 
 /**
  * A factory to construct command line parsers for all the different kind of build flows
@@ -50,6 +50,8 @@ export class BuildSubCommandFactory {
             .option("--skipCheckout <projects...>", "A list of projects to skip checkout")
             .action((options) => {
                 const parsedInputs = Container.get(InputService);
+                if (options.debug) options.loggerLevel = LoggerLevel.DEBUG;
+                delete options.debug;
                 parsedInputs.updateInputs({...options, CLICommand: CLIActionType.BUILD, CLISubCommand: buildType});
             });
     }

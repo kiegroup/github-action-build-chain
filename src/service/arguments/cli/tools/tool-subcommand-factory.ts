@@ -4,6 +4,7 @@ import { CLIActionType, ToolType } from "@bc/domain/cli";
 import { ProjectListCommand } from "@bc/service/arguments/cli/tools/project-list";
 import { InputService } from "@bc/service/inputs/input-service";
 import Container from "typedi";
+import { LoggerLevel } from "@bc/domain/inputs";
 
 
 
@@ -32,6 +33,8 @@ export class ToolSubCommandFactory {
             .option("-d, --debug", "Set debugging mode to true", false)
             .action((options) => {
                 const parsedInputs = Container.get(InputService);
+                if (options.debug) { options.loggerLevel = LoggerLevel.DEBUG; }
+                delete options.debug;
                 parsedInputs.updateInputs({...options, CLICommand: CLIActionType.TOOLS, CLISubCommand: toolType});
             });
         

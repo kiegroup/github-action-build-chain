@@ -34,7 +34,6 @@ describe("build branch flow cli", () => {
         expect(option.branch).toBe(branch);
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.outputFolder).toMatch(new RegExp(`^build_chain_${formatDate(new Date()).slice(0, -2)}\\d\\d`));
-        expect(option.debug).toBe(false);
         expect(option.loggerLevel).toBe(LoggerLevel.INFO);
         expect(option.skipExecution).toBe(false);
         expect(option.skipParallelCheckout).toBe(false);
@@ -78,7 +77,6 @@ describe("build branch flow cli", () => {
         const option = parsedInputs.inputs;
         expect(option.defintionFile).toBe(definitionFile);
         expect(option.outputFolder).toBe(outputFolder);
-        expect(option.debug).toBe(true);
         expect(option.loggerLevel).toBe(LoggerLevel.DEBUG);
         expect(option.skipExecution).toBe(true);
         expect(option.skipParallelCheckout).toBe(true);

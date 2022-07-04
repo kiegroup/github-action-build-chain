@@ -27,7 +27,6 @@ describe("build single pull request flow cli", () => {
         // check all the required options are set and all the optional ones have the right default value if any
         const option = parsedInputs.inputs;        
         expect(option.defintionFile).toBe(definitionFile);
-        expect(option.debug).toBe(false);
         expect(option.loggerLevel).toBe(LoggerLevel.INFO);
 
         // check that the executed command info is set correctly
@@ -60,7 +59,6 @@ describe("build single pull request flow cli", () => {
         const option = parsedInputs.inputs;
         expect(option.skipGroup).toStrictEqual(skipGroup);
         expect(option.token).toBe(token);
-        expect(option.debug).toBe(true);
         expect(option.loggerLevel).toBe(LoggerLevel.DEBUG);
 
         // check that the executed command info is set correctly

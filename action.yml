@@ -14,8 +14,18 @@ inputs:
     description: "the project to start flow from. By default is the project triggering the job"
     required: false
   skip-execution:
-    description: "skips execution and artifacts archiving"
+    description: "skips execution and artifacts archiving for all projects. Overrides skip-project-execution"
     default: false
+    required: false
+  skip-project-execution:
+    description: "skips execution and artifacts archiving for certain projects"
+    required: false
+  skip-checkout:
+    description: "Skip checkout for all projects. Overrides skip-project-checkout"
+    default: false
+    required: false
+  skip-project-checkout:
+    description: "A list of projects to skip checkout"
     required: false
   skip-parallel-checkout:
     description: "Checkout the project sequentially or parallely"

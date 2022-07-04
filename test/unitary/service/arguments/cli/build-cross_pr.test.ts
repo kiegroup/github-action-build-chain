@@ -35,6 +35,7 @@ describe("build cross pull request flow cli", () => {
         expect(option.outputFolder).toMatch(new RegExp(`^build_chain_${formatDate(new Date()).slice(0, -2)}\\d\\d`));
         expect(option.loggerLevel).toBe(LoggerLevel.INFO);
         expect(option.skipExecution).toBe(false);
+        expect(option.skipCheckout).toBe(false);
         expect(option.skipParallelCheckout).toBe(false);
 
         // check that the executed command info is set correctly
@@ -62,11 +63,11 @@ describe("build cross pull request flow cli", () => {
         const token = "abc";
         const outputFolder = "qaz";
         const customCommandTreatment = "abc||def";
-        const skipCheckout = ["pr1", "pr2"];
+        const skipProject = ["pr1", "pr2"];
 
-        program.parse([command, "-f", definitionFile, "-u", url, "-p", startProject, "--token", 
-                        token, "-o", outputFolder, "-t", customCommandTreatment, "--skipCheckout", ...skipCheckout,
-                        "--debug", "--skipParallelCheckout", "--skipExecution"], { from: "user" });
+        program.parse([command, "-f", definitionFile, "-u", url, "-p", startProject, "--token", token, "-o", 
+                        outputFolder, "-t", customCommandTreatment, "--skipProjectCheckout", ...skipProject, "--skipCheckout",
+                        "--skipProjectExecution", ...skipProject, "--debug", "--skipParallelCheckout", "--skipExecution"], { from: "user" });
         
         // check all the required options and optional options are set correctly
         const option = parsedInputs.inputs;
@@ -75,11 +76,13 @@ describe("build cross pull request flow cli", () => {
         expect(option.outputFolder).toBe(outputFolder);
         expect(option.loggerLevel).toBe(LoggerLevel.DEBUG);
         expect(option.skipExecution).toBe(true);
+        expect(option.skipCheckout).toBe(true);
         expect(option.skipParallelCheckout).toBe(true);
         expect(option.startProject).toBe(startProject);
         expect(option.token).toBe(token);
         expect(option.customCommandTreatment).toBe(customCommandTreatment);
-        expect(option.skipCheckout).toStrictEqual(skipCheckout);
+        expect(option.skipProjectCheckout).toStrictEqual(skipProject);
+        expect(option.skipProjectExecution).toStrictEqual(skipProject);
 
         // check that the executed command info is set correctly
         expect(option.CLICommand).toBe(CLIActionType.BUILD);

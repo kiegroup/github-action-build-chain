@@ -36,6 +36,7 @@ describe("build branch flow cli", () => {
         expect(option.outputFolder).toMatch(new RegExp(`^build_chain_${formatDate(new Date()).slice(0, -2)}\\d\\d`));
         expect(option.loggerLevel).toBe(LoggerLevel.INFO);
         expect(option.skipExecution).toBe(false);
+        expect(option.skipCheckout).toBe(false);
         expect(option.skipParallelCheckout).toBe(false);
         expect(option.fullProjectDependencyTree).toBe(false);
 
@@ -64,14 +65,14 @@ describe("build branch flow cli", () => {
         const token = "abc";
         const outputFolder = "qaz";
         const customCommandTreatment = "abc||def";
-        const skipCheckout = ["pr1", "pr2"];
+        const skipProject = ["pr1", "pr2"];
         const commandOption = ["cmd1", "cmd2"];
         const group = "gr1";
 
         program.parse([command, "-f", definitionFile, "-p", startProject, "--token", token, "-b", branch,
-                        "-o", outputFolder, "-t", customCommandTreatment, "--skipCheckout", ...skipCheckout, 
-                        "-g", group, "-c", ...commandOption, "--debug", "--skipParallelCheckout", 
-                        "--skipExecution", "--fullProjectDependencyTree"], { from: "user" });
+                        "-o", outputFolder, "-t", customCommandTreatment, "--skipProjectCheckout", ...skipProject, 
+                        "--skipProjectExecution", ...skipProject,"-g", group, "-c", ...commandOption, "--debug", "--skipParallelCheckout", 
+                        "--skipExecution", "--skipCheckout", "--fullProjectDependencyTree"], { from: "user" });
         
         // check all the required options and optional options are set correctly
         const option = parsedInputs.inputs;
@@ -79,12 +80,14 @@ describe("build branch flow cli", () => {
         expect(option.outputFolder).toBe(outputFolder);
         expect(option.loggerLevel).toBe(LoggerLevel.DEBUG);
         expect(option.skipExecution).toBe(true);
+        expect(option.skipCheckout).toBe(true);
         expect(option.skipParallelCheckout).toBe(true);
         expect(option.fullProjectDependencyTree).toBe(true);
         expect(option.startProject).toBe(startProject);
         expect(option.token).toBe(token);
         expect(option.customCommandTreatment).toBe(customCommandTreatment);
-        expect(option.skipCheckout).toStrictEqual(skipCheckout);
+        expect(option.skipProjectCheckout).toStrictEqual(skipProject);
+        expect(option.skipProjectExecution).toStrictEqual(skipProject);
         expect(option.branch).toBe(branch);
         expect(option.group).toBe(group);
         expect(option.command).toStrictEqual(commandOption);

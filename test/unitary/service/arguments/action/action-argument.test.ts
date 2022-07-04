@@ -7,8 +7,8 @@ import Container from "typedi";
 const parsedInput = Container.get(InputService);
 
 const definitionFile = "/path/to/file";
-const skipCheckout = ["project1", "project2", "project3"];
-const skipExecution = true;
+const skipProject = ["project1", "project2", "project3"];
+const skipAll = true;
 const skipParallelCheckout = false;
 const startProject = "project4";
 const fakeFlagValue = "abc";
@@ -17,8 +17,10 @@ const additionaFlags = `--tempFlag;-z ${fakeFlagValue}`;
 const setGeneralInputs = (flowType: string) => {
     process.env = {
         "INPUT_DEFINITION-FILE": definitionFile,
-        "INPUT_SKIP-CHECKOUT": skipCheckout.join(", "),
-        "INPUT_SKIP-EXECUTION": skipExecution.toString(),
+        "INPUT_SKIP-PROJECT-CHECKOUT": skipProject.join(", "),
+        "INPUT_SKIP-PROJECT-EXECUTION": skipProject.join(", "),
+        "INPUT_SKIP-EXECUTION": skipAll.toString(),
+        "INPUT_SKIP-CHECKOUT": skipAll.toString(),
         "INPUT_SKIP-PARALLEL-CHECKOUT": skipParallelCheckout.toString(),
         "INPUT_STARTING-PROJECT": startProject,
         "INPUT_ADDITIONAL-FLAGS": additionaFlags,
@@ -40,8 +42,10 @@ describe("Different flow types", () => {
             parser.parseInput();
             const vals = parsedInput.inputs;
             expect(vals.definitionFile).toBe(definitionFile);
-            expect(vals.skipCheckout).toStrictEqual(skipCheckout);
-            expect(vals.skipExecution).toBe(skipExecution);
+            expect(vals.skipProjectCheckout).toStrictEqual(skipProject);
+            expect(vals.skipProjectExecution).toStrictEqual(skipProject);
+            expect(vals.skipExecution).toBe(skipAll);
+            expect(vals.skipCheckout).toBe(skipAll);
             expect(vals.skipParallelCheckout).toBe(skipParallelCheckout);
             expect(vals.startProject).toBe(startProject);
             expect(vals.tempFlag).toBe(true);
@@ -68,8 +72,10 @@ describe("Different log levels", () => {
             parser.parseInput();
             const vals = parsedInput.inputs;
             expect(vals.definitionFile).toBe(definitionFile);
-            expect(vals.skipCheckout).toStrictEqual(skipCheckout);
-            expect(vals.skipExecution).toBe(skipExecution);
+            expect(vals.skipProjectCheckout).toStrictEqual(skipProject);
+            expect(vals.skipProjectExecution).toStrictEqual(skipProject);
+            expect(vals.skipExecution).toBe(skipAll);
+            expect(vals.skipCheckout).toBe(skipAll);
             expect(vals.skipParallelCheckout).toBe(skipParallelCheckout);
             expect(vals.startProject).toBe(startProject);
             expect(vals.tempFlag).toBe(true);

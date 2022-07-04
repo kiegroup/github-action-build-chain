@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { CLIActionType } from "@bc/domain/cli";
 import { MainCommandFactory } from "@bc/service/arguments/cli/main-command-factory";
-import { ParsedInputs } from "@bc/service/inputs/parsed-inputs"; 
+import { InputService } from "@bc/service/inputs/input-service"; 
 import { formatDate } from "@bc/utils/date";
 import { Command, CommanderError } from "commander";
 import Container from "typedi";
@@ -15,7 +15,7 @@ const definitionFile = "/path/to/file";
 
 // Command to be executed
 const command = `${CLIActionType.BUILD} ${FlowType.CROSS_PULL_REQUEST}`;
-const parsedInputs = Container.get(ParsedInputs);
+const parsedInputs = Container.get(InputService);
 
 
 beforeEach(() => {

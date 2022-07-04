@@ -2,7 +2,7 @@ import { FlowType, InputValues, LoggerLevel } from "@bc/domain/inputs";
 import * as core from "@actions/core";
 import { OptionValues } from "commander";
 import Container from "typedi";
-import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
+import { InputService } from "@bc/service/inputs/input-service";
 import { InvalidInput } from "@bc/domain/errors";
 
 /**
@@ -87,7 +87,7 @@ export class ActionArguments {
             ...this.getAdditionalFlags(core.getInput("additional-flags"))
         };
 
-        const parsedInput = Container.get(ParsedInputs);
+        const parsedInput = Container.get(InputService);
         parsedInput.updateInputs(input);        
     }
 }

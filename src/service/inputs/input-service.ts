@@ -2,7 +2,7 @@ import { defaultInputValues, InputValues, LoggerLevel } from "@bc/domain/inputs"
 import { Service } from "typedi";
 
 @Service()
-export class ParsedInputs {
+export class InputService {
     // store parsed options
     private _inputs: InputValues = defaultInputValues;
 

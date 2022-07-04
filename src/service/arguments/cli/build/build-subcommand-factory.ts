@@ -6,7 +6,7 @@ import { CrossPullRequestCommand } from "@bc/service/arguments/cli/build/cross-p
 import { FullDownstreamCommand } from "@bc/service/arguments/cli/build/fd-command";
 import { SinglePullRequestCommand } from "@bc/service/arguments/cli/build/single-pr-command";
 import { formatDate } from "@bc/utils/date";
-import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
+import { InputService } from "@bc/service/inputs/input-service";
 import Container from "typedi";
 import { FlowType } from "@bc/domain/inputs";
 
@@ -49,7 +49,7 @@ export class BuildSubCommandFactory {
             .option("-t, --customCommandTreatment <RegEx||ReplacementEx>", "Regex defines the regular expression for what you want to replace with the ReplacementEx")
             .option("--skipCheckout <projects...>", "A list of projects to skip checkout")
             .action((options) => {
-                const parsedInputs = Container.get(ParsedInputs);
+                const parsedInputs = Container.get(InputService);
                 parsedInputs.updateInputs({...options, CLICommand: CLIActionType.BUILD, CLISubCommand: buildType});
             });
     }

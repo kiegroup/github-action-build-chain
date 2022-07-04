@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { CLIActionType, ToolType } from "@bc/domain/cli";
 import { MainCommandFactory } from "@bc/service/arguments/cli/main-command-factory";
-import { ParsedInputs } from "@bc/service/inputs/parsed-inputs";
+import { InputService } from "@bc/service/inputs/input-service";
 import { Command, CommanderError } from "commander";
 import Container from "typedi";
 import { LoggerLevel } from "@bc/domain/inputs";
@@ -13,7 +13,7 @@ const command = `${CLIActionType.TOOLS} ${ToolType.PROJECT_LIST}`;
 
 // Define required arguments to be reused for each test
 const definitionFile = "/path/to/file";
-const parsedInputs = Container.get(ParsedInputs);
+const parsedInputs = Container.get(InputService);
 
 beforeEach(() => {
     // Construct the a fresh instance of the cli each time

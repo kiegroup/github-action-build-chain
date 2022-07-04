@@ -28,8 +28,10 @@ export interface InputValues extends OptionValues {
     CLICommand?: CLIActionType
     CLISubCommand?: FlowType | ToolType,
     skipExecution: boolean,
-    skipParallelCheckout: boolean
-    skipCheckout?: string[],
+    skipParallelCheckout: boolean,
+    skipCheckout: boolean,
+    skipProjectCheckout?: string[],
+    skipProjectExecution?: string[],
     startProject?: string,
     loggerLevel: LoggerLevel,
     annotationsPrefix?: string,
@@ -42,6 +44,7 @@ export interface InputValues extends OptionValues {
 export const defaultInputValues: Readonly<InputValues> = {
     definitionFile: "",
     skipExecution: false,
+    skipCheckout: false,
     skipParallelCheckout: false,
     loggerLevel: LoggerLevel.INFO,
 };

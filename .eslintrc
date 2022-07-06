@@ -27,6 +27,7 @@
     "curly": "error",
     "no-empty": "error",
     "no-console": "error",
-    "no-alert": "error"
+    "no-alert": "error",
+    "@typescript-eslint/no-non-null-assertion": "off"
   }
 }

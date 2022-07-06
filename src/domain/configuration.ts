@@ -1,4 +1,5 @@
 import { TreatmentOptions } from "@bc/domain/treatment-options";
+import { Endpoints } from "@octokit/types";
 
 export interface Configuration {
   // TODO: to implement
@@ -18,3 +19,23 @@ export const defaultValue: Readonly<Configuration> = {
   skipCheckout: false,
   skipExecution: false,
 };
+
+export type GitConfiguration = {
+  serverUrl?: string,
+  serverUrlWithToken?: string,
+  action?: string,
+  actor?: string,
+  author?: string,
+  jobId?: string,
+  ref?: string,
+  workflow?: string
+}
+
+export type ProjectConfiguration = {
+  repository?: string,
+  name?: string,
+  group?: string,
+  branch?: string
+}
+
+export type EventData = Endpoints["GET /repos/{owner}/{repo}/pulls/{pull_number}"]["response"]["data"] | Record<string, never>

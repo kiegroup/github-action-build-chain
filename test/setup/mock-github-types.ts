@@ -46,5 +46,14 @@ export type Config = {
     mocks?: {
         baseUrl: string,
         api: Api[]
+    },
+    env?: {
+        [key: string]: string
+    },
+    action?: {
+        eventPayloadFileName?: string,
+        eventPayload: {
+            [key: string]: unknown
+        }
     }
 }

@@ -18,7 +18,7 @@ export class ActionConfiguration extends BaseConfiguration{
             target: {
                 branch: this.gitEventData.base.ref,
                 repository: this.gitEventData.base.repo.full_name,
-                name: this.gitEventData.base.repo.full_name,
+                name: this.gitEventData.base.repo.name,
                 group: this.gitEventData.base.repo.owner.login
             }
         };

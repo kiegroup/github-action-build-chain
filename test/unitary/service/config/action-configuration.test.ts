@@ -98,3 +98,14 @@ describe("load source and target project", () => {
     });
 });
 
+describe("load token", () => {
+    test("success", () => {
+        actionConfig.loadToken();
+        const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env.token;
+        expect(Container.get(constants.GITHUB.TOKEN)).toBe(actualData);
+    });
+    test("failure", () => {
+        delete process.env["GITHUB_TOKEN"];
+        expect(() => actionConfig.loadToken()).toThrowError();
+    });
+});

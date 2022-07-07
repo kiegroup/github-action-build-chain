@@ -3,7 +3,6 @@ import { defaultInputValues, InputValues } from "@bc/domain/inputs";
 import { InputService } from "@bc/service/inputs/input-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
-import { logAndThrow } from "@bc/utils/log";
 import Container from "typedi";
 
 export abstract class BaseConfiguration {
@@ -62,11 +61,7 @@ export abstract class BaseConfiguration {
     abstract loadToken(): void;
 
     loadParsedInput(): InputValues {
-        const input = Container.get(InputService).inputs;
-        if (Object.keys(input).length === 0) {
-            const errorMessage = "The configuration has not been initialized. Please contact with the administrator or report and issue to build-chain tool repository";
-            logAndThrow(errorMessage);
-        }
-        return input;
+        // parsed inputs will always have the default value. No need to check whether it is empty or not
+        return Container.get(InputService).inputs;
     }
 }

@@ -9,7 +9,7 @@ import { CLIConfiguration } from "@bc/service/config/cli-configuration";
 import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
-const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event");
+const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event-cli");
 let cliConfig = new CLIConfiguration();
 
 // disable logs
@@ -176,5 +176,26 @@ describe("load source and target project", () =>{
         expect(source).toStrictEqual(expectedSource);
         expect(target).toStrictEqual(expectedTarget);
 
+    });
+});
+
+describe("load token", () => {
+    test("success: via token flag", () => {
+        const token = "tokenflag";
+        jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => {return {...defaultInputValues, token};});
+        cliConfig.loadToken();
+        expect(Container.get(constants.GITHUB.TOKEN)).toBe(token);
+    });
+
+    test("success: via env", () => {
+        cliConfig.loadToken();
+        const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env.token;
+        expect(Container.get(constants.GITHUB.TOKEN)).toBe(actualData);
+    });
+
+    test("failure", () =>{
+        jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => {return {...defaultInputValues};});
+        delete process.env["GITHUB_TOKEN"];
+        expect(() => cliConfig.loadToken()).toThrowError();
     });
 });

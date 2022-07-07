@@ -9,7 +9,7 @@ import Container from "typedi";
 export class CLIConfiguration extends BaseConfiguration{
 
     loadProject(): {source: ProjectConfiguration, target: ProjectConfiguration} {
-        if (this.parsedInputs.flowType === FlowType.BRANCH){
+        if (this.parsedInputs.CLISubCommand === FlowType.BRANCH){
             const projectName = this.parsedInputs.startProject!.split("/");
             const projectConfig = {
                 branch: this.parsedInputs.branch,
@@ -32,7 +32,7 @@ export class CLIConfiguration extends BaseConfiguration{
                 target: {
                     branch: this.gitEventData.base.ref,
                     repository: this.gitEventData.base.repo.full_name,
-                    name: this.gitEventData.base.repo.full_name,
+                    name: this.gitEventData.base.repo.name,
                     group: this.gitEventData.base.repo.owner.login
                 }
             };
@@ -44,9 +44,8 @@ export class CLIConfiguration extends BaseConfiguration{
         let gitConfig: GitConfiguration = {
             serverUrl: serverUrl,
             serverUrlWithToken: serverUrl?.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
-            author: this.gitEventData.head.user.login
         };
-        if (this.parsedInputs.flowType === FlowType.BRANCH) {
+        if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
             const group = (this.parsedInputs.group) ? this.parsedInputs.group : this.parsedInputs.startProject?.split("/")[0];
             if (!group) {logAndThrow("Specify group option or set project name as GROUP_NAME/REPO_NAME");}
             gitConfig =  {
@@ -65,15 +64,19 @@ export class CLIConfiguration extends BaseConfiguration{
         const prCheck = this.parsedInputs.url.match(PR_URL);
         if (prCheck) {
             this.logger.debug("Getting pull request information");
-            const { data } = await OctokitFactory.getOctokitInstance().pulls.get({
-                owner: prCheck[1],
-                repo: prCheck[2],
-                pull_number: parseInt(prCheck[3])
-            });
-
-            return data;
+            try{
+                const { data } = await OctokitFactory.getOctokitInstance().pulls.get({
+                    owner: prCheck[1],
+                    repo: prCheck[2],
+                    pull_number: parseInt(prCheck[3])
+                });
+                return data;
+            } catch(err) {
+                logAndThrow(`Invalid event url ${this.parsedInputs.url}`);
+            }
+            
         }
-        logAndThrow(`Invalid event url ${this.parsedInputs.url}\n url must be a github pull request event url or a github tree url`);
+        logAndThrow(`Invalid event url ${this.parsedInputs.url}. URL must be a github pull request event url or a github tree url`);
     }
 
     loadToken(): void {

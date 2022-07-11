@@ -4,7 +4,7 @@ import { InputService } from "@bc/service/inputs/input-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { logAndThrow } from "@bc/utils/log";
-import { DefinitionFile, getOrderedListForTree, getTree, readDefinitionFile, Tree } from "@kie/build-chain-configuration-reader";
+import { DefinitionFile, getOrderedListForTree, getTree, Node, readDefinitionFile, Tree } from "@kie/build-chain-configuration-reader";
 import Container from "typedi";
 
 export abstract class BaseConfiguration {
@@ -14,7 +14,7 @@ export abstract class BaseConfiguration {
     protected _targetProject: ProjectConfiguration;
     protected _parsedInputs: InputValues;
     protected _definitionFile: DefinitionFile;
-    protected _projectList: Tree;
+    protected _projectList: Node[];
     protected _projectTree: Tree;
     protected readonly logger: LoggerService;
     
@@ -64,6 +64,18 @@ export abstract class BaseConfiguration {
         return this._parsedInputs;
     }
 
+    get definitionFile(): DefinitionFile {
+        return this._definitionFile;
+    }
+
+    get projectList(): Node[] {
+        return this._projectList;
+    }
+
+    get projectTree(): Tree {
+        return this._projectTree;
+    }
+
     abstract loadProject(): {source: ProjectConfiguration, target: ProjectConfiguration};
 
     abstract loadGitConfiguration(): GitConfiguration;
@@ -77,7 +89,7 @@ export abstract class BaseConfiguration {
         return Container.get(InputService).inputs;
     }
 
-    async loadDefinitionFile(): Promise<{definitionFile: DefinitionFile, projectList: Tree, projectTree: Tree}>{
+    async loadDefinitionFile(): Promise<{definitionFile: DefinitionFile, projectList: Node[], projectTree: Tree}>{
         try {
             const [definitionFile, projectList, projectTree] = await Promise.all([
                 readDefinitionFile(this.parsedInputs.definitionFile),

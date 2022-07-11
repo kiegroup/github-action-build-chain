@@ -89,9 +89,9 @@ declare module "@kie/build-chain-configuration-reader" {
 
     export function parentChainFromNode(node: Node): Tree;
 
-    export function getOrderedListForTree(file: string, options?: BuildChainReaderOptions): Promise<Tree>;
+    export function getOrderedListForTree(file: string, options?: BuildChainReaderOptions): Promise<Node[]>;
 
-    export function getOrderedListForProject(file: string, options?: BuildChainReaderOptions): Tree;
+    export function getOrderedListForProject(file: string, options?: BuildChainReaderOptions): Node[];
     
     export function treatUrl(url: string, placeholders: UrlPlaceholders): string;
 

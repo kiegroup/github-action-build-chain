@@ -47,7 +47,7 @@ export class BuildSubCommandFactory {
             .option("--skipExecution", "A flag to skip execution and artifacts archiving for all projects. Overrides skipProjectExecution", false)
             .option("--skipProjectExecution <projects...>", "A flag to skip execution and artifacts archiving for certain projects only")
             .option("--skipParallelCheckout", "Checkout the project sequentially", false)
-            .option("-t, --customCommandTreatment <RegEx||ReplacementEx>", "Regex defines the regular expression for what you want to replace with the ReplacementEx")
+            .option("-t, --customCommandTreatment <exp...>", "Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want to replace with the ReplacementEx")
             .option("--skipProjectCheckout <projects...>", "A list of projects to skip checkout.")
             .option("--skipCheckout", "skip checkout for all projects. Overrides skipProjectCheckout", false)
             .action((options) => {

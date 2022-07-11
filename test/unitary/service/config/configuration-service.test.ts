@@ -105,16 +105,11 @@ describe("cli", () => {
     });
 
     test.each([
-        ["custom command treatment defined", {...defaultInputValues, customCommandTreatment: "abc||xyz"}, {replaceExpressions: ["abc", "xyz"]}],
+        ["custom command treatment defined", {...defaultInputValues, customCommandTreatment: ["abc||xyz"]}, {replaceExpressions: ["abc||xyz"]}],
         ["custom command treatment not defined", defaultInputValues, {}]
     ])("getTreatmentOptions: success - %p", (title: string, currInput: InputValues, treatmentOptions: TreatmentOptions) => {
         currentInput = currInput;
         expect(config.getTreatmentOptions()).toStrictEqual(treatmentOptions);
-    });
-
-    test("getTreatmentOptions: failure - custom command treatment defined but incorrent format", () => {
-        currentInput = {...defaultInputValues, customCommandTreatment: "abc"};
-        expect(() => config.getTreatmentOptions()).toThrowError();
     });
 });
 
@@ -195,15 +190,10 @@ describe("action", () => {
     });
 
     test.each([
-        ["custom command treatment defined", {...defaultInputValues, customCommandTreatment: "abc||xyz"}, {replaceExpressions: ["abc", "xyz"]}],
+        ["custom command treatment defined", {...defaultInputValues, customCommandTreatment: ["abc||xyz"]}, {replaceExpressions: ["abc||xyz"]}],
         ["custom command treatment not defined", defaultInputValues, {}]
     ])("getTreatmentOptions: success - %p", (title: string, currInput: InputValues, treatmentOptions: TreatmentOptions) => {
         currentInput = currInput;
         expect(config.getTreatmentOptions()).toStrictEqual(treatmentOptions);
-    });
-
-    test("getTreatmentOptions: failure - custom command treatment defined but incorrent format", () => {
-        currentInput = {...defaultInputValues, customCommandTreatment: "abc"};
-        expect(() => config.getTreatmentOptions()).toThrowError();
     });
 });

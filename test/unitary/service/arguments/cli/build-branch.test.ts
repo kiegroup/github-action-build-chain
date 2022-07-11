@@ -64,13 +64,13 @@ describe("build branch flow cli", () => {
     test("optional arguments", () => {
         const token = "abc";
         const outputFolder = "qaz";
-        const customCommandTreatment = "abc||def";
+        const customCommandTreatment = ["abc||def"];
         const skipProject = ["pr1", "pr2"];
         const commandOption = ["cmd1", "cmd2"];
         const group = "gr1";
 
         program.parse([command, "-f", definitionFile, "-p", startProject, "--token", token, "-b", branch,
-                        "-o", outputFolder, "-t", customCommandTreatment, "--skipProjectCheckout", ...skipProject, 
+                        "-o", outputFolder, "-t", ...customCommandTreatment, "--skipProjectCheckout", ...skipProject, 
                         "--skipProjectExecution", ...skipProject,"-g", group, "-c", ...commandOption, "--debug", "--skipParallelCheckout", 
                         "--skipExecution", "--skipCheckout", "--fullProjectDependencyTree"], { from: "user" });
         
@@ -85,7 +85,7 @@ describe("build branch flow cli", () => {
         expect(option.fullProjectDependencyTree).toBe(true);
         expect(option.startProject).toBe(startProject);
         expect(option.token).toBe(token);
-        expect(option.customCommandTreatment).toBe(customCommandTreatment);
+        expect(option.customCommandTreatment).toStrictEqual(customCommandTreatment);
         expect(option.skipProjectCheckout).toStrictEqual(skipProject);
         expect(option.skipProjectExecution).toStrictEqual(skipProject);
         expect(option.branch).toBe(branch);

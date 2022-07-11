@@ -98,10 +98,8 @@ export class ConfigurationService {
      */
     getTreatmentOptions(): TreatmentOptions {
         if (this.configuration.parsedInputs.customCommandTreatment) {
-            const replaceExpressions = this.configuration.parsedInputs.customCommandTreatment.split("||");
-            if (replaceExpressions.length !== 2) {logAndThrow("Invalid custom command treatment format. The format required is <Regex||ReplacementRegex>");}
             return {
-                replaceExpressions
+                replaceExpressions: this.configuration.parsedInputs.customCommandTreatment
             };
         }
         return {};

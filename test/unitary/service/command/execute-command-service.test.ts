@@ -1,17 +1,17 @@
 import { ExecuteCommandService } from "@bc/service/command/execute-command-service";
 import { CommandTreatmentDelegator } from "@bc/service/command/treatment/command-treatment-delegator";
 import { CommandExecutorDelegator } from "@bc/service/command/executor/command-executor-delegator";
-import { ConfigurationService } from "@bc/service/configuration-service";
 import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
 import { defaultValue as nodeDefaultValue, Node } from "@bc/domain/node";
 import { NodeExecutionLevel } from "@bc/domain/node-execution-level";
 import { TestLoggerService } from "@bc/service/logger/__mocks__/test-logger-service";
+import { ConfigurationService } from "@bc/service/config/configuration-service";
 
 jest.mock("@bc/service/logger/logger-service-factory");
 jest.mock("@bc/service/command/treatment/command-treatment-delegator");
 jest.mock("@bc/service/command/executor/command-executor-delegator");
-jest.mock("@bc/service/configuration-service");
+jest.mock("@bc/service/config/configuration-service");
 
 describe("ExecuteCommandService", () => {
   test("executeCommand without cwd", async () => {
@@ -20,12 +20,7 @@ describe("ExecuteCommandService", () => {
     const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, true);
     const configurationService = new ConfigurationService();
 
-    // Due to: github.com/facebook/jest/issues/9675
-    Object.defineProperty(configurationService, "configuration", {
-      get: () => ({
-        treatmentOptions: "treatmentOptions",
-      }),
-    });
+    (ConfigurationService.prototype.getTreatmentOptions as jest.Mocked<jest.Mock>).mockReturnValueOnce("treatmentOptions");
     (CommandTreatmentDelegator.prototype.treatCommand as jest.Mocked<jest.Mock>).mockReturnValue("command x treated");
     (CommandExecutorDelegator.prototype.executeCommand as jest.Mocked<jest.Mock>).mockReturnValue({ result: ExecutionResult.OK });
 
@@ -48,12 +43,7 @@ describe("ExecuteCommandService", () => {
     const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, true);
     const configurationService = new ConfigurationService();
 
-    // Due to: github.com/facebook/jest/issues/9675
-    Object.defineProperty(configurationService, "configuration", {
-      get: () => ({
-        treatmentOptions: "treatmentOptions",
-      }),
-    });
+    (ConfigurationService.prototype.getTreatmentOptions as jest.Mocked<jest.Mock>).mockReturnValueOnce("treatmentOptions");
     (CommandTreatmentDelegator.prototype.treatCommand as jest.Mocked<jest.Mock>).mockReturnValue("command x treated");
     (CommandExecutorDelegator.prototype.executeCommand as jest.Mocked<jest.Mock>).mockReturnValue({ result: ExecutionResult.OK });
 

@@ -13,7 +13,7 @@ import { InputService } from "@bc/service/inputs/input-service";
 jest.mock("@kie/build-chain-configuration-reader");
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
-const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event");
+const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event-action");
 let actionConfig = new ActionConfiguration();
 
 // disable logs

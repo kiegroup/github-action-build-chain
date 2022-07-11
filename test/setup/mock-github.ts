@@ -239,6 +239,7 @@ export class MockGithub {
         const action = this.config.action;
         const filename = path.join(this.setupPath, action.eventPayloadFileName ? action.eventPayloadFileName : "event.json");
         fs.writeFileSync(filename, JSON.stringify(action.eventPayload));
+        process.env["GITHUB_EVENT_PATH"] = filename;
     }
 
     /**

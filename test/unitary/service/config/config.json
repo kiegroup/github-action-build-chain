@@ -48,7 +48,6 @@
         "ref": "main",
         "server_url": "https://git.ca/",
         "token": "token",
-        "event_path": "/home/sbapna/projects/github-action-build-chain/test/setup/event/event.json",
         "repository": "owner/project"
     },
     "action": {

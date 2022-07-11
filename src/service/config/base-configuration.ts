@@ -87,8 +87,16 @@ export abstract class BaseConfiguration {
     abstract loadToken(): void;
 
     loadParsedInput(): InputValues {
+        const inputs: InputValues = Container.get(InputService).inputs;
+        // validate any input that needs to be in a certain way
+        if (inputs.customCommandTreatment) {
+            inputs.customCommandTreatment.forEach((cct) => {
+                const check = cct.split("||");
+                if (check.length !== 2) {logAndThrow("Invalid format for custom command treatment. Required format: Regex||ReplaceRegex");}
+            });
+        }
         // parsed inputs will always have the default value. No need to check whether it is empty or not
-        return Container.get(InputService).inputs;
+        return inputs;
     }
 
     private parseCommand(cmd: string | string[] | undefined): string[] {

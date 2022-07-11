@@ -8,6 +8,8 @@ import { EntryPoint } from "@bc/domain/entry-point";
 import fs from "fs";
 import { getOrderedListForTree, getTree, ProjectTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
 import { Node } from "@bc/domain/node";
+import { defaultInputValues } from "@bc/domain/inputs";
+import { InputService } from "@bc/service/inputs/input-service";
 jest.mock("@kie/build-chain-configuration-reader");
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
@@ -144,5 +146,24 @@ describe("load definition file", () => {
         readDefinitionFileMock.mockImplementation(() => { throw new Error("Invalid definition file"); });
         await expect(actionConfig.loadDefinitionFile()).rejects.toThrowError();
 
+    });
+});
+
+describe("load input", () => {
+    test("success: validated input", () => {
+        const input = {...defaultInputValues, customCommandTreatment: ["abc||def", "xyz||pqr"]};
+        jest.spyOn(InputService.prototype, "inputs", "get").mockImplementation(() => input);
+        expect(actionConfig.loadParsedInput()).toStrictEqual(input);
+    });
+
+    test("success: no input to validate", () => {
+        jest.spyOn(InputService.prototype, "inputs", "get").mockImplementation(() => defaultInputValues);
+        expect(actionConfig.loadParsedInput()).toStrictEqual(defaultInputValues);
+    });
+
+    test("failure: invalidate input", () => {
+        const input = {...defaultInputValues, customCommandTreatment: ["abc||def", "xyz|pqr"]};
+        jest.spyOn(InputService.prototype, "inputs", "get").mockImplementation(() => input);
+        expect(() => actionConfig.loadParsedInput()).toThrowError();
     });
 });

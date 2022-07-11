@@ -8,6 +8,10 @@ import Container from "typedi";
 
 export class CLIConfiguration extends BaseConfiguration{
 
+    /**
+     * Construct source and target project configuration. For branch build source and target configuratoon is the same since we are just building a branch.
+     * @returns 
+     */
     loadProject(): {source: ProjectConfiguration, target: ProjectConfiguration} {
         if (this.parsedInputs.CLISubCommand === FlowType.BRANCH){
             const projectName = this.parsedInputs.startProject!.split("/");
@@ -39,6 +43,10 @@ export class CLIConfiguration extends BaseConfiguration{
         }
     }
 
+    /**
+     * Process user input to produce git configuration
+     * @returns 
+     */
     loadGitConfiguration(): GitConfiguration {
         const serverUrl = process.env.GITHUB_SERVER_URL ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "") : "https://github.com";
         let gitConfig: GitConfiguration = {
@@ -57,6 +65,10 @@ export class CLIConfiguration extends BaseConfiguration{
         return gitConfig;
     }
 
+    /**
+     * Produce the event payload file for PR build using the events url. For branch build github event is empty
+     * @returns 
+     */
     async loadGitEvent(): Promise<EventData> {
         if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {return {};}
         if (!this.parsedInputs.url) {logAndThrow("If running from the CLI, event url needs to be defined");}
@@ -79,6 +91,10 @@ export class CLIConfiguration extends BaseConfiguration{
         logAndThrow(`Invalid event url ${this.parsedInputs.url}. URL must be a github pull request event url or a github tree url`);
     }
 
+    /**
+     * Set the github token
+     * @returns 
+     */
     loadToken(): void {
         if (this.parsedInputs.token) {
             Container.set(constants.GITHUB.TOKEN, this.parsedInputs.token);

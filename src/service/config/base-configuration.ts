@@ -86,6 +86,10 @@ export abstract class BaseConfiguration {
 
     abstract loadToken(): void;
 
+    /**
+     * Validates any user input and returns the stored user input from InputService if there were no errors
+     * @returns {InputValues}
+     */
     loadParsedInput(): InputValues {
         const inputs: InputValues = Container.get(InputService).inputs;
         // validate any input that needs to be in a certain way
@@ -99,10 +103,20 @@ export abstract class BaseConfiguration {
         return inputs;
     }
 
+    /**
+     * converts a string or array of string or undefined into an array of string
+     * @param cmd 
+     * @returns an array of string
+     */
     private parseCommand(cmd: string | string[] | undefined): string[] {
         return cmd ? (Array.isArray(cmd) ? cmd : [cmd]) : [];
     }
 
+    /**
+     * parse the build-command section of ProjectNode. Produces all the 3 different execution phases
+     * @param build 
+     * @returns 
+     */
     private parseBuild(build: Build): {before?: Commands, commands?: Commands, after?: Commands} {
         const buildInfo = build["build-command"];
         const parsedBuild: {before?: Commands, commands?: Commands, after?: Commands} = {};
@@ -130,6 +144,11 @@ export abstract class BaseConfiguration {
         return parsedBuild;
     }
 
+    /**
+     * Convert ProjectNode to Node so that other services can use the info produced from build-chain-configuration reader
+     * @param node 
+     * @returns 
+     */
     private parseNode(node: ProjectNode): Node {
         const parsedNode: Node = {
             project: node.project,
@@ -151,7 +170,11 @@ export abstract class BaseConfiguration {
         }
         return parsedNode;
     }
-     
+    
+    /**
+     * Load the definition file as is in the form of an object, get the project tree and project list
+     * @returns 
+     */
     async loadDefinitionFile(): Promise<{definitionFile: DefinitionFile, projectList: Node[], projectTree: Node[]}>{
         try {
             const [definitionFile, projectList, projectTree] = await Promise.all([

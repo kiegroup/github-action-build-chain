@@ -6,7 +6,10 @@ import Container from "typedi";
 import { readFile } from "node:fs/promises";
 
 export class ActionConfiguration extends BaseConfiguration{
-
+    /**
+     * Create the source and target project configuration from the github event payload
+     * @returns 
+     */
     loadProject(): {source: ProjectConfiguration, target: ProjectConfiguration} {
         return {
             source: {
@@ -25,6 +28,10 @@ export class ActionConfiguration extends BaseConfiguration{
         
     }
 
+    /**
+     * Process the various github env variables
+     * @returns 
+     */
     loadGitConfiguration(): GitConfiguration {
         const serverUrl = process.env.GITHUB_SERVER_URL ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "") : "https://github.com";
         return {
@@ -39,6 +46,10 @@ export class ActionConfiguration extends BaseConfiguration{
         };
     }
 
+    /**
+     * Read the event payload file 
+     * @returns 
+     */
     async loadGitEvent(): Promise<EventData> {
         if (process.env.GITHUB_EVENT_PATH) {
             this.logger.debug("Getting pull request information");
@@ -48,6 +59,10 @@ export class ActionConfiguration extends BaseConfiguration{
         logAndThrow("Make sure you are running it in a github environment");
     }
 
+    /**
+     * Set the github token
+     * @returns 
+     */
     loadToken(): void {
         if (process.env.GITHUB_TOKEN) {
             Container.set(constants.GITHUB.TOKEN, process.env.GITHUB_TOKEN);

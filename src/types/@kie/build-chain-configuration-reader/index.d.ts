@@ -68,11 +68,11 @@ declare module "@kie/build-chain-configuration-reader" {
     }
 
     /** Tried to recontruct from https://github.com/kiegroup/build-chain-configuration-reader/blob/36edb075bff8d8644f1b4cb721898aa892d8e347/docs/tree-example.json */
-    export type Node = {
+    export type ProjectNode = {
         project: string,
         dependencies?: {project: string}[]
-        children?: Node[],
-        parent?: Node[],
+        children?: ProjectNode[],
+        parent?: ProjectNode[],
         repo?: {
             group: string,
             name: string
@@ -81,17 +81,17 @@ declare module "@kie/build-chain-configuration-reader" {
         mapping?: Mapping
     }
 
-    export type Tree = Node[];
+    export type ProjectTree = ProjectNode[];
 
-    export function getTree(file: string, options?: BuildChainReaderOptions): Tree;
+    export function getTree(file: string, options?: BuildChainReaderOptions): Promise<ProjectTree>;
 
-    export function getTreeForProject(file: string, project: string, options?: BuildChainReaderOptions): Node;
+    export function getTreeForProject(file: string, project: string, options?: BuildChainReaderOptions): ProjectNode;
 
-    export function parentChainFromNode(node: Node): Tree;
+    export function parentChainFromNode(node: ProjectNode): ProjectTree;
 
-    export function getOrderedListForTree(file: string, options?: BuildChainReaderOptions): Promise<Node[]>;
+    export function getOrderedListForTree(file: string, options?: BuildChainReaderOptions): Promise<ProjectNode[]>;
 
-    export function getOrderedListForProject(file: string, options?: BuildChainReaderOptions): Node[];
+    export function getOrderedListForProject(file: string, options?: BuildChainReaderOptions): ProjectNode[];
     
     export function treatUrl(url: string, placeholders: UrlPlaceholders): string;
 

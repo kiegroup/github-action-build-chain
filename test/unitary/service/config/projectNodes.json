@@ -1,0 +1,243 @@
+{
+  "mock": [
+    {
+      "project": "root",
+      "dependencies": [{ "project": "depend" }],
+      "parent": [
+        {
+          "project": "parent",
+          "dependencies": [],
+          "parent": [
+            {
+              "project": "grandparent"
+            }
+          ]
+        },
+        {
+          "project": "parent",
+          "dependencies": [],
+          "parent": [
+            {
+              "project": "grandparent"
+            }
+          ],
+          "children": [
+            {
+              "project": "sibling"
+            }
+          ],
+          "build": {
+            "build-command": {
+              "after": {
+                "upstream": "upstream",
+                "downstream": ["downstream"]
+              },
+              "before": {
+                "upstream": "upstream",
+                "downstream": ["downstream"],
+                "current": ["current1", "current2"]
+              },
+              "upstream": "upstream",
+              "downstream": "dowstream",
+              "current": ["current"]
+            }
+          }
+        },
+        {
+          "project": "parent",
+          "dependencies": [{ "project": "depend" }],
+          "children": [
+            {
+              "project": "sibling"
+            }
+          ]
+        }
+      ],
+      "children": [
+        {
+          "project": "child",
+          "dependencies": [],
+          "parent": [
+            {
+              "project": "grandparent"
+            }
+          ]
+        },
+        {
+          "project": "child",
+          "dependencies": [],
+          "parent": [
+            {
+              "project": "grandparent"
+            }
+          ],
+          "children": [
+            {
+              "project": "sibling"
+            }
+          ]
+        },
+        {
+          "project": "child",
+          "dependencies": [{ "project": "depend" }],
+          "children": [
+            {
+              "project": "sibling"
+            }
+          ],
+          "build": {
+            "build-command": {
+              "after": {
+                "upstream": "upstream",
+                "downstream": ["downstream"]
+              },
+              "before": {
+                "upstream": "upstream",
+                "downstream": ["downstream"],
+                "current": ["current1", "current2"]
+              },
+              "upstream": "upstream",
+              "downstream": "dowstream",
+              "current": ["current"]
+            }
+          }
+        }
+      ],
+      "build": {
+        "build-command": {
+          "after": {
+            "upstream": "upstream",
+            "downstream": ["downstream"]
+          },
+          "before": {
+            "upstream": "upstream",
+            "downstream": ["downstream"],
+            "current": ["current1", "current2"]
+          },
+          "upstream": "upstream",
+          "downstream": "dowstream",
+          "current": ["current"]
+        }
+      }
+    }
+  ],
+  "expected": [
+    {
+      "project": "root",
+      "dependencies": [{ "project": "depend" }],
+      "parents": [
+        {
+          "project": "parent",
+          "dependencies": [],
+          "parents": [
+            {
+              "project": "grandparent"
+            }
+          ]
+        },
+        {
+          "project": "parent",
+          "dependencies": [],
+          "parents": [
+            {
+              "project": "grandparent"
+            }
+          ],
+          "children": [
+            {
+              "project": "sibling"
+            }
+          ],
+          "after": {
+            "upstream": ["upstream"],
+            "downstream": ["downstream"],
+            "current": []
+          },
+          "before": {
+            "upstream": ["upstream"],
+            "downstream": ["downstream"],
+            "current": ["current1", "current2"]
+          },
+          "commands": {
+            "upstream": ["upstream"],
+            "downstream": ["dowstream"],
+            "current": ["current"]
+          }
+        },
+        {
+          "project": "parent",
+          "dependencies": [{ "project": "depend" }],
+          "children": [
+            {
+              "project": "sibling"
+            }
+          ]
+        }
+      ],
+      "children": [
+        {
+          "project": "child",
+          "dependencies": [],
+          "parents": [
+            {
+              "project": "grandparent"
+            }
+          ]
+        },
+        {
+          "project": "child",
+          "dependencies": [],
+          "parents": [
+            {
+              "project": "grandparent"
+            }
+          ],
+          "children": [
+            {
+              "project": "sibling"
+            }
+          ]
+        },
+        {
+          "project": "child",
+          "dependencies": [{ "project": "depend" }],
+          "children": [
+            {
+              "project": "sibling"
+            }
+          ],
+          "after": {
+            "upstream": ["upstream"],
+            "downstream": ["downstream"],
+            "current": []
+          },
+          "before": {
+            "upstream": ["upstream"],
+            "downstream": ["downstream"],
+            "current": ["current1", "current2"]
+          },
+          "commands": {
+            "upstream": ["upstream"],
+            "downstream": ["dowstream"],
+            "current": ["current"]
+          }
+        }
+      ],
+      "after": {
+        "upstream": ["upstream"],
+        "downstream": ["downstream"],
+        "current": []
+      },
+      "before": {
+        "upstream": ["upstream"],
+        "downstream": ["downstream"],
+        "current": ["current1", "current2"]
+      },
+      "commands": {
+        "upstream": ["upstream"],
+        "downstream": ["dowstream"],
+        "current": ["current"]
+      }
+    }
+  ]
+}

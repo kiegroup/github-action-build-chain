@@ -1,10 +1,12 @@
+import { Commands } from "@bc/domain/commands";
 import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/configuration";
 import { defaultInputValues, InputValues } from "@bc/domain/inputs";
+import { Node } from "@bc/domain/node";
 import { InputService } from "@bc/service/inputs/input-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { logAndThrow } from "@bc/utils/log";
-import { DefinitionFile, getOrderedListForTree, getTree, Node, readDefinitionFile, Tree } from "@kie/build-chain-configuration-reader";
+import { Build, DefinitionFile, getOrderedListForTree, getTree, ProjectNode, readDefinitionFile } from "@kie/build-chain-configuration-reader";
 import Container from "typedi";
 
 export abstract class BaseConfiguration {
@@ -15,7 +17,7 @@ export abstract class BaseConfiguration {
     protected _parsedInputs: InputValues;
     protected _definitionFile: DefinitionFile;
     protected _projectList: Node[];
-    protected _projectTree: Tree;
+    protected _projectTree: Node[];
     protected readonly logger: LoggerService;
     
     constructor() {
@@ -72,7 +74,7 @@ export abstract class BaseConfiguration {
         return this._projectList;
     }
 
-    get projectTree(): Tree {
+    get projectTree(): Node[] {
         return this._projectTree;
     }
 
@@ -89,14 +91,67 @@ export abstract class BaseConfiguration {
         return Container.get(InputService).inputs;
     }
 
-    async loadDefinitionFile(): Promise<{definitionFile: DefinitionFile, projectList: Node[], projectTree: Tree}>{
+    private parseCommand(cmd: string | string[] | undefined): string[] {
+        return cmd ? (Array.isArray(cmd) ? cmd : [cmd]) : [];
+    }
+
+    private parseBuild(build: Build): {before?: Commands, commands?: Commands, after?: Commands} {
+        const buildInfo = build["build-command"];
+        const parsedBuild: {before?: Commands, commands?: Commands, after?: Commands} = {};
+        if (buildInfo?.after) {
+            const after = buildInfo.after;
+            parsedBuild.after = {
+                upstream: this.parseCommand(after.upstream),
+                downstream: this.parseCommand(after.downstream),
+                current: this.parseCommand(after.current)
+            };
+        }
+        if (buildInfo?.before) {
+            const before = buildInfo.before;
+            parsedBuild.before = {
+                upstream: this.parseCommand(before.upstream),
+                downstream: this.parseCommand(before.downstream),
+                current: this.parseCommand(before.current)
+            };
+        }
+        parsedBuild.commands = {
+            upstream: this.parseCommand(buildInfo?.upstream),
+            downstream: this.parseCommand(buildInfo?.downstream),
+            current: this.parseCommand(buildInfo?.current)
+        };
+        return parsedBuild;
+    }
+
+    private parseNode(node: ProjectNode): Node {
+        const parsedNode: Node = {
+            project: node.project,
+        };
+        if (node.dependencies) {parsedNode.dependencies = node.dependencies;}
+        if (node.parent) {
+            const parent = node.parent.map((parentNode) => this.parseNode(parentNode));
+            parsedNode.parents = parent;
+        }
+        if (node.children) {
+            const children = node.children.map((childNode) => this.parseNode(childNode));
+            parsedNode.children = children;
+        }
+        if (node.build && node.build["build-command"]) {
+            const {before, commands, after} = this.parseBuild(node.build);
+            parsedNode.after = after;
+            parsedNode.before = before;
+            parsedNode.commands = commands;
+        }
+        return parsedNode;
+    }
+     
+    async loadDefinitionFile(): Promise<{definitionFile: DefinitionFile, projectList: Node[], projectTree: Node[]}>{
         try {
             const [definitionFile, projectList, projectTree] = await Promise.all([
                 readDefinitionFile(this.parsedInputs.definitionFile),
                 getOrderedListForTree(this.parsedInputs.definitionFile),
                 getTree(this.parsedInputs.definitionFile)
             ]);
-            return { definitionFile, projectList, projectTree };
+            return { definitionFile, projectList: projectList.map((node) => this.parseNode(node)), projectTree: projectTree.map((node) => this.parseNode(node)) };
         } catch(err){
             logAndThrow("Invalid definition file");
         }   

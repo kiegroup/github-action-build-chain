@@ -8,18 +8,28 @@ import Container from "typedi";
 import path from "path";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import fs from "fs";
-import { Node } from "@kie/build-chain-configuration-reader";
 import { NodeExecutionLevel } from "@bc/domain/node-execution-level";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
+import { Node } from "@bc/domain/node";
+import { getOrderedListForTree, getTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
 
 // disable logs
 jest.spyOn(global.console, "log");
 jest.mock("@kie/build-chain-configuration-reader");
 
+
 const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event");
 
 beforeEach(async () => {
     await mockGithub.setup();
+
+    const readDefinitionFileMock = readDefinitionFile as jest.Mock;
+    const getTreeMock = getTree as jest.Mock;
+    const getOrderedListForTreeMock = getOrderedListForTree as jest.Mock;
+
+    readDefinitionFileMock.mockReturnValue({version: "2.1"});
+    getTreeMock.mockReturnValue([]);
+    getOrderedListForTreeMock.mockReturnValue([]);
 });
 
 afterEach(() =>{

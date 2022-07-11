@@ -6,7 +6,8 @@ import Container from "typedi";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import fs from "fs";
-import { getOrderedListForTree, getTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
+import { getOrderedListForTree, getTree, ProjectTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
+import { Node } from "@bc/domain/node";
 jest.mock("@kie/build-chain-configuration-reader");
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
@@ -115,10 +116,27 @@ describe("load token", () => {
 
 describe("load definition file", () => {
     test("success", async () => {
-        await expect(actionConfig.loadDefinitionFile()).resolves.not.toThrowError();
+        const data = JSON.parse(fs.readFileSync(path.join(__dirname, "projectNodes.json"), "utf8"));
+        const mockData: ProjectTree = data.mock;
+        const expectedData: Node[] = data.expected;
+
+        const readDefinitionFileMock = readDefinitionFile as jest.Mock;
+        const getTreeMock = getTree as jest.Mock;
+        const getOrderedListForTreeMock = getOrderedListForTree as jest.Mock;
+
+        readDefinitionFileMock.mockReturnValueOnce({version: "2.1"});
+        getTreeMock.mockReturnValueOnce(mockData);
+        getOrderedListForTreeMock.mockReturnValueOnce(mockData);
+
+        const {definitionFile, projectList, projectTree} = await actionConfig.loadDefinitionFile();
         expect(readDefinitionFile).toHaveBeenCalledTimes(1);
         expect(getTree).toHaveBeenCalledTimes(1);
         expect(getOrderedListForTree).toHaveBeenCalledTimes(1);
+
+        expect(definitionFile).toStrictEqual({version: "2.1"});
+        expect(projectList).toStrictEqual(expectedData);
+        expect(projectTree).toStrictEqual(expectedData);
+
     });
     
     test("failure", async () => {

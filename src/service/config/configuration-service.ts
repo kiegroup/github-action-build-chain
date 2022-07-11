@@ -6,8 +6,8 @@ import { CLIConfiguration } from "@bc/service/config/cli-configuration";
 import { ActionConfiguration } from "@bc/service/config/action-configuration";
 import { logAndThrow } from "@bc/utils/log";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
-import { Node } from "@kie/build-chain-configuration-reader";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
+import { Node } from "@bc/domain/node";
 
 @Service()
 export class ConfigurationService {

@@ -6,6 +6,8 @@ import Container from "typedi";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import fs from "fs";
+import { getOrderedListForTree, getTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
+jest.mock("@kie/build-chain-configuration-reader");
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
 const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event");
@@ -75,7 +77,8 @@ describe("load git config", () => {
 
 describe("load source and target project", () => {
     test("success", async () => {
-        await actionConfig.init();
+        const eventData = await actionConfig.loadGitEvent();
+        jest.spyOn(actionConfig, "gitEventData", "get").mockImplementation(() => eventData);
         const { source, target } = actionConfig.loadProject();
         const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).action.eventPayload.pull_request;
         const expectedSource = {
@@ -107,5 +110,21 @@ describe("load token", () => {
     test("failure", () => {
         delete process.env["GITHUB_TOKEN"];
         expect(() => actionConfig.loadToken()).toThrowError();
+    });
+});
+
+describe("load definition file", () => {
+    test("success", async () => {
+        await expect(actionConfig.loadDefinitionFile()).resolves.not.toThrowError();
+        expect(readDefinitionFile).toHaveBeenCalledTimes(1);
+        expect(getTree).toHaveBeenCalledTimes(1);
+        expect(getOrderedListForTree).toHaveBeenCalledTimes(1);
+    });
+    
+    test("failure", async () => {
+        const readDefinitionFileMock = readDefinitionFile as jest.Mock;
+        readDefinitionFileMock.mockImplementation(() => { throw new Error("Invalid definition file"); });
+        await expect(actionConfig.loadDefinitionFile()).rejects.toThrowError();
+
     });
 });

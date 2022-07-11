@@ -11,6 +11,7 @@ import fs from "fs";
 
 // disable logs
 jest.spyOn(global.console, "log");
+jest.mock("@kie/build-chain-configuration-reader");
 
 const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event");
 

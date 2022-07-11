@@ -3,6 +3,8 @@ import { defaultInputValues, InputValues } from "@bc/domain/inputs";
 import { InputService } from "@bc/service/inputs/input-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
+import { logAndThrow } from "@bc/utils/log";
+import { DefinitionFile, getOrderedListForTree, getTree, readDefinitionFile, Tree } from "@kie/build-chain-configuration-reader";
 import Container from "typedi";
 
 export abstract class BaseConfiguration {
@@ -11,6 +13,9 @@ export abstract class BaseConfiguration {
     protected _sourceProject: ProjectConfiguration;
     protected _targetProject: ProjectConfiguration;
     protected _parsedInputs: InputValues;
+    protected _definitionFile: DefinitionFile;
+    protected _projectList: Tree;
+    protected _projectTree: Tree;
     protected readonly logger: LoggerService;
     
     constructor() {
@@ -20,6 +25,9 @@ export abstract class BaseConfiguration {
         this._gitConfiguration = {};
         this._sourceProject = {};
         this._targetProject = {};
+        this._definitionFile = {version: "2.1"};
+        this._projectList = [];
+        this._projectTree = [];
     }
 
     async init() {
@@ -30,6 +38,10 @@ export abstract class BaseConfiguration {
         const { source, target } = this.loadProject();
         this._sourceProject = source;
         this._targetProject = target;
+        const { definitionFile, projectList, projectTree } = await this.loadDefinitionFile(); 
+        this._definitionFile = definitionFile;
+        this._projectList = projectList;
+        this._projectTree = projectTree;
     }
 
     get gitEventData(): EventData {
@@ -63,5 +75,18 @@ export abstract class BaseConfiguration {
     loadParsedInput(): InputValues {
         // parsed inputs will always have the default value. No need to check whether it is empty or not
         return Container.get(InputService).inputs;
+    }
+
+    async loadDefinitionFile(): Promise<{definitionFile: DefinitionFile, projectList: Tree, projectTree: Tree}>{
+        try {
+            const [definitionFile, projectList, projectTree] = await Promise.all([
+                readDefinitionFile(this.parsedInputs.definitionFile),
+                getOrderedListForTree(this.parsedInputs.definitionFile),
+                getTree(this.parsedInputs.definitionFile)
+            ]);
+            return { definitionFile, projectList, projectTree };
+        } catch(err){
+            logAndThrow("Invalid definition file");
+        }   
     }
 }

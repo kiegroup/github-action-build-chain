@@ -7,6 +7,8 @@ import { EntryPoint } from "@bc/domain/entry-point";
 import fs from "fs";
 import { CLIConfiguration } from "@bc/service/config/cli-configuration";
 import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
+import { getOrderedListForTree, getTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
+jest.mock("@kie/build-chain-configuration-reader");
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
 const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event-cli");
@@ -197,5 +199,21 @@ describe("load token", () => {
         jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => {return {...defaultInputValues};});
         delete process.env["GITHUB_TOKEN"];
         expect(() => cliConfig.loadToken()).toThrowError();
+    });
+});
+
+describe("load definition file", () => {
+    test("success", async () => {
+        await expect(cliConfig.loadDefinitionFile()).resolves.not.toThrowError();
+        expect(readDefinitionFile).toHaveBeenCalledTimes(1);
+        expect(getTree).toHaveBeenCalledTimes(1);
+        expect(getOrderedListForTree).toHaveBeenCalledTimes(1);
+    });
+    
+    test("failure", async () => {
+        const readDefinitionFileMock = readDefinitionFile as jest.Mock;
+        readDefinitionFileMock.mockImplementation(() => { throw new Error("Invalid definition file"); });
+        await expect(cliConfig.loadDefinitionFile()).rejects.toThrowError();
+
     });
 });

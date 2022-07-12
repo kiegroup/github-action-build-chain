@@ -40,8 +40,10 @@ export class ConfigurationService {
      */
     getStarterProjectName(): string {
         const startProject = this.configuration.parsedInputs.startProject ?? process.env.GITHUB_REPOSITORY;
-        if (startProject) {return startProject;}
-        logAndThrow("Start project needs to be defined or build chain must be run in a Github environment");
+        if (!startProject) {
+            logAndThrow("Start project needs to be defined or build chain must be run in a Github environment");
+        }
+        return startProject;
     }
 
     /**
@@ -60,10 +62,9 @@ export class ConfigurationService {
     getStarterNode(): Node {
         const starterNode = this.configuration.projectList.find(node => this.isNodeStarter(node));
         if (!starterNode) {
-            const errorMessage = `There's no project ${this.getStarterProjectName()} in the chain. This is normally due the project starting 
-                                  the job (or the one selected to behave like so it's not in the project tree information. Please choose a 
-                                  different project like starter or define the project ${this.getStarterProjectName()} in the tree.`;
-            logAndThrow(errorMessage);
+            logAndThrow(`There's no project ${this.getStarterProjectName()} in the chain
+            This is normally due the project starting the job (or the one selected to behave like so it's not in the project tree information.
+            Please choose a different project like starter or define the project ${this.getStarterProjectName()} in the tree.`);
         }
         return starterNode;
     }

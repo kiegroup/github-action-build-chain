@@ -54,7 +54,7 @@ export class CLIConfiguration extends BaseConfiguration{
             serverUrlWithToken: serverUrl?.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
         };
         if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
-            const group = (this.parsedInputs.group) ? this.parsedInputs.group : this.parsedInputs.startProject?.split("/")[0];
+            const group = this.parsedInputs.group ?? this.parsedInputs.startProject?.split("/")[0];
             if (!group) {logAndThrow("Specify group option or set project name as GROUP_NAME/REPO_NAME");}
             gitConfig =  {
                 ...gitConfig,

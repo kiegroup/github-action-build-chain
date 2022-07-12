@@ -145,9 +145,6 @@ export class MockGithub {
     private async setupRepos(): Promise<RepoDetails[]>{
         if (!this.config.repositories) {return [];}
 
-        // create setup dir
-        if (fs.existsSync(this.setupPath)) {fs.rmSync(this.setupPath, { recursive: true });}
-
         // get repositories' data
         const repositories = this.config.repositories;
 
@@ -229,11 +226,20 @@ export class MockGithub {
         }
     }
 
-    /**
-     * Remove all git repos
-     */
-    private async teardownRepos() {
-        if (fs.existsSync(this.setupPath)) {fs.rmSync(this.setupPath, { recursive: true });}
+    private setupEnvironment() {
+        if (!this.config.env) {return;}
+        const env = this.config.env;
+        Object.keys(env).forEach(key => {
+            process.env[`GITHUB_${key.toUpperCase()}`] = env[key];
+        });
+    }
+
+    private setupAction() {
+        if (!this.config.action) {return;}
+        const action = this.config.action;
+        const filename = path.join(this.setupPath, action.eventPayloadFileName ? action.eventPayloadFileName : "event.json");
+        fs.writeFileSync(filename, JSON.stringify(action.eventPayload));
+        process.env["GITHUB_EVENT_PATH"] = filename;
     }
 
     /**
@@ -243,12 +249,29 @@ export class MockGithub {
         if (this.numNocks > 0) {nock.cleanAll();}
     }
 
+    private teardownEnv() {
+        if (!this.config.env) {return;}
+        const actualEnv = process.env;
+        const mockEnv = this.config.env;
+        Object.keys(actualEnv).forEach(key => {
+            Object.keys(mockEnv).forEach(k => {
+                if (key.localeCompare(`GITHUB_${k.toUpperCase()}`) === 0) {delete process.env[key];}
+            });
+        });
+    }
+
     /**
      * Setup local repos and mock github apis
      * @return Array of object containing path as well as current branch details of all the repositories created
      */
     async setup() {
+        // create setup dir
+        if (fs.existsSync(this.setupPath)) {fs.rmSync(this.setupPath, { recursive: true });}
+        fs.mkdirSync(this.setupPath, { recursive: true });
+
         this.setupMockApi();
+        this.setupEnvironment();
+        this.setupAction();
         return await this.setupRepos();
     }
 
@@ -256,7 +279,8 @@ export class MockGithub {
      * Teardown github repos and mocked apis
      */
     async teardown() {
+        if (fs.existsSync(this.setupPath)) {fs.rmSync(this.setupPath, { recursive: true });}
         this.teardownMocks();
-        this.teardownRepos();
+        this.teardownEnv();
     }
 }

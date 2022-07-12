@@ -85,7 +85,7 @@ export class ActionArguments {
             startProject: core.getInput("starting-project"),
             loggerLevel: this.getLoggerLevel(core.getInput("logger-level")),
             annotationsPrefix: core.getInput("annotations-prefix"),
-            customCommandTreatment: core.getInput("custom-command-treatment"),
+            customCommandTreatment: core.getInput("custom-command-treatment") === "" ? [] : core.getInput("custom-command-treatment").split(","),
             ...this.getAdditionalFlags(core.getInput("additional-flags"))
         };
 

@@ -60,11 +60,11 @@ describe("build single pull request flow cli", () => {
         const startProject = "xyz";
         const token = "abc";
         const outputFolder = "qaz";
-        const customCommandTreatment = "abc||def";
+        const customCommandTreatment = ["abc||def"];
         const skipProject = ["pr1", "pr2"];
 
         program.parse([command, "-f", definitionFile, "-u", url, "-p", startProject, "--token", token, "--skipProjectExecution", 
-                        ...skipProject, "-o", outputFolder, "-t", customCommandTreatment, "--skipProjectCheckout", ...skipProject,
+                        ...skipProject, "-o", outputFolder, "-t", ...customCommandTreatment, "--skipProjectCheckout", ...skipProject,
                         "--debug", "--skipParallelCheckout", "--skipExecution", "--skipCheckout"], { from: "user" });
         
         // check all the required options and optional options are set correctly
@@ -78,7 +78,7 @@ describe("build single pull request flow cli", () => {
         expect(option.skipParallelCheckout).toBe(true);
         expect(option.startProject).toBe(startProject);
         expect(option.token).toBe(token);
-        expect(option.customCommandTreatment).toBe(customCommandTreatment);
+        expect(option.customCommandTreatment).toStrictEqual(customCommandTreatment);
         expect(option.skipProjectCheckout).toStrictEqual(skipProject);
         expect(option.skipProjectExecution).toStrictEqual(skipProject);
 

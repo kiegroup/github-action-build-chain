@@ -1,13 +1,13 @@
 import { Service } from "typedi";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
 import { CommandTreatmentDelegator } from "@bc/service/command/treatment/command-treatment-delegator";
-import { ConfigurationService } from "@bc/service/configuration-service";
 import { CommandExecutorDelegator } from "@bc/service/command/executor/command-executor-delegator";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { Node } from "@bc/domain/node";
 import { NodeExecutionLevel } from "@bc/domain/node-execution-level";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
+import { ConfigurationService } from "@bc/service/config/configuration-service";
 
 @Service()
 export class ExecuteCommandService {
@@ -18,14 +18,14 @@ export class ExecuteCommandService {
   }
 
   public async executeCommand(command: string, cwd?: string): Promise<ExecuteCommandResult> {
-    const treatedCommand = this._commandTreatmentDelegator.treatCommand(command, this._configurationService.configuration?.treatmentOptions);
+    const treatedCommand = this._commandTreatmentDelegator.treatCommand(command, this._configurationService.getTreatmentOptions());
     return await this._commandExecutorDelegator.executeCommand(treatedCommand, cwd);
   }
 
   public async executeChainCommands(nodes: Node[], executionPhase: ExecutionPhase, cwd?: string): Promise<ExecuteNodeResult[]> {
     const result: ExecuteNodeResult[] = [];
     for (const node of nodes.values()) {
-      const commands = this.getNodeCommands(node, executionPhase, this._configurationService.getNodeExecutionLevel(node, nodes));
+      const commands = this.getNodeCommands(node, executionPhase, this._configurationService.getNodeExecutionLevel(node));
       if (commands?.length) {
         result.push(await this.executeNodeCommands(node, commands, this._configurationService.skipExecution(node), cwd));
       } else {

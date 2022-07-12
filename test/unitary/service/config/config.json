@@ -1,0 +1,80 @@
+{
+    "mocks": {
+        "baseUrl": "https://api.github.com",
+        "api": [
+            {
+                "path": "\/repos\/.+\/.+\/pulls\/\\d+$",
+                "method": "get",
+                "response": [
+                    {
+                        "code": 200,
+                        "data": {
+                            "head": {
+                                "ref": "feature",
+                                "repo": {
+                                    "full_name": "owner/project",
+                                    "name": "project",
+                                    "owner": {
+                                        "login": "owner"
+                                    }
+                                }
+                            },
+                            "base": {
+                                "ref": "main",
+                                "repo": {
+                                    "full_name": "owner/project",
+                                    "name": "project",
+                                    "owner": {
+                                        "login": "owner"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "code": 404,
+                        "data": {}
+                    }
+                ]
+            }
+        ]
+    },
+    "env": {
+        "action": "pull_request",
+        "actor": "actor",
+        "author": "author",
+        "job": "job",
+        "workflow": "workflow",
+        "ref": "main",
+        "server_url": "https://git.ca/",
+        "token": "token",
+        "repository": "owner/project"
+    },
+    "action": {
+        "eventPayloadFileName": "event.json",
+        "eventPayload": {
+            "pull_request": {
+                "head": {
+                    "ref": "feature",
+                    "repo": {
+                        "full_name": "owner/project",
+                        "name": "project",
+                        "owner": {
+                            "login": "owner"
+                        }
+                    }
+                },
+                "base": {
+                    "ref": "main",
+                    "repo": {
+                        "full_name": "owner/project",
+                        "name": "project",
+                        "owner": {
+                            "login": "owner"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

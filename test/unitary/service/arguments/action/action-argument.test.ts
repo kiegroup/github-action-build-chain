@@ -13,6 +13,7 @@ const skipParallelCheckout = false;
 const startProject = "project4";
 const fakeFlagValue = "abc";
 const additionaFlags = `--tempFlag;-z ${fakeFlagValue}`;
+const customCommandTreatment = ["abc||xyz"];
 
 const setGeneralInputs = (flowType: string) => {
     process.env = {
@@ -24,7 +25,8 @@ const setGeneralInputs = (flowType: string) => {
         "INPUT_SKIP-PARALLEL-CHECKOUT": skipParallelCheckout.toString(),
         "INPUT_STARTING-PROJECT": startProject,
         "INPUT_ADDITIONAL-FLAGS": additionaFlags,
-        "INPUT_FLOW-TYPE": flowType
+        "INPUT_FLOW-TYPE": flowType,
+        "INPUT_CUSTOM-COMMAND-TREATMENT": customCommandTreatment.join(", ")
     };
 };
 
@@ -52,6 +54,7 @@ describe("Different flow types", () => {
             expect(vals.z).toBe("abc");
             expect(vals.loggerLevel).toBe(LoggerLevel.INFO);
             expect(vals.flowType).toBe(expectedFlowType);
+            expect(vals.customCommandTreatment).toStrictEqual(customCommandTreatment);
         } catch (err) {
             expect(err).toBeInstanceOf(InvalidInput);
         }
@@ -82,6 +85,7 @@ describe("Different log levels", () => {
             expect(vals.z).toBe("abc");
             expect(vals.flowType).toBe(FlowType.CROSS_PULL_REQUEST);
             expect(vals.loggerLevel).toBe(expectedLogLevel);
+            expect(vals.customCommandTreatment).toStrictEqual(customCommandTreatment);
         } catch (err) {
             expect(err).toBeInstanceOf(InvalidInput);
         }

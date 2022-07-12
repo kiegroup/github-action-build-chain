@@ -11,105 +11,102 @@ import { Node } from "@bc/domain/node";
 
 @Service()
 export class ConfigurationService {
+  private configuration: BaseConfiguration;
 
-    private configuration: BaseConfiguration;
-
-    constructor() {
-        switch (Container.get(constants.CONTAINER.ENTRY_POINT)) {
-            case EntryPoint.CLI:
-                this.configuration = new CLIConfiguration();
-                break;
-            case EntryPoint.GITHUB_EVENT:
-                this.configuration = new ActionConfiguration();
-                break;
-            default:
-                logAndThrow("Invalid entrypoint. Please contact with the administrator or report and issue to build-chain tool repository");
-        }
+  constructor() {
+    switch (Container.get(constants.CONTAINER.ENTRY_POINT)) {
+      case EntryPoint.CLI:
+        this.configuration = new CLIConfiguration();
+        break;
+      case EntryPoint.GITHUB_EVENT:
+        this.configuration = new ActionConfiguration();
+        break;
+      default:
+        logAndThrow("Invalid entrypoint. Please contact with the administrator or report and issue to build-chain tool repository");
     }
+  }
 
-    /**
-     * Load all necessary data for the configuration object
-     */
-    async init() {
-        await this.configuration.init();
+  /**
+   * Load all necessary data for the configuration object
+   */
+  async init() {
+    await this.configuration.init();
+  }
+
+  /**
+   * Get the name of the project starting the build-chain
+   * @returns {string}
+   */
+  getStarterProjectName(): string {
+    const startProject = this.configuration.parsedInputs.startProject ?? process.env.GITHUB_REPOSITORY;
+    if (!startProject) {
+      logAndThrow("Start project needs to be defined or build chain must be run in a Github environment");
     }
+    return startProject;
+  }
 
-    /**
-     * Get the name of the project starting the build-chain
-     * @returns {string}
-     */
-    getStarterProjectName(): string {
-        const startProject = this.configuration.parsedInputs.startProject ?? process.env.GITHUB_REPOSITORY;
-        if (!startProject) {
-            logAndThrow("Start project needs to be defined or build chain must be run in a Github environment");
-        }
-        return startProject;
-    }
+  /**
+   * Check whether the given node is the starter project
+   * @param node
+   * @returns {Boolean} true if the node is the starter project
+   */
+  isNodeStarter(node: Node): boolean {
+    return node.project === this.getStarterProjectName();
+  }
 
-    /**
-     * Check whether the given node is the starter project
-     * @param node 
-     * @returns {Boolean} true if the node is the starter project
-     */
-    isNodeStarter(node: Node): boolean {
-        return node.project === this.getStarterProjectName();
-    }
-
-    /**
-     * Finds the starter node
-     * @returns {Node} starter node
-     */
-    getStarterNode(): Node {
-        const starterNode = this.configuration.projectList.find(node => this.isNodeStarter(node));
-        if (!starterNode) {
-            logAndThrow(`There's no project ${this.getStarterProjectName()} in the chain
+  /**
+   * Finds the starter node
+   * @returns {Node} starter node
+   */
+  getStarterNode(): Node {
+    const starterNode = this.configuration.projectList.find((node) => this.isNodeStarter(node));
+    if (!starterNode) {
+      logAndThrow(`There's no project ${this.getStarterProjectName()} in the chain
             This is normally due the project starting the job (or the one selected to behave like so it's not in the project tree information.
             Please choose a different project like starter or define the project ${this.getStarterProjectName()} in the tree.`);
-        }
-        return starterNode;
     }
+    return starterNode;
+  }
 
-    /**
-     * Gets the execution level (current, upstream or downstream) for the given node
-     * @param node 
-     * @returns {NodeExecutionLevel} Upstream, current or downstream
-     */
-    getNodeExecutionLevel(node: Node): NodeExecutionLevel {
-        const starterNodeIndex = this.configuration.projectList.indexOf(this.getStarterNode());
-        const currentNodeIndex = this.configuration.projectList.indexOf(node);
-        if (currentNodeIndex < starterNodeIndex) {
-            return NodeExecutionLevel.UPSTREAM;
-        } else if (currentNodeIndex > starterNodeIndex) {
-            return NodeExecutionLevel.DOWNSTREAM;
-        } else {
-            return NodeExecutionLevel.CURRENT;
-        }   
+  /**
+   * Gets the execution level (current, upstream or downstream) for the given node
+   * @param node
+   * @returns {NodeExecutionLevel} Upstream, current or downstream
+   */
+  getNodeExecutionLevel(node: Node): NodeExecutionLevel {
+    const starterNodeIndex = this.configuration.projectList.indexOf(this.getStarterNode());
+    const currentNodeIndex = this.configuration.projectList.indexOf(node);
+    if (currentNodeIndex < starterNodeIndex) {
+      return NodeExecutionLevel.UPSTREAM;
+    } else if (currentNodeIndex > starterNodeIndex) {
+      return NodeExecutionLevel.DOWNSTREAM;
+    } else {
+      return NodeExecutionLevel.CURRENT;
     }
+  }
 
-    /**
-     * Checks whether execution needs to be skipped for the given node
-     * @param node 
-     * @returns {Boolean} true if execution needs to be skipped otherwise false
-     */
-    skipExecution(node: Node): boolean {
-        if (this.configuration.parsedInputs.skipExecution) {
-            return true;
-        }
-        return this.configuration.parsedInputs.skipProjectExecution ? 
-                this.configuration.parsedInputs.skipProjectExecution.includes(node.project) :
-                false;
+  /**
+   * Checks whether execution needs to be skipped for the given node
+   * @param node
+   * @returns {Boolean} true if execution needs to be skipped otherwise false
+   */
+  skipExecution(node: Node): boolean {
+    if (this.configuration.parsedInputs.skipExecution) {
+      return true;
     }
+    return this.configuration.parsedInputs.skipProjectExecution ? this.configuration.parsedInputs.skipProjectExecution.includes(node.project) : false;
+  }
 
-    /**
-     * Parses user input from custom command treatment option to create the treatment option object
-     * @returns {TreatmentOptions} Construct the treatment options domain object
-     */
-    getTreatmentOptions(): TreatmentOptions {
-        if (this.configuration.parsedInputs.customCommandTreatment) {
-            return {
-                replaceExpressions: this.configuration.parsedInputs.customCommandTreatment
-            };
-        }
-        return {};
+  /**
+   * Parses user input from custom command treatment option to create the treatment option object
+   * @returns {TreatmentOptions} Construct the treatment options domain object
+   */
+  getTreatmentOptions(): TreatmentOptions {
+    if (this.configuration.parsedInputs.customCommandTreatment) {
+      return {
+        replaceExpressions: this.configuration.parsedInputs.customCommandTreatment,
+      };
     }
+    return {};
+  }
 }

@@ -8,10 +8,6 @@ class CLIRunner extends Runner {
   constructor() {
     super(EntryPoint.CLI);
   }
-
-  initializeConfig(): void {
-    //TODO: to implement
-  }
 }
 
 new CLIRunner().execute();

@@ -8,10 +8,6 @@ class GithubEventRunner extends Runner {
   constructor() {
     super(EntryPoint.GITHUB_EVENT);
   }
-
-  initializeConfig(): void {
-    //TODO: to implement
-  }
 }
 
 new GithubEventRunner().execute();

@@ -1,10 +1,10 @@
 /** Defines all the types of command line actions */
 export enum CLIActionType {
-    BUILD = "build",
-    TOOLS = "tools"
+  BUILD = "build",
+  TOOLS = "tools",
 }
 
 /** Defines all the types of tools available */
 export enum ToolType {
-    PROJECT_LIST = "project-list",
+  PROJECT_LIST = "project-list",
 }

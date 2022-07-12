@@ -1,3 +1,4 @@
 export enum EntryPoint {
-  CLI, GITHUB_EVENT
+  CLI,
+  GITHUB_EVENT,
 }

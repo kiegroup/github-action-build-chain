@@ -1,3 +1,5 @@
 export enum NodeExecutionLevel {
-  UPSTREAM = "upstream", CURRENT = "current", DOWNSTREAM = "downstream"
+  UPSTREAM = "upstream",
+  CURRENT = "current",
+  DOWNSTREAM = "downstream",
 }

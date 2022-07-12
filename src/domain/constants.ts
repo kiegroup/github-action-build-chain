@@ -3,6 +3,6 @@ export const constants = {
     ENTRY_POINT: "entry-point",
   },
   GITHUB: {
-    TOKEN: "token"
-  }
+    TOKEN: "token",
+  },
 };

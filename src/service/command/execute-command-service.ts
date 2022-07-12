@@ -19,7 +19,7 @@ export class ExecuteCommandService {
 
   public async executeCommand(command: string, cwd?: string): Promise<ExecuteCommandResult> {
     const treatedCommand = this._commandTreatmentDelegator.treatCommand(command, this._configurationService.getTreatmentOptions());
-    return await this._commandExecutorDelegator.executeCommand(treatedCommand, cwd);
+    return this._commandExecutorDelegator.executeCommand(treatedCommand, cwd);
   }
 
   public async executeChainCommands(nodes: Node[], executionPhase: ExecutionPhase, cwd?: string): Promise<ExecuteNodeResult[]> {

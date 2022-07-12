@@ -115,7 +115,7 @@ export class GitCLIService {
      * @returns sha string
      */
     async head(cwd: string): Promise<string> {
-        return await this.git(cwd).raw("show-ref", "--head", "-s", "/HEAD");
+        return this.git(cwd).raw("show-ref", "--head", "-s", "/HEAD");
     }
      
     /**
@@ -125,7 +125,7 @@ export class GitCLIService {
      * @returns sha string
      */
     async sha(cwd: string, branch: string): Promise<string> {
-        return await this.git(cwd).raw("show-ref", "-s", `refs/remotes/origin/${branch}`);
+        return this.git(cwd).raw("show-ref", "-s", `refs/remotes/origin/${branch}`);
     }
     
     /**

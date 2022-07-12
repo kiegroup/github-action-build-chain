@@ -107,7 +107,10 @@ export abstract class BaseConfiguration {
      * @returns an array of string
      */
     private parseCommand(cmd: string | string[] | undefined): string[] {
-        return cmd ? (Array.isArray(cmd) ? cmd : [cmd]) : [];
+        if (cmd) {
+            return Array.isArray(cmd) ? cmd : [cmd];
+        }
+        return [];
     }
 
     /**

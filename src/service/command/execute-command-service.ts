@@ -54,7 +54,10 @@ export class ExecuteCommandService {
 
   private getNodeCommands(node: Node, executionPhase: ExecutionPhase, nodeExecutionLevel: NodeExecutionLevel): string[] | undefined {
     const commands = node[`${executionPhase}`];
-    const levelCommands = commands ? commands[`${nodeExecutionLevel}`].length ? commands[`${nodeExecutionLevel}`] : commands[`${NodeExecutionLevel.CURRENT}`] : undefined;
+    let levelCommands;
+    if (commands) {
+      levelCommands = commands[`${nodeExecutionLevel}`].length ? commands[`${nodeExecutionLevel}`] : commands[`${NodeExecutionLevel.CURRENT}`];
+    }
     if (!commands) {
       LoggerServiceFactory.getInstance().debug(`No commands defined for project ${node.project} and phase ${executionPhase}`);
     } else if (!levelCommands || !levelCommands.length) {

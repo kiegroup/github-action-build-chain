@@ -77,7 +77,13 @@ export class ConfigurationService {
     getNodeExecutionLevel(node: Node): NodeExecutionLevel {
         const starterNodeIndex = this.configuration.projectList.indexOf(this.getStarterNode());
         const currentNodeIndex = this.configuration.projectList.indexOf(node);
-        return currentNodeIndex < starterNodeIndex ? NodeExecutionLevel.UPSTREAM : currentNodeIndex > starterNodeIndex ? NodeExecutionLevel.DOWNSTREAM : NodeExecutionLevel.CURRENT;
+        if (currentNodeIndex < starterNodeIndex) {
+            return NodeExecutionLevel.UPSTREAM;
+        } else if (currentNodeIndex > starterNodeIndex) {
+            return NodeExecutionLevel.DOWNSTREAM;
+        } else {
+            return NodeExecutionLevel.CURRENT;
+        }   
     }
 
     /**
@@ -86,9 +92,10 @@ export class ConfigurationService {
      * @returns {Boolean} true if execution needs to be skipped otherwise false
      */
     skipExecution(node: Node): boolean {
-        return this.configuration.parsedInputs.skipExecution ?
-                this.configuration.parsedInputs.skipExecution :
-                this.configuration.parsedInputs.skipProjectExecution ?
+        if (this.configuration.parsedInputs.skipExecution) {
+            return true;
+        }
+        return this.configuration.parsedInputs.skipProjectExecution ? 
                 this.configuration.parsedInputs.skipProjectExecution.includes(node.project) :
                 false;
     }

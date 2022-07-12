@@ -61,7 +61,8 @@ export class ExecuteCommandService {
     if (!commands) {
       LoggerServiceFactory.getInstance().debug(`No commands defined for project ${node.project} and phase ${executionPhase}`);
     } else if (!levelCommands || !levelCommands.length) {
-      LoggerServiceFactory.getInstance().debug(`No commands defined for project ${node.project} phase ${executionPhase} and level ${nodeExecutionLevel !== NodeExecutionLevel.CURRENT ? `${nodeExecutionLevel} or ${NodeExecutionLevel.CURRENT}` : NodeExecutionLevel.CURRENT}`);
+      const levelMsg = nodeExecutionLevel !== NodeExecutionLevel.CURRENT ? `${nodeExecutionLevel} or ${NodeExecutionLevel.CURRENT}` : NodeExecutionLevel.CURRENT;
+      LoggerServiceFactory.getInstance().debug(`No commands defined for project ${node.project} phase ${executionPhase} and level ${levelMsg}`);
     }
     return levelCommands;
   }

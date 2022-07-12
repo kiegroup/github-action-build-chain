@@ -11,21 +11,21 @@ export class TestLoggerService extends AbstractLoggerService {
   endGroup(): void {
   }
 
-  startGroup(_message: string): void {
+  startGroup(message: string): void {
   }
 
-  public debug(_message: string): void {
+  public debug(message: string): void {
   }
 
-  public info(_message: string): void {
+  public info(message: string): void {
   }
 
-  public trace(_message: string): void {
+  public trace(message: string): void {
   }
 
-  public warn(_message: string): void {
+  public warn(message: string): void {
   }
 
-  public error(_message: string): void {
+  public error(message: string): void {
   }
 }

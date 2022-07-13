@@ -10,7 +10,7 @@ export class ActionConfiguration extends BaseConfiguration {
    * Create the source and target project configuration from the github event payload
    * @returns
    */
-  loadProject(): {source: ProjectConfiguration, target: ProjectConfiguration} {
+  loadProject(): { source: ProjectConfiguration; target: ProjectConfiguration } {
     return {
       source: {
         branch: this.gitEventData.head.ref,
@@ -32,18 +32,13 @@ export class ActionConfiguration extends BaseConfiguration {
    * @returns
    */
   loadGitConfiguration(): GitConfiguration {
-    const serverUrl = process.env.GITHUB_SERVER_URL
-      ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "")
-      : "https://github.com";
+    const serverUrl = process.env.GITHUB_SERVER_URL ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "") : "https://github.com";
     return {
       action: process.env.GITHUB_ACTION,
       actor: process.env.GITHUB_ACTOR,
       author: process.env.GITHUB_AUTHOR,
       serverUrl: serverUrl,
-      serverUrlWithToken: serverUrl?.replace(
-        "://",
-        `://${Container.get(constants.GITHUB.TOKEN)}@`
-      ),
+      serverUrlWithToken: serverUrl?.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
       jobId: process.env.GITHUB_JOB,
       ref: process.env.GITHUB_REF,
       workflow: process.env.GITHUB_WORKFLOW,

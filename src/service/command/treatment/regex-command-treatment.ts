@@ -39,11 +39,10 @@ export class RegexCommandTreatment implements CommandTreatment {
 
   private createRegex(replaceExpression: string): RegExp {
     const [, literal, flag] = replaceExpression.split("/");
-    return literal
-      ? flag
-        ? new RegExp(literal, flag)
-        : new RegExp(literal)
-      : new RegExp(replaceExpression);
+    if (literal) {
+      return flag ? new RegExp(literal, flag) : new RegExp(literal);
+    }
+    return new RegExp(replaceExpression);
   }
 }
 

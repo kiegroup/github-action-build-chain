@@ -4,18 +4,18 @@ import { CommandConstructor } from "@bc/service/arguments/cli/command-constructo
 import { Command } from "commander";
 
 export abstract class AbstractPullRequestCommand implements CommandConstructor {
-    private readonly description: string;
-    private readonly type: FlowType;
+  private readonly description: string;
+  private readonly type: FlowType;
 
-    constructor(description: string, type: FlowType){
-        this.description = description;
-        this.type = type;
-    }
+  constructor(description: string, type: FlowType) {
+    this.description = description;
+    this.type = type;
+  }
 
-    createCommand(): Command {
-        return new Command(`${CLIActionType.BUILD} ${this.type}`)
-            .description(this.description)
-            .requiredOption("-u, --url <event_url>", "pull request event url")
-            .option("-p, --startProject <project>", "The project to start the build from");
-    }
+  createCommand(): Command {
+    return new Command(`${CLIActionType.BUILD} ${this.type}`)
+      .description(this.description)
+      .requiredOption("-u, --url <event_url>", "pull request event url")
+      .option("-p, --startProject <project>", "The project to start the build from");
+  }
 }

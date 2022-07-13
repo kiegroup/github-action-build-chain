@@ -6,9 +6,9 @@ import { AbstractPullRequestCommand } from "@bc/service/arguments/cli/build/abst
  * @implements {CommandConstructor}
  */
 export class FullDownstreamCommand extends AbstractPullRequestCommand {
-    constructor () {
-        const description: string = "Execute full downstream build chain workflow";
-        const type: FlowType = FlowType.FULL_DOWNSTREAM;
-        super(description, type)
-    }
+  constructor() {
+    const description: string = "Execute full downstream build chain workflow";
+    const type: FlowType = FlowType.FULL_DOWNSTREAM;
+    super(description, type);
+  }
 }

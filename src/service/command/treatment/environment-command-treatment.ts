@@ -6,7 +6,7 @@ import { Service } from "typedi";
 export class EnvironmentCommandTreatment implements CommandTreatment {
 
   // eslint-disable-next-line
-  public treat(command: string, options?: TreatmentOptions): string {
+  public treat(command: string, _options?: TreatmentOptions): string {
     const variables = this.getVariablesFromCommand(command);
     const treatedCommand = variables?.length > 0 ? variables.reduce(
       (acc, variable) =>

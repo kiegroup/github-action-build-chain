@@ -19,7 +19,7 @@ export class ExecuteCommandService {
 
   public async executeCommand(command: string, cwd?: string): Promise<ExecuteCommandResult> {
     const treatedCommand = this._commandTreatmentDelegator.treatCommand(command, this._configurationService.getTreatmentOptions());
-    return await this._commandExecutorDelegator.executeCommand(treatedCommand, cwd);
+    return this._commandExecutorDelegator.executeCommand(treatedCommand, cwd);
   }
 
   public async executeChainCommands(nodes: Node[], executionPhase: ExecutionPhase, cwd?: string): Promise<ExecuteNodeResult[]> {
@@ -54,11 +54,15 @@ export class ExecuteCommandService {
 
   private getNodeCommands(node: Node, executionPhase: ExecutionPhase, nodeExecutionLevel: NodeExecutionLevel): string[] | undefined {
     const commands = node[`${executionPhase}`];
-    const levelCommands = commands ? commands[`${nodeExecutionLevel}`].length ? commands[`${nodeExecutionLevel}`] : commands[`${NodeExecutionLevel.CURRENT}`] : undefined;
+    let levelCommands;
+    if (commands) {
+      levelCommands = commands[`${nodeExecutionLevel}`].length ? commands[`${nodeExecutionLevel}`] : commands[`${NodeExecutionLevel.CURRENT}`];
+    }
     if (!commands) {
       LoggerServiceFactory.getInstance().debug(`No commands defined for project ${node.project} and phase ${executionPhase}`);
     } else if (!levelCommands || !levelCommands.length) {
-      LoggerServiceFactory.getInstance().debug(`No commands defined for project ${node.project} phase ${executionPhase} and level ${nodeExecutionLevel !== NodeExecutionLevel.CURRENT ? `${nodeExecutionLevel} or ${NodeExecutionLevel.CURRENT}` : NodeExecutionLevel.CURRENT}`);
+      const levelMsg = nodeExecutionLevel !== NodeExecutionLevel.CURRENT ? `${nodeExecutionLevel} or ${NodeExecutionLevel.CURRENT}` : NodeExecutionLevel.CURRENT;
+      LoggerServiceFactory.getInstance().debug(`No commands defined for project ${node.project} phase ${executionPhase} and level ${levelMsg}`);
     }
     return levelCommands;
   }

@@ -31,6 +31,6 @@ jobs:
           -Dsonar.tests=test
           -Dsonar.testExecutionReportPaths=test-report.xml
           -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-          -Dsonar.exclusions=test/**
+          -Dsonar.exclusions=test/**,**/__mocks__/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

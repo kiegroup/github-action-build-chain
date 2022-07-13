@@ -9,3 +9,4 @@ yarn.lock
 coverage/
 test-report.xml
 .idea/
+.vscode/

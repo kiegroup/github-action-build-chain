@@ -1,11 +1,9 @@
-import "reflect-metadata";
+import Container from "typedi";
 import { EntryPoint } from "@bc/domain/entry-point";
-import { Container } from "typedi";
 import { constants } from "@bc/domain/constants";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 
 export abstract class Runner {
-
   async initializeConfig(): Promise<void> {
     const configService = Container.get(ConfigurationService);
     await configService.init();
@@ -22,4 +20,3 @@ export abstract class Runner {
 
   // TODO: to define and implement runFLow and postExecutionAction
 }
-

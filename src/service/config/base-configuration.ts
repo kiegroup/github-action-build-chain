@@ -1,12 +1,22 @@
 import { Commands } from "@bc/domain/commands";
 import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/configuration";
+import { constants } from "@bc/domain/constants";
 import { defaultInputValues, InputValues } from "@bc/domain/inputs";
 import { Node } from "@bc/domain/node";
 import { InputService } from "@bc/service/inputs/input-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { logAndThrow } from "@bc/utils/log";
-import { Build, DefinitionFile, getOrderedListForTree, getTree, ProjectNode, readDefinitionFile } from "@kie/build-chain-configuration-reader";
+import {
+  Build,
+  BuildChainReaderOptions,
+  DefinitionFile,
+  getOrderedListForTree,
+  getTree,
+  ProjectNode,
+  readDefinitionFile,
+  UrlPlaceholders,
+} from "@kie/build-chain-configuration-reader";
 import Container from "typedi";
 
 export abstract class BaseConfiguration {
@@ -177,21 +187,76 @@ export abstract class BaseConfiguration {
   }
 
   /**
+   * Generates placeholders values required to replace any place holders in the definition file url
+   * @param project source or target project configuration data
+   * @returns
+   */
+  generatePlaceholder(project: ProjectConfiguration): UrlPlaceholders {
+    // check whether definition file is a url or not
+    const urlRegex = /^https?/;
+    if (!urlRegex.test(this.parsedInputs.definitionFile)) { return {}; }
+
+    // all url place holders are of the form ${KEY:DEFAULT} where :DEFAULT is optional
+    const placeholderRegex = /\${([^{}:]+)(:([^{}]*))?}/g;
+    const matches = [...this.parsedInputs.definitionFile.matchAll(placeholderRegex)];
+    const placeholder: UrlPlaceholders = {};
+    matches.forEach((match) => {
+      const key = match[1];
+      // if env variable exists for the key use that otherwise use default value
+      const defaultValue = process.env[key] ?? match[3];
+      if (key === "GROUP") {
+        placeholder["GROUP"] = project.group ?? defaultValue;
+      } else if (key === "PROJECT_NAME") {
+        placeholder["PROJECT_NAME"] = project.name ?? defaultValue;
+      } else if (key === "BRANCH") {
+        placeholder["BRANCH"] = project.branch ?? defaultValue;
+      } else {
+        placeholder[key] = defaultValue;
+      }
+    });
+    return placeholder;
+  }
+
+  /**
+   * Parse definition file with url placeholder and token passed as option
+   * @param options placeholder values and token
+   * @returns
+   */
+  private async loadDefinitionFileWithOptions(
+    options: BuildChainReaderOptions
+  ): Promise<{ definitionFile: DefinitionFile; projectList: Node[]; projectTree: Node[] }> {
+    const [definitionFile, projectList, projectTree] = await Promise.all([
+      readDefinitionFile(this.parsedInputs.definitionFile, options),
+      getOrderedListForTree(this.parsedInputs.definitionFile, options),
+      getTree(this.parsedInputs.definitionFile, options),
+    ]);
+    return {
+      definitionFile,
+      projectList: projectList.map((node) => this.parseNode(node)),
+      projectTree: projectTree.map((node) => this.parseNode(node)),
+    };
+  }
+
+  /**
    * Load the definition file as is in the form of an object, get the project tree and project list
    * @returns
    */
   async loadDefinitionFile(): Promise<{ definitionFile: DefinitionFile; projectList: Node[]; projectTree: Node[] }> {
+    // generate placeholders for definition file url if any (something to consider to shift to buil-chain-configuration-reader project in the future)
+    let placeholder: UrlPlaceholders;
+
+    // generate from source
+    placeholder = this.generatePlaceholder(this.sourceProject);
     try {
-      const [definitionFile, projectList, projectTree] = await Promise.all([
-        readDefinitionFile(this.parsedInputs.definitionFile),
-        getOrderedListForTree(this.parsedInputs.definitionFile),
-        getTree(this.parsedInputs.definitionFile),
-      ]);
-      return {
-        definitionFile,
-        projectList: projectList.map((node) => this.parseNode(node)),
-        projectTree: projectTree.map((node) => this.parseNode(node)),
-      };
+      return await this.loadDefinitionFileWithOptions({ placeholder, token: Container.get(constants.GITHUB.TOKEN) });
+    } catch (err) {
+      this.logger.debug("Did not find correct definition on file, trying target");
+    }
+
+    // generate from target
+    placeholder = this.generatePlaceholder(this.targetProject);
+    try {
+      return await this.loadDefinitionFileWithOptions({ placeholder, token: Container.get(constants.GITHUB.TOKEN) });
     } catch (err) {
       logAndThrow("Invalid definition file");
     }

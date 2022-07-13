@@ -4,7 +4,7 @@ declare module "@kie/build-chain-configuration-reader" {
   };
 
   export type BuildChainReaderOptions = {
-    url: UrlPlaceholders | Record<string, never>;
+    placeholder: UrlPlaceholders | Record<string, never>;
     token: string;
   };
 

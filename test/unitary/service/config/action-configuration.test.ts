@@ -8,7 +8,7 @@ import { EntryPoint } from "@bc/domain/entry-point";
 import fs from "fs";
 import { getOrderedListForTree, getTree, ProjectTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
 import { Node } from "@bc/domain/node";
-import { defaultInputValues } from "@bc/domain/inputs";
+import { defaultInputValues, FlowType } from "@bc/domain/inputs";
 import { InputService } from "@bc/service/inputs/input-service";
 jest.mock("@kie/build-chain-configuration-reader");
 
@@ -29,10 +29,21 @@ afterEach(() => {
 });
 
 describe("load event data", () => {
-  test("success", async () => {
+  test("success: non branch flow", async () => {
+    jest.spyOn(actionConfig, "parsedInputs", "get").mockImplementation(() => {
+      return { ...defaultInputValues, flowType: FlowType.CROSS_PULL_REQUEST };
+    });
     const eventData = await actionConfig.loadGitEvent();
     const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8"));
     expect(eventData).toStrictEqual(actualData.action.eventPayload.pull_request);
+  });
+
+  test("success: branch flow", async () => {
+    jest.spyOn(actionConfig, "parsedInputs", "get").mockImplementation(() => {
+      return { ...defaultInputValues, flowType: FlowType.BRANCH };
+    });
+    const eventData = await actionConfig.loadGitEvent();
+    expect(eventData).toStrictEqual({});
   });
 
   test("failure", async () => {
@@ -48,15 +59,17 @@ describe("load git config", () => {
   });
   test("Without default github url", () => {
     const config = actionConfig.loadGitConfiguration();
+    const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env;
     const expectedData = {
-      action: process.env.GITHUB_ACTION,
-      actor: process.env.GITHUB_ACTOR,
-      author: process.env.GITHUB_AUTHOR,
+      action: actualData.action,
+      actor: actualData.actor,
+      author: actualData.author,
       serverUrl: "https://git.ca",
       serverUrlWithToken: `https://${token}@git.ca`,
-      jobId: process.env.GITHUB_JOB,
-      ref: process.env.GITHUB_REF,
-      workflow: process.env.GITHUB_WORKFLOW,
+      jobId: actualData.job,
+      ref: actualData.ref,
+      workflow: actualData.workflow,
+      repository: actualData.repository,
     };
     expect(config).toStrictEqual(expectedData);
   });
@@ -64,22 +77,27 @@ describe("load git config", () => {
   test("With default github url", () => {
     delete process.env["GITHUB_SERVER_URL"];
     const config = actionConfig.loadGitConfiguration();
+    const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env;
     const expectedData = {
-      action: process.env.GITHUB_ACTION,
-      actor: process.env.GITHUB_ACTOR,
-      author: process.env.GITHUB_AUTHOR,
+      action: actualData.action,
+      actor: actualData.actor,
+      author: actualData.author,
       serverUrl: "https://github.com",
       serverUrlWithToken: `https://${token}@github.com`,
-      jobId: process.env.GITHUB_JOB,
-      ref: process.env.GITHUB_REF,
-      workflow: process.env.GITHUB_WORKFLOW,
+      jobId: actualData.job,
+      ref: actualData.ref,
+      workflow: actualData.workflow,
+      repository: actualData.repository,
     };
     expect(config).toStrictEqual(expectedData);
   });
 });
 
 describe("load source and target project", () => {
-  test("success", async () => {
+  test("non branch flow", async () => {
+    jest.spyOn(actionConfig, "parsedInputs", "get").mockImplementation(() => {
+      return { ...defaultInputValues, flowType: FlowType.CROSS_PULL_REQUEST };
+    });
     const eventData = await actionConfig.loadGitEvent();
     jest.spyOn(actionConfig, "gitEventData", "get").mockImplementation(() => eventData);
     const { source, target } = actionConfig.loadProject();
@@ -100,6 +118,25 @@ describe("load source and target project", () => {
 
     expect(source).toStrictEqual(expectedSource);
     expect(target).toStrictEqual(expectedTarget);
+  });
+
+  test("branch flow", async () => {
+    const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env;
+    jest.spyOn(actionConfig, "parsedInputs", "get").mockImplementation(() => {
+      return { ...defaultInputValues, flowType: FlowType.BRANCH };
+    });
+    jest.spyOn(actionConfig, "gitConfiguration", "get").mockImplementation(() => {
+      return { ref: actualData.ref, repository: actualData.repository };
+    });
+    const { source, target } = actionConfig.loadProject();
+    const expectedConfig = {
+      branch: actualData.ref,
+      repository: actualData.repository,
+      name: actualData.repository.slice(actualData.repository.indexOf("/") + 1),
+      group: actualData.repository.slice(0, actualData.repository.indexOf("/")),
+    };
+    expect(source).toStrictEqual(expectedConfig);
+    expect(target).toStrictEqual(expectedConfig);
   });
 });
 

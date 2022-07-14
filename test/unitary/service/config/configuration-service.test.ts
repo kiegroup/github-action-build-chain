@@ -122,6 +122,18 @@ describe("cli", () => {
     currentInput = currInput;
     expect(config.getTreatmentOptions()).toStrictEqual(treatmentOptions);
   });
+
+  test("get target project", () => {
+    const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
+    jest.spyOn(BaseConfiguration.prototype, "targetProject", "get").mockImplementation(() => project);
+    expect(config.getTargetProject()).toStrictEqual(project);
+  });
+
+  test("get source project", () => {
+    const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
+    jest.spyOn(BaseConfiguration.prototype, "targetProject", "get").mockImplementation(() => project);
+    expect(config.getSourceProject()).toStrictEqual(project);
+  });
 });
 
 describe("action", () => {
@@ -208,5 +220,17 @@ describe("action", () => {
   ])("getTreatmentOptions: success - %p", (title: string, currInput: InputValues, treatmentOptions: TreatmentOptions) => {
     currentInput = currInput;
     expect(config.getTreatmentOptions()).toStrictEqual(treatmentOptions);
+  });
+
+  test("get target project", () => {
+    const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
+    jest.spyOn(BaseConfiguration.prototype, "targetProject", "get").mockImplementation(() => project);
+    expect(config.getTargetProject()).toStrictEqual(project);
+  });
+
+  test("get source project", () => {
+    const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
+    jest.spyOn(BaseConfiguration.prototype, "targetProject", "get").mockImplementation(() => project);
+    expect(config.getSourceProject()).toStrictEqual(project);
   });
 });

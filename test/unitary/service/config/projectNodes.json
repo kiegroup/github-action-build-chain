@@ -118,6 +118,9 @@
           "downstream": "dowstream",
           "current": ["current"]
         }
+      },
+      "mapping": {
+        "exclude": ["abc", "def"]
       }
     }
   ],
@@ -125,6 +128,9 @@
     {
       "project": "root",
       "dependencies": [{ "project": "depend" }],
+      "mapping": {
+        "exclude": ["abc", "def"]
+      },
       "parents": [
         {
           "project": "parent",

@@ -169,6 +169,9 @@ export abstract class BaseConfiguration {
     if (node.dependencies) {
       parsedNode.dependencies = node.dependencies;
     }
+    if (node.mapping) {
+      parsedNode.mapping = node.mapping;
+    }
     if (node.parent) {
       const parent = node.parent.map((parentNode) => this.parseNode(parentNode));
       parsedNode.parents = parent;

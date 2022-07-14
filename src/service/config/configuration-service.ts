@@ -8,6 +8,7 @@ import { logAndThrow } from "@bc/utils/log";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
+import { ProjectConfiguration } from "@bc/domain/configuration";
 
 @Service()
 export class ConfigurationService {
@@ -108,5 +109,13 @@ export class ConfigurationService {
       };
     }
     return {};
+  }
+
+  getTargetProject(): ProjectConfiguration {
+    return this.configuration.targetProject;
+  }
+
+  getSourceProject(): ProjectConfiguration {
+    return this.configuration.sourceProject;
   }
 }

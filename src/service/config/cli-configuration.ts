@@ -17,7 +17,7 @@ export class CLIConfiguration extends BaseConfiguration {
       const projectConfig = {
         branch: this.parsedInputs.branch,
         name: projectName[projectName.length - 1],
-        group: this.parsedInputs.group ? this.parsedInputs.group : projectName[0],
+        group: this.parsedInputs.group ?? projectName[0],
         repository: this.parsedInputs.startProject,
       };
       return {

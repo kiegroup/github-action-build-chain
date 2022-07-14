@@ -37,6 +37,8 @@ export interface InputValues extends OptionValues {
   customCommandTreatment?: string[];
   token?: string;
   url?: string;
+  branch?: string;
+  group?: string;
 }
 
 /**

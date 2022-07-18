@@ -108,4 +108,16 @@ export class CLIConfiguration extends BaseConfiguration {
       logAndThrow("A github token is needed");
     }
   }
+
+  /**
+   * Get the flow type if defined otherwise throw an error
+   * @returns
+   */
+  getFlowType(): FlowType {
+    const subcmd = this.parsedInputs.CLISubCommand!;
+    if (Object.values(FlowType).includes(subcmd as FlowType)) {
+      return subcmd as FlowType;
+    }
+    logAndThrow("The CLI subcommand is a tool commaand. No flow defined");
+  }
 }

@@ -91,4 +91,12 @@ export class ActionConfiguration extends BaseConfiguration {
     }
     logAndThrow("A github token is needed");
   }
+
+  /**
+   * Get the flow type for the github event
+   * @returns 
+   */
+  getFlowType(): FlowType {
+      return this.parsedInputs.flowType!;
+  }
 }

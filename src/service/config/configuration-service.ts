@@ -9,6 +9,7 @@ import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
 import { ProjectConfiguration } from "@bc/domain/configuration";
+import { FlowType } from "@bc/domain/inputs";
 
 @Service()
 export class ConfigurationService {
@@ -111,10 +112,18 @@ export class ConfigurationService {
     return {};
   }
 
+  /**
+   * Returns the information for the target repository. For PR flow types it is the base branch
+   * @returns
+   */
   getTargetProject(): ProjectConfiguration {
     return this.configuration.targetProject;
   }
 
+  /**
+   * Returns the information for the source repository. For PR flow types it is the head branch
+   * @returns
+   */
   getSourceProject(): ProjectConfiguration {
     return this.configuration.sourceProject;
   }
@@ -122,10 +131,14 @@ export class ConfigurationService {
   /**
    * Root folder is outputFolder if defined via options otherwise GITHUB_WORKSPACE.
    * If both of these are undefined, it is the current working directory
-   * @returns 
+   * @returns
    */
   getRootFolder(): string {
     const rootFolder = this.configuration.parsedInputs.outputFolder ?? process.env.GITHUB_WORKSPACE;
     return rootFolder ?? process.cwd();
+  }
+
+  getFlowType(): FlowType {
+    return this.configuration.getFlowType();
   }
 }

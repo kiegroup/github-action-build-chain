@@ -1,7 +1,7 @@
 import { Commands } from "@bc/domain/commands";
 import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/configuration";
 import { constants } from "@bc/domain/constants";
-import { defaultInputValues, InputValues } from "@bc/domain/inputs";
+import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { Node } from "@bc/domain/node";
 import { InputService } from "@bc/service/inputs/input-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
@@ -95,6 +95,8 @@ export abstract class BaseConfiguration {
   abstract loadGitEvent(): Promise<EventData>;
 
   abstract loadToken(): void;
+
+  abstract getFlowType(): FlowType;
 
   /**
    * Validates any user input and returns the stored user input from InputService if there were no errors

@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
-import { defaultInputValues, InputValues } from "@bc/domain/inputs";
+import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { MockGithub } from "../../../setup/mock-github";
 import Container from "typedi";
@@ -12,6 +12,7 @@ import { NodeExecutionLevel } from "@bc/domain/node-execution-level";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
 import { getOrderedListForTree, getTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
+import { ToolType } from "@bc/domain/cli";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -134,6 +135,16 @@ describe("cli", () => {
     jest.spyOn(BaseConfiguration.prototype, "sourceProject", "get").mockImplementation(() => project);
     expect(config.getSourceProject()).toStrictEqual(project);
   });
+
+  test("get flow type: success", () => {
+    currentInput = { ...defaultInputValues, CLISubCommand: FlowType.CROSS_PULL_REQUEST };
+    expect(config.getFlowType()).toBe(FlowType.CROSS_PULL_REQUEST);
+  });
+
+  test("get flow type: failure", () => {
+    currentInput = { ...defaultInputValues, CLISubCommand: ToolType.PROJECT_LIST };
+    expect(() => config.getFlowType()).toThrowError();
+  });
 });
 
 describe("action", () => {
@@ -232,5 +243,10 @@ describe("action", () => {
     const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
     jest.spyOn(BaseConfiguration.prototype, "sourceProject", "get").mockImplementation(() => project);
     expect(config.getSourceProject()).toStrictEqual(project);
+  });
+
+  test("get flow type", () => {
+    currentInput = { ...defaultInputValues, flowType: FlowType.CROSS_PULL_REQUEST };
+    expect(config.getFlowType()).toBe(FlowType.CROSS_PULL_REQUEST);
   });
 });

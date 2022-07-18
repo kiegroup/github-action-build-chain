@@ -11,6 +11,7 @@ export interface Node {
   commands?: Commands;
   after?: Commands;
   mapping?: Mapping;
+  clone?: string[];
 }
 
 export const defaultValue: Readonly<Node> = {

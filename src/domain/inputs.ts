@@ -23,6 +23,7 @@ export enum LoggerLevel {
  */
 export interface InputValues extends OptionValues {
   definitionFile: string;
+  outputFolder?: string;
   flowType?: FlowType;
   CLICommand?: CLIActionType;
   CLISubCommand?: FlowType | ToolType;

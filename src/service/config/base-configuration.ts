@@ -102,12 +102,18 @@ export abstract class BaseConfiguration {
    */
   loadParsedInput(): InputValues {
     const inputs: InputValues = Container.get(InputService).inputs;
-    // validate any input that needs to be in a certain way
+
+    // customCommandTreatment values must be of the form: REGEX||REPLACE_REGEX
     inputs.customCommandTreatment?.forEach((cct) => {
       if (cct.split("||").length !== 2) {
         logAndThrow("Invalid format for custom command treatment. Required format: Regex||ReplaceRegex");
       }
     });
+
+    // startProject must be of the form: OWNER/PROJECT
+    if (inputs.startProject && inputs.startProject.split("/").length !== 2) {
+      logAndThrow("Invalid start project. Start project must be of the form OWNER/PROJECT");
+    }
 
     // parsed inputs will always have the default value. No need to check whether it is empty or not
     return inputs;
@@ -118,7 +124,7 @@ export abstract class BaseConfiguration {
    * @param cmd
    * @returns an array of string
    */
-  private parseCommand(cmd: string | string[] | undefined): string[] {
+  private convertToArray(cmd: string | string[] | undefined): string[] {
     if (cmd) {
       return Array.isArray(cmd) ? cmd : [cmd];
     }
@@ -136,23 +142,23 @@ export abstract class BaseConfiguration {
     if (buildInfo?.after) {
       const after = buildInfo.after;
       parsedBuild.after = {
-        upstream: this.parseCommand(after.upstream),
-        downstream: this.parseCommand(after.downstream),
-        current: this.parseCommand(after.current),
+        upstream: this.convertToArray(after.upstream),
+        downstream: this.convertToArray(after.downstream),
+        current: this.convertToArray(after.current),
       };
     }
     if (buildInfo?.before) {
       const before = buildInfo.before;
       parsedBuild.before = {
-        upstream: this.parseCommand(before.upstream),
-        downstream: this.parseCommand(before.downstream),
-        current: this.parseCommand(before.current),
+        upstream: this.convertToArray(before.upstream),
+        downstream: this.convertToArray(before.downstream),
+        current: this.convertToArray(before.current),
       };
     }
     parsedBuild.commands = {
-      upstream: this.parseCommand(buildInfo?.upstream),
-      downstream: this.parseCommand(buildInfo?.downstream),
-      current: this.parseCommand(buildInfo?.current),
+      upstream: this.convertToArray(buildInfo?.upstream),
+      downstream: this.convertToArray(buildInfo?.downstream),
+      current: this.convertToArray(buildInfo?.current),
     };
     return parsedBuild;
   }
@@ -164,6 +170,7 @@ export abstract class BaseConfiguration {
    */
   private parseNode(node: ProjectNode): Node {
     const parsedNode: Node = {
+      // build-chain-configuration-reader package ensures that project is of form owner/name
       project: node.project,
     };
     if (node.dependencies) {
@@ -171,6 +178,9 @@ export abstract class BaseConfiguration {
     }
     if (node.mapping) {
       parsedNode.mapping = node.mapping;
+    }
+    if (node.build?.clone) {
+      parsedNode.clone = this.convertToArray(node.build.clone);
     }
     if (node.parent) {
       const parent = node.parent.map((parentNode) => this.parseNode(parentNode));

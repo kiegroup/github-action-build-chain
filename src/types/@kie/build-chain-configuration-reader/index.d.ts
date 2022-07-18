@@ -30,6 +30,7 @@ declare module "@kie/build-chain-configuration-reader" {
   };
 
   export type Build = {
+    clone: string | string[];
     "build-command"?: {
       before?: {
         current?: string | string[];
@@ -96,12 +97,12 @@ declare module "@kie/build-chain-configuration-reader" {
   export function treatUrl(url: string, placeholders: UrlPlaceholders): string;
 
   export function getBaseBranch(
-    projectTriggeringTheJob: string,
-    projectTriggeringTheJobMapping: Mapping,
+    starterProject: string,
+    starterProjectMapping: Mapping | undefined,
     currentProject: string,
-    currentProjectMapping: Mapping,
-    expectedBaseBranch: string
-  ): string;
+    currentProjectMapping: Mapping | undefined,
+    expectedBaseBranch: string | undefined
+  ): string | undefined;
 
   export function readDefinitionFile(file: string, options?: BuildChainReaderOptions): Promise<DefinitionFile>;
 }

@@ -131,7 +131,7 @@ describe("cli", () => {
 
   test("get source project", () => {
     const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
-    jest.spyOn(BaseConfiguration.prototype, "targetProject", "get").mockImplementation(() => project);
+    jest.spyOn(BaseConfiguration.prototype, "sourceProject", "get").mockImplementation(() => project);
     expect(config.getSourceProject()).toStrictEqual(project);
   });
 });
@@ -230,7 +230,7 @@ describe("action", () => {
 
   test("get source project", () => {
     const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
-    jest.spyOn(BaseConfiguration.prototype, "targetProject", "get").mockImplementation(() => project);
+    jest.spyOn(BaseConfiguration.prototype, "sourceProject", "get").mockImplementation(() => project);
     expect(config.getSourceProject()).toStrictEqual(project);
   });
 });

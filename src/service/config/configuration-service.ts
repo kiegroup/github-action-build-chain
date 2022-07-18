@@ -118,4 +118,14 @@ export class ConfigurationService {
   getSourceProject(): ProjectConfiguration {
     return this.configuration.sourceProject;
   }
+
+  /**
+   * Root folder is outputFolder if defined via options otherwise GITHUB_WORKSPACE.
+   * If both of these are undefined, it is the current working directory
+   * @returns 
+   */
+  getRootFolder(): string {
+    const rootFolder = this.configuration.parsedInputs.outputFolder ?? process.env.GITHUB_WORKSPACE;
+    return rootFolder ?? process.cwd();
+  }
 }

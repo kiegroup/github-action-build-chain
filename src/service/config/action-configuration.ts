@@ -54,7 +54,7 @@ export class ActionConfiguration extends BaseConfiguration {
       actor: process.env.GITHUB_ACTOR,
       author: process.env.GITHUB_AUTHOR,
       serverUrl: serverUrl,
-      serverUrlWithToken: serverUrl?.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
+      serverUrlWithToken: serverUrl.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
       jobId: process.env.GITHUB_JOB,
       ref: process.env.GITHUB_REF,
       workflow: process.env.GITHUB_WORKFLOW,

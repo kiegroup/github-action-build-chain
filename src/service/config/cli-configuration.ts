@@ -50,7 +50,7 @@ export class CLIConfiguration extends BaseConfiguration {
     const serverUrl = process.env.GITHUB_SERVER_URL ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "") : "https://github.com";
     let gitConfig: GitConfiguration = {
       serverUrl: serverUrl,
-      serverUrlWithToken: serverUrl?.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
+      serverUrlWithToken: serverUrl.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
     };
     if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
       const group = this.parsedInputs.group ?? this.parsedInputs.startProject?.split("/")[0];

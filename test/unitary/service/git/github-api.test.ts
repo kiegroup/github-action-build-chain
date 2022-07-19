@@ -36,16 +36,19 @@ test.each([
 });
 
 test.each([
-  ["success: origin", true, ["testgroup", "repoA", "sbranch"]],
-  ["success: fork", true, ["testgroup", "repoA", "sbranch", "testgroup-forked", "repoA-forked"]],
-  ["failure: origin", false, ["testgroup", "repoA", "tbranch"]],
-  ["failure: fork", false, ["testgroup", "repoA", "tbranch", "testgroup-forked", "repoA-forked"]],
-])("hasPullRequest %p", async (title: string, hasPR: boolean, args: string[]) => {
-  if (args.length < 4) {
-    await expect(git.hasPullRequest(args[0], args[1], args[2])).resolves.toBe(hasPR);
-  } else {
-    await expect(git.hasPullRequest(args[0], args[1], args[2], { sourceOwner: args[3], sourceRepo: args[4] })).resolves.toBe(hasPR);
-  }
+  ["success: head", true, ["testgroup", "repoA"], ["sbranch", undefined]],
+  ["success: base", true, ["testgroup", "repoA"], [undefined, "sbranch"]],
+  ["success: head and base", true, ["testgroup", "repoA"], ["tbranch", "sbranch"]],
+  ["success: no pr", false, ["testgroup", "repoA"], ["tbranch", "sbranch"]],
+])("hasPullRequest %p", async (title: string, hasPR: boolean, args: string[], optionalArgs: (string | undefined)[]) => {
+  await expect(git.hasPullRequest(args[0], args[1], optionalArgs[0], optionalArgs[1])).resolves.toBe(hasPR);
+});
+
+test.each([
+  ["failure: no head or base", ["testgroup", "repoA"], [undefined, undefined]],
+  ["failure: api error", ["testgroup", "repoA"], ["tbranch", "sbranch"]],
+])("hasPullRequest %p", async (title: string, args: string[], optionalArgs: (string | undefined)[]) => {
+  await expect(git.hasPullRequest(args[0], args[1], optionalArgs[0], optionalArgs[1])).rejects.toThrowError();
 });
 
 test.each([
@@ -53,10 +56,10 @@ test.each([
   ["failure: same source and target owner", false, ["target2", "target2", "repoA"]],
   ["success: different source and target owner", true, ["target3", "source", "repoA"]],
   ["failure: different source and target owner", false, ["target4", "source", "repoA"]],
-])("getSourceProjectName %p", async (title: string, testForSuccess: boolean, args: string[]) => {
+])("getForkName %p", async (title: string, testForSuccess: boolean, args: string[]) => {
   if (testForSuccess) {
-    await expect(git.getSourceProjectName(args[0], args[1], args[2])).resolves.toBe(args[2]);
+    await expect(git.getForkName(args[0], args[1], args[2])).resolves.toBe(args[2]);
   } else {
-    await expect(git.getSourceProjectName(args[0], args[1], args[2])).rejects.toThrowError();
+    await expect(git.getForkName(args[0], args[1], args[2])).rejects.toThrowError();
   }
 });

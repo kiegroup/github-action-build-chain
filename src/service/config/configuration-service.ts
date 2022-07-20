@@ -100,6 +100,26 @@ export class ConfigurationService {
   }
 
   /**
+   * Checks whether given node needs to be checked out or not
+   * @param node
+   * @returns {Boolean} true if checking out needs to be skipped for the given node otherwise false
+   */
+  skipCheckout(node: Node): boolean {
+    if (this.configuration.parsedInputs.skipCheckout) {
+      return true;
+    }
+    return this.configuration.parsedInputs.skipProjectCheckout ? this.configuration.parsedInputs.skipProjectCheckout.includes(node.project) : false;
+  }
+
+  /**
+   * Checks whether checkout should be sequential or parallel
+   * @returns {Boolean} true if checkout should be sequential otherwise false
+   */
+  skipParallelCheckout(): boolean {
+    return this.configuration.parsedInputs.skipParallelCheckout;
+  }
+
+  /**
    * Parses user input from custom command treatment option to create the treatment option object
    * @returns {TreatmentOptions} Construct the treatment options domain object
    */
@@ -138,7 +158,22 @@ export class ConfigurationService {
     return rootFolder ?? process.cwd();
   }
 
+  /**
+   * Return the flow type of the current build or throw an error is the build is not
+   * of any flow type
+   * @returns
+   */
   getFlowType(): FlowType {
     return this.configuration.getFlowType();
+  }
+
+  /**
+   * Returns the clone url for the given repo group and name
+   * @param group owner of the repository
+   * @param repoName name of the repository
+   * @returns
+   */
+  getCloneUrl(group: string, repoName: string): string {
+    return `${this.configuration.gitConfiguration.serverUrlWithToken}/${group}/${repoName}`;
   }
 }

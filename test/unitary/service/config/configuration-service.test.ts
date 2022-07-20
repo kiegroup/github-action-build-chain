@@ -145,6 +145,32 @@ describe("cli", () => {
     currentInput = { ...defaultInputValues, CLISubCommand: ToolType.PROJECT_LIST };
     expect(() => config.getFlowType()).toThrowError();
   });
+
+  test("root folder from github workspace", () => {
+    const workspace = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env.workspace;
+    expect(config.getRootFolder()).toBe(workspace);
+  });
+
+  test("root folder from input", () => {
+    currentInput = { ...defaultInputValues, outputFolder: "current" };
+    expect(config.getRootFolder()).toBe(currentInput.outputFolder);
+  });
+
+  test("root folder default", () => {
+    delete process.env["GITHUB_WORKSPACE"];
+    expect(config.getRootFolder()).toBe(process.cwd());
+  });
+
+  test("get clone url", () => {
+    const gitConfig = { serverUrlWithToken: "http://github.com" };
+    jest.spyOn(BaseConfiguration.prototype, "gitConfiguration", "get").mockImplementation(() => gitConfig);
+    expect(config.getCloneUrl("owner", "project")).toBe(`${gitConfig.serverUrlWithToken}/owner/project`);
+  });
+
+  test("skipParallelCheckout", () => {
+    currentInput = { ...defaultInputValues, skipParallelCheckout: true };
+    expect(config.skipParallelCheckout()).toBe(currentInput.skipParallelCheckout);
+  });
 });
 
 describe("action", () => {
@@ -248,5 +274,31 @@ describe("action", () => {
   test("get flow type", () => {
     currentInput = { ...defaultInputValues, flowType: FlowType.CROSS_PULL_REQUEST };
     expect(config.getFlowType()).toBe(FlowType.CROSS_PULL_REQUEST);
+  });
+
+  test("root folder from github workspace", () => {
+    const workspace = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env.workspace;
+    expect(config.getRootFolder()).toBe(workspace);
+  });
+
+  test("root folder from input", () => {
+    currentInput = { ...defaultInputValues, outputFolder: "current" };
+    expect(config.getRootFolder()).toBe(currentInput.outputFolder);
+  });
+
+  test("root folder default", () => {
+    delete process.env["GITHUB_WORKSPACE"];
+    expect(config.getRootFolder()).toBe(process.cwd());
+  });
+
+  test("get clone url", () => {
+    const gitConfig = { serverUrlWithToken: "http://github.com" };
+    jest.spyOn(BaseConfiguration.prototype, "gitConfiguration", "get").mockImplementation(() => gitConfig);
+    expect(config.getCloneUrl("owner", "project")).toBe(`${gitConfig.serverUrlWithToken}/owner/project`);
+  });
+
+  test("skipParallelCheckout", () => {
+    currentInput = { ...defaultInputValues, skipParallelCheckout: true };
+    expect(config.skipParallelCheckout()).toBe(currentInput.skipParallelCheckout);
   });
 });

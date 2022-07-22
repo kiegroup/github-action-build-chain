@@ -8,7 +8,7 @@ import { readFile } from "node:fs/promises";
 export class ActionConfiguration extends BaseConfiguration {
   /**
    * Create the source and target project configuration from the github event payload
-   * @returns
+   * @returns a new { source: ProjectConfiguration; target: ProjectConfiguration } instance
    */
   loadProject(): { source: ProjectConfiguration; target: ProjectConfiguration } {
     return {
@@ -29,7 +29,7 @@ export class ActionConfiguration extends BaseConfiguration {
 
   /**
    * Process the various github env variables
-   * @returns
+   * @returns a new GitConfiguration instance
    */
   loadGitConfiguration(): GitConfiguration {
     const serverUrl = process.env.GITHUB_SERVER_URL ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "") : "https://github.com";
@@ -47,7 +47,7 @@ export class ActionConfiguration extends BaseConfiguration {
 
   /**
    * Read the event payload file
-   * @returns
+   * @returns the github event
    */
   async loadGitEvent(): Promise<EventData> {
     if (process.env.GITHUB_EVENT_PATH) {
@@ -61,14 +61,13 @@ export class ActionConfiguration extends BaseConfiguration {
   }
 
   /**
-   * Set the github token
-   * @returns
+   * Set the github token to the context
    */
   loadToken(): void {
     if (process.env.GITHUB_TOKEN) {
       Container.set(constants.GITHUB.TOKEN, process.env.GITHUB_TOKEN);
-      return;
+    } else {
+      logAndThrow("A github token is needed");
     }
-    logAndThrow("A github token is needed");
   }
 }

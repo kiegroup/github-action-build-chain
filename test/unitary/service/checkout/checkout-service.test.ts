@@ -111,6 +111,7 @@ describe.each([
         targetBranch: "tbranch1",
         targetGroup: "owner1",
         targetName: "project1",
+        repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
     });
@@ -123,6 +124,7 @@ describe.each([
         targetBranch: "tbranch2",
         targetGroup: "owner2",
         targetName: "project2",
+        repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
     });
@@ -158,6 +160,7 @@ describe.each([
         targetBranch: "tbranch1",
         targetGroup: "owner1",
         targetName: "project1",
+        repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
     });
@@ -170,6 +173,7 @@ describe.each([
         targetBranch: "tbranch2",
         targetGroup: "owner2",
         targetName: "project2",
+        repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
     });
@@ -204,6 +208,7 @@ describe.each([
         targetBranch: "tbranch1",
         targetGroup: "owner1",
         targetName: "project1",
+        repoDir: `${rootFolder}/owner1_project1`,
         merge: false,
       },
     });
@@ -216,6 +221,7 @@ describe.each([
         targetBranch: "tbranch2",
         targetGroup: "owner2",
         targetName: "project2",
+        repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
     });
@@ -282,6 +288,7 @@ describe.each([
         targetBranch: "tbranch1",
         targetGroup: "owner1",
         targetName: "project1",
+        repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
     });
@@ -294,6 +301,7 @@ describe.each([
         targetBranch: "tbranch2",
         targetGroup: "owner2",
         targetName: "project2",
+        repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
     });
@@ -329,6 +337,7 @@ describe.each([
         targetBranch: "tbranch1",
         targetGroup: "owner1",
         targetName: "project1",
+        repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
     });
@@ -341,6 +350,7 @@ describe.each([
         targetBranch: "tbranch2",
         targetGroup: "owner2",
         targetName: "project2",
+        repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
     });
@@ -375,6 +385,7 @@ describe.each([
         targetBranch: "tbranch1",
         targetGroup: "owner1",
         targetName: "project1",
+        repoDir: `${rootFolder}/owner1_project1`,
         merge: false,
       },
     });
@@ -387,6 +398,7 @@ describe.each([
         targetBranch: "tbranch2",
         targetGroup: "owner2",
         targetName: "project2",
+        repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
     });
@@ -453,6 +465,7 @@ describe.each([
         targetBranch: "tbranch1",
         targetGroup: "owner1",
         targetName: "project1",
+        repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
     });
@@ -465,6 +478,7 @@ describe.each([
         targetBranch: "tbranch2",
         targetGroup: "owner2",
         targetName: "project2",
+        repoDir: `${rootFolder}/owner2_project2`,
         merge: false,
       },
     });
@@ -499,6 +513,7 @@ describe.each([
         targetBranch: "tbranch1",
         targetGroup: "owner1",
         targetName: "project1",
+        repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
     });
@@ -511,6 +526,7 @@ describe.each([
         targetBranch: "tbranch2",
         targetGroup: "owner2",
         targetName: "project2",
+        repoDir: `${rootFolder}/owner2_project2`,
         merge: false,
       },
     });
@@ -544,6 +560,7 @@ describe.each([
         targetBranch: "tbranch1",
         targetGroup: "owner1",
         targetName: "project1",
+        repoDir: `${rootFolder}/owner1_project1`,
         merge: false,
       },
     });
@@ -556,6 +573,7 @@ describe.each([
         targetBranch: "tbranch2",
         targetGroup: "owner2",
         targetName: "project2",
+        repoDir: `${rootFolder}/owner2_project2`,
         merge: false,
       },
     });

@@ -5,6 +5,7 @@ export type CheckoutInfo = {
   targetName: string;
   targetGroup: string;
   targetBranch: string;
+  repoDir: string;
   merge: boolean;
 };
 

@@ -68,16 +68,13 @@ export class CheckoutService {
     const checkoutInfo = await this.getCheckoutInfo(node);
     const gitCLIService = Container.get(GitCLIService);
 
-    // the location for the project should be cloned
-    const repoDir = this.getProjectDir(node);
-
     // get the url of the target repository that needs to be cloned
     const targetCloneUrl = this.config.getCloneUrl(checkoutInfo.targetGroup, checkoutInfo.targetName);
 
-    this.logger.info(`Checking out ${checkoutInfo.targetGroup}/${checkoutInfo.targetName}:${checkoutInfo.targetBranch} into ${repoDir}`);
+    this.logger.info(`Checking out ${checkoutInfo.targetGroup}/${checkoutInfo.targetName}:${checkoutInfo.targetBranch} into ${checkoutInfo.repoDir}`);
 
     // clone the repository and switch to target branch (for branch flow target and source branch are the same)
-    await gitCLIService.clone(targetCloneUrl, repoDir, checkoutInfo.targetBranch).catch(() => {
+    await gitCLIService.clone(targetCloneUrl, checkoutInfo.repoDir, checkoutInfo.targetBranch).catch(() => {
       logAndThrow(
         `[${node.project}] Error cloning ${checkoutInfo.targetGroup}/${checkoutInfo.targetName} and switching to target branch ${checkoutInfo.targetBranch}`
       );
@@ -89,7 +86,7 @@ export class CheckoutService {
       // get url of the source for the merge
       const sourceCloneUrl = this.config.getCloneUrl(checkoutInfo.sourceGroup, checkoutInfo.sourceName);
 
-      await gitCLIService.merge(repoDir, sourceCloneUrl, checkoutInfo.sourceBranch).catch(() => {
+      await gitCLIService.merge(checkoutInfo.repoDir, sourceCloneUrl, checkoutInfo.sourceBranch).catch(() => {
         logAndThrow(`[${node.project}] Error merging ${checkoutInfo.sourceGroup}/${checkoutInfo.sourceName}:${checkoutInfo.sourceBranch}
                       into ${checkoutInfo.targetGroup}/${checkoutInfo.targetName}:${checkoutInfo.targetBranch}`);
       });
@@ -156,6 +153,7 @@ export class CheckoutService {
         targetBranch: currentTarget.mappedBranch,
         targetGroup: currentTarget.group,
         targetName: currentTarget.name,
+        repoDir: this.getProjectDir(node),
         merge: true,
       };
     }
@@ -180,6 +178,7 @@ export class CheckoutService {
         targetBranch: currentTarget.mappedBranch,
         targetGroup: currentTarget.group,
         targetName: currentTarget.name,
+        repoDir: this.getProjectDir(node),
         merge: true,
       };
     }
@@ -197,6 +196,7 @@ export class CheckoutService {
       targetBranch: currentTarget.mappedBranch,
       targetGroup: currentTarget.group,
       targetName: currentTarget.name,
+      repoDir: this.getProjectDir(node),
       merge: false,
     };
   }

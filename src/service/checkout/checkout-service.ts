@@ -133,13 +133,13 @@ export class CheckoutService {
       .getForkName(currentTarget.group, originalSource.group!, currentTarget.name)
       .then(async (forkName) => {
         // only check for PR if we were able to get a fork name
-        const hasPullRequest = await githubAPIService.hasPullRequest(
+        const hasPullRequestFromFork = await githubAPIService.hasPullRequest(
           currentTarget.group,
           currentTarget.name,
           `${originalSource.group}/${forkName}:${originalSource.branch}`,
           currentTarget.mappedBranch
         );
-        return { forkName, hasPullRequest };
+        return { forkName, hasPullRequest: hasPullRequestFromFork };
       })
       .catch((err) => {
         if (err instanceof NotFoundError) {

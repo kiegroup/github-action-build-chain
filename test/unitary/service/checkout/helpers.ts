@@ -8,53 +8,14 @@ export const nodeChain: Node[] = [
     project: "owner1/project1",
     clone: ["clone-1", "clone-2"],
     mapping: {
-      dependant: {
-        default: [
-          {
-            source: "tbranch1",
-            target: "main",
-          },
-        ],
-        "owner3/project3": [
-          {
-            source: "tbranch1",
-            target: "tbranch3",
-          },
-        ],
-        "owner2/project2": [
-          {
-            source: "tbranch1",
-            target: "tbranch2",
-          },
-        ],
-      },
-      dependencies: {
-        default: [
-          {
-            source: "tbranch1",
-            target: "main",
-          },
-        ],
-      },
+      dependant: {},
+      dependencies: {},
     },
   },
   {
     project: "owner2/project2",
     mapping: {
-      dependant: {
-        "owner3/project3": [
-          {
-            source: "tbranch2",
-            target: "tbranch3",
-          },
-        ],
-        default: [
-          {
-            source: "tbranch2",
-            target: "main",
-          },
-        ],
-      },
+      dependant: {},
       dependencies: {
         default: [
           {

@@ -13,7 +13,7 @@ declare module "@kie/build-chain-configuration-reader" {
     dependencies?: {
       [key: string]: { source: string; target?: string; targetExpression?: string }[];
     };
-    depenpendant?: {
+    dependant?: {
       [key: string]: { source: string; target?: string; targetExpression?: string }[];
     };
   };
@@ -101,8 +101,8 @@ declare module "@kie/build-chain-configuration-reader" {
     starterProjectMapping: Mapping | undefined,
     currentProject: string,
     currentProjectMapping: Mapping | undefined,
-    expectedBaseBranch: string | undefined
-  ): string | undefined;
+    expectedBaseBranch: string
+  ): string;
 
   export function readDefinitionFile(file: string, options?: BuildChainReaderOptions): Promise<DefinitionFile>;
 }

@@ -184,6 +184,9 @@ export abstract class BaseConfiguration {
     if (node.build?.clone) {
       parsedNode.clone = this.convertToArray(node.build.clone);
     }
+    if (node.build?.["archive-artifacts"]) {
+      parsedNode.archiveArtifacts = node.build["archive-artifacts"];
+    }
     if (node.parent) {
       const parent = node.parent.map((parentNode) => this.parseNode(parentNode));
       parsedNode.parents = parent;
@@ -209,7 +212,9 @@ export abstract class BaseConfiguration {
   generatePlaceholder(project: ProjectConfiguration): UrlPlaceholders {
     // check whether definition file is a url or not
     const urlRegex = /^https?/;
-    if (!urlRegex.test(this.parsedInputs.definitionFile)) { return {}; }
+    if (!urlRegex.test(this.parsedInputs.definitionFile)) {
+      return {};
+    }
 
     // all url place holders are of the form ${KEY:DEFAULT} where :DEFAULT is optional
     const placeholderRegex = /\${([^{}:]+)(:([^{}]*))?}/g;

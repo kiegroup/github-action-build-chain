@@ -132,7 +132,7 @@ export class UploadService {
   private noFileFound(archiveArtifacts: ArchiveArtifacts, searchPaths: string) {
     switch (archiveArtifacts["if-no-files-found"]) {
       case IfNoFile.ERROR:
-        logAndThrow(`No files were found with the provided path: ${searchPaths}. No artifacts will be uploaded.`);
+        throw logAndThrow(`No files were found with the provided path: ${searchPaths}. No artifacts will be uploaded.`);
       case IfNoFile.IGNORE:
         this.logger.info(`No files were found with the provided path: ${searchPaths}. No artifacts will be uploaded.`);
         break;
@@ -150,24 +150,15 @@ export class UploadService {
     if (filesToUpload.length === 0) {
       this.noFileFound(archiveArtifacts, searchPaths);
       return {
-        artifactName: "",
+        artifactName: archiveArtifacts.name,
         artifactItems: [],
         failedItems: [],
         size: 0,
       };
     } else {
-      this.logger.info(`[INFO] With the provided path (${searchPaths}), there will be ${filesToUpload.length} file(s) uploaded`);
+      this.logger.debug(`With the provided path (${searchPaths}), there will be ${filesToUpload.length} file(s) uploaded`);
       this.logger.debug(`Root artifact directory is ${rootDirectory}`);
-      const uploadResponse = await artifact.create().uploadArtifact(archiveArtifacts.name, filesToUpload, rootDirectory, { continueOnError: false });
-
-      if (uploadResponse.failedItems.length > 0) {
-        logAndThrow(
-          `An error was encountered when uploading ${uploadResponse.artifactName}. There were ${uploadResponse.failedItems.length} items that failed to upload.`
-        );
-      } else {
-        this.logger.info(`Artifact ${uploadResponse.artifactName} has been successfully uploaded!`);
-      }
-      return uploadResponse;
+      return artifact.create().uploadArtifact(archiveArtifacts.name, filesToUpload, rootDirectory, { continueOnError: false });
     }
   }
 }

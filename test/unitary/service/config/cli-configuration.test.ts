@@ -364,7 +364,7 @@ describe("load definition file", () => {
 
 describe("load input", () => {
   test("success: validated input", () => {
-    const input = { ...defaultInputValues, customCommandTreatment: ["abc||def", "xyz||pqr"] };
+    const input = { ...defaultInputValues, customCommandTreatment: ["abc||def", "xyz||pqr"], startProject: "owner/project" };
     jest.spyOn(InputService.prototype, "inputs", "get").mockImplementation(() => input);
     expect(cliConfig.loadParsedInput()).toStrictEqual(input);
   });

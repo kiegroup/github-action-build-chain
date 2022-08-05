@@ -247,9 +247,8 @@ export class CheckoutService {
    * @returns checkout information for each node
    */
   async checkoutDefinitionTree(nodeChain: Node[]): Promise<CheckedOutNode[]> {
-    if (this.config.skipParallelCheckout()) {
-      return this.checkoutDefinitionTreeSequential(nodeChain);
-    }
-    return this.checkoutDefinitionTreeParallel(nodeChain);
+    return this.config.skipParallelCheckout() ? 
+            this.checkoutDefinitionTreeSequential(nodeChain) : 
+            this.checkoutDefinitionTreeParallel(nodeChain);
   }
 }

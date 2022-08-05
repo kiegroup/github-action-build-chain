@@ -2,7 +2,9 @@ import { NotFoundError } from "@bc/domain/errors";
 import { OctokitFactory } from "@bc/service/git/octokit";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
+import { logAndThrow } from "@bc/utils/log";
 import { Octokit } from "@octokit/rest";
+import { Endpoints } from "@octokit/types";
 import { Service } from "typedi";
 
 @Service()
@@ -33,44 +35,38 @@ export class GithubAPIService {
   }
 
   /**
-   * Checks whether the given repo has any open pull requests for a given head ref
-   * @param owner repo owner
-   * @param repo repo name
-   * @param head head ref
-   * @returns whether there is any open pull request
-   */
-  private async _hasPullRequest(owner: string, repo: string, head: string): Promise<boolean> {
-    try {
-      const { status, data } = await this.octokit.pulls.list({
-        owner,
-        repo,
-        state: "open",
-        head,
-      });
-      return status === 200 && data.length > 0;
-    } catch (err) {
-      this.logger.error(`Error getting pull request list from https://api.github.com/repos/${owner}/${repo}/pulls?head=${head}&state=open'".`);
-      throw err;
-    }
-  }
-
-  /**
    * Checks whether the given repo has any open pull requests for a given head branch either in the forked repo or in the original repo
    * @param owner repo owner
    * @param repo repo name
-   * @param headBranch source/head branch
-   * @param source Object containing information on sourceOwner (owner of the forked repo) and (sourceRepo name of the forked repo)
+   * @param head source/head branch to filter PRs by
+   * @param base base branch to filter PRs by
    * @returns whether there is any open pull request
    */
-  async hasPullRequest(owner: string, repo: string, headBranch: string, source?: { sourceOwner: string; sourceRepo: string }): Promise<boolean> {
-    // check for PRs from the repo itself
-    const promises = [this._hasPullRequest(owner, repo, `${owner}:${headBranch}`)];
-
-    // check for PRs from the forked repo
-    if (source) {
-      promises.push(this._hasPullRequest(owner, repo, `${source.sourceOwner}/${source.sourceRepo}:${headBranch}`));
+  async hasPullRequest(owner: string, repo: string, head?: string, base?: string): Promise<boolean> {
+    let query: Endpoints["GET /repos/{owner}/{repo}/pulls"]["parameters"] = { owner, repo, state: "open" };
+    if (!base && !head) {
+      logAndThrow(`[${owner}/${repo}] Either head or base needs to be defined while requesting pull request information`);
     }
-    return (await Promise.all(promises)).reduce((finalResult: boolean, result: boolean) => finalResult || result, false);
+    if (base) {
+      query = { ...query, base };
+    }
+    if (head) {
+      query = { ...query, head };
+    }
+    try {
+      const { status, data } = await this.octokit.pulls.list(query);
+      return status === 200 && data.length > 0;
+    } catch (err) {
+      let msg = `Error getting pull request list from https://api.github.com/repos/${owner}/${repo}/pulls?state=open`;
+      if (base) {
+        msg += `&base=${base}`;
+      }
+      if (head) {
+        msg += `&head=${head}`;
+      }
+      this.logger.error(msg);
+      throw err;
+    }
   }
 
   /**
@@ -86,7 +82,7 @@ export class GithubAPIService {
    * @param repo repo name
    * @returns project name of the forked repo
    */
-  async getSourceProjectName(targetOwner: string, sourceOwner: string, repo: string): Promise<string> {
+  async getForkName(targetOwner: string, sourceOwner: string, repo: string): Promise<string> {
     try {
       // ensure that repo exists
       if (targetOwner === sourceOwner) {

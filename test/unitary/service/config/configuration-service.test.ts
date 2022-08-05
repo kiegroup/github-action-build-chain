@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
-import { defaultInputValues, InputValues } from "@bc/domain/inputs";
+import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { MockGithub } from "../../../setup/mock-github";
 import Container from "typedi";
@@ -12,6 +12,7 @@ import { NodeExecutionLevel } from "@bc/domain/node-execution-level";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
 import { getOrderedListForTree, getTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
+import { ToolType } from "@bc/domain/cli";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -122,6 +123,54 @@ describe("cli", () => {
     currentInput = currInput;
     expect(config.getTreatmentOptions()).toStrictEqual(treatmentOptions);
   });
+
+  test("get target project", () => {
+    const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
+    jest.spyOn(BaseConfiguration.prototype, "targetProject", "get").mockImplementation(() => project);
+    expect(config.getTargetProject()).toStrictEqual(project);
+  });
+
+  test("get source project", () => {
+    const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
+    jest.spyOn(BaseConfiguration.prototype, "sourceProject", "get").mockImplementation(() => project);
+    expect(config.getSourceProject()).toStrictEqual(project);
+  });
+
+  test("get flow type: success", () => {
+    currentInput = { ...defaultInputValues, CLISubCommand: FlowType.CROSS_PULL_REQUEST };
+    expect(config.getFlowType()).toBe(FlowType.CROSS_PULL_REQUEST);
+  });
+
+  test("get flow type: failure", () => {
+    currentInput = { ...defaultInputValues, CLISubCommand: ToolType.PROJECT_LIST };
+    expect(() => config.getFlowType()).toThrowError();
+  });
+
+  test("root folder from github workspace", () => {
+    const workspace = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env.workspace;
+    expect(config.getRootFolder()).toBe(workspace);
+  });
+
+  test("root folder from input", () => {
+    currentInput = { ...defaultInputValues, outputFolder: "current" };
+    expect(config.getRootFolder()).toBe(currentInput.outputFolder);
+  });
+
+  test("root folder default", () => {
+    delete process.env["GITHUB_WORKSPACE"];
+    expect(config.getRootFolder()).toBe(process.cwd());
+  });
+
+  test("get clone url", () => {
+    const gitConfig = { serverUrlWithToken: "http://github.com" };
+    jest.spyOn(BaseConfiguration.prototype, "gitConfiguration", "get").mockImplementation(() => gitConfig);
+    expect(config.getCloneUrl("owner", "project")).toBe(`${gitConfig.serverUrlWithToken}/owner/project`);
+  });
+
+  test("skipParallelCheckout", () => {
+    currentInput = { ...defaultInputValues, skipParallelCheckout: true };
+    expect(config.skipParallelCheckout()).toBe(currentInput.skipParallelCheckout);
+  });
 });
 
 describe("action", () => {
@@ -208,5 +257,48 @@ describe("action", () => {
   ])("getTreatmentOptions: success - %p", (title: string, currInput: InputValues, treatmentOptions: TreatmentOptions) => {
     currentInput = currInput;
     expect(config.getTreatmentOptions()).toStrictEqual(treatmentOptions);
+  });
+
+  test("get target project", () => {
+    const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
+    jest.spyOn(BaseConfiguration.prototype, "targetProject", "get").mockImplementation(() => project);
+    expect(config.getTargetProject()).toStrictEqual(project);
+  });
+
+  test("get source project", () => {
+    const project = { branch: "main", name: "project", group: "owner", repository: "owner/project" };
+    jest.spyOn(BaseConfiguration.prototype, "sourceProject", "get").mockImplementation(() => project);
+    expect(config.getSourceProject()).toStrictEqual(project);
+  });
+
+  test("get flow type", () => {
+    currentInput = { ...defaultInputValues, flowType: FlowType.CROSS_PULL_REQUEST };
+    expect(config.getFlowType()).toBe(FlowType.CROSS_PULL_REQUEST);
+  });
+
+  test("root folder from github workspace", () => {
+    const workspace = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env.workspace;
+    expect(config.getRootFolder()).toBe(workspace);
+  });
+
+  test("root folder from input", () => {
+    currentInput = { ...defaultInputValues, outputFolder: "current" };
+    expect(config.getRootFolder()).toBe(currentInput.outputFolder);
+  });
+
+  test("root folder default", () => {
+    delete process.env["GITHUB_WORKSPACE"];
+    expect(config.getRootFolder()).toBe(process.cwd());
+  });
+
+  test("get clone url", () => {
+    const gitConfig = { serverUrlWithToken: "http://github.com" };
+    jest.spyOn(BaseConfiguration.prototype, "gitConfiguration", "get").mockImplementation(() => gitConfig);
+    expect(config.getCloneUrl("owner", "project")).toBe(`${gitConfig.serverUrlWithToken}/owner/project`);
+  });
+
+  test("skipParallelCheckout", () => {
+    currentInput = { ...defaultInputValues, skipParallelCheckout: true };
+    expect(config.skipParallelCheckout()).toBe(currentInput.skipParallelCheckout);
   });
 });

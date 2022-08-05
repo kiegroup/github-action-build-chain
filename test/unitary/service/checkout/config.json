@@ -1,0 +1,258 @@
+{
+  "mocks": {
+    "baseUrl": "https://api.github.com",
+    "api": [
+      {
+        "path": "/repos/owner1/project1/forks",
+        "method": "get",
+        "response": [
+          {
+            "code": 200,
+            "data": [
+              {
+                "name": "project1-forked",
+                "owner": {
+                  "login": "owner2"
+                }
+              }
+            ]
+          },
+          {
+            "code": 200,
+            "data": [],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": [
+              {
+                "name": "project1-forked",
+                "owner": {
+                  "login": "owner2"
+                }
+              }
+            ]
+          },
+          {
+            "code": 200,
+            "data": [],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": [
+              {
+                "name": "project1-forked",
+                "owner": {
+                  "login": "owner4"
+                }
+              }
+            ]
+          },
+          {
+            "code": 200,
+            "data": [],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": [
+              {
+                "name": "project1-forked",
+                "owner": {
+                  "login": "owner4"
+                }
+              }
+            ]
+          },
+          {
+            "code": 200,
+            "data": [],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": [
+              {
+                "name": "project1-forked",
+                "owner": {
+                  "login": "owner2"
+                }
+              }
+            ]
+          },
+          {
+            "code": 200,
+            "data": [],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": [
+              {
+                "name": "project1-forked",
+                "owner": {
+                  "login": "owner2"
+                }
+              }
+            ]
+          },
+          {
+            "code": 200,
+            "data": [],
+            "times": 2
+          }
+        ]
+      },
+      {
+        "path": "/repos/owner2/project2/forks",
+        "method": "get",
+        "response": [
+          {
+            "code": 200,
+            "data": [
+              {
+                "name": "project2-forked",
+                "owner": {
+                  "login": "owner4"
+                }
+              }
+            ],
+            "times": 6
+          }
+        ]
+      },
+      {
+        "path": "/repos/owner1/project1/pulls",
+        "method": "get",
+        "response": [
+          {
+            "code": 200,
+            "data": ["dummy"],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"],
+            "times": 2
+          },
+          {
+            "code": 200,
+            "data": []
+          }
+        ]
+      },
+      {
+        "path": "/repos/owner2/project2/pulls",
+        "method": "get",
+        "response": [
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"]
+          },
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"]
+          },
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"]
+          },
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"]
+          },
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"]
+          },
+          {
+            "code": 200,
+            "data": []
+          },
+          {
+            "code": 200,
+            "data": ["dummy"],
+            "times": 7
+          },
+          {
+            "code": 200,
+            "data": [],
+            "times": 12
+          }
+        ]
+      },
+      {
+        "path": "/repos/owner2/project2$",
+        "method": "get",
+        "response": [
+          {
+            "code": 200,
+            "data": [],
+            "times": 12
+          }
+        ]
+      }
+    ]
+  }
+}

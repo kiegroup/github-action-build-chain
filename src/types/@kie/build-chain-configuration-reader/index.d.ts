@@ -4,7 +4,7 @@ declare module "@kie/build-chain-configuration-reader" {
   };
 
   export type BuildChainReaderOptions = {
-    url: UrlPlaceholders | Record<string, never>;
+    placeholder: UrlPlaceholders | Record<string, never>;
     token: string;
   };
 
@@ -13,7 +13,7 @@ declare module "@kie/build-chain-configuration-reader" {
     dependencies?: {
       [key: string]: { source: string; target?: string; targetExpression?: string }[];
     };
-    depenpendant?: {
+    dependant?: {
       [key: string]: { source: string; target?: string; targetExpression?: string }[];
     };
   };
@@ -30,6 +30,7 @@ declare module "@kie/build-chain-configuration-reader" {
   };
 
   export type Build = {
+    clone: string | string[];
     "build-command"?: {
       before?: {
         current?: string | string[];
@@ -96,10 +97,10 @@ declare module "@kie/build-chain-configuration-reader" {
   export function treatUrl(url: string, placeholders: UrlPlaceholders): string;
 
   export function getBaseBranch(
-    projectTriggeringTheJob: string,
-    projectTriggeringTheJobMapping: Mapping,
+    starterProject: string,
+    starterProjectMapping: Mapping | undefined,
     currentProject: string,
-    currentProjectMapping: Mapping,
+    currentProjectMapping: Mapping | undefined,
     expectedBaseBranch: string
   ): string;
 

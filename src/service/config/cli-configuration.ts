@@ -17,7 +17,7 @@ export class CLIConfiguration extends BaseConfiguration {
       const projectConfig = {
         branch: this.parsedInputs.branch,
         name: projectName[projectName.length - 1],
-        group: this.parsedInputs.group ? this.parsedInputs.group : projectName[0],
+        group: this.parsedInputs.group ?? projectName[0],
         repository: this.parsedInputs.startProject,
       };
       return {
@@ -50,7 +50,7 @@ export class CLIConfiguration extends BaseConfiguration {
     const serverUrl = process.env.GITHUB_SERVER_URL ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "") : "https://github.com";
     let gitConfig: GitConfiguration = {
       serverUrl: serverUrl,
-      serverUrlWithToken: serverUrl?.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
+      serverUrlWithToken: serverUrl.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
     };
     if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
       const group = this.parsedInputs.group ?? this.parsedInputs.startProject?.split("/")[0];
@@ -107,5 +107,17 @@ export class CLIConfiguration extends BaseConfiguration {
     } else {
       logAndThrow("A github token is needed");
     }
+  }
+
+  /**
+   * Get the flow type if defined otherwise throw an error
+   * @returns
+   */
+  getFlowType(): FlowType {
+    const subcmd = this.parsedInputs.CLISubCommand!;
+    if (Object.values(FlowType).includes(subcmd as FlowType)) {
+      return subcmd as FlowType;
+    }
+    logAndThrow("The CLI subcommand is a tool commaand. No flow defined");
   }
 }

@@ -8,6 +8,8 @@ import { logAndThrow } from "@bc/utils/log";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
+import { ProjectConfiguration } from "@bc/domain/configuration";
+import { FlowType } from "@bc/domain/inputs";
 
 @Service()
 export class ConfigurationService {
@@ -98,6 +100,26 @@ export class ConfigurationService {
   }
 
   /**
+   * Checks whether given node needs to be checked out or not
+   * @param node
+   * @returns {Boolean} true if checking out needs to be skipped for the given node otherwise false
+   */
+  skipCheckout(node: Node): boolean {
+    if (this.configuration.parsedInputs.skipCheckout) {
+      return true;
+    }
+    return this.configuration.parsedInputs.skipProjectCheckout ? this.configuration.parsedInputs.skipProjectCheckout.includes(node.project) : false;
+  }
+
+  /**
+   * Checks whether checkout should be sequential or parallel
+   * @returns {Boolean} true if checkout should be sequential otherwise false
+   */
+  skipParallelCheckout(): boolean {
+    return this.configuration.parsedInputs.skipParallelCheckout;
+  }
+
+  /**
    * Parses user input from custom command treatment option to create the treatment option object
    * @returns {TreatmentOptions} Construct the treatment options domain object
    */
@@ -108,5 +130,50 @@ export class ConfigurationService {
       };
     }
     return {};
+  }
+
+  /**
+   * Returns the information for the target repository. For PR flow types it is the base branch
+   * @returns
+   */
+  getTargetProject(): ProjectConfiguration {
+    return this.configuration.targetProject;
+  }
+
+  /**
+   * Returns the information for the source repository. For PR flow types it is the head branch
+   * @returns
+   */
+  getSourceProject(): ProjectConfiguration {
+    return this.configuration.sourceProject;
+  }
+
+  /**
+   * Root folder is outputFolder if defined via options otherwise GITHUB_WORKSPACE.
+   * If both of these are undefined, it is the current working directory
+   * @returns
+   */
+  getRootFolder(): string {
+    const rootFolder = this.configuration.parsedInputs.outputFolder ?? process.env.GITHUB_WORKSPACE;
+    return rootFolder ?? process.cwd();
+  }
+
+  /**
+   * Return the flow type of the current build or throw an error is the build is not
+   * of any flow type
+   * @returns
+   */
+  getFlowType(): FlowType {
+    return this.configuration.getFlowType();
+  }
+
+  /**
+   * Returns the clone url for the given repo group and name
+   * @param group owner of the repository
+   * @param repoName name of the repository
+   * @returns
+   */
+  getCloneUrl(group: string, repoName: string): string {
+    return `${this.configuration.gitConfiguration.serverUrlWithToken}/${group}/${repoName}`;
   }
 }

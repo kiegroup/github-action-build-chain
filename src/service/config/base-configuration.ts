@@ -1,12 +1,22 @@
 import { Commands } from "@bc/domain/commands";
 import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/configuration";
-import { defaultInputValues, InputValues } from "@bc/domain/inputs";
+import { constants } from "@bc/domain/constants";
+import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { Node } from "@bc/domain/node";
 import { InputService } from "@bc/service/inputs/input-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { logAndThrow } from "@bc/utils/log";
-import { Build, DefinitionFile, getOrderedListForTree, getTree, ProjectNode, readDefinitionFile } from "@kie/build-chain-configuration-reader";
+import {
+  Build,
+  BuildChainReaderOptions,
+  DefinitionFile,
+  getOrderedListForTree,
+  getTree,
+  ProjectNode,
+  readDefinitionFile,
+  UrlPlaceholders,
+} from "@kie/build-chain-configuration-reader";
 import Container from "typedi";
 
 export abstract class BaseConfiguration {
@@ -86,18 +96,26 @@ export abstract class BaseConfiguration {
 
   abstract loadToken(): void;
 
+  abstract getFlowType(): FlowType;
+
   /**
    * Validates any user input and returns the stored user input from InputService if there were no errors
    * @returns {InputValues}
    */
   loadParsedInput(): InputValues {
     const inputs: InputValues = Container.get(InputService).inputs;
-    // validate any input that needs to be in a certain way
+
+    // customCommandTreatment values must be of the form: REGEX||REPLACE_REGEX
     inputs.customCommandTreatment?.forEach((cct) => {
       if (cct.split("||").length !== 2) {
         logAndThrow("Invalid format for custom command treatment. Required format: Regex||ReplaceRegex");
       }
     });
+
+    // startProject must be of the form: OWNER/PROJECT
+    if (inputs.startProject && inputs.startProject.split("/").length !== 2) {
+      logAndThrow("Invalid start project. Start project must be of the form OWNER/PROJECT");
+    }
 
     // parsed inputs will always have the default value. No need to check whether it is empty or not
     return inputs;
@@ -108,7 +126,7 @@ export abstract class BaseConfiguration {
    * @param cmd
    * @returns an array of string
    */
-  private parseCommand(cmd: string | string[] | undefined): string[] {
+  private convertToArray(cmd: string | string[] | undefined): string[] {
     if (cmd) {
       return Array.isArray(cmd) ? cmd : [cmd];
     }
@@ -126,23 +144,23 @@ export abstract class BaseConfiguration {
     if (buildInfo?.after) {
       const after = buildInfo.after;
       parsedBuild.after = {
-        upstream: this.parseCommand(after.upstream),
-        downstream: this.parseCommand(after.downstream),
-        current: this.parseCommand(after.current),
+        upstream: this.convertToArray(after.upstream),
+        downstream: this.convertToArray(after.downstream),
+        current: this.convertToArray(after.current),
       };
     }
     if (buildInfo?.before) {
       const before = buildInfo.before;
       parsedBuild.before = {
-        upstream: this.parseCommand(before.upstream),
-        downstream: this.parseCommand(before.downstream),
-        current: this.parseCommand(before.current),
+        upstream: this.convertToArray(before.upstream),
+        downstream: this.convertToArray(before.downstream),
+        current: this.convertToArray(before.current),
       };
     }
     parsedBuild.commands = {
-      upstream: this.parseCommand(buildInfo?.upstream),
-      downstream: this.parseCommand(buildInfo?.downstream),
-      current: this.parseCommand(buildInfo?.current),
+      upstream: this.convertToArray(buildInfo?.upstream),
+      downstream: this.convertToArray(buildInfo?.downstream),
+      current: this.convertToArray(buildInfo?.current),
     };
     return parsedBuild;
   }
@@ -154,10 +172,17 @@ export abstract class BaseConfiguration {
    */
   private parseNode(node: ProjectNode): Node {
     const parsedNode: Node = {
+      // build-chain-configuration-reader package ensures that project is of form owner/name
       project: node.project,
     };
     if (node.dependencies) {
       parsedNode.dependencies = node.dependencies;
+    }
+    if (node.mapping) {
+      parsedNode.mapping = node.mapping;
+    }
+    if (node.build?.clone) {
+      parsedNode.clone = this.convertToArray(node.build.clone);
     }
     if (node.parent) {
       const parent = node.parent.map((parentNode) => this.parseNode(parentNode));
@@ -177,21 +202,76 @@ export abstract class BaseConfiguration {
   }
 
   /**
+   * Generates placeholders values required to replace any place holders in the definition file url
+   * @param project source or target project configuration data
+   * @returns
+   */
+  generatePlaceholder(project: ProjectConfiguration): UrlPlaceholders {
+    // check whether definition file is a url or not
+    const urlRegex = /^https?/;
+    if (!urlRegex.test(this.parsedInputs.definitionFile)) { return {}; }
+
+    // all url place holders are of the form ${KEY:DEFAULT} where :DEFAULT is optional
+    const placeholderRegex = /\${([^{}:]+)(:([^{}]*))?}/g;
+    const matches = [...this.parsedInputs.definitionFile.matchAll(placeholderRegex)];
+    const placeholder: UrlPlaceholders = {};
+    matches.forEach((match) => {
+      const key = match[1];
+      // if env variable exists for the key use that otherwise use default value
+      const defaultValue = process.env[key] ?? match[3];
+      if (key === "GROUP") {
+        placeholder["GROUP"] = project.group ?? defaultValue;
+      } else if (key === "PROJECT_NAME") {
+        placeholder["PROJECT_NAME"] = project.name ?? defaultValue;
+      } else if (key === "BRANCH") {
+        placeholder["BRANCH"] = project.branch ?? defaultValue;
+      } else {
+        placeholder[key] = defaultValue;
+      }
+    });
+    return placeholder;
+  }
+
+  /**
+   * Parse definition file with url placeholder and token passed as option
+   * @param options placeholder values and token
+   * @returns
+   */
+  private async loadDefinitionFileWithOptions(
+    options: BuildChainReaderOptions
+  ): Promise<{ definitionFile: DefinitionFile; projectList: Node[]; projectTree: Node[] }> {
+    const [definitionFile, projectList, projectTree] = await Promise.all([
+      readDefinitionFile(this.parsedInputs.definitionFile, options),
+      getOrderedListForTree(this.parsedInputs.definitionFile, options),
+      getTree(this.parsedInputs.definitionFile, options),
+    ]);
+    return {
+      definitionFile,
+      projectList: projectList.map((node) => this.parseNode(node)),
+      projectTree: projectTree.map((node) => this.parseNode(node)),
+    };
+  }
+
+  /**
    * Load the definition file as is in the form of an object, get the project tree and project list
    * @returns
    */
   async loadDefinitionFile(): Promise<{ definitionFile: DefinitionFile; projectList: Node[]; projectTree: Node[] }> {
+    // generate placeholders for definition file url if any (something to consider to shift to buil-chain-configuration-reader project in the future)
+    let placeholder: UrlPlaceholders;
+
+    // generate from source
+    placeholder = this.generatePlaceholder(this.sourceProject);
     try {
-      const [definitionFile, projectList, projectTree] = await Promise.all([
-        readDefinitionFile(this.parsedInputs.definitionFile),
-        getOrderedListForTree(this.parsedInputs.definitionFile),
-        getTree(this.parsedInputs.definitionFile),
-      ]);
-      return {
-        definitionFile,
-        projectList: projectList.map((node) => this.parseNode(node)),
-        projectTree: projectTree.map((node) => this.parseNode(node)),
-      };
+      return await this.loadDefinitionFileWithOptions({ placeholder, token: Container.get(constants.GITHUB.TOKEN) });
+    } catch (err) {
+      this.logger.debug("Did not find correct definition on file, trying target");
+    }
+
+    // generate from target
+    placeholder = this.generatePlaceholder(this.targetProject);
+    try {
+      return await this.loadDefinitionFileWithOptions({ placeholder, token: Container.get(constants.GITHUB.TOKEN) });
     } catch (err) {
       logAndThrow("Invalid definition file");
     }

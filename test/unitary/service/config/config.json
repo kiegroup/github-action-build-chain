@@ -48,7 +48,8 @@
     "ref": "main",
     "server_url": "https://git.ca/",
     "token": "token",
-    "repository": "owner/project"
+    "repository": "owner/project",
+    "workspace": "current"
   },
   "action": {
     "eventPayloadFileName": "event.json",

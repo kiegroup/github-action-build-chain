@@ -217,8 +217,93 @@ describe("load token", () => {
   });
 });
 
+describe("generate placeholders", () => {
+  test("generated from source", () => {
+    const definitionFileUrl = "https://abc/${GROUP}/${PROJECT_NAME}/${BRANCH}";
+    jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => {
+      return { ...defaultInputValues, definitionFile: definitionFileUrl };
+    });
+
+    const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).action.eventPayload.pull_request;
+    const source = {
+      branch: actualData.head.ref,
+      repository: actualData.head.repo.full_name,
+      name: actualData.head.repo.name,
+      group: actualData.head.repo.owner.login,
+    };
+
+    expect(cliConfig.generatePlaceholder(source)).toStrictEqual({ BRANCH: source.branch, GROUP: source.group, PROJECT_NAME: source.name });
+  });
+
+  test("generated from target", () => {
+    const definitionFileUrl = "https://abc/${GROUP}/${PROJECT_NAME}/${BRANCH}";
+    jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => {
+      return { ...defaultInputValues, definitionFile: definitionFileUrl };
+    });
+
+    const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).action.eventPayload.pull_request;
+    const target = {
+      branch: actualData.base.ref,
+      repository: actualData.base.repo.full_name,
+      name: actualData.base.repo.name,
+      group: actualData.base.repo.owner.login,
+    };
+
+    expect(cliConfig.generatePlaceholder(target)).toStrictEqual({ BRANCH: target.branch, GROUP: target.group, PROJECT_NAME: target.name });
+  });
+
+  test("no source or target. generated from env", () => {
+    const definitionFileUrl = "https://abc/${GROUP}/${PROJECT_NAME}/${BRANCH}/${TEST}";
+    jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => {
+      return { ...defaultInputValues, definitionFile: definitionFileUrl };
+    });
+
+    const env = {
+      TEST: "test1",
+      GROUP: "group",
+      PROJECT_NAME: "name",
+      BRANCH: "main",
+    };
+
+    process.env = { ...process.env, ...env };
+
+    expect(cliConfig.generatePlaceholder({})).toStrictEqual(env);
+  });
+
+  test("no source or target or env. generated from default", () => {
+    const definitionFileUrl = "https://abc/${GROUP:group}/${PROJECT_NAME:name}/${BRANCH:branch}/";
+    jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => {
+      return { ...defaultInputValues, definitionFile: definitionFileUrl };
+    });
+
+    const env = {
+      GROUP: "group",
+      PROJECT_NAME: "name",
+      BRANCH: "main",
+    };
+
+    expect(cliConfig.generatePlaceholder({})).toStrictEqual(env);
+  });
+
+  test("no placeholders required", () => {
+    const definitionFileUrl = "https://abc/group/branch";
+    jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => {
+      return { ...defaultInputValues, definitionFile: definitionFileUrl };
+    });
+    expect(cliConfig.generatePlaceholder({})).toStrictEqual({});
+  });
+
+  test("no definition file url", () => {
+    const definitionFileUrl = "definitionfile";
+    jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => {
+      return { ...defaultInputValues, definitionFile: definitionFileUrl };
+    });
+    expect(cliConfig.generatePlaceholder({})).toStrictEqual({});
+  });
+});
+
 describe("load definition file", () => {
-  test("success", async () => {
+  test("success: from source generated placeholder", async () => {
     const data = JSON.parse(fs.readFileSync(path.join(__dirname, "projectNodes.json"), "utf8"));
     const mockData: ProjectTree = data.mock;
     const expectedData: Node[] = data.expected;
@@ -233,6 +318,33 @@ describe("load definition file", () => {
 
     const { definitionFile, projectList, projectTree } = await cliConfig.loadDefinitionFile();
     expect(readDefinitionFile).toHaveBeenCalledTimes(1);
+    expect(getTree).toHaveBeenCalledTimes(1);
+    expect(getOrderedListForTree).toHaveBeenCalledTimes(1);
+
+    expect(definitionFile).toStrictEqual({ version: "2.1" });
+    expect(projectList).toStrictEqual(expectedData);
+    expect(projectTree).toStrictEqual(expectedData);
+  });
+
+  test("success: from target generated placeholder", async () => {
+    const data = JSON.parse(fs.readFileSync(path.join(__dirname, "projectNodes.json"), "utf8"));
+    const mockData: ProjectTree = data.mock;
+    const expectedData: Node[] = data.expected;
+
+    const readDefinitionFileMock = readDefinitionFile as jest.Mock;
+    const getTreeMock = getTree as jest.Mock;
+    const getOrderedListForTreeMock = getOrderedListForTree as jest.Mock;
+
+    readDefinitionFileMock
+      .mockImplementationOnce(() => {
+        throw new Error("Invalid definition file");
+      })
+      .mockReturnValueOnce({ version: "2.1" });
+    getTreeMock.mockReturnValueOnce(mockData);
+    getOrderedListForTreeMock.mockReturnValueOnce(mockData);
+
+    const { definitionFile, projectList, projectTree } = await cliConfig.loadDefinitionFile();
+    expect(readDefinitionFile).toHaveBeenCalledTimes(2);
     expect(getTree).toHaveBeenCalledTimes(1);
     expect(getOrderedListForTree).toHaveBeenCalledTimes(1);
 

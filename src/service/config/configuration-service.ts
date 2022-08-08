@@ -10,6 +10,7 @@ import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
 import { ProjectConfiguration } from "@bc/domain/configuration";
 import { FlowType } from "@bc/domain/inputs";
+import { Post, Pre } from "@kie/build-chain-configuration-reader";
 
 @Service()
 export class ConfigurationService {
@@ -174,5 +175,13 @@ export class ConfigurationService {
    */
   getCloneUrl(group: string, repoName: string): string {
     return `${this.configuration.gitConfiguration.serverUrlWithToken}/${group}/${repoName}`;
+  }
+
+  getPre(): Pre | undefined {
+    return this.configuration.definitionFile.pre;
+  }
+
+  getPost(): Post | undefined {
+    return this.configuration.definitionFile.post;
   }
 }

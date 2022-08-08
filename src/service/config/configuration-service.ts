@@ -154,8 +154,7 @@ export class ConfigurationService {
    * @returns
    */
   getRootFolder(): string {
-    const rootFolder = this.configuration.parsedInputs.outputFolder ?? process.env.GITHUB_WORKSPACE;
-    return rootFolder ?? process.cwd();
+    return this.configuration.parsedInputs.outputFolder ?? process.env.GITHUB_WORKSPACE ?? process.cwd();
   }
 
   /**

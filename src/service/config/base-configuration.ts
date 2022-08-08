@@ -88,8 +88,6 @@ export abstract class BaseConfiguration {
     return this._projectTree;
   }
 
-  abstract loadProject(): { source: ProjectConfiguration; target: ProjectConfiguration };
-
   abstract loadGitConfiguration(): GitConfiguration;
 
   abstract loadGitEvent(): Promise<EventData>;
@@ -97,6 +95,27 @@ export abstract class BaseConfiguration {
   abstract loadToken(): void;
 
   abstract getFlowType(): FlowType;
+
+  /**
+   * Create the source and target project configuration from the github event payload
+   * @returns a new { source: ProjectConfiguration; target: ProjectConfiguration } instance
+   */
+  loadProject(): { source: ProjectConfiguration; target: ProjectConfiguration } {
+    return {
+      source: {
+        branch: this.gitEventData.head.ref,
+        repository: this.gitEventData.head.repo?.full_name,
+        name: this.gitEventData.head.repo?.name,
+        group: this.gitEventData.head.repo?.owner.login,
+      },
+      target: {
+        branch: this.gitEventData.base.ref,
+        repository: this.gitEventData.base.repo.full_name,
+        name: this.gitEventData.base.repo.name,
+        group: this.gitEventData.base.repo.owner.login,
+      },
+    };
+  }
 
   /**
    * Validates any user input and returns the stored user input from InputService if there were no errors
@@ -209,7 +228,9 @@ export abstract class BaseConfiguration {
   generatePlaceholder(project: ProjectConfiguration): UrlPlaceholders {
     // check whether definition file is a url or not
     const urlRegex = /^https?/;
-    if (!urlRegex.test(this.parsedInputs.definitionFile)) { return {}; }
+    if (!urlRegex.test(this.parsedInputs.definitionFile)) {
+      return {};
+    }
 
     // all url place holders are of the form ${KEY:DEFAULT} where :DEFAULT is optional
     const placeholderRegex = /\${([^{}:]+)(:([^{}]*))?}/g;

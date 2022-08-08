@@ -7,11 +7,8 @@ import { logAndThrow } from "@bc/utils/log";
 import Container from "typedi";
 
 export class CLIConfiguration extends BaseConfiguration {
-  /**
-   * Construct source and target project configuration. For branch build source and target configuratoon is the same since we are just building a branch.
-   * @returns
-   */
-  loadProject(): { source: ProjectConfiguration; target: ProjectConfiguration } {
+  
+  override loadProject(): { source: ProjectConfiguration; target: ProjectConfiguration } {
     if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
       const projectName = this.parsedInputs.startProject!.split("/");
       const projectConfig = {
@@ -25,20 +22,7 @@ export class CLIConfiguration extends BaseConfiguration {
         target: projectConfig,
       };
     } else {
-      return {
-        source: {
-          branch: this.gitEventData.head.ref,
-          repository: this.gitEventData.head.repo?.full_name,
-          name: this.gitEventData.head.repo?.name,
-          group: this.gitEventData.head.repo?.owner.login,
-        },
-        target: {
-          branch: this.gitEventData.base.ref,
-          repository: this.gitEventData.base.repo.full_name,
-          name: this.gitEventData.base.repo.name,
-          group: this.gitEventData.base.repo.owner.login,
-        },
-      };
+      return super.loadProject();
     }
   }
 

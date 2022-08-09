@@ -40,7 +40,20 @@ export class ArtifactService {
       return this.uploadService.upload(node.archiveArtifacts!);
     });
 
-    return Promise.allSettled(promises);
-    // TODO printing of archive artifact summary should be done by the job summary service
+    const result = await Promise.allSettled(promises);
+
+    result.forEach((res) => {
+      if (res.status === "fulfilled") {
+        if (res.value.artifactItems.length > 0) {
+          this.logger.info(`Artifact ${res.value.artifactName} uploaded ${res.value.artifactItems.length} files: ${res.value.artifactItems}`);
+        }
+        if (res.value.failedItems.length > 0) {
+          this.logger.info(`Artifact ${res.value.artifactName} failed to upload ${res.value.failedItems.length} files: ${res.value.failedItems}`);
+        }
+      } else {
+        this.logger.info(`Failure in uploading artifacts for one or more nodes: ${res.reason}`);
+      }
+    });
+    return result;
   }
 }

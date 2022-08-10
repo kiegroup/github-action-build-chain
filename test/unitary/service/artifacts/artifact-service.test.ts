@@ -53,6 +53,7 @@ test.each([
       size: 0,
     };
   });
+  jest.spyOn(ConfigurationService.prototype, "getStarterProjectName").mockImplementation(() => nodeChain[startProjectIndex].project);
   jest.spyOn(ConfigurationService.prototype, "getStarterNode").mockImplementation(() => nodeChain[startProjectIndex]);
 
   const artifactService = Container.get(ArtifactService);

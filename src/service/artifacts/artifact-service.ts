@@ -22,13 +22,15 @@ export class ArtifactService {
   private getNodesToArchive(nodeChain: Node[]): Node[] {
     const startingProject = this.configService.getStarterNode();
     const dependencies = startingProject.archiveArtifacts?.dependencies ?? ArchiveDependencies.NONE;
+    let result: Node[];
     if (dependencies === ArchiveDependencies.NONE) {
-      return [startingProject];
+      result = [startingProject];
     } else if (dependencies === ArchiveDependencies.ALL) {
-      return nodeChain.filter((node) => !!node.archiveArtifacts);
+      result = nodeChain.filter((node) => !!node.archiveArtifacts);
     } else {
-      return nodeChain.filter((node) => node.archiveArtifacts && (dependencies.includes(node.project) || node.project === startingProject.project));
+      result = nodeChain.filter((node) => node.archiveArtifacts && (dependencies.includes(node.project) || this.configService.isNodeStarter(node)));
     }
+    return result;
   }
 
   async uploadNodes(nodesChain: Node[]): Promise<PromiseSettledResult<UploadResponse>[]> {

@@ -59,10 +59,13 @@ declare module "@kie/build-chain-configuration-reader" {
     dependencies?: string | string[] | { project: string }[];
   };
 
+  export type Pre = string | string[];
+  export type Post = {success?: string | string[], failure?: string | string[], always?: string | string[]};
+
   export type DefinitionFile = {
     version: string;
-    pre?: string | string[];
-    post?: string | string[];
+    pre?: Pre;
+    post?: Post;
     default?: Build;
     build?: Build;
     dependencies?: Dependency[];

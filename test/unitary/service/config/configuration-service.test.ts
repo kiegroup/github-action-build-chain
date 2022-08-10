@@ -171,6 +171,28 @@ describe("cli", () => {
     currentInput = { ...defaultInputValues, skipParallelCheckout: true };
     expect(config.skipParallelCheckout()).toBe(currentInput.skipParallelCheckout);
   });
+
+  test("getPre", () => {
+    jest.spyOn(BaseConfiguration.prototype, "definitionFile", "get").mockImplementation(() => {
+      return {
+        version: "1.0",
+        pre: "hello",
+      };
+    });
+    expect(config.getPre()).toBe("hello");
+  });
+
+  test("getPost", () => {
+    jest.spyOn(BaseConfiguration.prototype, "definitionFile", "get").mockImplementation(() => {
+      return {
+        version: "1.0",
+        post: {
+          success: "hello",
+        },
+      };
+    });
+    expect(config.getPost()).toStrictEqual({ success: "hello" });
+  });
 });
 
 describe("action", () => {
@@ -300,5 +322,27 @@ describe("action", () => {
   test("skipParallelCheckout", () => {
     currentInput = { ...defaultInputValues, skipParallelCheckout: true };
     expect(config.skipParallelCheckout()).toBe(currentInput.skipParallelCheckout);
+  });
+
+  test("getPre", () => {
+    jest.spyOn(BaseConfiguration.prototype, "definitionFile", "get").mockImplementation(() => {
+      return {
+        version: "1.0",
+        pre: "hello",
+      };
+    });
+    expect(config.getPre()).toBe("hello");
+  });
+
+  test("getPost", () => {
+    jest.spyOn(BaseConfiguration.prototype, "definitionFile", "get").mockImplementation(() => {
+      return {
+        version: "1.0",
+        post: {
+          success: "hello",
+        },
+      };
+    });
+    expect(config.getPost()).toStrictEqual({ success: "hello" });
   });
 });

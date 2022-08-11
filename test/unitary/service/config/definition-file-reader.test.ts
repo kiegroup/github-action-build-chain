@@ -5,7 +5,7 @@ import { EntryPoint } from "@bc/domain/entry-point";
 import { defaultInputValues, FlowType } from "@bc/domain/inputs";
 import { Node } from "@bc/domain/node";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
-import { getOrderedListForProject, getTreeForProject, parentChainFromNode } from "@kie/build-chain-configuration-reader";
+import { getOrderedListForProject, getTreeForProject, parentChainFromNode, readDefinitionFile } from "@kie/build-chain-configuration-reader";
 import fs from "fs";
 import path from "path";
 import Container from "typedi";
@@ -35,10 +35,10 @@ class TestConfiguration extends BaseConfiguration {
   }
 }
 
-let nodeChainGenerator: DefinitionFileReader;
+let definitionFileReader: DefinitionFileReader;
 
 beforeEach(() => {
-  nodeChainGenerator = new DefinitionFileReader(new TestConfiguration());
+  definitionFileReader = new DefinitionFileReader(new TestConfiguration());
 });
 
 describe("generate placeholders", () => {
@@ -56,7 +56,7 @@ describe("generate placeholders", () => {
       group: actualData.head.repo.owner.login,
     };
 
-    expect(nodeChainGenerator.generatePlaceholder(source)).toStrictEqual({ BRANCH: source.branch, GROUP: source.group, PROJECT_NAME: source.name });
+    expect(definitionFileReader.generatePlaceholder(source)).toStrictEqual({ BRANCH: source.branch, GROUP: source.group, PROJECT_NAME: source.name });
   });
 
   test("generated from target", () => {
@@ -73,7 +73,7 @@ describe("generate placeholders", () => {
       group: actualData.base.repo.owner.login,
     };
 
-    expect(nodeChainGenerator.generatePlaceholder(target)).toStrictEqual({ BRANCH: target.branch, GROUP: target.group, PROJECT_NAME: target.name });
+    expect(definitionFileReader.generatePlaceholder(target)).toStrictEqual({ BRANCH: target.branch, GROUP: target.group, PROJECT_NAME: target.name });
   });
 
   test("no source or target. generated from env", () => {
@@ -91,7 +91,7 @@ describe("generate placeholders", () => {
 
     process.env = { ...process.env, ...env };
 
-    expect(nodeChainGenerator.generatePlaceholder({})).toStrictEqual(env);
+    expect(definitionFileReader.generatePlaceholder({})).toStrictEqual(env);
   });
 
   test("no source or target or env. generated from default", () => {
@@ -106,7 +106,7 @@ describe("generate placeholders", () => {
       BRANCH: "main",
     };
 
-    expect(nodeChainGenerator.generatePlaceholder({})).toStrictEqual(env);
+    expect(definitionFileReader.generatePlaceholder({})).toStrictEqual(env);
   });
 
   test("no placeholders required", () => {
@@ -114,7 +114,7 @@ describe("generate placeholders", () => {
     jest.spyOn(BaseConfiguration.prototype, "parsedInputs", "get").mockImplementation(() => {
       return { ...defaultInputValues, definitionFile: definitionFileUrl };
     });
-    expect(nodeChainGenerator.generatePlaceholder({})).toStrictEqual({});
+    expect(definitionFileReader.generatePlaceholder({})).toStrictEqual({});
   });
 
   test("no definition file url", () => {
@@ -122,7 +122,7 @@ describe("generate placeholders", () => {
     jest.spyOn(BaseConfiguration.prototype, "parsedInputs", "get").mockImplementation(() => {
       return { ...defaultInputValues, definitionFile: definitionFileUrl };
     });
-    expect(nodeChainGenerator.generatePlaceholder({})).toStrictEqual({});
+    expect(definitionFileReader.generatePlaceholder({})).toStrictEqual({});
   });
 });
 
@@ -145,7 +145,7 @@ describe.each([
     const getOrderedListProjectMock = getOrderedListForProject as jest.Mock;
     getOrderedListProjectMock.mockReturnValueOnce(mockData);
 
-    const nodeChain = await nodeChainGenerator.generateNodeChain(mockData[0].project);
+    const nodeChain = await definitionFileReader.generateNodeChain(mockData[0].project);
     expect(getOrderedListProjectMock).toHaveBeenCalledTimes(1);
     expect(nodeChain).toStrictEqual(expectedData);
   });
@@ -158,7 +158,7 @@ describe.each([
       })
       .mockReturnValueOnce(mockData);
 
-    const nodeChain = await nodeChainGenerator.generateNodeChain(mockData[0].project);
+    const nodeChain = await definitionFileReader.generateNodeChain(mockData[0].project);
     expect(getOrderedListProjectMock).toHaveBeenCalledTimes(2);
     expect(nodeChain).toStrictEqual(expectedData);
   });
@@ -168,7 +168,7 @@ describe.each([
     getOrderedListProjectMock.mockImplementation(() => {
       throw new Error("Invalid definition file");
     });
-    await expect(nodeChainGenerator.generateNodeChain("test")).rejects.toThrowError();
+    await expect(definitionFileReader.generateNodeChain("test")).rejects.toThrowError();
   });
 });
 
@@ -191,7 +191,7 @@ describe.each([
     getTreeForProjectMock.mockReturnValueOnce({project: "abc"});
     parentChainFromNodeMock.mockReturnValueOnce(mockData);
 
-    const nodeChain = await nodeChainGenerator.generateNodeChain(mockData[0].project);
+    const nodeChain = await definitionFileReader.generateNodeChain(mockData[0].project);
     expect(parentChainFromNodeMock).toHaveBeenCalledTimes(1);
     expect(getTreeForProjectMock).toHaveBeenCalledTimes(1);
     expect(nodeChain).toStrictEqual(expectedData);
@@ -205,7 +205,7 @@ describe.each([
     }).mockReturnValueOnce({project: "abc"});
     parentChainFromNodeMock.mockReturnValueOnce(mockData);
 
-    const nodeChain = await nodeChainGenerator.generateNodeChain(mockData[0].project);
+    const nodeChain = await definitionFileReader.generateNodeChain(mockData[0].project);
     expect(parentChainFromNodeMock).toHaveBeenCalledTimes(1);
     expect(getTreeForProjectMock).toHaveBeenCalledTimes(2);
     expect(nodeChain).toStrictEqual(expectedData);
@@ -216,7 +216,7 @@ describe.each([
     getTreeForProjectMock.mockImplementation(() => {
       throw new Error("Invalid definition file");
     });
-    await expect(nodeChainGenerator.generateNodeChain("test")).rejects.toThrowError();
+    await expect(definitionFileReader.generateNodeChain("test")).rejects.toThrowError();
   });
 });
 
@@ -227,16 +227,14 @@ describe("generate node chain: single pr", () => {
 
   beforeEach(() => {
     jest.spyOn(TestConfiguration.prototype, "getFlowType").mockImplementation(() => FlowType.SINGLE_PULL_REQUEST);
-    jest.spyOn(BaseConfiguration.prototype, "parsedInputs", "get").mockImplementation(() => {
-      return { ...defaultInputValues, fullProjectDependencyTree: true };
-    });
+    jest.spyOn(BaseConfiguration.prototype, "parsedInputs", "get").mockImplementation(() => defaultInputValues);
   });
 
   test("success: from source generated placeholder", async () => {
     const getTreeForProjectMock = getTreeForProject as jest.Mock;
     getTreeForProjectMock.mockReturnValueOnce(mockData[0]);
 
-    const nodeChain = await nodeChainGenerator.generateNodeChain(mockData[0].project);
+    const nodeChain = await definitionFileReader.generateNodeChain(mockData[0].project);
     expect(getTreeForProjectMock).toHaveBeenCalledTimes(1);
     expect(nodeChain).toStrictEqual([expectedData[0]]);
   });
@@ -247,7 +245,7 @@ describe("generate node chain: single pr", () => {
       throw new Error("Invalid definition file");
     }).mockReturnValueOnce(mockData[0]);
 
-    const nodeChain = await nodeChainGenerator.generateNodeChain(mockData[0].project);
+    const nodeChain = await definitionFileReader.generateNodeChain(mockData[0].project);
     expect(getTreeForProjectMock).toHaveBeenCalledTimes(2);
     expect(nodeChain).toStrictEqual([expectedData[0]]);
   });
@@ -257,6 +255,40 @@ describe("generate node chain: single pr", () => {
     getTreeForProjectMock.mockImplementation(() => {
       throw new Error("Invalid definition file");
     });
-    await expect(nodeChainGenerator.generateNodeChain("test")).rejects.toThrowError();
+    await expect(definitionFileReader.generateNodeChain("test")).rejects.toThrowError();
+  });
+});
+
+describe("get definition file", () => {
+  beforeEach(() => {
+    jest.spyOn(BaseConfiguration.prototype, "parsedInputs", "get").mockImplementation(() => defaultInputValues);
+  });
+
+  test("success: from source generated placeholder", async () => {
+    const readDefinitionFileMock = readDefinitionFile as jest.Mock;
+    readDefinitionFileMock.mockReturnValueOnce({version: "2.1"});
+
+    const nodeChain = await definitionFileReader.getDefinitionFile();
+    expect(readDefinitionFileMock).toHaveBeenCalledTimes(1);
+    expect(nodeChain).toStrictEqual({version: "2.1"});
+  });
+
+  test("success: from target generated placeholder", async () => {
+    const readDefinitionFileMock = readDefinitionFile as jest.Mock;
+    readDefinitionFileMock.mockImplementationOnce(() => {
+      throw new Error("Invalid definition file");
+    }).mockReturnValueOnce({version: "2.1"});
+
+    const nodeChain = await definitionFileReader.getDefinitionFile();
+    expect(readDefinitionFileMock).toHaveBeenCalledTimes(2);
+    expect(nodeChain).toStrictEqual({version: "2.1"});
+  });
+
+  test("failure", async () => {
+    const readDefinitionFileMock = readDefinitionFile as jest.Mock;
+    readDefinitionFileMock.mockImplementation(() => {
+      throw new Error("Invalid definition file");
+    });
+    await expect(definitionFileReader.getDefinitionFile()).rejects.toThrowError();
   });
 });

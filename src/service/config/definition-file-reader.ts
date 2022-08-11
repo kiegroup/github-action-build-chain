@@ -10,15 +10,17 @@ import { logAndThrow } from "@bc/utils/log";
 import {
   Build,
   BuildChainReaderOptions,
+  DefinitionFile,
   getOrderedListForProject,
   getTreeForProject,
   parentChainFromNode,
   ProjectNode,
+  readDefinitionFile,
   UrlPlaceholders,
 } from "@kie/build-chain-configuration-reader";
 import Container from "typedi";
 
-export class NodeChainGenerator {
+export class DefinitionFileReader {
   private configuration: BaseConfiguration;
   private logger: LoggerService;
 
@@ -166,6 +168,27 @@ export class NodeChainGenerator {
       }
     }
     return nodeChain.map((node) => this.parseNode(node));
+  }
+
+  async getDefinitionFile(): Promise<DefinitionFile> {
+    // generate placeholders for definition file url if any (something to consider to shift to buil-chain-configuration-reader project in the future)
+    let placeholder: UrlPlaceholders;
+
+    // generate from source
+    placeholder = this.generatePlaceholder(this.configuration.sourceProject);
+    try {
+      return readDefinitionFile(this.configuration.parsedInputs.definitionFile, { placeholder, token: Container.get(constants.GITHUB.TOKEN) });
+    } catch (err) {
+      this.logger.debug("Did not find correct definition on file, trying target");
+    }
+
+    // generate from target
+    placeholder = this.generatePlaceholder(this.configuration.targetProject);
+    try {
+      return readDefinitionFile(this.configuration.parsedInputs.definitionFile, { placeholder, token: Container.get(constants.GITHUB.TOKEN) });
+    } catch (err) {
+      logAndThrow("Invalid definition file");
+    }
   }
 
   async generateNodeChain(starterProject: string): Promise<Node[]> {

@@ -10,12 +10,14 @@ import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
 import { ProjectConfiguration } from "@bc/domain/configuration";
 import { FlowType } from "@bc/domain/inputs";
-import { NodeChainGenerator } from "@bc/service/config/nodechain-generator";
+import { DefinitionFile, Post, Pre } from "@kie/build-chain-configuration-reader";
+import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 
 @Service()
 export class ConfigurationService {
   private configuration: BaseConfiguration;
   private _nodeChain: Node[];
+  private _definitionFile: DefinitionFile;
 
   constructor() {
     switch (Container.get(constants.CONTAINER.ENTRY_POINT)) {
@@ -29,10 +31,15 @@ export class ConfigurationService {
         logAndThrow("Invalid entrypoint. Please contact with the administrator or report and issue to build-chain tool repository");
     }
     this._nodeChain = [];
+    this._definitionFile = {version: "2.1"};
   }
 
   get nodeChain(): Node[] {
     return this._nodeChain;
+  }
+
+  get definitionFile(): DefinitionFile {
+    return this._definitionFile;
   }
 
   /**
@@ -40,8 +47,9 @@ export class ConfigurationService {
    */
   async init() {
     await this.configuration.init();
-    const nodeChainGenerator = new NodeChainGenerator(this.configuration);
-    this._nodeChain = await nodeChainGenerator.generateNodeChain(this.getStarterProjectName());
+    const definitionFileReader = new DefinitionFileReader(this.configuration);
+    this._definitionFile = await definitionFileReader.getDefinitionFile();
+    this._nodeChain = await definitionFileReader.generateNodeChain(this.getStarterProjectName());
   }
 
   /**
@@ -183,5 +191,13 @@ export class ConfigurationService {
    */
   getCloneUrl(group: string, repoName: string): string {
     return `${this.configuration.gitConfiguration.serverUrlWithToken}/${group}/${repoName}`;
+  }
+
+  getPre(): Pre | undefined {
+    return this.definitionFile.pre;
+  }
+
+  getPost(): Post | undefined {
+    return this.definitionFile.post;
   }
 }

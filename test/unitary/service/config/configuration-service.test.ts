@@ -11,9 +11,8 @@ import fs from "fs";
 import { NodeExecutionLevel } from "@bc/domain/node-execution-level";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
-import { getOrderedListForTree, getTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
 import { ToolType } from "@bc/domain/cli";
-import { NodeChainGenerator } from "@bc/service/config/nodechain-generator";
+import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -23,14 +22,6 @@ const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event");
 
 beforeEach(async () => {
   await mockGithub.setup();
-
-  const readDefinitionFileMock = readDefinitionFile as jest.Mock;
-  const getTreeMock = getTree as jest.Mock;
-  const getOrderedListForTreeMock = getOrderedListForTree as jest.Mock;
-
-  readDefinitionFileMock.mockReturnValue({ version: "2.1" });
-  getTreeMock.mockReturnValue([]);
-  getOrderedListForTreeMock.mockReturnValue([]);
 });
 
 afterEach(() => {
@@ -49,7 +40,8 @@ describe("cli", () => {
   beforeEach(async () => {
     currentInput = { ...defaultInputValues, startProject, url: "https://github.com/owner/project/pull/270" };
     jest.spyOn(BaseConfiguration.prototype, "parsedInputs", "get").mockImplementation(() => currentInput);
-    jest.spyOn(NodeChainGenerator.prototype, "generateNodeChain").mockImplementation(async () => []);
+    jest.spyOn(DefinitionFileReader.prototype, "generateNodeChain").mockImplementation(async () => []);
+    jest.spyOn(DefinitionFileReader.prototype, "getDefinitionFile").mockImplementation(async () => {return {version: "2.1"};});
     config = new ConfigurationService();
     await config.init();
   });
@@ -172,6 +164,28 @@ describe("cli", () => {
   test("skipParallelCheckout", () => {
     currentInput = { ...defaultInputValues, skipParallelCheckout: true };
     expect(config.skipParallelCheckout()).toBe(currentInput.skipParallelCheckout);
+  });
+
+  test("getPre", () => {
+    jest.spyOn(ConfigurationService.prototype, "definitionFile", "get").mockImplementation(() => {
+      return {
+        version: "1.0",
+        pre: "hello",
+      };
+    });
+    expect(config.getPre()).toBe("hello");
+  });
+
+  test("getPost", () => {
+    jest.spyOn(ConfigurationService.prototype, "definitionFile", "get").mockImplementation(() => {
+      return {
+        version: "1.0",
+        post: {
+          success: "hello",
+        },
+      };
+    });
+    expect(config.getPost()).toStrictEqual({ success: "hello" });
   });
 });
 
@@ -305,5 +319,27 @@ describe("action", () => {
   test("skipParallelCheckout", () => {
     currentInput = { ...defaultInputValues, skipParallelCheckout: true };
     expect(config.skipParallelCheckout()).toBe(currentInput.skipParallelCheckout);
+  });
+
+  test("getPre", () => {
+    jest.spyOn(ConfigurationService.prototype, "definitionFile", "get").mockImplementation(() => {
+      return {
+        version: "1.0",
+        pre: "hello",
+      };
+    });
+    expect(config.getPre()).toBe("hello");
+  });
+
+  test("getPost", () => {
+    jest.spyOn(ConfigurationService.prototype, "definitionFile", "get").mockImplementation(() => {
+      return {
+        version: "1.0",
+        post: {
+          success: "hello",
+        },
+      };
+    });
+    expect(config.getPost()).toStrictEqual({ success: "hello" });
   });
 });

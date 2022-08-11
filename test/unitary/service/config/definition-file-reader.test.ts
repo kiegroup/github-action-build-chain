@@ -5,11 +5,11 @@ import { EntryPoint } from "@bc/domain/entry-point";
 import { defaultInputValues, FlowType } from "@bc/domain/inputs";
 import { Node } from "@bc/domain/node";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
-import { NodeChainGenerator } from "@bc/service/config/nodechain-generator";
 import { getOrderedListForProject, getTreeForProject, parentChainFromNode } from "@kie/build-chain-configuration-reader";
 import fs from "fs";
 import path from "path";
 import Container from "typedi";
+import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 jest.mock("@kie/build-chain-configuration-reader");
 
 // disable logs
@@ -35,10 +35,10 @@ class TestConfiguration extends BaseConfiguration {
   }
 }
 
-let nodeChainGenerator: NodeChainGenerator;
+let nodeChainGenerator: DefinitionFileReader;
 
 beforeEach(() => {
-  nodeChainGenerator = new NodeChainGenerator(new TestConfiguration());
+  nodeChainGenerator = new DefinitionFileReader(new TestConfiguration());
 });
 
 describe("generate placeholders", () => {

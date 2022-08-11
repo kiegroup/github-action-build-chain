@@ -203,6 +203,9 @@ export abstract class BaseConfiguration {
     if (node.build?.clone) {
       parsedNode.clone = this.convertToArray(node.build.clone);
     }
+    if (node.build?.["archive-artifacts"]) {
+      parsedNode.archiveArtifacts = node.build["archive-artifacts"];
+    }
     if (node.parent) {
       const parent = node.parent.map((parentNode) => this.parseNode(parentNode));
       parsedNode.parents = parent;

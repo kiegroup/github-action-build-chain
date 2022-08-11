@@ -19,11 +19,10 @@ declare module "@kie/build-chain-configuration-reader" {
   };
 
   export type ArchiveArtifacts = {
-    path?: string | string[];
     "if-no-files-found"?: string;
-    dependencies?: string | { project: string }[] | string[];
-    name?: string;
-    paths?: {
+    dependencies?: string[] | "all" | "none";
+    name: string;
+    paths: {
       path?: string;
       on?: string;
     }[];

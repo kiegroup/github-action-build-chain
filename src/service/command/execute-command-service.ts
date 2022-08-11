@@ -5,9 +5,9 @@ import { CommandExecutorDelegator } from "@bc/service/command/executor/command-e
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { Node } from "@bc/domain/node";
-import { NodeExecutionLevel } from "@bc/domain/node-execution-level";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
+import { NodeExecution, NodeExecutionLevel } from "@bc/domain/node-execution";
 
 @Service()
 export class ExecuteCommandService {
@@ -22,14 +22,14 @@ export class ExecuteCommandService {
     return this._commandExecutorDelegator.executeCommand(treatedCommand, cwd);
   }
 
-  public async executeChainCommands(nodes: Node[], executionPhase: ExecutionPhase, cwd?: string): Promise<ExecuteNodeResult[]> {
+  public async executeChainCommands(nodes: NodeExecution[], executionPhase: ExecutionPhase): Promise<ExecuteNodeResult[]> {
     const result: ExecuteNodeResult[] = [];
     for (const node of nodes.values()) {
-      const commands = this.getNodeCommands(node, executionPhase, this._configurationService.getNodeExecutionLevel(node));
+      const commands = this.getNodeCommands(node.node, executionPhase, this._configurationService.getNodeExecutionLevel(node.node));
       if (commands?.length) {
-        result.push(await this.executeNodeCommands(node, commands, this._configurationService.skipExecution(node), cwd));
+        result.push(await this.executeNodeCommands(node.node, commands, this._configurationService.skipExecution(node.node), node.cwd));
       } else {
-        result.push({ node });
+        result.push({ node: node.node });
       }
     }
     return result;

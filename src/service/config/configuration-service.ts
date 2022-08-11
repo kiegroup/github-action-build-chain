@@ -1,5 +1,5 @@
 import Container, { Service } from "typedi";
-import { NodeExecutionLevel } from "@bc/domain/node-execution-level";
+import { NodeExecutionLevel } from "@bc/domain/node-execution";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import { CLIConfiguration } from "@bc/service/config/cli-configuration";

@@ -13,6 +13,7 @@ import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
 import { getOrderedListForTree, getTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
 import { ToolType } from "@bc/domain/cli";
+import { NodeChainGenerator } from "@bc/service/config/nodechain-generator";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -48,6 +49,7 @@ describe("cli", () => {
   beforeEach(async () => {
     currentInput = { ...defaultInputValues, startProject, url: "https://github.com/owner/project/pull/270" };
     jest.spyOn(BaseConfiguration.prototype, "parsedInputs", "get").mockImplementation(() => currentInput);
+    jest.spyOn(NodeChainGenerator.prototype, "generateNodeChain").mockImplementation(async () => []);
     config = new ConfigurationService();
     await config.init();
   });
@@ -76,13 +78,13 @@ describe("cli", () => {
   test("getStarterNode: success", () => {
     const chain: Node[] = [{ project: "abc" }, { project: startProject }, { project: "def" }];
     const nodeFound: Node = { project: startProject };
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
     expect(config.getStarterNode()).toStrictEqual(nodeFound);
   });
 
   test("getStarterNode: failure", () => {
     const chain: Node[] = [{ project: "abc" }, { project: "xyz" }, { project: "def" }];
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
     expect(() => config.getStarterNode()).toThrowError();
   });
 
@@ -92,7 +94,7 @@ describe("cli", () => {
     ["downstream", 2, NodeExecutionLevel.DOWNSTREAM],
   ])("getNodeExecutionLevel: %p", (title: string, currNodeIndex: number, executionLevel: NodeExecutionLevel) => {
     const chain: Node[] = [{ project: "abc" }, { project: startProject }, { project: "def" }];
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
     expect(config.getNodeExecutionLevel(chain[currNodeIndex])).toBe(executionLevel);
   });
 
@@ -211,13 +213,15 @@ describe("action", () => {
   test("getStarterNode: success", () => {
     const chain: Node[] = [{ project: "abc" }, { project: env.repository }, { project: "def" }];
     const nodeFound: Node = { project: env.repository };
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
+
     expect(config.getStarterNode()).toStrictEqual(nodeFound);
   });
 
   test("getStarterNode: failure", () => {
     const chain: Node[] = [{ project: "abc" }, { project: "xyz" }, { project: "def" }];
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
+
     expect(() => config.getStarterNode()).toThrowError();
   });
 
@@ -227,7 +231,8 @@ describe("action", () => {
     ["downstream", 2, NodeExecutionLevel.DOWNSTREAM],
   ])("getNodeExecutionLevel: %p", (title: string, currNodeIndex: number, executionLevel: NodeExecutionLevel) => {
     const chain: Node[] = [{ project: "abc" }, { project: env.repository }, { project: "def" }];
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
+
     expect(config.getNodeExecutionLevel(chain[currNodeIndex])).toBe(executionLevel);
   });
 

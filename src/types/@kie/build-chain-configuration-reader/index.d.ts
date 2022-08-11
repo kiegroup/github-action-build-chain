@@ -86,13 +86,13 @@ declare module "@kie/build-chain-configuration-reader" {
 
   export function getTree(file: string, options?: BuildChainReaderOptions): Promise<ProjectTree>;
 
-  export function getTreeForProject(file: string, project: string, options?: BuildChainReaderOptions): ProjectNode;
+  export function getTreeForProject(file: string, project: string, options?: BuildChainReaderOptions): Promise<ProjectNode>;
 
-  export function parentChainFromNode(node: ProjectNode): ProjectTree;
+  export function parentChainFromNode(node: ProjectNode): Promise<ProjectNode[]>;
 
   export function getOrderedListForTree(file: string, options?: BuildChainReaderOptions): Promise<ProjectNode[]>;
 
-  export function getOrderedListForProject(file: string, options?: BuildChainReaderOptions): ProjectNode[];
+  export function getOrderedListForProject(file: string, options?: BuildChainReaderOptions): Promise<ProjectNode[]>;
 
   export function treatUrl(url: string, placeholders: UrlPlaceholders): string;
 

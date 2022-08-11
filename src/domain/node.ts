@@ -1,5 +1,5 @@
 import { Commands } from "@bc/domain/commands";
-import { Mapping } from "@kie/build-chain-configuration-reader";
+import { ArchiveArtifacts, Mapping } from "@kie/build-chain-configuration-reader";
 
 export interface Node {
   project: string;
@@ -11,6 +11,7 @@ export interface Node {
   after?: Commands;
   mapping?: Mapping;
   clone?: string[];
+  archiveArtifacts?: ArchiveArtifacts;
 }
 
 export const defaultValue: Readonly<Node> = {

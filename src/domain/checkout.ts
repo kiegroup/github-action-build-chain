@@ -1,3 +1,5 @@
+import { Node } from "@bc/domain/node";
+
 export type CheckoutInfo = {
   sourceName: string;
   sourceGroup: string;
@@ -10,6 +12,6 @@ export type CheckoutInfo = {
 };
 
 export type CheckedOutNode = {
-  project: string;
+  node: Node;
   checkoutInfo?: CheckoutInfo
 }

@@ -35,6 +35,9 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  //set node chain
+  jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => nodeChain);
+
   // skip checkout for the last node
   jest
     .spyOn(ConfigurationService.prototype, "skipCheckout")
@@ -86,7 +89,7 @@ describe.each([
   });
 
   test("PR exists from node_forked:source_branch to node:mapped_branch", async () => {
-    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree(nodeChain);
+    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
     expect(cloneSpy).toHaveBeenCalledTimes(2);
@@ -103,7 +106,7 @@ describe.each([
     // checking checkout information correctness
     expect(checkedOutNodeInfo.length).toBe(3);
     expect(checkedOutNodeInfo[0]).toStrictEqual({
-      project: "owner1/project1",
+      node: nodeChain[0],
       checkoutInfo: {
         sourceBranch: "sbranch2",
         sourceGroup: "owner2",
@@ -116,7 +119,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
-      project: "owner2/project2",
+      node: nodeChain[1],
       checkoutInfo: {
         sourceBranch: "sbranch2",
         sourceGroup: "owner2",
@@ -129,13 +132,13 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
-      project: "owner3/project3",
+      node: nodeChain[2],
       checkoutInfo: undefined,
     });
   });
 
   test("PR exists from node:source_branch to node:mapped_branch", async () => {
-    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree(nodeChain);
+    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
     expect(cloneSpy).toHaveBeenCalledTimes(2);
@@ -152,7 +155,7 @@ describe.each([
     // checking checkout information correctness
     expect(checkedOutNodeInfo.length).toBe(3);
     expect(checkedOutNodeInfo[0]).toStrictEqual({
-      project: "owner1/project1",
+      node: nodeChain[0],
       checkoutInfo: {
         sourceBranch: "sbranch2",
         sourceGroup: "owner1",
@@ -165,7 +168,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
-      project: "owner2/project2",
+      node: nodeChain[1],
       checkoutInfo: {
         sourceBranch: "sbranch2",
         sourceGroup: "owner2",
@@ -178,13 +181,13 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
-      project: "owner3/project3",
+      node: nodeChain[2],
       checkoutInfo: undefined,
     });
   });
 
   test("No PR", async () => {
-    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree(nodeChain);
+    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
     expect(cloneSpy).toHaveBeenCalledTimes(2);
@@ -200,7 +203,7 @@ describe.each([
     // checking checkout information correctness
     expect(checkedOutNodeInfo.length).toBe(3);
     expect(checkedOutNodeInfo[0]).toStrictEqual({
-      project: "owner1/project1",
+      node: nodeChain[0],
       checkoutInfo: {
         sourceBranch: "tbranch1",
         sourceGroup: "owner1",
@@ -213,7 +216,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
-      project: "owner2/project2",
+      node: nodeChain[1],
       checkoutInfo: {
         sourceBranch: "sbranch2",
         sourceGroup: "owner2",
@@ -226,7 +229,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
-      project: "owner3/project3",
+      node: nodeChain[2],
       checkoutInfo: undefined,
     });
   });
@@ -263,7 +266,7 @@ describe.each([
   });
 
   test("PR exists from node_forked:source_branch to node:mapped_branch", async () => {
-    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree(nodeChain);
+    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
     expect(cloneSpy).toHaveBeenCalledTimes(2);
@@ -280,7 +283,7 @@ describe.each([
     // checking checkout information correctness
     expect(checkedOutNodeInfo.length).toBe(3);
     expect(checkedOutNodeInfo[0]).toStrictEqual({
-      project: "owner1/project1",
+      node: nodeChain[0],
       checkoutInfo: {
         sourceBranch: "sbranch2-forked",
         sourceGroup: "owner4",
@@ -293,7 +296,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
-      project: "owner2/project2",
+      node: nodeChain[1],
       checkoutInfo: {
         sourceBranch: "sbranch2-forked",
         sourceGroup: "owner4",
@@ -306,13 +309,13 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
-      project: "owner3/project3",
+      node: nodeChain[2],
       checkoutInfo: undefined,
     });
   });
 
   test("PR exists from node:source_branch to node:mapped_branch", async () => {
-    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree(nodeChain);
+    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
     expect(cloneSpy).toHaveBeenCalledTimes(2);
@@ -329,7 +332,7 @@ describe.each([
     // checking checkout information correctness
     expect(checkedOutNodeInfo.length).toBe(3);
     expect(checkedOutNodeInfo[0]).toStrictEqual({
-      project: "owner1/project1",
+      node: nodeChain[0],
       checkoutInfo: {
         sourceBranch: "sbranch2-forked",
         sourceGroup: "owner1",
@@ -342,7 +345,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
-      project: "owner2/project2",
+      node: nodeChain[1],
       checkoutInfo: {
         sourceBranch: "sbranch2-forked",
         sourceGroup: "owner4",
@@ -355,13 +358,13 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
-      project: "owner3/project3",
+      node: nodeChain[2],
       checkoutInfo: undefined,
     });
   });
 
   test("No PR", async () => {
-    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree(nodeChain);
+    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
     expect(cloneSpy).toHaveBeenCalledTimes(2);
@@ -377,7 +380,7 @@ describe.each([
     // checking checkout information correctness
     expect(checkedOutNodeInfo.length).toBe(3);
     expect(checkedOutNodeInfo[0]).toStrictEqual({
-      project: "owner1/project1",
+      node: nodeChain[0],
       checkoutInfo: {
         sourceBranch: "tbranch1",
         sourceGroup: "owner1",
@@ -390,7 +393,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
-      project: "owner2/project2",
+      node: nodeChain[1],
       checkoutInfo: {
         sourceBranch: "sbranch2-forked",
         sourceGroup: "owner4",
@@ -403,7 +406,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
-      project: "owner3/project3",
+      node: nodeChain[2],
       checkoutInfo: undefined,
     });
   });
@@ -441,7 +444,7 @@ describe.each([
   });
 
   test("PR exists from node_forked:source_branch to node:mapped_branch", async () => {
-    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree(nodeChain);
+    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
     expect(cloneSpy).toHaveBeenCalledTimes(2);
@@ -457,7 +460,7 @@ describe.each([
     // checking checkout information correctness
     expect(checkedOutNodeInfo.length).toBe(3);
     expect(checkedOutNodeInfo[0]).toStrictEqual({
-      project: "owner1/project1",
+      node: nodeChain[0],
       checkoutInfo: {
         sourceBranch: "tbranch2",
         sourceGroup: "owner2",
@@ -470,7 +473,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
-      project: "owner2/project2",
+      node: nodeChain[1],
       checkoutInfo: {
         sourceBranch: "tbranch2",
         sourceGroup: "owner2",
@@ -483,13 +486,13 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
-      project: "owner3/project3",
+      node: nodeChain[2],
       checkoutInfo: undefined,
     });
   });
 
   test("PR exists from node:source_branch to node:mapped_branch", async () => {
-    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree(nodeChain);
+    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
     expect(cloneSpy).toHaveBeenCalledTimes(2);
@@ -505,7 +508,7 @@ describe.each([
     // checking checkout information correctness
     expect(checkedOutNodeInfo.length).toBe(3);
     expect(checkedOutNodeInfo[0]).toStrictEqual({
-      project: "owner1/project1",
+      node: nodeChain[0],
       checkoutInfo: {
         sourceBranch: "tbranch2",
         sourceGroup: "owner1",
@@ -518,7 +521,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
-      project: "owner2/project2",
+      node: nodeChain[1],
       checkoutInfo: {
         sourceBranch: "tbranch2",
         sourceGroup: "owner2",
@@ -531,13 +534,13 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
-      project: "owner3/project3",
+      node: nodeChain[2],
       checkoutInfo: undefined,
     });
   });
 
   test("No PR", async () => {
-    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree(nodeChain);
+    const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
     expect(cloneSpy).toHaveBeenCalledTimes(2);
@@ -552,7 +555,7 @@ describe.each([
     // checking checkout information correctness
     expect(checkedOutNodeInfo.length).toBe(3);
     expect(checkedOutNodeInfo[0]).toStrictEqual({
-      project: "owner1/project1",
+      node: nodeChain[0],
       checkoutInfo: {
         sourceBranch: "tbranch1",
         sourceGroup: "owner1",
@@ -565,7 +568,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
-      project: "owner2/project2",
+      node: nodeChain[1],
       checkoutInfo: {
         sourceBranch: "tbranch2",
         sourceGroup: "owner2",
@@ -578,7 +581,7 @@ describe.each([
       },
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
-      project: "owner3/project3",
+      node: nodeChain[2],
       checkoutInfo: undefined,
     });
   });

@@ -197,7 +197,7 @@ describe("executeChainCommands", () => {
     const executeCommandService = new ExecuteCommandService(commandTreatmentDelegator, commandExecutorDelegator, configurationService);
 
     // Act
-    const result = await executeCommandService.executeChainCommands(nodes.map((node) => {return {node, cwd};}), executionPhase);
+    const result = await executeCommandService.executeChainCommands(nodes.map(node => ({node, cwd})), executionPhase);
 
     // Assert
     expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledTimes(expectedNumberOfCalls);

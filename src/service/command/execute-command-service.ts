@@ -24,12 +24,12 @@ export class ExecuteCommandService {
 
   public async executeChainCommands(nodes: NodeExecution[], executionPhase: ExecutionPhase): Promise<ExecuteNodeResult[]> {
     const result: ExecuteNodeResult[] = [];
-    for (const node of nodes.values()) {
-      const commands = this.getNodeCommands(node.node, executionPhase, this._configurationService.getNodeExecutionLevel(node.node));
+    for (const {node, cwd} of nodes) {
+      const commands = this.getNodeCommands(node, executionPhase, this._configurationService.getNodeExecutionLevel(node));
       if (commands?.length) {
-        result.push(await this.executeNodeCommands(node.node, commands, this._configurationService.skipExecution(node.node), node.cwd));
+        result.push(await this.executeNodeCommands(node, commands, this._configurationService.skipExecution(node), cwd));
       } else {
-        result.push({ node: node.node });
+        result.push({ node });
       }
     }
     return result;
@@ -40,7 +40,7 @@ export class ExecuteCommandService {
       node,
       executeCommandResults: [],
     };
-    for await (const command of commands.values()) {
+    for await (const command of commands) {
       result.executeCommandResults?.push(skipExecution ?
         {
           startingDate: Date.now(),

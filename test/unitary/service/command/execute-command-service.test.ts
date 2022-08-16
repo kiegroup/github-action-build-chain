@@ -4,7 +4,7 @@ import { CommandExecutorDelegator } from "@bc/service/command/executor/command-e
 import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
 import { defaultValue as nodeDefaultValue, Node } from "@bc/domain/node";
-import { NodeExecutionLevel } from "@bc/domain/node-execution-level";
+import { NodeExecutionLevel } from "@bc/domain/node-execution";
 import { TestLoggerService } from "@bc/service/logger/__mocks__/test-logger-service";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 
@@ -197,7 +197,7 @@ describe("executeChainCommands", () => {
     const executeCommandService = new ExecuteCommandService(commandTreatmentDelegator, commandExecutorDelegator, configurationService);
 
     // Act
-    const result = await executeCommandService.executeChainCommands(nodes, executionPhase, cwd);
+    const result = await executeCommandService.executeChainCommands(nodes.map(node => ({node, cwd})), executionPhase);
 
     // Assert
     expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledTimes(expectedNumberOfCalls);

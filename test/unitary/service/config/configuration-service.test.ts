@@ -8,7 +8,7 @@ import Container from "typedi";
 import path from "path";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import fs from "fs";
-import { NodeExecutionLevel } from "@bc/domain/node-execution-level";
+import { NodeExecutionLevel } from "@bc/domain/node-execution";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
 import { getOrderedListForTree, getTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";

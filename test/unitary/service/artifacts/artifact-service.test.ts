@@ -55,9 +55,10 @@ test.each([
   });
   jest.spyOn(ConfigurationService.prototype, "getStarterProjectName").mockImplementation(() => nodeChain[startProjectIndex].project);
   jest.spyOn(ConfigurationService.prototype, "getStarterNode").mockImplementation(() => nodeChain[startProjectIndex]);
+  jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => nodeChain);
 
   const artifactService = Container.get(ArtifactService);
-  await artifactService.uploadNodes(nodeChain);
+  await artifactService.uploadNodes();
   expect(spyUpload).toHaveBeenCalledTimes(nodesToArchive.length);
   nodesToArchive.forEach((node) => {
     expect(spyUpload).toHaveBeenCalledWith(node.archiveArtifacts);

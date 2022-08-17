@@ -19,22 +19,22 @@ export class ArtifactService {
     this.logger = LoggerServiceFactory.getInstance();
   }
 
-  private getNodesToArchive(nodeChain: Node[]): Node[] {
+  private getNodesToArchive(): Node[] {
     const startingProject = this.configService.getStarterNode();
     const dependencies = startingProject.archiveArtifacts?.dependencies ?? ArchiveDependencies.NONE;
     let result: Node[];
     if (dependencies === ArchiveDependencies.NONE) {
       result = [startingProject];
     } else if (dependencies === ArchiveDependencies.ALL) {
-      result = nodeChain.filter((node) => !!node.archiveArtifacts);
+      result = this.configService.nodeChain.filter((node) => !!node.archiveArtifacts);
     } else {
-      result = nodeChain.filter((node) => node.archiveArtifacts && (dependencies.includes(node.project) || this.configService.isNodeStarter(node)));
+      result = this.configService.nodeChain.filter((node) => node.archiveArtifacts && (dependencies.includes(node.project) || this.configService.isNodeStarter(node)));
     }
     return result;
   }
 
-  async uploadNodes(nodesChain: Node[]): Promise<PromiseSettledResult<UploadResponse>[]> {
-    const nodesToArchive = this.getNodesToArchive(nodesChain);
+  async uploadNodes(): Promise<PromiseSettledResult<UploadResponse>[]> {
+    const nodesToArchive = this.getNodesToArchive();
     this.logger.info(nodesToArchive.length > 0 ? `Archiving artifacts for ${nodesToArchive.map((node) => node.project)}` : "No artifacts to archive");
     const promises = nodesToArchive.map(async (node) => {
       this.logger.info(`Project [${node.project}]. Uploading artifacts...`);

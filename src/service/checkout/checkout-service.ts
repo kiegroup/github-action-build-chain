@@ -203,7 +203,6 @@ export class CheckoutService {
 
   /**
    * Checkout each node in the node chain sequentially
-   * @param nodeChain
    * @returns checkout information for each node
    */
   private async checkoutDefinitionTreeSequential(): Promise<CheckedOutNode[]> {
@@ -225,19 +224,18 @@ export class CheckoutService {
    */
   /**
    * Checkout each node in the node chain parallely
-   * @param nodeChain
    * @returns checkout information for each node
    */
   private async checkoutDefinitionTreeParallel(): Promise<CheckedOutNode[]> {
     return Promise.all(
-      this.config.nodeChain.map(async (node) => {
-        return this.checkoutNode(node).then((checkoutInfo) => {
+      this.config.nodeChain.map(async (node) => 
+        this.checkoutNode(node).then((checkoutInfo) => {
           return {
             node,
             checkoutInfo,
           };
-        });
-      })
+        })
+      )
     );
   }
 

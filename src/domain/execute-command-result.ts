@@ -1,10 +1,10 @@
 export interface ExecuteCommandResult {
-  startingDate?: number;
-  endingDate?: number;
-  time?: number;
-  result?: ExecutionResult;
-  errorMessage?: string;
-  command?: string;
+  startingDate: number;
+  endingDate: number;
+  time: number;
+  result: ExecutionResult;
+  errorMessage: string;
+  command: string;
 }
 
 export enum ExecutionResult {

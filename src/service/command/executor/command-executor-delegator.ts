@@ -14,28 +14,24 @@ export class CommandExecutorDelegator {
 
   public async executeCommand(command: string, cwd?: string): Promise<ExecuteCommandResult> {
     const startHrTime = process.hrtime();
-    let result: ExecuteCommandResult = {
-      startingDate: Date.now(),
-      command: command,
-    };
-
+    const startingDate = Date.now();
+    let result: ExecutionResult;
+    let errorMessage = "";
+    
     try {
       this.isExport(command) ? await this._exportExecutor.execute(command, cwd) : await this._bashExecutor.execute(command, cwd);
-      result = {
-        ...result,
-        result: ExecutionResult.OK,
-      };
+      result = ExecutionResult.OK;
     } catch (ex) {
-      const errorMessage = (ex instanceof Error) ? ex.message : "unknown";
+      errorMessage = (ex instanceof Error) ? ex.message : "unknown";
       LoggerServiceFactory.getInstance().error(`Error executing command ${command}. ${errorMessage}`);
-      result = {
-        ...result,
-        result: ExecutionResult.NOT_OK,
-        errorMessage,
-      };
+      result = ExecutionResult.NOT_OK;
     }
     return {
-      ...result,
+      startingDate,
+      command,
+      result,
+      errorMessage,
+      endingDate: Date.now(),
       time: hrtimeToMs(startHrTime),
     };
   }

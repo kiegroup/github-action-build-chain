@@ -11,8 +11,8 @@ import fs from "fs";
 import { NodeExecutionLevel } from "@bc/domain/node-execution";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
-import { getOrderedListForTree, getTree, readDefinitionFile } from "@kie/build-chain-configuration-reader";
 import { ToolType } from "@bc/domain/cli";
+import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -22,14 +22,6 @@ const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event");
 
 beforeEach(async () => {
   await mockGithub.setup();
-
-  const readDefinitionFileMock = readDefinitionFile as jest.Mock;
-  const getTreeMock = getTree as jest.Mock;
-  const getOrderedListForTreeMock = getOrderedListForTree as jest.Mock;
-
-  readDefinitionFileMock.mockReturnValue({ version: "2.1" });
-  getTreeMock.mockReturnValue([]);
-  getOrderedListForTreeMock.mockReturnValue([]);
 });
 
 afterEach(() => {
@@ -48,6 +40,8 @@ describe("cli", () => {
   beforeEach(async () => {
     currentInput = { ...defaultInputValues, startProject, url: "https://github.com/owner/project/pull/270" };
     jest.spyOn(BaseConfiguration.prototype, "parsedInputs", "get").mockImplementation(() => currentInput);
+    jest.spyOn(DefinitionFileReader.prototype, "generateNodeChain").mockImplementation(async () => []);
+    jest.spyOn(DefinitionFileReader.prototype, "getDefinitionFile").mockImplementation(async () => {return {version: "2.1"};});
     config = new ConfigurationService();
     await config.init();
   });
@@ -76,13 +70,13 @@ describe("cli", () => {
   test("getStarterNode: success", () => {
     const chain: Node[] = [{ project: "abc" }, { project: startProject }, { project: "def" }];
     const nodeFound: Node = { project: startProject };
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
     expect(config.getStarterNode()).toStrictEqual(nodeFound);
   });
 
   test("getStarterNode: failure", () => {
     const chain: Node[] = [{ project: "abc" }, { project: "xyz" }, { project: "def" }];
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
     expect(() => config.getStarterNode()).toThrowError();
   });
 
@@ -92,7 +86,7 @@ describe("cli", () => {
     ["downstream", 2, NodeExecutionLevel.DOWNSTREAM],
   ])("getNodeExecutionLevel: %p", (title: string, currNodeIndex: number, executionLevel: NodeExecutionLevel) => {
     const chain: Node[] = [{ project: "abc" }, { project: startProject }, { project: "def" }];
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
     expect(config.getNodeExecutionLevel(chain[currNodeIndex])).toBe(executionLevel);
   });
 
@@ -173,7 +167,7 @@ describe("cli", () => {
   });
 
   test("getPre", () => {
-    jest.spyOn(BaseConfiguration.prototype, "definitionFile", "get").mockImplementation(() => {
+    jest.spyOn(ConfigurationService.prototype, "definitionFile", "get").mockImplementation(() => {
       return {
         version: "1.0",
         pre: "hello",
@@ -183,7 +177,7 @@ describe("cli", () => {
   });
 
   test("getPost", () => {
-    jest.spyOn(BaseConfiguration.prototype, "definitionFile", "get").mockImplementation(() => {
+    jest.spyOn(ConfigurationService.prototype, "definitionFile", "get").mockImplementation(() => {
       return {
         version: "1.0",
         post: {
@@ -233,13 +227,15 @@ describe("action", () => {
   test("getStarterNode: success", () => {
     const chain: Node[] = [{ project: "abc" }, { project: env.repository }, { project: "def" }];
     const nodeFound: Node = { project: env.repository };
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
+
     expect(config.getStarterNode()).toStrictEqual(nodeFound);
   });
 
   test("getStarterNode: failure", () => {
     const chain: Node[] = [{ project: "abc" }, { project: "xyz" }, { project: "def" }];
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
+
     expect(() => config.getStarterNode()).toThrowError();
   });
 
@@ -249,7 +245,8 @@ describe("action", () => {
     ["downstream", 2, NodeExecutionLevel.DOWNSTREAM],
   ])("getNodeExecutionLevel: %p", (title: string, currNodeIndex: number, executionLevel: NodeExecutionLevel) => {
     const chain: Node[] = [{ project: "abc" }, { project: env.repository }, { project: "def" }];
-    jest.spyOn(BaseConfiguration.prototype, "projectList", "get").mockImplementation(() => chain);
+    jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
+
     expect(config.getNodeExecutionLevel(chain[currNodeIndex])).toBe(executionLevel);
   });
 
@@ -325,7 +322,7 @@ describe("action", () => {
   });
 
   test("getPre", () => {
-    jest.spyOn(BaseConfiguration.prototype, "definitionFile", "get").mockImplementation(() => {
+    jest.spyOn(ConfigurationService.prototype, "definitionFile", "get").mockImplementation(() => {
       return {
         version: "1.0",
         pre: "hello",
@@ -335,7 +332,7 @@ describe("action", () => {
   });
 
   test("getPost", () => {
-    jest.spyOn(BaseConfiguration.prototype, "definitionFile", "get").mockImplementation(() => {
+    jest.spyOn(ConfigurationService.prototype, "definitionFile", "get").mockImplementation(() => {
       return {
         version: "1.0",
         post: {

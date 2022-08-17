@@ -10,11 +10,14 @@ import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { Node } from "@bc/domain/node";
 import { ProjectConfiguration } from "@bc/domain/configuration";
 import { FlowType } from "@bc/domain/inputs";
-import { Post, Pre } from "@kie/build-chain-configuration-reader";
+import { DefinitionFile, Post, Pre } from "@kie/build-chain-configuration-reader";
+import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 
 @Service()
 export class ConfigurationService {
   private configuration: BaseConfiguration;
+  private _nodeChain: Node[];
+  private _definitionFile: DefinitionFile;
 
   constructor() {
     switch (Container.get(constants.CONTAINER.ENTRY_POINT)) {
@@ -27,6 +30,16 @@ export class ConfigurationService {
       default:
         logAndThrow("Invalid entrypoint. Please contact with the administrator or report and issue to build-chain tool repository");
     }
+    this._nodeChain = [];
+    this._definitionFile = {version: "2.1"};
+  }
+
+  get nodeChain(): Node[] {
+    return this._nodeChain;
+  }
+
+  get definitionFile(): DefinitionFile {
+    return this._definitionFile;
   }
 
   /**
@@ -34,6 +47,9 @@ export class ConfigurationService {
    */
   async init() {
     await this.configuration.init();
+    const definitionFileReader = new DefinitionFileReader(this.configuration);
+    this._definitionFile = await definitionFileReader.getDefinitionFile();
+    this._nodeChain = await definitionFileReader.generateNodeChain(this.getStarterProjectName());
   }
 
   /**
@@ -62,7 +78,7 @@ export class ConfigurationService {
    * @returns {Node} starter node
    */
   getStarterNode(): Node {
-    const starterNode = this.configuration.projectList.find((node) => this.isNodeStarter(node));
+    const starterNode = this.nodeChain.find((node) => this.isNodeStarter(node));
     if (!starterNode) {
       logAndThrow(`There's no project ${this.getStarterProjectName()} in the chain
             This is normally due the project starting the job (or the one selected to behave like so it's not in the project tree information.
@@ -77,8 +93,8 @@ export class ConfigurationService {
    * @returns {NodeExecutionLevel} Upstream, current or downstream
    */
   getNodeExecutionLevel(node: Node): NodeExecutionLevel {
-    const starterNodeIndex = this.configuration.projectList.indexOf(this.getStarterNode());
-    const currentNodeIndex = this.configuration.projectList.indexOf(node);
+    const starterNodeIndex = this.nodeChain.indexOf(this.getStarterNode());
+    const currentNodeIndex = this.nodeChain.indexOf(node);
     if (currentNodeIndex < starterNodeIndex) {
       return NodeExecutionLevel.UPSTREAM;
     } else if (currentNodeIndex > starterNodeIndex) {
@@ -178,10 +194,10 @@ export class ConfigurationService {
   }
 
   getPre(): Pre | undefined {
-    return this.configuration.definitionFile.pre;
+    return this.definitionFile.pre;
   }
 
   getPost(): Post | undefined {
-    return this.configuration.definitionFile.post;
+    return this.definitionFile.post;
   }
 }

@@ -203,15 +203,14 @@ export class CheckoutService {
 
   /**
    * Checkout each node in the node chain sequentially
-   * @param nodeChain
    * @returns checkout information for each node
    */
-  private async checkoutDefinitionTreeSequential(nodeChain: Node[]): Promise<CheckedOutNode[]> {
+  private async checkoutDefinitionTreeSequential(): Promise<CheckedOutNode[]> {
     const result: CheckedOutNode[] = [];
-    for (const node of nodeChain) {
+    for (const node of this.config.nodeChain) {
       const checkoutInfo = await this.checkoutNode(node);
       result.push({
-        project: node.project,
+        node,
         checkoutInfo,
       });
     }
@@ -225,19 +224,18 @@ export class CheckoutService {
    */
   /**
    * Checkout each node in the node chain parallely
-   * @param nodeChain
    * @returns checkout information for each node
    */
-  private async checkoutDefinitionTreeParallel(nodeChain: Node[]): Promise<CheckedOutNode[]> {
+  private async checkoutDefinitionTreeParallel(): Promise<CheckedOutNode[]> {
     return Promise.all(
-      nodeChain.map(async (node) => {
-        return this.checkoutNode(node).then((checkoutInfo) => {
+      this.config.nodeChain.map(async (node) => 
+        this.checkoutNode(node).then((checkoutInfo) => {
           return {
-            project: node.project,
+            node,
             checkoutInfo,
           };
-        });
-      })
+        })
+      )
     );
   }
 
@@ -246,9 +244,9 @@ export class CheckoutService {
    * @param nodeChain
    * @returns checkout information for each node
    */
-  async checkoutDefinitionTree(nodeChain: Node[]): Promise<CheckedOutNode[]> {
+  async checkoutDefinitionTree(): Promise<CheckedOutNode[]> {
     return this.config.skipParallelCheckout() ? 
-            this.checkoutDefinitionTreeSequential(nodeChain) : 
-            this.checkoutDefinitionTreeParallel(nodeChain);
+            this.checkoutDefinitionTreeSequential() : 
+            this.checkoutDefinitionTreeParallel();
   }
 }

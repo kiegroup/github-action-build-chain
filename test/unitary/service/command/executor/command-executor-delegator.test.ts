@@ -45,6 +45,8 @@ describe("isExport", () => {
       command: "export VARIABLE=VALUE",
       result: ExecutionResult.OK,
       startingDate: expect.any(Number),
+      endingDate: expect.any(Number),
+      errorMessage: "",
       time: 1000,
     });
     expect(bashExecutor.execute).toHaveBeenCalledTimes(0);
@@ -74,6 +76,8 @@ describe("isExport", () => {
       command: "export VARIABLE=VALUE",
       result: ExecutionResult.OK,
       startingDate: expect.any(Number),
+      endingDate: expect.any(Number),
+      errorMessage: "",
       time: 2000,
     });
     expect(bashExecutor.execute).toHaveBeenCalledTimes(0);
@@ -103,6 +107,7 @@ describe("isExport", () => {
       errorMessage: "whatever the error message",
       result: ExecutionResult.NOT_OK,
       startingDate: expect.any(Number),
+      endingDate: expect.any(Number),
       time: 1000
     });
     expect(bashExecutor.execute).toHaveBeenCalledTimes(0);
@@ -136,6 +141,8 @@ describe("not export command", () => {
       result: ExecutionResult.OK,
       startingDate: expect.any(Number),
       time: 1000,
+      endingDate: expect.any(Number),
+      errorMessage: "",
     });
     expect(bashExecutor.execute).toHaveBeenCalledTimes(1);
     expect(exportExecutor.execute).toHaveBeenCalledTimes(0);
@@ -165,6 +172,8 @@ describe("not export command", () => {
       result: ExecutionResult.OK,
       startingDate: expect.any(Number),
       time: 1000,
+      endingDate: expect.any(Number),
+      errorMessage: "",
     });
     expect(bashExecutor.execute).toHaveBeenCalledTimes(1);
     expect(exportExecutor.execute).toHaveBeenCalledTimes(0);
@@ -194,6 +203,7 @@ describe("not export command", () => {
       result: ExecutionResult.NOT_OK,
       startingDate: expect.any(Number),
       time: 1000,
+      endingDate: expect.any(Number),
     });
     expect(bashExecutor.execute).toHaveBeenCalledTimes(1);
     expect(exportExecutor.execute).toHaveBeenCalledTimes(0);

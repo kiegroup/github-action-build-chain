@@ -24,10 +24,10 @@ export class ArtifactService {
         result = [startingNode];
         break;
       case ArchiveDependencies.ALL:
-        result = nodeChain.filter((node) => !!node.archiveArtifacts);
+        result = nodeChain.filter(node => !!node.archiveArtifacts);
         break;
       default:
-        result = nodeChain.filter((node) => node.archiveArtifacts && (dependencies.includes(node.project) || node.project === startingNode.project));
+        result = nodeChain.filter(node => node.archiveArtifacts && (dependencies.includes(node.project) || node.project === startingNode.project));
     }
     return result;
   }

@@ -26,33 +26,12 @@ export class ExecuteCommandService {
     const result: ExecuteNodeResult[] = [];
     for (const {node, cwd} of nodes) {
       const commands = this.getNodeCommands(node, executionPhase, this._configurationService.getNodeExecutionLevel(node));
-      if (commands?.length) {
-        result.push(await this.executeNodeCommands(node, commands, this._configurationService.skipExecution(node), cwd));
-      } else {
-        result.push({ node });
-      }
+      result.push(await this.executeNodeCommands(node, commands ?? [], this._configurationService.skipExecution(node), cwd));
     }
     return result;
   }
 
-  private async executeNodeCommands(node: Node, commands: string[], skipExecution: boolean, cwd?: string): Promise<ExecuteNodeResult> {
-    const result: ExecuteNodeResult = {
-      node,
-      executeCommandResults: [],
-    };
-    for await (const command of commands) {
-      result.executeCommandResults?.push(skipExecution ?
-        {
-          startingDate: Date.now(),
-          endingDate: Date.now(),
-          command,
-          result: ExecutionResult.SKIP,
-        } : await this.executeCommand(command, cwd));
-    }
-    return result;
-  }
-
-  private getNodeCommands(node: Node, executionPhase: ExecutionPhase, nodeExecutionLevel: NodeExecutionLevel): string[] | undefined {
+  public getNodeCommands(node: Node, executionPhase: ExecutionPhase, nodeExecutionLevel: NodeExecutionLevel): string[] | undefined {
     const commands = node[`${executionPhase}`];
     let levelCommands;
     if (commands) {
@@ -66,4 +45,24 @@ export class ExecuteCommandService {
     }
     return levelCommands;
   }
+
+  private async executeNodeCommands(node: Node, commands: string[], skipExecution: boolean, cwd?: string): Promise<ExecuteNodeResult> {
+    const result: ExecuteNodeResult = {
+      node,
+      executeCommandResults: [],
+    };
+    for (const command of commands) {
+      result.executeCommandResults.push(skipExecution ?
+        {
+          startingDate: Date.now(),
+          endingDate: Date.now(),
+          command,
+          result: ExecutionResult.SKIP,
+          errorMessage: "",
+          time: 0
+        } : await this.executeCommand(command, cwd));
+    }
+    return result;
+  }
+
 }

@@ -222,7 +222,7 @@ describe("executeChainCommands", () => {
         time: 3,
         result: ExecutionResult.OK,
         command: "commandx",
-      })) : undefined,
+      })) : [],
     }));
     expect(result.map(r => r.executeCommandResults)).toStrictEqual(expectedResult.map(r => r.executeCommandResults));
   });

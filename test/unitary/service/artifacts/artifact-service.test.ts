@@ -4,7 +4,6 @@ import { EntryPoint } from "@bc/domain/entry-point";
 import { Node } from "@bc/domain/node";
 import { UploadService } from "@bc/service/artifacts/upload-service";
 import Container from "typedi";
-import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { ArtifactService } from "@bc/service/artifacts/artifact-service";
 
 // disable logs
@@ -53,12 +52,8 @@ test.each([
       size: 0,
     };
   });
-  jest.spyOn(ConfigurationService.prototype, "getStarterProjectName").mockImplementation(() => nodeChain[startProjectIndex].project);
-  jest.spyOn(ConfigurationService.prototype, "getStarterNode").mockImplementation(() => nodeChain[startProjectIndex]);
-  jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => nodeChain);
-
   const artifactService = Container.get(ArtifactService);
-  await artifactService.uploadNodes();
+  await artifactService.uploadNodes(nodeChain, nodeChain[startProjectIndex]);
   expect(spyUpload).toHaveBeenCalledTimes(nodesToArchive.length);
   nodesToArchive.forEach((node) => {
     expect(spyUpload).toHaveBeenCalledWith(node.archiveArtifacts);

@@ -8,7 +8,7 @@ export interface ExecuteCommandResult {
 }
 
 export enum ExecutionResult {
-  OK,
-  NOT_OK,
-  SKIP,
+  OK = "OK",
+  NOT_OK = "NOT OK",
+  SKIP = "SKIP",
 }

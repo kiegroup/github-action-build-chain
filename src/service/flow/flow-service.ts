@@ -41,7 +41,15 @@ export class FlowService {
     this.printCheckoutSummary(checkoutInfo);
     this.logger.endGroup();
 
-    const nodeChainForExecution: NodeExecution[] = checkoutInfo.map((info) => ({ node: info.node, cwd: info.checkoutInfo?.repoDir }));
+    /**
+     * Cannot directly map checkoutInfo into NodeExecution array since the order of nodes might change when parallely checking
+     * out the node chain
+     */
+    const nodeChainForExecution: NodeExecution[] = this.configService.nodeChain.map((node) => {
+      const nodeCheckoutInfo = checkoutInfo.find((info) => info.node.project === node.project);
+      // nodeCheckoutInfo will never be undefined since checkoutInfo is constructed from node chain and so node project will exist
+      return { node, cwd: nodeCheckoutInfo!.checkoutInfo?.repoDir };
+    });
 
     // not looping through the keys of ExecutionPhase just so that we can enforce the order in which the phases need to be executed
     const before = await this.executeAndPrint(nodeChainForExecution, ExecutionPhase.BEFORE);

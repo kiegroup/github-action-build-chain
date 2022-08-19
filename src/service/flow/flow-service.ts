@@ -1,4 +1,3 @@
-import { UploadResponse } from "@actions/artifact";
 import { CheckedOutNode } from "@bc/domain/checkout";
 import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";

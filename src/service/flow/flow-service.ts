@@ -3,6 +3,7 @@ import { CheckedOutNode } from "@bc/domain/checkout";
 import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
+import { FlowResult } from "@bc/domain/flow";
 import { NodeExecution } from "@bc/domain/node-execution";
 import { ArtifactService } from "@bc/service/artifacts/artifact-service";
 import { CheckoutService } from "@bc/service/checkout/checkout-service";
@@ -28,13 +29,7 @@ export class FlowService {
     this.logger = LoggerServiceFactory.getInstance();
   }
 
-  async run(): Promise<{
-    checkoutInfo: CheckedOutNode[];
-    artifactUploadResults: PromiseSettledResult<UploadResponse>[];
-    executionResult: {
-      [key in ExecutionPhase]: ExecuteNodeResult[]
-    }
-  }> {
+  async run(): Promise<FlowResult> {
     const flowType = this.configService.getFlowType();
     this.logger.startGroup(`[${flowType}] Execution Plan`);
     this.printExecutionPlan();

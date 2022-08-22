@@ -101,17 +101,17 @@ export class FlowService {
         const current = this.executor.getNodeCommands(node, ExecutionPhase.CURRENT, nodeLevel);
         const after = this.executor.getNodeCommands(node, ExecutionPhase.AFTER, nodeLevel);
 
-        if (before && before.length > 0) {
+        if (before?.length) {
           this.logger.info(`\t [${ExecutionPhase.BEFORE}]`);
           this.logger.info(`\t\t ${before.join("\n")}`);
         }
 
-        if (current && current.length > 0) {
+        if (current?.length) {
           this.logger.info(`\t [${ExecutionPhase.CURRENT}]`);
           this.logger.info(`\t\t ${current.join("\n")}`);
         }
 
-        if (after && after.length > 0) {
+        if (after?.length) {
           this.logger.info(`\t [${ExecutionPhase.AFTER}]`);
           this.logger.info(`\t\t ${after.join("\n")}`);
         }

@@ -45,11 +45,11 @@ export class FlowService {
      * Cannot directly map checkoutInfo into NodeExecution array since the order of nodes might change when parallely checking
      * out the node chain
      */
-    const nodeChainForExecution: NodeExecution[] = this.configService.nodeChain.map((node) => {
-      const nodeCheckoutInfo = checkoutInfo.find((info) => info.node.project === node.project);
+    const nodeChainForExecution: NodeExecution[] = this.configService.nodeChain.map((node) => ({
+      node,
       // nodeCheckoutInfo will never be undefined since checkoutInfo is constructed from node chain and so node project will exist
-      return { node, cwd: nodeCheckoutInfo!.checkoutInfo?.repoDir };
-    });
+      cwd: checkoutInfo.find(info => info.node.project === node.project)!.checkoutInfo?.repoDir,
+    }));
 
     // not looping through the keys of ExecutionPhase just so that we can enforce the order in which the phases need to be executed
     const before = await this.executeAndPrint(nodeChainForExecution, ExecutionPhase.BEFORE);
@@ -61,7 +61,7 @@ export class FlowService {
     const artifactUploadResults = await this.artifactService.uploadNodes(this.configService.nodeChain, this.configService.getStarterNode());
     this.logger.endGroup();
 
-    return { checkoutInfo, artifactUploadResults, executionResult: {after, commands, before} };
+    return { checkoutInfo, artifactUploadResults, executionResult: { after, commands, before } };
   }
 
   /**
@@ -89,7 +89,7 @@ export class FlowService {
    */
   private printExecutionPlan() {
     this.logger.info(`${this.configService.nodeChain.length} projects will be executed`);
-    this.configService.nodeChain.forEach((node) => {
+    this.configService.nodeChain.forEach(node => {
       const nodeLevel = this.configService.getNodeExecutionLevel(node);
       this.logger.info(`[${node.project}]`);
       this.logger.info(`\t Level type: ${nodeLevel}`);
@@ -131,7 +131,7 @@ export class FlowService {
    *    Project taken from def/ghi:dev
    */
   private printCheckoutSummary(checkoutInfo: CheckedOutNode[]) {
-    checkoutInfo.forEach((info) => {
+    checkoutInfo.forEach(info => {
       this.logger.info(`[${info.node.project}]`);
       if (info.checkoutInfo) {
         this.logger.info(`\t Project taken from ${info.checkoutInfo.targetGroup}/${info.checkoutInfo.targetName}:${info.checkoutInfo.targetBranch}`);
@@ -158,12 +158,12 @@ export class FlowService {
    *        Error: msg
    */
   private printExecutionSummary(result: ExecuteNodeResult[]) {
-    result.forEach((res) => {
+    result.forEach(res => {
       this.logger.info(`[${res.node.project}]`);
-      if (res.executeCommandResults.length === 0) {
+      if (!res.executeCommandResults.length) {
         this.logger.info("\t No commands were found for this project");
       }
-      res.executeCommandResults.forEach((cmdRes) => {
+      res.executeCommandResults.forEach(cmdRes => {
         this.logger.info(`\t [${cmdRes.result}] ${cmdRes.command} [Executed in ${cmdRes.time} ms]`);
         if (cmdRes.result === ExecutionResult.NOT_OK) {
           this.logger.info(`\t\t Error: ${cmdRes.errorMessage}`);

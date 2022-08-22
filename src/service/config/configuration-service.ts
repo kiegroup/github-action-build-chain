@@ -31,7 +31,7 @@ export class ConfigurationService {
         logAndThrow("Invalid entrypoint. Please contact with the administrator or report and issue to build-chain tool repository");
     }
     this._nodeChain = [];
-    this._definitionFile = {version: "2.1"};
+    this._definitionFile = { version: "2.1" };
   }
 
   get nodeChain(): Node[] {
@@ -199,5 +199,13 @@ export class ConfigurationService {
 
   getPost(): Post | undefined {
     return this.definitionFile.post;
+  }
+
+  getDefinitionFileUrl(): string {
+    return this.configuration.parsedInputs.definitionFile;
+  }
+
+  getEventUrl(): string {
+    return this.getFlowType() === FlowType.BRANCH ? "" : this.configuration.gitEventData.html_url;
   }
 }

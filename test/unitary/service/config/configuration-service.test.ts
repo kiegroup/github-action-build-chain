@@ -22,6 +22,10 @@ const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event");
 
 beforeEach(async () => {
   await mockGithub.setup();
+  jest.spyOn(DefinitionFileReader.prototype, "generateNodeChain").mockImplementation(async () => []);
+  jest.spyOn(DefinitionFileReader.prototype, "getDefinitionFile").mockImplementation(async () => {
+    return { version: "2.1" };
+  });
 });
 
 afterEach(() => {
@@ -40,8 +44,6 @@ describe("cli", () => {
   beforeEach(async () => {
     currentInput = { ...defaultInputValues, startProject, url: "https://github.com/owner/project/pull/270" };
     jest.spyOn(BaseConfiguration.prototype, "parsedInputs", "get").mockImplementation(() => currentInput);
-    jest.spyOn(DefinitionFileReader.prototype, "generateNodeChain").mockImplementation(async () => []);
-    jest.spyOn(DefinitionFileReader.prototype, "getDefinitionFile").mockImplementation(async () => {return {version: "2.1"};});
     config = new ConfigurationService();
     await config.init();
   });
@@ -192,7 +194,8 @@ describe("cli", () => {
 describe("action", () => {
   let config: ConfigurationService;
   let currentInput: InputValues;
-  const env = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env;
+  const data = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8"));
+
   beforeAll(() => {
     Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
   });
@@ -209,7 +212,7 @@ describe("action", () => {
   });
 
   test("getStarterProjectName: success", () => {
-    expect(config.getStarterProjectName()).toBe(env.repository);
+    expect(config.getStarterProjectName()).toBe(data.env.repository);
   });
 
   test("getStarterProjectName: failure", () => {
@@ -218,15 +221,15 @@ describe("action", () => {
   });
 
   test.each([
-    [true, env.repository],
+    [true, data.env.repository],
     [false, "falsename"],
   ])("isNodeStarter %p", (isNodeStarter: boolean, project: string) => {
     expect(config.isNodeStarter({ project: project })).toBe(isNodeStarter);
   });
 
   test("getStarterNode: success", () => {
-    const chain: Node[] = [{ project: "abc" }, { project: env.repository }, { project: "def" }];
-    const nodeFound: Node = { project: env.repository };
+    const chain: Node[] = [{ project: "abc" }, { project: data.env.repository }, { project: "def" }];
+    const nodeFound: Node = { project: data.env.repository };
     jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
 
     expect(config.getStarterNode()).toStrictEqual(nodeFound);
@@ -244,7 +247,7 @@ describe("action", () => {
     ["current", 1, NodeExecutionLevel.CURRENT],
     ["downstream", 2, NodeExecutionLevel.DOWNSTREAM],
   ])("getNodeExecutionLevel: %p", (title: string, currNodeIndex: number, executionLevel: NodeExecutionLevel) => {
-    const chain: Node[] = [{ project: "abc" }, { project: env.repository }, { project: "def" }];
+    const chain: Node[] = [{ project: "abc" }, { project: data.env.repository }, { project: "def" }];
     jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => chain);
 
     expect(config.getNodeExecutionLevel(chain[currNodeIndex])).toBe(executionLevel);
@@ -341,5 +344,14 @@ describe("action", () => {
       };
     });
     expect(config.getPost()).toStrictEqual({ success: "hello" });
+  });
+
+  test.each([
+    ["branch flow", FlowType.BRANCH, ""],
+    ["non-branch flow", FlowType.CROSS_PULL_REQUEST, data.action.eventPayload.pull_request.html_url],
+  ])("getEventUrl: %p", (_title: string, flowType: FlowType, result: string) => {
+    jest.spyOn(ConfigurationService.prototype, "getFlowType").mockImplementationOnce(() => flowType);
+
+    expect(config.getEventUrl()).toBe(result);
   });
 });

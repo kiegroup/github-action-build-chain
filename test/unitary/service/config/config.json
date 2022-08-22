@@ -55,6 +55,7 @@
     "eventPayloadFileName": "event.json",
     "eventPayload": {
       "pull_request": {
+        "html_url": "https://github.com/pulls/109",
         "head": {
           "ref": "feature",
           "repo": {

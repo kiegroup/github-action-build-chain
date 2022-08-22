@@ -1,3 +1,4 @@
+import { ExecuteCommandResult } from "@bc/domain/execute-command-result";
 import { PrePostExecutor } from "@bc/service/pre-post/pre-post";
 import { Inject, Service } from "typedi";
 
@@ -10,25 +11,27 @@ export class PostExecutor extends PrePostExecutor {
     this.executionSuccess = executionSuccess;
   }
 
-  async run() {
+  async run(): Promise<ExecuteCommandResult[]> {
     const post = this.configService.getPost();
+    let result: ExecuteCommandResult[] = [];
     if (post) {
       this.logger.startGroup("[POST] Executing post section");
       if (this.executionSuccess) {
         this.logger.info("[POST] execution result is OK, so 'success' and 'always' sections will be executed");
         if (post.success) {
-          await this.execute(post.success);
+          result = await this.execute(post.success);
         }
       } else {
         this.logger.info("[POST] execution result is NOT OK, so 'failure' and 'always' sections will be executed");
         if (post.failure) {
-          await this.execute(post.failure);
+          result = await this.execute(post.failure);
         }
       }
       if (post.always) {
-        await this.execute(post.always);
+        result = [...result, ...await this.execute(post.always)];
       }
       this.logger.endGroup();
     }
+    return result;
   }
 }

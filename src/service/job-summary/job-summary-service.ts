@@ -51,12 +51,12 @@ export class JobSummaryService {
         `**Project Starting the Job:** [${this.configService.getStarterProjectName()}](https://github.com/${this.configService.getStarterProjectName()})`,
         true
       )
-      .addDetails("Pre", pre)
-      .addDetails(`Execution phase: ${ExecutionPhase.BEFORE}`, before)
-      .addDetails(`Execution phase: ${ExecutionPhase.CURRENT}`, current)
-      .addDetails(`Execution phase: ${ExecutionPhase.AFTER}`, after)
-      .addDetails("Post", post)
-      .addDetails("Local Execution", localExecution)
+      .addRaw(`<details open><summary><h2>Pre</h2></summary>${pre}</details>`, true)
+      .addRaw(`<details open><summary><h2>Execution phase: ${ExecutionPhase.BEFORE}</h2></summary>${before}</details>`, true)
+      .addRaw(`<details open><summary><h2>Execution phase: ${ExecutionPhase.CURRENT}</h2></summary>${current}</details>`, true)
+      .addRaw(`<details open><summary><h2>Execution phase: ${ExecutionPhase.AFTER}</h2></summary>${after}</details>`, true)
+      .addRaw(`<details open><summary><h2>Post</h2></summary>${post}</details>`, true)
+      .addRaw(`<details open><summary><h2>Local Execution</h2></summary>${localExecution}</details>`, true)
       .write();
   }
 

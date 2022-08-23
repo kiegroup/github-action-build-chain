@@ -1,0 +1,52 @@
+<h1>Build Chain Execution Summary</h1>
+
+**Project Starting the Job:** [owner2/project2](https://github.com/owner2/project2)
+<details open><summary><h2>Pre</h2></summary><table><tr><th>Command</th><th>Execution Result</th><th>Execution Time</th></tr><tr><td>cmd1</td><td>✅</td><td>1</td></tr><tr><td>cmd2</td><td>❌</td><td>2</td></tr><tr><td>cmd3</td><td>✅</td><td>3</td></tr></table>
+</details>
+<details open><summary><h2>Execution phase: before</h2></summary><table><tr><th>Project</th><th>Source</th><th>Target</th><th>Merged</th><th>Execution Result</th><th>Avg Execution Time</th></tr><tr><td>owner1/project1</td><td>checkout skipped</td><td>checkout skipped</td><td>❌</td><td>&#9940;</td><td>0</td></tr><tr><td>owner2/project2</td><td>owner2/project2:main</td><td>owner2/project2:main</td><td>❌</td><td>✅</td><td>2</td></tr><tr><td>owner3/project3</td><td>owner3/project3:main</td><td>owner3-forked/project3-forked:dev</td><td>✅</td><td>❌</td><td>3</td></tr></table>
+
+```mermaid
+flowchart LR;
+        owner1/project1:::noEntry==>owner2/project2:::okClass==>owner3/project3:::errorClass
+        click owner1/project1 'https://github.com/owner1/project1'
+				click owner2/project2 'https://github.com/owner2/project2'
+				click owner3/project3 'https://github.com/owner3/project3'
+        classDef okClass fill:#218838,stroke:#1e7e34,color: #fff,border-radius: 4px
+        classDef errorClass fill:#dc3545,stroke:#dc3545,color: #fff,border-radius: 4px
+        classDef noEntry fill:#6c757d,stroke:#6c757d,color: #fff,border-radius: 4px
+```
+</details>
+<details open><summary><h2>Execution phase: commands</h2></summary><table><tr><th>Project</th><th>Source</th><th>Target</th><th>Merged</th><th>Execution Result</th><th>Avg Execution Time</th></tr><tr><td>owner1/project1</td><td>checkout skipped</td><td>checkout skipped</td><td>❌</td><td>&#9940;</td><td>0</td></tr><tr><td>owner2/project2</td><td>owner2/project2:main</td><td>owner2/project2:main</td><td>❌</td><td>✅</td><td>2</td></tr><tr><td>owner3/project3</td><td>owner3/project3:main</td><td>owner3-forked/project3-forked:dev</td><td>✅</td><td>❌</td><td>3</td></tr></table>
+
+```mermaid
+flowchart LR;
+        owner1/project1:::noEntry==>owner2/project2:::okClass==>owner3/project3:::errorClass
+        click owner1/project1 'https://github.com/owner1/project1'
+				click owner2/project2 'https://github.com/owner2/project2'
+				click owner3/project3 'https://github.com/owner3/project3'
+        classDef okClass fill:#218838,stroke:#1e7e34,color: #fff,border-radius: 4px
+        classDef errorClass fill:#dc3545,stroke:#dc3545,color: #fff,border-radius: 4px
+        classDef noEntry fill:#6c757d,stroke:#6c757d,color: #fff,border-radius: 4px
+```
+</details>
+<details open><summary><h2>Execution phase: after</h2></summary><table><tr><th>Project</th><th>Source</th><th>Target</th><th>Merged</th><th>Execution Result</th><th>Avg Execution Time</th></tr><tr><td>owner1/project1</td><td>checkout skipped</td><td>checkout skipped</td><td>❌</td><td>&#9940;</td><td>0</td></tr><tr><td>owner2/project2</td><td>owner2/project2:main</td><td>owner2/project2:main</td><td>❌</td><td>✅</td><td>2</td></tr><tr><td>owner3/project3</td><td>owner3/project3:main</td><td>owner3-forked/project3-forked:dev</td><td>✅</td><td>❌</td><td>3</td></tr></table>
+
+```mermaid
+flowchart LR;
+        owner1/project1:::noEntry==>owner2/project2:::okClass==>owner3/project3:::errorClass
+        click owner1/project1 'https://github.com/owner1/project1'
+				click owner2/project2 'https://github.com/owner2/project2'
+				click owner3/project3 'https://github.com/owner3/project3'
+        classDef okClass fill:#218838,stroke:#1e7e34,color: #fff,border-radius: 4px
+        classDef errorClass fill:#dc3545,stroke:#dc3545,color: #fff,border-radius: 4px
+        classDef noEntry fill:#6c757d,stroke:#6c757d,color: #fff,border-radius: 4px
+```
+</details>
+<details open><summary><h2>Post</h2></summary><table><tr><th>Command</th><th>Execution Result</th><th>Execution Time</th></tr><tr><td>cmd1</td><td>✅</td><td>1</td></tr><tr><td>cmd2</td><td>❌</td><td>2</td></tr><tr><td>cmd3</td><td>✅</td><td>3</td></tr></table>
+</details>
+<details open><summary><h2>Local Execution</h2></summary>You can copy paste the following commands to locally execute build chain tool.
+<pre><code>npm i @kie/build-chain-action@2.3.35 -g build-chain-action -f definitionFile build cross_pr -u eventUrl</code></pre>
+
+**Git Version**: `1.0.1`
+> **_Notice_**: The `GITHUB_TOKEN` should be set in the environment.
+</details>

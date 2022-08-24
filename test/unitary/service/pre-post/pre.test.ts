@@ -35,7 +35,7 @@ test.each([
   const pre = Container.get(PreExecutor);
   await pre.run();
   expect(execSpy).toHaveBeenCalledTimes(executedCmds.length);
-  executedCmds.forEach((cmd) => {
+  executedCmds.forEach(cmd => {
     expect(execSpy).toHaveBeenCalledWith(cmd, process.cwd());
   });
 });

@@ -119,8 +119,8 @@ test("getReachableParentCommits", async () => {
   const output = rawCommand.stdout
     .toString()
     .split(/\n/g)
-    .map((line) => line.split(/ /g).slice(1))
-    .filter((commit) => commit.length > 0)
+    .map(line => line.split(/ /g).slice(1))
+    .filter(commit => commit.length > 0)
     .flat();
   const result = await git.getReachableParentCommits(cwd, ref);
   expect(result).toStrictEqual(output);

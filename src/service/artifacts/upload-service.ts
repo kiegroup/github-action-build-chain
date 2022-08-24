@@ -144,7 +144,7 @@ export class UploadService {
 
   async upload(archiveArtifacts: ArchiveArtifacts): Promise<artifact.UploadResponse> {
     // remove the filter once build-chain-config reader is refactored
-    const searchPaths = archiveArtifacts.paths.filter((pathItem) => pathItem.path).reduce((prev: string, curr) => prev.concat(curr.path!, "\n"), "");
+    const searchPaths = archiveArtifacts.paths.filter(pathItem => pathItem.path).reduce((prev: string, curr) => prev.concat(curr.path!, "\n"), "");
 
     const { filesToUpload, rootDirectory } = await this.findFilesToUpload(searchPaths);
     if (filesToUpload.length === 0) {

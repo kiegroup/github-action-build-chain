@@ -55,7 +55,7 @@ export const fakeClone = async (to: string) => {
 
 export const checkClone = async (rootFolder: string) => {
   const promises: Promise<void>[] = [];
-  clones.forEach((clone) => {
+  clones.forEach(clone => {
     const fullClonePath = path.join(rootFolder, clone);
     promises.push(
       expect(readFile(path.join(fullClonePath, filename), "utf8")).resolves.toBe(filedata),

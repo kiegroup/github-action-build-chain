@@ -30,7 +30,7 @@ export class ToolSubCommandFactory {
       .requiredOption("-f, --defintionFile <path_or_url>", "The definition file, either a path to the filesystem or a URL to it")
       .option("-t, --token <token>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
       .option("-d, --debug", "Set debugging mode to true", false)
-      .action((options) => {
+      .action(options => {
         const parsedInputs = Container.get(InputService);
         if (options.debug) {
           options.loggerLevel = LoggerLevel.DEBUG;
@@ -45,6 +45,6 @@ export class ToolSubCommandFactory {
    * @returns {Command[]} Array of objects of command line parsers
    */
   static getAllCommands(): Command[] {
-    return Object.keys(ToolType).map((toolType) => this.getCommand(ToolType[toolType as keyof typeof ToolType]));
+    return Object.keys(ToolType).map(toolType => this.getCommand(ToolType[toolType as keyof typeof ToolType]));
   }
 }

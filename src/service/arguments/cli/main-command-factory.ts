@@ -16,8 +16,8 @@ export class MainCommandFactory {
 
     program.name("build-chain").description("A CLI tool to perform the build chain github actions");
 
-    BuildSubCommandFactory.getAllCommands().forEach((cmd) => program.addCommand(this.setConfig(cmd, options)));
-    ToolSubCommandFactory.getAllCommands().forEach((cmd) => program.addCommand(this.setConfig(cmd, options)));
+    BuildSubCommandFactory.getAllCommands().forEach(cmd => program.addCommand(this.setConfig(cmd, options)));
+    ToolSubCommandFactory.getAllCommands().forEach(cmd => program.addCommand(this.setConfig(cmd, options)));
 
     return this.setConfig(program, options);
   }

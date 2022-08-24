@@ -93,11 +93,11 @@ export class DefinitionFileReader {
       parsedNode.clone = this.convertToArray(node.build.clone);
     }
     if (node.parent) {
-      const parent = node.parent.map((parentNode) => this.parseNode(parentNode));
+      const parent = node.parent.map(parentNode => this.parseNode(parentNode));
       parsedNode.parents = parent;
     }
     if (node.children) {
-      const children = node.children.map((childNode) => this.parseNode(childNode));
+      const children = node.children.map(childNode => this.parseNode(childNode));
       parsedNode.children = children;
     }
     if (node.build && node.build["build-command"]) {
@@ -125,7 +125,7 @@ export class DefinitionFileReader {
     const placeholderRegex = /\${([^{}:]+)(:([^{}]*))?}/g;
     const matches = [...this.configuration.parsedInputs.definitionFile.matchAll(placeholderRegex)];
     const placeholder: UrlPlaceholders = {};
-    matches.forEach((match) => {
+    matches.forEach(match => {
       const key = match[1];
       // if env variable exists for the key use that otherwise use default value
       const defaultValue = process.env[key] ?? match[3];
@@ -167,7 +167,7 @@ export class DefinitionFileReader {
         nodeChain = [await getTreeForProject(this.configuration.parsedInputs.definitionFile, starterProject)];
       }
     }
-    return nodeChain.map((node) => this.parseNode(node));
+    return nodeChain.map(node => this.parseNode(node));
   }
 
   async getDefinitionFile(): Promise<DefinitionFile> {

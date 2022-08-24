@@ -41,7 +41,7 @@ export class CheckoutService {
    */
   private async cloneNode(node: Node): Promise<void> {
     const promises: Promise<void>[] = [];
-    node.clone?.forEach((folder) => {
+    node.clone?.forEach(folder => {
       promises.push(copy(this.getProjectDir(node), path.join(this.config.getRootFolder(), folder)));
     });
     await Promise.all(promises);
@@ -128,7 +128,7 @@ export class CheckoutService {
      */
     const result = await githubAPIService
       .getForkName(currentTarget.group, originalSource.group!, currentTarget.name)
-      .then(async (forkName) => {
+      .then(async forkName => {
         // only check for PR if we were able to get a fork name
         const hasPullRequestFromFork = await githubAPIService.hasPullRequest(
           currentTarget.group,
@@ -138,7 +138,7 @@ export class CheckoutService {
         );
         return { forkName, hasPullRequest: hasPullRequestFromFork };
       })
-      .catch((err) => {
+      .catch(err => {
         if (err instanceof NotFoundError) {
           return { forkName: "", hasPullRequest: false };
         }
@@ -228,8 +228,8 @@ export class CheckoutService {
    */
   private async checkoutDefinitionTreeParallel(): Promise<CheckedOutNode[]> {
     return Promise.all(
-      this.config.nodeChain.map(async (node) => 
-        this.checkoutNode(node).then((checkoutInfo) => {
+      this.config.nodeChain.map(async node => 
+        this.checkoutNode(node).then(checkoutInfo => {
           return {
             node,
             checkoutInfo,

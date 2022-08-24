@@ -90,7 +90,7 @@ export abstract class BaseConfiguration {
     const inputs: InputValues = Container.get(InputService).inputs;
 
     // customCommandTreatment values must be of the form: REGEX||REPLACE_REGEX
-    inputs.customCommandTreatment?.forEach((cct) => {
+    inputs.customCommandTreatment?.forEach(cct => {
       if (cct.split("||").length !== 2) {
         logAndThrow("Invalid format for custom command treatment. Required format: Regex||ReplaceRegex");
       }

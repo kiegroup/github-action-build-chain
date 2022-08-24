@@ -48,7 +48,7 @@ describe("On success", () => {
     const execSpy = jest.spyOn(ExecuteCommandService.prototype, "executeCommand").mockImplementationOnce(async (_cmd: string, _cwd?: string) => emptyCommandResult);
     await post.run();
     expect(execSpy).toHaveBeenCalledTimes(executedCmds.length);
-    executedCmds.forEach((cmd) => {
+    executedCmds.forEach(cmd => {
       expect(execSpy).toHaveBeenCalledWith(cmd, process.cwd());
     });
   });
@@ -66,7 +66,7 @@ describe("On success", () => {
     const execSpy = jest.spyOn(ExecuteCommandService.prototype, "executeCommand").mockImplementationOnce(async (_cmd: string, _cwd?: string) => emptyCommandResult);
     await post.run();
     expect(execSpy).toHaveBeenCalledTimes(executedCmds.length * 2);
-    [...executedCmds, ...executedCmds].forEach((cmd) => {
+    [...executedCmds, ...executedCmds].forEach(cmd => {
       expect(execSpy).toHaveBeenCalledWith(cmd, process.cwd());
     });
   });
@@ -107,7 +107,7 @@ describe("On failure", () => {
     const execSpy = jest.spyOn(ExecuteCommandService.prototype, "executeCommand").mockImplementationOnce(async (_cmd: string, _cwd?: string) => emptyCommandResult);
     await post.run();
     expect(execSpy).toHaveBeenCalledTimes(executedCmds.length);
-    executedCmds.forEach((cmd) => {
+    executedCmds.forEach(cmd => {
       expect(execSpy).toHaveBeenCalledWith(cmd, process.cwd());
     });
   });
@@ -126,7 +126,7 @@ describe("On failure", () => {
 
     await post.run();
     expect(execSpy).toHaveBeenCalledTimes(executedCmds.length * 2);
-    [...executedCmds, ...executedCmds].forEach((cmd) => {
+    [...executedCmds, ...executedCmds].forEach(cmd => {
       expect(execSpy).toHaveBeenCalledWith(cmd, process.cwd());
     });
   });

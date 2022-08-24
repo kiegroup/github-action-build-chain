@@ -45,7 +45,7 @@ export class FlowService {
      * Cannot directly map checkoutInfo into NodeExecution array since the order of nodes might change when parallely checking
      * out the node chain
      */
-    const nodeChainForExecution: NodeExecution[] = this.configService.nodeChain.map((node) => ({
+    const nodeChainForExecution: NodeExecution[] = this.configService.nodeChain.map(node => ({
       node,
       // nodeCheckoutInfo will never be undefined since checkoutInfo is constructed from node chain and so node project will exist
       cwd: checkoutInfo.find(info => info.node.project === node.project)!.checkoutInfo?.repoDir,

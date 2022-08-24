@@ -1,6 +1,6 @@
 function getArguments(subParser) {
   const buildParser = subParser.add_parser("build", {
-    help: "build functionallities"
+    help: "build functionalities"
   });
   const buildSubParser = buildParser.add_subparsers({
     dest: "build",
@@ -40,7 +40,7 @@ function branchArguments(subParser) {
   parser.add_argument("--fullProjectDependencyTree", {
     action: "store_true",
     help:
-      "Checks out and execute the whole tree instead of the upstream build. It mocks a full downstream execution but for a branch execution. (fasle by default)."
+      "checks out and execute the whole tree instead of the upstream build. It mocks a full downstream execution but for a branch execution. (fasle by default)."
   });
   parser.add_argument("-b", "-branch", {
     nargs: 1,

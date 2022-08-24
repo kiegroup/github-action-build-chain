@@ -636,7 +636,7 @@ build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-bui
 - **skipParallelCheckout**: Checkout the project sequentially.
 - **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
 - **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checkout information will be printed anyway. E.g. `--skipCheckout`
-- **--fullProjectDependencyTree**: Checks out and execute the whole tree instead of the upstream build (fasle by default). E.g. `--fullProjectDependencyTree`
+- **--fullProjectDependencyTree**: Checks out and execute the whole tree instead of the upstream build (false by default). E.g. `--fullProjectDependencyTree`
 
 Examples:
 

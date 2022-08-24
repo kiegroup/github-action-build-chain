@@ -34,8 +34,8 @@ export class ArtifactService {
 
   async uploadNodes(nodeChain: Node[], startingNode: Node): Promise<PromiseSettledResult<UploadResponse>[]> {
     const nodesToArchive = this.getNodesToArchive(nodeChain, startingNode);
-    this.logger.info(nodesToArchive.length > 0 ? `Archiving artifacts for ${nodesToArchive.map((node) => node.project)}` : "No artifacts to archive");
-    const promises = nodesToArchive.map(async (node) => {
+    this.logger.info(nodesToArchive.length > 0 ? `Archiving artifacts for ${nodesToArchive.map(node => node.project)}` : "No artifacts to archive");
+    const promises = nodesToArchive.map(async node => {
       this.logger.info(`Project [${node.project}]. Uploading artifacts...`);
       // archiveArtifacts will exist as it is verified by getNodesToArchive
       return this.uploadService.upload(node.archiveArtifacts!);
@@ -43,7 +43,7 @@ export class ArtifactService {
 
     const result = await Promise.allSettled(promises);
 
-    result.forEach((res) => {
+    result.forEach(res => {
       if (res.status === "fulfilled") {
         if (res.value.artifactItems.length > 0) {
           this.logger.info(`Artifact ${res.value.artifactName} uploaded ${res.value.artifactItems.length} files: ${res.value.artifactItems}`);

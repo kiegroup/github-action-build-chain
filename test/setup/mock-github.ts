@@ -223,7 +223,7 @@ export class MockGithub {
     let scope: nock.Scope = nock(baseUrl);
     for (let i = 0; i < this.config.mocks.api.length; i++) {
       const api: Api = this.config.mocks.api[i];
-      api.response.forEach((res) => {
+      api.response.forEach(res => {
         if (res.times) {
           scope = this.getInterceptor(scope, api).times(res.times).reply(res.code, res.data);
         } else {
@@ -239,7 +239,7 @@ export class MockGithub {
       return;
     }
     const env = this.config.env;
-    Object.keys(env).forEach((key) => {
+    Object.keys(env).forEach(key => {
       process.env[`GITHUB_${key.toUpperCase()}`] = env[key];
     });
   }
@@ -269,8 +269,8 @@ export class MockGithub {
     }
     const actualEnv = process.env;
     const mockEnv = this.config.env;
-    Object.keys(actualEnv).forEach((key) => {
-      Object.keys(mockEnv).forEach((k) => {
+    Object.keys(actualEnv).forEach(key => {
+      Object.keys(mockEnv).forEach(k => {
         if (key.localeCompare(`GITHUB_${k.toUpperCase()}`) === 0) {
           delete process.env[key];
         }

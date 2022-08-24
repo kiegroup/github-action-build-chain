@@ -24,7 +24,7 @@ const constructArchiveArtifacts = (search: string[], ifNoFilesFound = "ignore"):
   return {
     "if-no-files-found": ifNoFilesFound,
     name: "test",
-    paths: search.map((s) => {
+    paths: search.map(s => {
       return { path: s };
     }),
   };

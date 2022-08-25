@@ -97,7 +97,7 @@ export class GithubAPIService {
           owner: targetOwner,
           repo,
         })) {
-          const forkedRepo = response.data.find((project) => project.owner.login === sourceOwner);
+          const forkedRepo = response.data.find(project => project.owner.login === sourceOwner);
           if (forkedRepo) {
             return forkedRepo.name;
           }

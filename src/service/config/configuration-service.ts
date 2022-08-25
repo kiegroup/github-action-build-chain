@@ -78,7 +78,7 @@ export class ConfigurationService {
    * @returns {Node} starter node
    */
   getStarterNode(): Node {
-    const starterNode = this.nodeChain.find((node) => this.isNodeStarter(node));
+    const starterNode = this.nodeChain.find(node => this.isNodeStarter(node));
     if (!starterNode) {
       logAndThrow(`There's no project ${this.getStarterProjectName()} in the chain
             This is normally due the project starting the job (or the one selected to behave like so it's not in the project tree information.

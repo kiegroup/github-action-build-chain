@@ -66,7 +66,7 @@ export class JobSummaryService {
       { data: "Execution Result", header: true },
       { data: "Execution Time", header: true },
     ];
-    const data = result.map((res) => [res.command, this.getExecutionResultString(res.result), `${res.time}`]);
+    const data = result.map(res => [res.command, this.getExecutionResultString(res.result), `${res.time}`]);
     return core.summary
       .emptyBuffer()
       .addTable([prePostTableHeaders, ...data])
@@ -93,7 +93,7 @@ export class JobSummaryService {
   }
 
   private getExecutionResult(executeCommandResults: ExecuteCommandResult[]): ExecutionResult {
-    return executeCommandResults.find((res) => res.result !== ExecutionResult.OK)?.result ?? ExecutionResult.OK;
+    return executeCommandResults.find(res => res.result !== ExecutionResult.OK)?.result ?? ExecutionResult.OK;
   }
 
   private getExecutionResultString(result: ExecutionResult): string {
@@ -108,8 +108,8 @@ export class JobSummaryService {
   }
 
   private getExecutionResultData(executionResult: ExecuteNodeResult[], checkoutInfo: CheckedOutNode[]): string[][] {
-    return executionResult.map((res) => {
-      const nodeCheckoutInfo = checkoutInfo.find((info) => info.node.project === res.node.project)!.checkoutInfo;
+    return executionResult.map(res => {
+      const nodeCheckoutInfo = checkoutInfo.find(info => info.node.project === res.node.project)!.checkoutInfo;
       const result = this.getExecutionResultString(this.getExecutionResult(res.executeCommandResults));
 
       return [
@@ -128,7 +128,7 @@ export class JobSummaryService {
   private constructGraph(executionResult: ExecuteNodeResult[]) {
     return `flowchart LR;
         ${executionResult
-          .map((res) => {
+          .map(res => {
             const result = this.getExecutionResult(res.executeCommandResults);
             let className = "okClass";
             switch (result) {
@@ -142,7 +142,7 @@ export class JobSummaryService {
             return `${res.node.project}:::${className}`;
           })
           .join("==>")}
-        ${executionResult.map((res) => `click ${res.node.project} 'https://github.com/${res.node.project}'`).join("\n\t\t\t\t")}
+        ${executionResult.map(res => `click ${res.node.project} 'https://github.com/${res.node.project}'`).join("\n\t\t\t\t")}
         classDef okClass fill:#218838,stroke:#1e7e34,color: #fff,border-radius: 4px
         classDef errorClass fill:#dc3545,stroke:#dc3545,color: #fff,border-radius: 4px
         classDef noEntry fill:#6c757d,stroke:#6c757d,color: #fff,border-radius: 4px`;

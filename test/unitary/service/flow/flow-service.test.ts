@@ -146,10 +146,10 @@ test("run flow", async () => {
   jest.spyOn(ExecuteCommandService.prototype, "executeChainCommands").mockImplementation(async () => executionResult);
   jest.spyOn(ArtifactService.prototype, "uploadNodes").mockImplementation(async () => []);
 
-  const groupSpy = jest.spyOn(GithubActionLoggerService.prototype, "startGroup").mockImplementation((_msg) => undefined);
+  const groupSpy = jest.spyOn(GithubActionLoggerService.prototype, "startGroup").mockImplementation(_msg => undefined);
   jest.spyOn(GithubActionLoggerService.prototype, "endGroup").mockImplementation(() => undefined);
-  jest.spyOn(GithubActionLoggerService.prototype, "debug").mockImplementation((_msg) => undefined);
-  const infoSpy = jest.spyOn(GithubActionLoggerService.prototype, "info").mockImplementation((_msg) => undefined);
+  jest.spyOn(GithubActionLoggerService.prototype, "debug").mockImplementation(_msg => undefined);
+  const infoSpy = jest.spyOn(GithubActionLoggerService.prototype, "info").mockImplementation(_msg => undefined);
 
   const flowService = Container.get(FlowService);
   const result = await flowService.run();

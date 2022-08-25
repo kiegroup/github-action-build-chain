@@ -55,7 +55,7 @@ test.each([
   const artifactService = Container.get(ArtifactService);
   await artifactService.uploadNodes(nodeChain, nodeChain[startProjectIndex]);
   expect(spyUpload).toHaveBeenCalledTimes(nodesToArchive.length);
-  nodesToArchive.forEach((node) => {
+  nodesToArchive.forEach(node => {
     expect(spyUpload).toHaveBeenCalledWith(node.archiveArtifacts);
   });
 });

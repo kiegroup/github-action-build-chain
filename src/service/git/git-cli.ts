@@ -94,7 +94,7 @@ export class GitCLIService {
   async getReachableParentCommits(cwd: string, ref: string): Promise<string[]> {
     return (await this.git(cwd).raw("rev-list", "--parents", `${ref}..HEAD`))
       .split(/\n/g)
-      .map((line) => line.split(/ /g).slice(1))
+      .map(line => line.split(/ /g).slice(1))
       .flat();
   }
 

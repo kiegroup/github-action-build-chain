@@ -49,7 +49,7 @@ export abstract class Runner {
   }
 
   private archiveArtifactsFailure(result: PromiseSettledResult<UploadResponse>[]) {
-    return !!result.find((res) => res.status === "rejected");
+    return !!result.find(res => res.status === "rejected");
   }
 
   /**
@@ -67,6 +67,6 @@ export abstract class Runner {
    * @returns
    */
   private commandExecutionFailure(result: ExecuteCommandResult[]) {
-    return !!result.find((res) => res.result === ExecutionResult.NOT_OK);
+    return !!result.find(res => res.result === ExecutionResult.NOT_OK);
   }
 }

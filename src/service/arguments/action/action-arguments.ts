@@ -61,7 +61,7 @@ export class ActionArguments {
     additionaFlags
       .trim()
       .split(";")
-      .forEach((flag) => {
+      .forEach(flag => {
         const opt: string[] = flag.split(" ");
         if (opt[0].startsWith("--")) {
           opt[0] = opt[0].substring(2);
@@ -87,8 +87,8 @@ export class ActionArguments {
       flowType: this.getFlowType(core.getInput("flow-type")),
       skipExecution: core.getBooleanInput("skip-execution"),
       skipParallelCheckout: core.getBooleanInput("skip-parallel-checkout"),
-      skipProjectCheckout: core.getInput("skip-project-checkout").split(",").map((str) => str.trim()),
-      skipProjectExecution: core.getInput("skip-project-execution").split(",").map((str) => str.trim()),
+      skipProjectCheckout: core.getInput("skip-project-checkout").split(",").map(str => str.trim()),
+      skipProjectExecution: core.getInput("skip-project-execution").split(",").map(str => str.trim()),
       skipCheckout: core.getBooleanInput("skip-checkout"),
       startProject: core.getInput("starting-project"),
       loggerLevel: this.getLoggerLevel(core.getInput("logger-level")),

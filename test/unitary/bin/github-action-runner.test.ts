@@ -13,6 +13,9 @@ import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { GithubActionRunner } from "@bc/bin/runners/github-action-runner";
 import { JobSummaryService } from "@bc/service/job-summary/job-summary-service";
 
+// disable logs
+jest.spyOn(global.console, "log");
+
 test("initialization", () => {
   // ensure that entry point value is something other than GITHUB_EVENT
   Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);

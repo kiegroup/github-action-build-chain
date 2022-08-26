@@ -21,7 +21,10 @@ export class GithubActionRunner extends Runner {
     // execute pre section
     const preResult = await this.executePre();
     if (preResult.isFailure) {
-      await jobSummaryService.generateSummary(defaultFlowResult, preResult.output, []);
+      // io task is involved so start it as a promise and wait for it when actually needed
+      const promise = jobSummaryService.generateSummary(defaultFlowResult, preResult.output, []);
+      this.printExecutionFailure(preResult.output);
+      await promise;
       return process.exit(1);
     }
 
@@ -32,11 +35,18 @@ export class GithubActionRunner extends Runner {
     const postResult = await this.executePost(flowResult.isFailure);
 
     // post a job summary
-    await jobSummaryService.generateSummary(flowResult.output, preResult.output, postResult.output);
+    // io task is involved so start it as a promise and wait for it when actually needed
+    const promise = jobSummaryService.generateSummary(flowResult.output, preResult.output, postResult.output);
 
     if (flowResult.isFailure || postResult.isFailure) {
+      this.printNodeExecutionFailure(flowResult.output.executionResult.before);
+      this.printNodeExecutionFailure(flowResult.output.executionResult.commands);
+      this.printNodeExecutionFailure(flowResult.output.executionResult.after);
+      this.printExecutionFailure(postResult.output);
+      await promise;
       return process.exit(1);
     }
+
+    await promise;
   }
 }
-

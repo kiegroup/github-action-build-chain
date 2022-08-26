@@ -8,10 +8,13 @@ import { FlowResult } from "@bc/domain/flow";
 import { PreExecutor } from "@bc/service/pre-post/pre";
 import { PostExecutor } from "@bc/service/pre-post/post";
 import { FlowService } from "@bc/service/flow/flow-service";
+import { AbstractLoggerService } from "@bc/service/logger/abstract-logger-service";
 
 /** Dummy runner to test protected methods */
 class DummyRunner extends Runner {
-  async execute(): Promise<void> {return;}
+  async execute(): Promise<void> {
+    return;
+  }
 
   async testExecutePre(): Promise<{ isFailure: boolean; output: ExecuteCommandResult[] }> {
     return this.executePre();
@@ -23,6 +26,14 @@ class DummyRunner extends Runner {
 
   async testExecutePost(flowExecutionResult: boolean): Promise<{ isFailure: boolean; output: ExecuteCommandResult[] }> {
     return this.executePost(flowExecutionResult);
+  }
+
+  testPrintExecutionFailure(res: ExecuteCommandResult[]) {
+    this.printExecutionFailure(res);
+  }
+
+  testPrintNodeExecutionFailure(res: ExecuteNodeResult[]) {
+    this.printNodeExecutionFailure(res);
   }
 }
 
@@ -39,7 +50,7 @@ const notOkResult: ExecuteCommandResult = {
   startingDate: 0,
   endingDate: 0,
   result: ExecutionResult.NOT_OK,
-  errorMessage: "",
+  errorMessage: "multiline\nmsg",
   time: 0,
   command: "cmd1",
 };
@@ -65,12 +76,12 @@ const artifactNotOk: PromiseSettledResult<UploadResponse> = {
 
 const nodeOk: ExecuteNodeResult = {
   node: { project: "owner1/project1" },
-  executeCommandResults: [okResult, okResult],
+  executeCommandResults: [okResult, skipResult],
 };
 
 const nodeNotOk: ExecuteNodeResult = {
   node: { project: "owner1/project1" },
-  executeCommandResults: [okResult, notOkResult],
+  executeCommandResults: [okResult, notOkResult, skipResult],
 };
 
 let dummyRunner: DummyRunner;
@@ -146,4 +157,22 @@ test.each([
 ])("%p", async (_title: string, isFailure: boolean, output: FlowResult) => {
   jest.spyOn(FlowService.prototype, "run").mockImplementation(async () => output);
   await expect(dummyRunner.testExecuteFlow()).resolves.toStrictEqual({ isFailure, output });
+});
+
+test.each([
+  ["no failure", [okResult, okResult, skipResult], 0],
+  ["failure", [okResult, okResult, skipResult, notOkResult], 3],
+])("printExecutionFailure - %p", (_title: string, result: ExecuteCommandResult[], numOfLogCalls: number) => {
+  const loggerSpy = jest.spyOn(AbstractLoggerService.prototype, "error");
+  dummyRunner.testPrintExecutionFailure(result);
+  expect(loggerSpy).toBeCalledTimes(numOfLogCalls);
+});
+
+test.each([
+  ["no failure", [nodeOk, nodeOk], 0],
+  ["failure", [nodeOk, nodeNotOk, nodeOk], 4],
+])("printNodeExecutionFailure - %p", (_title: string, result: ExecuteNodeResult[], numOfLogCalls: number) => {
+  const loggerSpy = jest.spyOn(AbstractLoggerService.prototype, "error");
+  dummyRunner.testPrintNodeExecutionFailure(result);
+  expect(loggerSpy).toBeCalledTimes(numOfLogCalls);
 });

@@ -12,6 +12,9 @@ import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-comman
 import { UploadResponse } from "@actions/artifact";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 
+// disable logs
+jest.spyOn(global.console, "log");
+
 test("initialization", () => {
   // ensure that entry point value is something other than CLI
   Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);

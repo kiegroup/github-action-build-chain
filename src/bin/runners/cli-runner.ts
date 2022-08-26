@@ -16,6 +16,7 @@ export class CLIRunner extends Runner {
     // execute pre section
     const preResult = await this.executePre();
     if (preResult.isFailure) {
+      this.printExecutionFailure(preResult.output);
       return process.exit(1);
     }
 
@@ -26,9 +27,11 @@ export class CLIRunner extends Runner {
     const postResult = await this.executePost(flowResult.isFailure);
 
     if (flowResult.isFailure || postResult.isFailure) {
+      this.printNodeExecutionFailure(flowResult.output.executionResult.before);
+      this.printNodeExecutionFailure(flowResult.output.executionResult.commands);
+      this.printNodeExecutionFailure(flowResult.output.executionResult.after);
+      this.printExecutionFailure(postResult.output);
       return process.exit(1);
     }
   }
 }
-
-//new CLIRunner().execute();

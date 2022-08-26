@@ -9,10 +9,15 @@ import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-comman
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { UploadResponse } from "@actions/artifact";
 import { FlowResult } from "@bc/domain/flow";
+import { LoggerService } from "@bc/service/logger/logger-service";
+import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 
 export abstract class Runner {
+  private logger: LoggerService;
+
   constructor(entryPoint: EntryPoint) {
     Container.set(constants.CONTAINER.ENTRY_POINT, entryPoint);
+    this.logger = LoggerServiceFactory.getInstance();
   }
 
   abstract execute(): Promise<void>;
@@ -46,6 +51,39 @@ export abstract class Runner {
     const postService = Container.get(PostExecutor);
     const postResult = await postService.run();
     return { isFailure: this.commandExecutionFailure(postResult), output: postResult };
+  }
+
+  /**
+   * Prints the failed commands in the following format
+   * [Error] Failed to execute cmd1 :
+   * [Error] This is a multiline error msg
+   * [Error] broken down line wise
+   * @param result
+   */
+  protected printExecutionFailure(result: ExecuteCommandResult[]) {
+    result.forEach(res => {
+      if (res.result === ExecutionResult.NOT_OK) {
+        this.logger.error(`Failed to execute ${res.command} :`);
+        res.errorMessage.split("\n").forEach(msg => this.logger.error(msg));
+      }
+    });
+  }
+
+  /**
+   * Prints the failed commands for the node chain in the following format
+   * [Error] Failed to execute commands for owner1/project1
+   * [Error] Failed to execute cmd1 :
+   * [Error] This is a multiline error msg
+   * [Error] broken down line wise
+   * @param result
+   */
+  protected printNodeExecutionFailure(result: ExecuteNodeResult[]) {
+    result.forEach(res => {
+      if (this.commandExecutionFailure(res.executeCommandResults)) {
+        this.logger.error(`Failed to execute commands for ${res.node.project}`);
+        this.printExecutionFailure(res.executeCommandResults);
+      }
+    });
   }
 
   private archiveArtifactsFailure(result: PromiseSettledResult<UploadResponse>[]) {

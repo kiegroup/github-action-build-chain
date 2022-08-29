@@ -10,3 +10,13 @@ export type FlowResult = {
     [key in ExecutionPhase]: ExecuteNodeResult[]
   }
 }
+
+export const defaultFlowResult: FlowResult = {
+  checkoutInfo: [],
+  artifactUploadResults: [],
+  executionResult: {
+    before: [],
+    after: [],
+    commands: []
+  }
+}; 

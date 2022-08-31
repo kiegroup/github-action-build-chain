@@ -17,7 +17,6 @@
     "prettier": "prettier -l src/** test/**/*.js",
     "prettier-write": "prettier --write .",
     "lint-final": "npm run prettier && npm run lint",
-    "prepublish": "npm run lint && npm run test",
     "ncc-build": "ncc build --minify bin/build-chain-event.js"
   },
   "git-pre-hooks": {

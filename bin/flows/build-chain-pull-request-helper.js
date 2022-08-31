@@ -38,17 +38,21 @@ async function getEvent(octokit, eventUrl) {
   const m = eventUrl.match(GITHUB_URL_REGEXP);
   if (m && m[3] === "pull") {
     logger.debug("Getting PR data...", eventUrl);
-    const { data: pull_request } = await octokit.pulls.get({
-      owner: m[1],
-      repo: m[2],
-      pull_number: m[4]
-    });
-    event = {
-      action: "opened",
-      ref: `refs/pull/${m[4]}/merge`,
-      type: "pull_request",
-      pull_request
-    };
+    try {
+      const { data: pull_request } = await octokit.pulls.get({
+        owner: m[1],
+        repo: m[2],
+        pull_number: m[4]
+      });
+      event = {
+        action: "opened",
+        ref: `refs/pull/${m[4]}/merge`,
+        type: "pull_request",
+        pull_request
+      };
+    } catch (err) {
+      throw new Error(getErrorMessage(err));
+    }
   } else if (m && m[3] === "tree") {
     event = {
       type: "tree",
@@ -64,6 +68,17 @@ async function getEvent(octokit, eventUrl) {
     throw new ClientError(`invalid URL: ${eventUrl}`);
   }
   return event;
+}
+
+function getErrorMessage(err) {
+  switch (err.status) {
+    case 401:
+      return "Failed to authenticate with provided token, please use -token argument to provide a new one. You can also check your GITHUB_TOKEN environment variable and check whether the provided token is still valid.";
+    case 404:
+      return "Failed to fetch GitHub URL, please check if the URL used in -url argument is valid and if the token you are using have permissions to access it.";
+    default:
+      return err.message;
+  }
 }
 
 module.exports = {

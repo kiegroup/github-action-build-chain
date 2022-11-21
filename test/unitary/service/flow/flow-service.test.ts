@@ -7,7 +7,6 @@ import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
 import { FlowType } from "@bc/domain/inputs";
-import { Node } from "@bc/domain/node";
 import { NodeExecutionLevel } from "@bc/domain/node-execution";
 import { CheckoutService } from "@bc/service/checkout/checkout-service";
 import { ExecuteCommandService } from "@bc/service/command/execute-command-service";
@@ -16,9 +15,12 @@ import { FlowService } from "@bc/service/flow/flow-service";
 import { GithubActionLoggerService } from "@bc/service/logger/github-action-logger-service";
 import Container from "typedi";
 import { ArtifactService } from "@bc/service/artifacts/artifact-service";
+import { Node } from "@kie/build-chain-configuration-reader";
+import { defaultNodeValue } from "@bc/domain/node";
 
 const nodeChain: Node[] = [
   {
+    ...defaultNodeValue,
     project: "owner1/project1",
     before: {
       upstream: ["cmd1"],
@@ -27,6 +29,7 @@ const nodeChain: Node[] = [
     },
   },
   {
+    ...defaultNodeValue,
     project: "owner2/project2",
     before: {
       current: ["cmd2-before"],
@@ -45,6 +48,7 @@ const nodeChain: Node[] = [
     },
   },
   {
+    ...defaultNodeValue,
     project: "owner3/project3",
     after: {
       upstream: [],

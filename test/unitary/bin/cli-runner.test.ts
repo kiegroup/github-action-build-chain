@@ -11,6 +11,7 @@ import { defaultFlowResult, FlowResult } from "@bc/domain/flow";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
 import { UploadResponse } from "@actions/artifact";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
+import { defaultNodeValue } from "@bc/domain/node";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -55,12 +56,12 @@ describe("execute", () => {
   };
 
   const nodeOk: ExecuteNodeResult = {
-    node: { project: "owner1/project1" },
+    node: { ...defaultNodeValue, project: "owner1/project1" },
     executeCommandResults: [okResult, okResult],
   };
 
   const nodeNotOk: ExecuteNodeResult = {
-    node: { project: "owner1/project1" },
+    node: { ...defaultNodeValue, project: "owner1/project1" },
     executeCommandResults: [okResult, notOkResult],
   };
 

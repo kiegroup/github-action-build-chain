@@ -1,10 +1,10 @@
 import "reflect-metadata";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
-import { Node } from "@bc/domain/node";
 import { UploadService } from "@bc/service/artifacts/upload-service";
 import Container from "typedi";
 import { ArtifactService } from "@bc/service/artifacts/artifact-service";
+import { Node } from "@kie/build-chain-configuration-reader";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -15,26 +15,35 @@ Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
 const nodeChain: Node[] = [
   {
     project: "owner1/project1",
+    parents: [],
+    children: [],
     archiveArtifacts: {
       name: "artifacts-project1",
       dependencies: "all",
-      paths: [{ path: "test" }],
+      "if-no-files-found": "ignore",
+      paths: [{ path: "test", on: "success" }],
     },
   },
   {
     project: "owner2/project2",
+    parents: [],
+    children: [],
     archiveArtifacts: {
       name: "artifacts-project1",
       dependencies: "none",
-      paths: [{ path: "test" }],
+      "if-no-files-found": "ignore",
+      paths: [{ path: "test", on: "success" }],
     },
   },
   {
     project: "owner3/project3",
+    parents: [],
+    children: [],
     archiveArtifacts: {
       name: "artifacts-project1",
       dependencies: ["owner1/project1"],
-      paths: [{ path: "test" }],
+      "if-no-files-found": "ignore",
+      paths: [{ path: "test", on: "success" }],
     },
   },
 ];
@@ -56,6 +65,6 @@ test.each([
   await artifactService.uploadNodes(nodeChain, nodeChain[startProjectIndex]);
   expect(spyUpload).toHaveBeenCalledTimes(nodesToArchive.length);
   nodesToArchive.forEach(node => {
-    expect(spyUpload).toHaveBeenCalledWith(node.archiveArtifacts);
+    expect(spyUpload).toHaveBeenCalledWith(node.archiveArtifacts, node.project);
   });
 });

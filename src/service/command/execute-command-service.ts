@@ -4,10 +4,10 @@ import { CommandTreatmentDelegator } from "@bc/service/command/treatment/command
 import { CommandExecutorDelegator } from "@bc/service/command/executor/command-executor-delegator";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
-import { Node } from "@bc/domain/node";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { NodeExecution, NodeExecutionLevel } from "@bc/domain/node-execution";
+import { Node } from "@kie/build-chain-configuration-reader";
 
 @Service()
 export class ExecuteCommandService {

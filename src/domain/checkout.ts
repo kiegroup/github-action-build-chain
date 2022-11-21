@@ -1,4 +1,4 @@
-import { Node } from "@bc/domain/node";
+import { Node } from "@kie/build-chain-configuration-reader";
 
 export type CheckoutInfo = {
   sourceName: string;

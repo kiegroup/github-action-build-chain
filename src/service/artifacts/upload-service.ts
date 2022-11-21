@@ -144,12 +144,13 @@ export class UploadService {
   async upload(archiveArtifacts: ArchiveArtifacts, projectName: string): Promise<artifact.UploadResponse> {
     // remove the filter once build-chain-config reader is refactored
     const searchPaths = archiveArtifacts.paths.filter(pathItem => pathItem.path).reduce((prev: string, curr) => prev.concat(curr.path!, "\n"), "");
-
     const { filesToUpload, rootDirectory } = await this.findFilesToUpload(searchPaths);
+    const artifactName = archiveArtifacts.name ?? projectName;
+
     if (filesToUpload.length === 0) {
       this.noFileFound(archiveArtifacts, searchPaths);
       return {
-        artifactName: archiveArtifacts.name ?? projectName,
+        artifactName,
         artifactItems: [],
         failedItems: [],
         size: 0,
@@ -157,7 +158,7 @@ export class UploadService {
     } else {
       this.logger.debug(`With the provided path (${searchPaths}), there will be ${filesToUpload.length} file(s) uploaded`);
       this.logger.debug(`Root artifact directory is ${rootDirectory}`);
-      return artifact.create().uploadArtifact(archiveArtifacts.name ?? projectName, filesToUpload, rootDirectory, { continueOnError: false });
+      return artifact.create().uploadArtifact(artifactName, filesToUpload, rootDirectory, { continueOnError: false });
     }
   }
 }

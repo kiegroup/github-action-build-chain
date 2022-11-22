@@ -6,7 +6,7 @@ import { EntryPoint } from "@bc/domain/entry-point";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { FlowType } from "@bc/domain/inputs";
-import { Node } from "@bc/domain/node";
+import { defaultNodeValue } from "@bc/domain/node";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { GitCLIService } from "@bc/service/git/git-cli";
 import { JobSummaryService } from "@bc/service/job-summary/job-summary-service";
@@ -14,9 +14,11 @@ import { open, rm } from "fs/promises";
 import path from "path";
 import Container from "typedi";
 import { readFileSync } from "fs";
+import { Node } from "@kie/build-chain-configuration-reader";
 
 const nodeChain: Node[] = [
   {
+    ...defaultNodeValue,
     project: "owner1/project1",
     before: {
       upstream: ["cmd1"],
@@ -25,6 +27,7 @@ const nodeChain: Node[] = [
     },
   },
   {
+    ...defaultNodeValue,
     project: "owner2/project2",
     before: {
       current: ["cmd2-before"],
@@ -43,6 +46,7 @@ const nodeChain: Node[] = [
     },
   },
   {
+    ...defaultNodeValue,
     project: "owner3/project3",
     after: {
       upstream: [],

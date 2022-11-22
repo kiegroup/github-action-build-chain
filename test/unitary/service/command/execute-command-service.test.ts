@@ -3,10 +3,11 @@ import { CommandTreatmentDelegator } from "@bc/service/command/treatment/command
 import { CommandExecutorDelegator } from "@bc/service/command/executor/command-executor-delegator";
 import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
-import { defaultValue as nodeDefaultValue, Node } from "@bc/domain/node";
+import { defaultNodeValue } from "@bc/domain/node";
 import { NodeExecutionLevel } from "@bc/domain/node-execution";
 import { TestLoggerService } from "@bc/service/logger/__mocks__/test-logger-service";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
+import { Node } from "@kie/build-chain-configuration-reader";
 
 jest.mock("@bc/service/logger/logger-service-factory");
 jest.mock("@bc/service/command/treatment/command-treatment-delegator");
@@ -64,7 +65,7 @@ describe("ExecuteCommandService", () => {
 describe("executeChainCommands", () => {
 
   const nodes: Node[] = [{
-    ...nodeDefaultValue,
+    ...defaultNodeValue,
     project: "project1",
     before: {
       upstream: ["project1 before upstream 1"],
@@ -82,7 +83,7 @@ describe("executeChainCommands", () => {
       downstream: ["project1 after downstream 1", "project1 after downstream 2", "project1 after downstream 3"],
     },
   }, {
-    ...nodeDefaultValue,
+    ...defaultNodeValue,
     project: "project2",
     before: {
       upstream: ["project2 before upstream 1"],
@@ -100,7 +101,7 @@ describe("executeChainCommands", () => {
       downstream: ["project2 after downstream 1", "project2 after downstream 2", "project2 after downstream 3"],
     },
   }, {
-    ...nodeDefaultValue,
+    ...defaultNodeValue,
     project: "project3",
     before: {
       upstream: [],
@@ -118,10 +119,10 @@ describe("executeChainCommands", () => {
       downstream: [],
     },
   }, {
-    ...nodeDefaultValue,
+    ...defaultNodeValue,
     project: "project4",
   }, {
-    ...nodeDefaultValue,
+    ...defaultNodeValue,
     project: "project5",
     before: {
       upstream: [],

@@ -1,21 +1,33 @@
-import { Node } from "@bc/domain/node";
 import path from "path";
 import { mkdirSync } from "fs";
 import { writeFile, readFile } from "fs/promises";
+import { Node } from "@kie/build-chain-configuration-reader";
 
 export const nodeChain: Node[] = [
   {
     project: "owner1/project1",
+    parents: [],
+    children: [],
     clone: ["clone-1", "clone-2"],
     mapping: {
-      dependant: {},
-      dependencies: {},
+      dependant: {
+        default: []
+      },
+      dependencies: {
+        default: []
+      },
+      exclude: []
     },
   },
   {
     project: "owner2/project2",
+    parents: [],
+    children: [],
     mapping: {
-      dependant: {},
+      exclude: [],
+      dependant: {
+        default: []
+      },
       dependencies: {
         default: [
           {
@@ -34,6 +46,8 @@ export const nodeChain: Node[] = [
   },
   {
     project: "owner3/project3",
+    parents: [],
+    children: []
   },
 ];
 

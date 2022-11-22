@@ -1,8 +1,7 @@
-import { Node } from "@bc/domain/node";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
-import { getBaseBranch } from "@kie/build-chain-configuration-reader";
+import { getMappedTarget, Node } from "@kie/build-chain-configuration-reader";
 import Container, { Service } from "typedi";
 import { copy } from "fs-extra";
 import path from "path";
@@ -113,7 +112,7 @@ export class CheckoutService {
     const currentTarget = {
       // map the starting project target branch to the corresponding branch defined in the mapping for the current node
       // target branch is guaranteed to exist since base always exist
-      mappedBranch: getBaseBranch(starterNode.project, starterNode.mapping, node.project, node.mapping, originalTarget.branch!),
+      mappedBranch: getMappedTarget(starterNode.project, starterNode.mapping, node.project, node.mapping, originalTarget.branch!),
       name: node.project.split("/")[1],
       group: node.project.split("/")[0],
     };

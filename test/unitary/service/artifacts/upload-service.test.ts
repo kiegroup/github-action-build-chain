@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import path from "path";
 import { mkdir, rm, writeFile } from "fs/promises";
-import { ArchiveArtifacts } from "@kie/build-chain-configuration-reader";
+import { ArchiveArtifacts, IfNoFile } from "@kie/build-chain-configuration-reader";
 import { UploadService } from "@bc/service/artifacts/upload-service";
 import Container from "typedi";
 import { constants } from "@bc/domain/constants";
@@ -20,12 +20,13 @@ let uploadService: UploadService;
 const mockedCreate = create as jest.Mock;
 const uploadOptions = { continueOnError: false };
 
-const constructArchiveArtifacts = (search: string[], ifNoFilesFound = "ignore"): ArchiveArtifacts => {
+const constructArchiveArtifacts = (search: string[], ifNoFilesFound: IfNoFile = "ignore" as IfNoFile): ArchiveArtifacts => {
   return {
     "if-no-files-found": ifNoFilesFound,
+    dependencies: "all",
     name: "test",
     paths: search.map(s => {
-      return { path: s };
+      return { path: s, on: "success" };
     }),
   };
 };
@@ -103,7 +104,7 @@ describe("search files", () => {
     const archiveConfig = constructArchiveArtifacts([searchPath]);
     const uploadArtifact = jest.fn().mockResolvedValue({ failedItems: [], artifactName: archiveConfig.name });
     mockedCreate.mockReturnValueOnce({ uploadArtifact });
-    await uploadService.upload(archiveConfig);
+    await uploadService.upload(archiveConfig, "project");
     expect(uploadArtifact).toHaveBeenCalledWith(archiveConfig.name, [searchItem1Path], rootDir, uploadOptions);
   });
 
@@ -113,7 +114,7 @@ describe("search files", () => {
     const archiveConfig = constructArchiveArtifacts([searchPath]);
     const uploadArtifact = jest.fn().mockResolvedValue({ failedItems: [], artifactName: archiveConfig.name });
     mockedCreate.mockReturnValueOnce({ uploadArtifact });
-    await uploadService.upload(archiveConfig);
+    await uploadService.upload(archiveConfig, "project");
     expect(uploadArtifact).toHaveBeenCalledWith(archiveConfig.name, [lonelyFilePath], rootDir, uploadOptions);
   });
 
@@ -122,7 +123,7 @@ describe("search files", () => {
     const archiveConfig = constructArchiveArtifacts([searchPath]);
     const uploadArtifact = jest.fn().mockResolvedValue({ failedItems: [], artifactName: archiveConfig.name });
     mockedCreate.mockReturnValueOnce({ uploadArtifact });
-    await uploadService.upload(archiveConfig);
+    await uploadService.upload(archiveConfig, "project");
     expect(uploadArtifact).toHaveBeenCalledWith(archiveConfig.name, [lonelyFilePath], searchPath, uploadOptions);
   });
 
@@ -133,7 +134,7 @@ describe("search files", () => {
     const archiveConfig = constructArchiveArtifacts([searchPath]);
     const uploadArtifact = jest.fn().mockResolvedValue({ failedItems: [], artifactName: archiveConfig.name });
     mockedCreate.mockReturnValueOnce({ uploadArtifact });
-    await uploadService.upload(archiveConfig);
+    await uploadService.upload(archiveConfig, "project");
     const filesToUpload = [amazingFileInFolderHPath, extraSearchItem4Path, extraSearchItem5Path, lonelyFilePath];
     expect(uploadArtifact).toHaveBeenCalled();
     const receivedName = uploadArtifact.mock.calls[0][0];
@@ -153,7 +154,7 @@ describe("search files", () => {
     const archiveConfig = constructArchiveArtifacts([searchPath]);
     const uploadArtifact = jest.fn().mockResolvedValue({ failedItems: [], artifactName: archiveConfig.name });
     mockedCreate.mockReturnValueOnce({ uploadArtifact });
-    await uploadService.upload(archiveConfig);
+    await uploadService.upload(archiveConfig, "project");
     expect(uploadArtifact).toHaveBeenCalled();
     const receivedName = uploadArtifact.mock.calls[0][0];
     const receivedFiles = uploadArtifact.mock.calls[0][1];
@@ -182,7 +183,7 @@ describe("search files", () => {
     const archiveConfig = constructArchiveArtifacts(searchPath);
     const uploadArtifact = jest.fn().mockResolvedValue({ failedItems: [], artifactName: archiveConfig.name });
     mockedCreate.mockReturnValueOnce({ uploadArtifact });
-    await uploadService.upload(archiveConfig);
+    await uploadService.upload(archiveConfig, "project");
     expect(uploadArtifact).toHaveBeenCalled();
     const receivedName = uploadArtifact.mock.calls[0][0];
     const receivedFiles = uploadArtifact.mock.calls[0][1];
@@ -208,7 +209,7 @@ describe("search files", () => {
     const archiveConfig = constructArchiveArtifacts(searchPath);
     const uploadArtifact = jest.fn().mockResolvedValue({ failedItems: [], artifactName: archiveConfig.name });
     mockedCreate.mockReturnValueOnce({ uploadArtifact });
-    await uploadService.upload(archiveConfig);
+    await uploadService.upload(archiveConfig, "project");
     expect(uploadArtifact).toHaveBeenCalled();
     const receivedName = uploadArtifact.mock.calls[0][0];
     const receivedFiles = uploadArtifact.mock.calls[0][1];
@@ -226,7 +227,7 @@ describe("search files", () => {
     const archiveConfig = constructArchiveArtifacts(searchPath);
     const uploadArtifact = jest.fn().mockResolvedValue({ failedItems: [], artifactName: archiveConfig.name });
     mockedCreate.mockReturnValueOnce({ uploadArtifact });
-    await uploadService.upload(archiveConfig);
+    await uploadService.upload(archiveConfig, "project");
     expect(uploadArtifact).toHaveBeenCalled();
     const receivedName = uploadArtifact.mock.calls[0][0];
     const receivedFiles = uploadArtifact.mock.calls[0][1];
@@ -247,13 +248,13 @@ describe("upload", () => {
     ["ignore", jest.spyOn(AbstractLoggerService.prototype, "info")],
     ["error", jest.spyOn(AbstractLoggerService.prototype, "error")],
   ])("with no files found - %p", async (ifNoFilesFound: string, spy: jest.SpyInstance) => {
-    const archiveConfig = constructArchiveArtifacts([path.join(__dirname, "does-not-exist.txt")], ifNoFilesFound);
+    const archiveConfig = constructArchiveArtifacts([path.join(__dirname, "does-not-exist.txt")], ifNoFilesFound as IfNoFile);
     const uploadArtifact = jest.fn().mockResolvedValue({ failedItems: [], artifactName: archiveConfig.name });
     mockedCreate.mockReturnValueOnce({ uploadArtifact });
     if (ifNoFilesFound === "error") {
-      await expect(uploadService.upload(archiveConfig)).rejects.toThrowError();
+      await expect(uploadService.upload(archiveConfig, "project")).rejects.toThrowError();
     } else {
-      await expect(uploadService.upload(archiveConfig)).resolves.toStrictEqual({
+      await expect(uploadService.upload(archiveConfig, "project")).resolves.toStrictEqual({
         artifactName: archiveConfig.name,
         artifactItems: [],
         failedItems: [],

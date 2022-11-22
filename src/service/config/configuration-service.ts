@@ -7,10 +7,9 @@ import { ActionConfiguration } from "@bc/service/config/action-configuration";
 import { logAndThrow } from "@bc/utils/log";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
-import { Node } from "@bc/domain/node";
 import { ProjectConfiguration } from "@bc/domain/configuration";
 import { FlowType } from "@bc/domain/inputs";
-import { DefinitionFile, Post, Pre } from "@kie/build-chain-configuration-reader";
+import { DefinitionFile, Post, Pre, Node } from "@kie/build-chain-configuration-reader";
 import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 
 @Service()

@@ -9,6 +9,8 @@ import { PreExecutor } from "@bc/service/pre-post/pre";
 import { PostExecutor } from "@bc/service/pre-post/post";
 import { FlowService } from "@bc/service/flow/flow-service";
 import { AbstractLoggerService } from "@bc/service/logger/abstract-logger-service";
+import { defaultNodeValue } from "@bc/domain/node";
+
 
 /** Dummy runner to test protected methods */
 class DummyRunner extends Runner {
@@ -75,12 +77,12 @@ const artifactNotOk: PromiseSettledResult<UploadResponse> = {
 };
 
 const nodeOk: ExecuteNodeResult = {
-  node: { project: "owner1/project1" },
+  node: { ...defaultNodeValue, project: "owner1/project1" },
   executeCommandResults: [okResult, skipResult],
 };
 
 const nodeNotOk: ExecuteNodeResult = {
-  node: { project: "owner1/project1" },
+  node: { ...defaultNodeValue, project: "owner1/project1" },
   executeCommandResults: [okResult, notOkResult, skipResult],
 };
 

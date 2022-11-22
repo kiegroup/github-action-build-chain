@@ -27,7 +27,7 @@ const emptyCommandResult: ExecuteCommandResult = {
 };
 
 test.each([
-  ["single command", "cmd", ["cmd"]],
+  ["single command", ["cmd"], ["cmd"]],
   ["multiple commands", ["cmd1", "cmd2"], ["cmd1", "cmd2"]],
 ])("%p", async (_title: string, cmds: Pre, executedCmds: string[]) => {
   jest.spyOn(ConfigurationService.prototype, "getPre").mockImplementation(() => cmds);

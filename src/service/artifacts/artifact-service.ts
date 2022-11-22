@@ -1,7 +1,6 @@
 import Container, { Service } from "typedi";
-import { Node } from "@bc/domain/node";
+import { Node, ArchiveDependencies } from "@kie/build-chain-configuration-reader";
 import { UploadService } from "@bc/service/artifacts/upload-service";
-import { ArchiveDependencies } from "@bc/domain/archive";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { UploadResponse } from "@actions/artifact";
@@ -38,7 +37,7 @@ export class ArtifactService {
     const promises = nodesToArchive.map(async node => {
       this.logger.info(`Project [${node.project}]. Uploading artifacts...`);
       // archiveArtifacts will exist as it is verified by getNodesToArchive
-      return this.uploadService.upload(node.archiveArtifacts!);
+      return this.uploadService.upload(node.archiveArtifacts!, node.project);
     });
 
     const result = await Promise.allSettled(promises);

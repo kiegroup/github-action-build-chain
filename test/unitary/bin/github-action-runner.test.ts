@@ -12,6 +12,8 @@ import { UploadResponse } from "@actions/artifact";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { GithubActionRunner } from "@bc/bin/runners/github-action-runner";
 import { JobSummaryService } from "@bc/service/job-summary/job-summary-service";
+import { defaultNodeValue } from "@bc/domain/node";
+
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -56,12 +58,12 @@ describe("execute", () => {
   };
 
   const nodeOk: ExecuteNodeResult = {
-    node: { project: "owner1/project1" },
+    node: { ...defaultNodeValue, project: "owner1/project1" },
     executeCommandResults: [okResult, okResult],
   };
 
   const nodeNotOk: ExecuteNodeResult = {
-    node: { project: "owner1/project1" },
+    node: { ...defaultNodeValue, project: "owner1/project1" },
     executeCommandResults: [okResult, notOkResult],
   };
 

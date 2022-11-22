@@ -37,9 +37,9 @@ describe("On success", () => {
   });
 
   test.each([
-    ["single command", "cmd", ["cmd"]],
+    ["single command", ["cmd"], ["cmd"]],
     ["multiple commands", ["cmd1", "cmd2"], ["cmd1", "cmd2"]],
-  ])("No always: %p", async (_title: string, cmds: string | string[], executedCmds: string[]) => {
+  ])("No always: %p", async (_title: string, cmds: string[], executedCmds: string[]) => {
     jest.spyOn(ConfigurationService.prototype, "getPost").mockImplementationOnce(() => {
       return {
         success: cmds,
@@ -54,9 +54,9 @@ describe("On success", () => {
   });
 
   test.each([
-    ["single command", "cmd", ["cmd"]],
+    ["single command", ["cmd"], ["cmd"]],
     ["multiple commands", ["cmd1", "cmd2"], ["cmd1", "cmd2"]],
-  ])("With always: %p", async (_title: string, cmds: string | string[], executedCmds: string[]) => {
+  ])("With always: %p", async (_title: string, cmds: string[], executedCmds: string[]) => {
     jest.spyOn(ConfigurationService.prototype, "getPost").mockImplementationOnce(() => {
       return {
         success: cmds,
@@ -74,7 +74,7 @@ describe("On success", () => {
   test("no success", async () => {
     jest.spyOn(ConfigurationService.prototype, "getPost").mockImplementationOnce(() => {
       return {
-        failure: "cmd",
+        failure: ["cmd"],
       };
     });
     const execSpy = jest.spyOn(ExecuteCommandService.prototype, "executeCommand").mockImplementationOnce(async (_cmd: string, _cwd?: string) => emptyCommandResult);
@@ -96,9 +96,9 @@ describe("On failure", () => {
   });
 
   test.each([
-    ["single command", "cmd", ["cmd"]],
+    ["single command", ["cmd"], ["cmd"]],
     ["multiple commands", ["cmd1", "cmd2"], ["cmd1", "cmd2"]],
-  ])("No always: %p", async (_title: string, cmds: string | string[], executedCmds: string[]) => {
+  ])("No always: %p", async (_title: string, cmds: string[], executedCmds: string[]) => {
     jest.spyOn(ConfigurationService.prototype, "getPost").mockImplementationOnce(() => {
       return {
         failure: cmds,
@@ -113,9 +113,9 @@ describe("On failure", () => {
   });
 
   test.each([
-    ["single command", "cmd", ["cmd"]],
+    ["single command", ["cmd"], ["cmd"]],
     ["multiple commands", ["cmd1", "cmd2"], ["cmd1", "cmd2"]],
-  ])("With always: %p", async (_title: string, cmds: string | string[], executedCmds: string[]) => {
+  ])("With always: %p", async (_title: string, cmds: string[], executedCmds: string[]) => {
     jest.spyOn(ConfigurationService.prototype, "getPost").mockImplementationOnce(() => {
       return {
         failure: cmds,
@@ -134,7 +134,7 @@ describe("On failure", () => {
   test("no failure", async () => {
     jest.spyOn(ConfigurationService.prototype, "getPost").mockImplementationOnce(() => {
       return {
-        success: "cmd",
+        success: ["cmd"],
       };
     });
     const execSpy = jest.spyOn(ExecuteCommandService.prototype, "executeCommand").mockImplementationOnce(async (_cmd: string, _cwd?: string) => emptyCommandResult);

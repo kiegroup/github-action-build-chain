@@ -3,46 +3,53 @@ import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
-import { MockGithub } from "../../../setup/mock-github";
 import Container from "typedi";
-import path from "path";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
-import fs from "fs";
 import { NodeExecutionLevel } from "@bc/domain/node-execution";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { ToolType } from "@bc/domain/cli";
 import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 import { Node } from "@kie/build-chain-configuration-reader";
-import {defaultNodeValue} from "@bc/domain/node";
+import { defaultNodeValue } from "@bc/domain/node";
+import { EventData } from "@bc/domain/configuration";
 
 // disable logs
 jest.spyOn(global.console, "log");
 jest.mock("@kie/build-chain-configuration-reader");
 
-const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event");
+describe("initialization", () => {
+  beforeEach(() => {
+    jest
+      .spyOn(ConfigurationService.prototype, "init")
+      .mockImplementationOnce(async () =>
+        Container.get(constants.CONTAINER.ENTRY_POINT)
+      );
+  });
+  test("action", async () => {
+    Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
+    const config = new ConfigurationService();
+    await expect(config.init()).resolves.toBe(EntryPoint.GITHUB_EVENT);
+  });
 
-beforeEach(async () => {
-  await mockGithub.setup();
-  jest
-    .spyOn(DefinitionFileReader.prototype, "generateNodeChain")
-    .mockImplementation(async () => []);
-  jest
-    .spyOn(DefinitionFileReader.prototype, "getDefinitionFile")
-    .mockImplementation(async () => {
-      return { version: "2.1" };
-    });
+  test("cli", async () => {
+    Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
+    const config = new ConfigurationService();
+    await expect(config.init()).resolves.toBe(EntryPoint.CLI);
+  });
+
+  test("incorrect entrypoint", async () => {
+    Container.set(constants.CONTAINER.ENTRY_POINT, "dummy");
+    expect(() => new ConfigurationService()).toThrowError();
+  });
 });
 
-afterEach(() => {
-  mockGithub.teardown();
-});
-
-describe("cli", () => {
+describe("methods", () => {
   let config: ConfigurationService;
   let currentInput: InputValues;
   const startProject = "owner/project";
 
   beforeAll(() => {
+    // doesn't matter whether it is a CLI or action
     Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
   });
 
@@ -52,9 +59,22 @@ describe("cli", () => {
       startProject,
       url: "https://github.com/owner/project/pull/270",
     };
+
     jest
       .spyOn(BaseConfiguration.prototype, "parsedInputs", "get")
       .mockImplementation(() => currentInput);
+    jest
+      .spyOn(DefinitionFileReader.prototype, "generateNodeChain")
+      .mockImplementation(async () => []);
+    jest
+      .spyOn(DefinitionFileReader.prototype, "getDefinitionFile")
+      .mockImplementation(async () => {
+        return { version: "2.1" };
+      });
+    jest
+      .spyOn(BaseConfiguration.prototype, "init")
+      .mockImplementation(async () => undefined);
+
     config = new ConfigurationService();
     await config.init();
   });
@@ -81,7 +101,9 @@ describe("cli", () => {
     [true, startProject],
     [false, "falsename"],
   ])("isNodeStarter %p", (isNodeStarter: boolean, project: string) => {
-    expect(config.isNodeStarter({ ...defaultNodeValue, project })).toBe(isNodeStarter);
+    expect(config.isNodeStarter({ ...defaultNodeValue, project })).toBe(
+      isNodeStarter
+    );
   });
 
   test("getStarterNode: success", () => {
@@ -174,6 +196,44 @@ describe("cli", () => {
 
   test.each([
     [
+      "option skipCheckout set to true",
+      { ...defaultNodeValue, project: "abc" },
+      { ...defaultInputValues, skipCheckout: true },
+      true,
+    ],
+    [
+      "option skipCheckout set to false and skipProjectCheckout contains project name",
+      { ...defaultNodeValue, project: "abc" },
+      { ...defaultInputValues, skipProjectCheckout: ["abc"] },
+      true,
+    ],
+    [
+      "option skipCheckout set to false and skipProjectCheckout does not contain project name",
+      { ...defaultNodeValue, project: "abc" },
+      { ...defaultInputValues, skipProjectCheckout: ["def"] },
+      false,
+    ],
+    [
+      "option skipCheckout set to false and skipProjectCheckout not defined",
+      { ...defaultNodeValue, project: "abc" },
+      defaultInputValues,
+      false,
+    ],
+  ])(
+    "skipCheckout: %p",
+    (
+      title: string,
+      node: Node,
+      currInput: InputValues,
+      isCheckoutSkipped: boolean
+    ) => {
+      currentInput = currInput;
+      expect(config.skipCheckout(node)).toBe(isCheckoutSkipped);
+    }
+  );
+
+  test.each([
+    [
       "custom command treatment defined",
       { ...defaultInputValues, customCommandTreatment: ["abc||xyz"] },
       { replaceExpressions: ["abc||xyz"] },
@@ -234,10 +294,9 @@ describe("cli", () => {
   });
 
   test("root folder from github workspace", () => {
-    const workspace = JSON.parse(
-      fs.readFileSync(path.join(__dirname, "config.json"), "utf8")
-    ).env.workspace;
-    expect(config.getRootFolder()).toBe(workspace);
+    process.env["GITHUB_WORKSPACE"] = "workspace";
+    expect(config.getRootFolder()).toBe("workspace");
+    delete process.env["GITHUB_WORKSPACE"];
   });
 
   test("root folder from input", () => {
@@ -285,251 +344,6 @@ describe("cli", () => {
       .mockImplementation(() => {
         return {
           version: "2.1",
-          post: {
-            success: ["hello"],
-          },
-        };
-      });
-    expect(config.getPost()).toStrictEqual({ success: ["hello"] });
-  });
-});
-
-describe("action", () => {
-  let config: ConfigurationService;
-  let currentInput: InputValues;
-  const data = JSON.parse(
-    fs.readFileSync(path.join(__dirname, "config.json"), "utf8")
-  );
-
-  beforeAll(() => {
-    Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
-  });
-
-  beforeEach(async () => {
-    currentInput = defaultInputValues;
-    jest
-      .spyOn(BaseConfiguration.prototype, "parsedInputs", "get")
-      .mockImplementation(() => currentInput);
-    config = new ConfigurationService();
-    await config.init();
-  });
-
-  afterEach(() => {
-    currentInput = defaultInputValues;
-  });
-
-  test("getStarterProjectName: success", () => {
-    expect(config.getStarterProjectName()).toBe(data.env.repository);
-  });
-
-  test("getStarterProjectName: failure", () => {
-    delete process.env["GITHUB_REPOSITORY"];
-    expect(() => config.getStarterProjectName()).toThrowError();
-  });
-
-  test.each([
-    [true, data.env.repository],
-    [false, "falsename"],
-  ])("isNodeStarter %p", (isNodeStarter: boolean, project: string) => {
-    expect(config.isNodeStarter({ ...defaultNodeValue, project: project })).toBe(isNodeStarter);
-  });
-
-  test("getStarterNode: success", () => {
-    const chain: Node[] = [
-      { ...defaultNodeValue, project: "abc" },
-      { ...defaultNodeValue, project: data.env.repository },
-      { ...defaultNodeValue, project: "def" },
-    ];
-    const nodeFound: Node = { ...defaultNodeValue, project: data.env.repository };
-    jest
-      .spyOn(ConfigurationService.prototype, "nodeChain", "get")
-      .mockImplementation(() => chain);
-
-    expect(config.getStarterNode()).toStrictEqual(nodeFound);
-  });
-
-  test("getStarterNode: failure", () => {
-    const chain: Node[] = [
-      { ...defaultNodeValue, project: "abc" },
-      { ...defaultNodeValue, project: "xyz" },
-      { ...defaultNodeValue, project: "def" },
-    ];
-    jest
-      .spyOn(ConfigurationService.prototype, "nodeChain", "get")
-      .mockImplementation(() => chain);
-
-    expect(() => config.getStarterNode()).toThrowError();
-  });
-
-  test.each([
-    ["upstream", 0, NodeExecutionLevel.UPSTREAM],
-    ["current", 1, NodeExecutionLevel.CURRENT],
-    ["downstream", 2, NodeExecutionLevel.DOWNSTREAM],
-  ])(
-    "getNodeExecutionLevel: %p",
-    (
-      title: string,
-      currNodeIndex: number,
-      executionLevel: NodeExecutionLevel
-    ) => {
-      const chain: Node[] = [
-        { ...defaultNodeValue, project: "abc" },
-        { ...defaultNodeValue, project: data.env.repository },
-        { ...defaultNodeValue, project: "def" },
-      ];
-      jest
-        .spyOn(ConfigurationService.prototype, "nodeChain", "get")
-        .mockImplementation(() => chain);
-
-      expect(config.getNodeExecutionLevel(chain[currNodeIndex])).toBe(
-        executionLevel
-      );
-    }
-  );
-
-  test.each([
-    [
-      "option skipExecution set to true",
-      { ...defaultNodeValue, project: "abc" },
-      { ...defaultInputValues, skipExecution: true },
-      true,
-    ],
-    [
-      "option skipExecution set to false and skipProjectExecution contains project name",
-      { ...defaultNodeValue, project: "abc" },
-      { ...defaultInputValues, skipProjectExecution: ["abc"] },
-      true,
-    ],
-    [
-      "option skipExecution set to false and skipProjectExecution does not contain project name",
-      { ...defaultNodeValue, project: "abc" },
-      { ...defaultInputValues, skipProjectExecution: ["def"] },
-      false,
-    ],
-    [
-      "option skipExecution set to false and skipProjectExecution not defined",
-      { ...defaultNodeValue, project: "abc" },
-      defaultInputValues,
-      false,
-    ],
-  ])(
-    "skipExecution: %p",
-    (
-      title: string,
-      node: Node,
-      currInput: InputValues,
-      isExecutionSkipped: boolean
-    ) => {
-      currentInput = currInput;
-      expect(config.skipExecution(node)).toBe(isExecutionSkipped);
-    }
-  );
-
-  test.each([
-    [
-      "custom command treatment defined",
-      { ...defaultInputValues, customCommandTreatment: ["abc||xyz"] },
-      { replaceExpressions: ["abc||xyz"] },
-    ],
-    ["custom command treatment not defined", defaultInputValues, {}],
-  ])(
-    "getTreatmentOptions: success - %p",
-    (
-      title: string,
-      currInput: InputValues,
-      treatmentOptions: TreatmentOptions
-    ) => {
-      currentInput = currInput;
-      expect(config.getTreatmentOptions()).toStrictEqual(treatmentOptions);
-    }
-  );
-
-  test("get target project", () => {
-    const project = {
-      branch: "main",
-      name: "project",
-      group: "owner",
-      repository: "owner/project",
-    };
-    jest
-      .spyOn(BaseConfiguration.prototype, "targetProject", "get")
-      .mockImplementation(() => project);
-    expect(config.getTargetProject()).toStrictEqual(project);
-  });
-
-  test("get source project", () => {
-    const project = {
-      branch: "main",
-      name: "project",
-      group: "owner",
-      repository: "owner/project",
-    };
-    jest
-      .spyOn(BaseConfiguration.prototype, "sourceProject", "get")
-      .mockImplementation(() => project);
-    expect(config.getSourceProject()).toStrictEqual(project);
-  });
-
-  test("get flow type", () => {
-    currentInput = {
-      ...defaultInputValues,
-      flowType: FlowType.CROSS_PULL_REQUEST,
-    };
-    expect(config.getFlowType()).toBe(FlowType.CROSS_PULL_REQUEST);
-  });
-
-  test("root folder from github workspace", () => {
-    const workspace = JSON.parse(
-      fs.readFileSync(path.join(__dirname, "config.json"), "utf8")
-    ).env.workspace;
-    expect(config.getRootFolder()).toBe(workspace);
-  });
-
-  test("root folder from input", () => {
-    currentInput = { ...defaultInputValues, outputFolder: "current" };
-    expect(config.getRootFolder()).toBe(currentInput.outputFolder);
-  });
-
-  test("root folder default", () => {
-    delete process.env["GITHUB_WORKSPACE"];
-    expect(config.getRootFolder()).toBe(process.cwd());
-  });
-
-  test("get clone url", () => {
-    const gitConfig = { serverUrlWithToken: "http://github.com" };
-    jest
-      .spyOn(BaseConfiguration.prototype, "gitConfiguration", "get")
-      .mockImplementation(() => gitConfig);
-    expect(config.getCloneUrl("owner", "project")).toBe(
-      `${gitConfig.serverUrlWithToken}/owner/project`
-    );
-  });
-
-  test("skipParallelCheckout", () => {
-    currentInput = { ...defaultInputValues, skipParallelCheckout: true };
-    expect(config.skipParallelCheckout()).toBe(
-      currentInput.skipParallelCheckout
-    );
-  });
-
-  test("getPre", () => {
-    jest
-      .spyOn(ConfigurationService.prototype, "definitionFile", "get")
-      .mockImplementation(() => {
-        return {
-          version: "2.2",
-          pre: ["hello"],
-        };
-      });
-    expect(config.getPre()).toStrictEqual(["hello"]);
-  });
-
-  test("getPost", () => {
-    jest
-      .spyOn(ConfigurationService.prototype, "definitionFile", "get")
-      .mockImplementation(() => {
-        return {
-          version: "2.2",
           post: {
             success: ["hello"],
           },
@@ -540,19 +354,15 @@ describe("action", () => {
 
   test.each([
     ["branch flow", FlowType.BRANCH, ""],
-    [
-      "non-branch flow",
-      FlowType.CROSS_PULL_REQUEST,
-      data.action.eventPayload.pull_request.html_url,
-    ],
-  ])(
-    "getEventUrl: %p",
-    (_title: string, flowType: FlowType, result: string) => {
-      jest
-        .spyOn(ConfigurationService.prototype, "getFlowType")
-        .mockImplementationOnce(() => flowType);
-
-      expect(config.getEventUrl()).toBe(result);
-    }
-  );
+    ["non branch flow", FlowType.CROSS_PULL_REQUEST, "url"],
+  ])("getEventUrl", (title: string, flowType: FlowType, expected: string) => {
+    currentInput = {
+      ...defaultInputValues,
+      CLISubCommand: flowType,
+    };
+    jest
+      .spyOn(BaseConfiguration.prototype, "gitEventData", "get")
+      .mockImplementationOnce(() => ({ html_url: expected } as EventData));
+    expect(config.getEventUrl()).toBe(expected);
+  });
 });

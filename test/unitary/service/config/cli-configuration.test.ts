@@ -1,44 +1,78 @@
 import "reflect-metadata";
-import { MockGithub } from "../../../setup/mock-github";
-import path from "path";
 import Container from "typedi";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
-import fs from "fs";
 import { CLIConfiguration } from "@bc/service/config/cli-configuration";
 import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { InputService } from "@bc/service/inputs/input-service";
+import { MockGithub, Moctokit } from "@kie/mock-github";
+import { EventData } from "@bc/domain/configuration";
 jest.mock("@kie/build-chain-configuration-reader");
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
-const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "event-cli");
 let cliConfig = new CLIConfiguration();
+const event = {
+  html_url: "https://github.com/pulls/270",
+  head: {
+    ref: "feature",
+    repo: {
+      full_name: "owner/project",
+      name: "project",
+      owner: {
+        login: "owner",
+      },
+    },
+  },
+  base: {
+    ref: "main",
+    repo: {
+      full_name: "owner/project",
+      name: "project",
+      owner: {
+        login: "owner",
+      },
+    },
+  },
+};
 
 // disable logs
 jest.spyOn(global.console, "log");
 
 beforeEach(async () => {
-  await mockGithub.setup();
   cliConfig = new CLIConfiguration();
 });
 
-afterEach(() => {
-  mockGithub.teardown();
-});
-
 describe("load event data", () => {
-  let currentInput: InputValues = { ...defaultInputValues, url: "http://github.com/owner/project/pull/270" };
+  const moctokit = new Moctokit();
+  let currentInput: InputValues = {
+    ...defaultInputValues,
+    url: "http://github.com/owner/project/pull/270",
+  };
   beforeEach(() => {
-    jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => currentInput);
+    jest
+      .spyOn(cliConfig, "parsedInputs", "get")
+      .mockImplementation(() => currentInput);
   });
   afterEach(() => {
-    currentInput = { ...defaultInputValues, url: "http://github.com/owner/project/pull/270" };
+    currentInput = {
+      ...defaultInputValues,
+      url: "http://github.com/owner/project/pull/270",
+    };
   });
   test("success: non-branch flow build", async () => {
+    moctokit.rest.pulls
+      .get({
+        owner: "owner",
+        repo: "project",
+        pull_number: 270,
+      })
+      .reply({
+        status: 200,
+        data: event,
+      });
     Container.set(constants.GITHUB.TOKEN, "faketoken");
     const eventData = await cliConfig.loadGitEvent();
-    const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8"));
-    expect(eventData).toStrictEqual(actualData.action.eventPayload.pull_request);
+    expect(eventData).toStrictEqual(event);
   });
 
   test("success: branch flow build", async () => {
@@ -58,21 +92,49 @@ describe("load event data", () => {
   });
 
   test("failure: invalid url (passes regex)", async () => {
-    await expect(cliConfig.loadGitEvent()).resolves.not.toThrowError();
+    moctokit.rest.pulls.get().reply({ status: 404, data: {} });
     await expect(cliConfig.loadGitEvent()).rejects.toThrowError();
   });
 });
 
 describe("load git config branch flow", () => {
   const token = "fakenotenvtoken";
-  let currentInput: InputValues = { ...defaultInputValues, CLISubCommand: FlowType.BRANCH, group: "group", branch: "main" };
+  let currentInput: InputValues = {
+    ...defaultInputValues,
+    CLISubCommand: FlowType.BRANCH,
+    group: "group",
+    branch: "main",
+  };
+  const mockGithub = new MockGithub({
+    env: {
+      action: "pull_request",
+      actor: "actor",
+      author: "author",
+      job: "job",
+      workflow: "workflow",
+      ref: "main",
+      server_url: "https://git.ca/",
+      token: "token",
+      repository: "owner/project",
+      workspace: "current",
+    },
+  });
   beforeEach(async () => {
-    jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => currentInput);
+    await mockGithub.setup();
+    jest
+      .spyOn(cliConfig, "parsedInputs", "get")
+      .mockImplementation(() => currentInput);
     Container.set(constants.GITHUB.TOKEN, token);
   });
 
-  afterEach(() => {
-    currentInput = { ...defaultInputValues, CLISubCommand: FlowType.BRANCH, group: "group", branch: "main" };
+  afterEach(async () => {
+    await mockGithub.teardown();
+    currentInput = {
+      ...defaultInputValues,
+      CLISubCommand: FlowType.BRANCH,
+      group: "group",
+      branch: "main",
+    };
   });
 
   test("success: without default github url", async () => {
@@ -107,9 +169,31 @@ describe("load git config branch flow", () => {
 
 describe("load git config no branch flow", () => {
   const token = "fakenotenvtoken";
+  const mockGithub = new MockGithub({
+    env: {
+      action: "pull_request",
+      actor: "actor",
+      author: "author",
+      job: "job",
+      workflow: "workflow",
+      ref: "main",
+      server_url: "https://git.ca/",
+      token: "token",
+      repository: "owner/project",
+      workspace: "current",
+    },
+  });
+
   beforeEach(async () => {
-    jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => defaultInputValues);
+    await mockGithub.setup();
+    jest
+      .spyOn(cliConfig, "parsedInputs", "get")
+      .mockImplementation(() => defaultInputValues);
     Container.set(constants.GITHUB.TOKEN, token);
+  });
+
+  afterEach(async () => {
+    await mockGithub.teardown();
   });
 
   test("success: without default github url", async () => {
@@ -142,7 +226,9 @@ describe("load source and target project", () => {
     url: "http://github.com/owner/project/pull/270",
   };
   beforeEach(() => {
-    jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => currentInput);
+    jest
+      .spyOn(cliConfig, "parsedInputs", "get")
+      .mockImplementation(() => currentInput);
   });
 
   afterEach(() => {
@@ -169,21 +255,22 @@ describe("load source and target project", () => {
   });
 
   test("Non branch flow", async () => {
-    const eventData = await cliConfig.loadGitEvent();
-    jest.spyOn(cliConfig, "gitEventData", "get").mockImplementation(() => eventData);
-    const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).action.eventPayload.pull_request;
+    jest
+      .spyOn(cliConfig, "gitEventData", "get")
+      .mockImplementation(() => event as EventData);
+
     const expectedSource = {
-      branch: actualData.head.ref,
-      repository: actualData.head.repo.full_name,
-      name: actualData.head.repo.name,
-      group: actualData.head.repo.owner.login,
+      branch: event.head.ref,
+      repository: event.head.repo.full_name,
+      name: event.head.repo.name,
+      group: event.head.repo.owner.login,
     };
 
     const expectedTarget = {
-      branch: actualData.base.ref,
-      repository: actualData.base.repo.full_name,
-      name: actualData.base.repo.name,
-      group: actualData.base.repo.owner.login,
+      branch: event.base.ref,
+      repository: event.base.repo.full_name,
+      name: event.base.repo.name,
+      group: event.base.repo.owner.login,
     };
     const { source, target } = cliConfig.loadProject();
     expect(source).toStrictEqual(expectedSource);
@@ -201,10 +288,17 @@ describe("load token", () => {
     expect(Container.get(constants.GITHUB.TOKEN)).toBe(token);
   });
 
-  test("success: via env", () => {
+  test("success: via env", async () => {
+    const mockGithub = new MockGithub({
+      env: {
+        token: "token",
+      },
+    });
+    await mockGithub.setup();
     cliConfig.loadToken();
-    const actualData = JSON.parse(fs.readFileSync(path.join(__dirname, "config.json"), "utf8")).env.token;
-    expect(Container.get(constants.GITHUB.TOKEN)).toBe(actualData);
+    expect(Container.get(constants.GITHUB.TOKEN)).toBe("token");
+    await mockGithub.teardown();
+
   });
 
   test("failure", () => {
@@ -218,19 +312,32 @@ describe("load token", () => {
 
 describe("load input", () => {
   test("success: validated input", () => {
-    const input = { ...defaultInputValues, customCommandTreatment: ["abc||def", "xyz||pqr"], startProject: "owner/project" };
-    jest.spyOn(InputService.prototype, "inputs", "get").mockImplementation(() => input);
+    const input = {
+      ...defaultInputValues,
+      customCommandTreatment: ["abc||def", "xyz||pqr"],
+      startProject: "owner/project",
+    };
+    jest
+      .spyOn(InputService.prototype, "inputs", "get")
+      .mockImplementation(() => input);
     expect(cliConfig.loadParsedInput()).toStrictEqual(input);
   });
 
   test("success: no input to validate", () => {
-    jest.spyOn(InputService.prototype, "inputs", "get").mockImplementation(() => defaultInputValues);
+    jest
+      .spyOn(InputService.prototype, "inputs", "get")
+      .mockImplementation(() => defaultInputValues);
     expect(cliConfig.loadParsedInput()).toStrictEqual(defaultInputValues);
   });
 
   test("failure: invalidate input", () => {
-    const input = { ...defaultInputValues, customCommandTreatment: ["abc||def", "xyz|pqr"] };
-    jest.spyOn(InputService.prototype, "inputs", "get").mockImplementation(() => input);
+    const input = {
+      ...defaultInputValues,
+      customCommandTreatment: ["abc||def", "xyz|pqr"],
+    };
+    jest
+      .spyOn(InputService.prototype, "inputs", "get")
+      .mockImplementation(() => input);
     expect(() => cliConfig.loadParsedInput()).toThrowError();
   });
 });

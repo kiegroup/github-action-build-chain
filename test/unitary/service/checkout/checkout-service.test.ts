@@ -10,7 +10,7 @@ import { rmSync } from "fs";
 import { GitCLIService } from "@bc/service/git/git-cli";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { serverUrl, nodeChain, fakeClone, checkClone } from "./helpers";
-import { MockGithub } from "../../../setup/mock-github";
+import { Moctokit } from "@kie/mock-github";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -23,16 +23,8 @@ Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
 Container.set(constants.GITHUB.TOKEN, "faketoken");
 
 const checkoutService = Container.get(CheckoutService);
-const mockGithub = new MockGithub(path.join(__dirname, "config.json"), "checkout-setup");
+const moctokit = new Moctokit();
 let cloneSpy: jest.SpyInstance, mergeSpy: jest.SpyInstance;
-
-beforeAll(async () => {
-  await mockGithub.setup();
-});
-
-afterAll(async () => {
-  await mockGithub.teardown();
-});
 
 beforeEach(async () => {
   //set node chain
@@ -58,10 +50,11 @@ beforeEach(async () => {
   mergeSpy = jest.spyOn(GitCLIService.prototype, "merge").mockImplementation(async () => undefined);
 });
 
+
 describe.each([
   ["sequential", true],
   ["parallel", false],
-])("%p: starting project has a PR from non-forked repository", (title: string, skipParallelCheckout: boolean) => {
+])("%p: starting project has a PR from non-forked repository", (_title: string, skipParallelCheckout: boolean) => { 
   const originalSource: ProjectConfiguration = {
     name: "project2",
     group: "owner2",
@@ -89,6 +82,20 @@ describe.each([
   });
 
   test("PR exists from node_forked:source_branch to node:mapped_branch", async () => {
+    
+    moctokit.rest.repos.listForks({
+      owner: "owner1",
+      repo: "project1"
+    }).reply({status: 200, data: [{name: "project1-forked", owner: {login: "owner2"}}]});
+    moctokit.rest.repos.get({
+      owner: "owner2",
+      repo: "project2"
+    }).reply({status: 200, data: {}});
+
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner2/project1-forked:sbranch2", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:sbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:sbranch2", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
+
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
@@ -138,6 +145,20 @@ describe.each([
   });
 
   test("PR exists from node:source_branch to node:mapped_branch", async () => {
+   
+    moctokit.rest.repos.listForks({
+      owner: "owner1",
+      repo: "project1"
+    }).reply({status: 200, data: [{name: "project1-forked", owner: {login: "owner4"}}]});
+    moctokit.rest.repos.get({
+      owner: "owner2",
+      repo: "project2"
+    }).reply({status: 200, data: {}});
+
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:sbranch2", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:sbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:sbranch2", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
+
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
@@ -187,6 +208,19 @@ describe.each([
   });
 
   test("No PR", async () => {
+    moctokit.rest.repos.listForks({
+      owner: "owner1",
+      repo: "project1"
+    }).reply({status: 200, data: []});
+    moctokit.rest.repos.get({
+      owner: "owner2",
+      repo: "project2"
+    }).reply({status: 200, data: {}});
+
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:sbranch2", base: "tbranch1"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:sbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:sbranch2", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
+
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
@@ -238,7 +272,7 @@ describe.each([
 describe.each([
   ["sequential", true],
   ["parallel", false],
-])("%p: starting project has a PR from forked repository", (title: string, skipParallelCheckout: boolean) => {
+])("%p: starting project has a PR from forked repository", (_title: string, skipParallelCheckout: boolean) => {
   const originalSource: ProjectConfiguration = {
     name: "project2-forked",
     group: "owner4",
@@ -266,6 +300,19 @@ describe.each([
   });
 
   test("PR exists from node_forked:source_branch to node:mapped_branch", async () => {
+    moctokit.rest.repos.listForks({
+      owner: "owner1",
+      repo: "project1"
+    }).reply({status: 200, data: [{name: "project1-forked", owner: {login: "owner4"}}]});
+    moctokit.rest.repos.listForks({
+      owner: "owner2",
+      repo: "project2"
+    }).reply({status: 200, data: [{name: "project2-forked", owner: {login: "owner4"}}]});
+
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner4/project1-forked:sbranch2-forked", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner4/project2-forked:sbranch2-forked", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
+
+    
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
@@ -315,6 +362,18 @@ describe.each([
   });
 
   test("PR exists from node:source_branch to node:mapped_branch", async () => {
+    moctokit.rest.repos.listForks({
+      owner: "owner1",
+      repo: "project1"
+    }).reply({status: 200, data: []});
+    moctokit.rest.repos.listForks({
+      owner: "owner2",
+      repo: "project2"
+    }).reply({status: 200, data: [{name: "project2-forked", owner: {login: "owner4"}}]});
+
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:sbranch2-forked", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner4/project2-forked:sbranch2-forked", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
+
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
@@ -364,6 +423,19 @@ describe.each([
   });
 
   test("No PR", async () => {
+    moctokit.rest.repos.listForks({
+      owner: "owner1",
+      repo: "project1"
+    }).reply({status: 200, data: []});
+    moctokit.rest.repos.listForks({
+      owner: "owner2",
+      repo: "project2"
+    }).reply({status: 200, data: [{name: "project2-forked", owner: {login: "owner4"}}]});
+
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:sbranch2-forked", base: "tbranch1"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner4/project2-forked:sbranch2-forked", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
+
+    
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
@@ -415,7 +487,7 @@ describe.each([
 describe.each([
   ["sequential", true],
   ["parallel", false],
-])("%p: starting project has no PR", (title: string, skipParallelCheckout: boolean) => {
+])("%p: starting project has no PR", (_title: string, skipParallelCheckout: boolean) => {
   const originalSource: ProjectConfiguration = {
     name: "project2",
     group: "owner2",
@@ -444,6 +516,19 @@ describe.each([
   });
 
   test("PR exists from node_forked:source_branch to node:mapped_branch", async () => {
+    moctokit.rest.repos.listForks({
+      owner: "owner1",
+      repo: "project1"
+    }).reply({status: 200, data: [{name: "project1-forked", owner: {login: "owner2"}}]});
+    moctokit.rest.repos.get({
+      owner: "owner2",
+      repo: "project2"
+    }).reply({status: 200, data: {}});
+
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner2/project1-forked:tbranch2", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+ 
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
@@ -492,6 +577,19 @@ describe.each([
   });
 
   test("PR exists from node:source_branch to node:mapped_branch", async () => {
+    moctokit.rest.repos.listForks({
+      owner: "owner1",
+      repo: "project1"
+    }).reply({status: 200, data: [{name: "project1-forked", owner: {login: "owner4"}}]});
+    moctokit.rest.repos.get({
+      owner: "owner2",
+      repo: "project2"
+    }).reply({status: 200, data: {}});
+
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:tbranch2", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+ 
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness
@@ -540,6 +638,20 @@ describe.each([
   });
 
   test("No PR", async () => {
+    moctokit.rest.repos.listForks({
+      owner: "owner1",
+      repo: "project1"
+    }).reply({status: 200, data: []});
+    moctokit.rest.repos.get({
+      owner: "owner2",
+      repo: "project2"
+    }).reply({status: 200, data: {}});
+
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:tbranch2", base: "tbranch1"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+ 
+    
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
     // checking clone and merge correctness

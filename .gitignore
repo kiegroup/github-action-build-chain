@@ -4,9 +4,9 @@ node_modules/
 locally_execution/**/*
 test/**/_temp/**/*
 build_chain_20*/**/*
-yarn.lock
-/project-dependencies.yaml
 coverage/
 test-report.xml
 .idea/
 .vscode/
+dist/
+build/

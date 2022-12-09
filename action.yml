@@ -15,21 +15,21 @@ inputs:
     required: false
   skip-execution:
     description: "skips execution and artifacts archiving for all projects. Overrides skip-project-execution"
-    default: false
+    default: "false"
     required: false
   skip-project-execution:
     description: "skips execution and artifacts archiving for certain projects"
     required: false
   skip-checkout:
     description: "Skip checkout for all projects. Overrides skip-project-checkout"
-    default: false
+    default: "false"
     required: false
   skip-project-checkout:
     description: "A list of projects to skip checkout"
     required: false
   skip-parallel-checkout:
     description: "Checkout the project sequentially or parallely"
-    default: false
+    default: "false"
     required: false
   custom-command-treatment:
     description: "<RegEx||ReplacementEx> Regex defines the regular expression for what you want to replace with the ReplacementEx"
@@ -45,7 +45,7 @@ inputs:
     description: "The prefix to identify the annotations for different jobs running for the same Action"
     required: false
 runs:
-  using: "node14"
+  using: "node16"
   main: "dist/index.js"
 branding:
   icon: "box"

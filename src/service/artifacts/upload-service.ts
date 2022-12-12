@@ -19,6 +19,10 @@ export class UploadService {
     this.logger = LoggerServiceFactory.getInstance();
   }
 
+  private validateArtifactName(name: string) {
+    return name.replace(/[/\s":<>*?\\]/g, "_");
+  }
+
   /** src: https://github.com/actions/upload-artifact/blob/main/src/search.ts#L31 */
   private getMultiPathLCA(searchPaths: string[]): string {
     if (searchPaths.length < 2) {
@@ -143,9 +147,9 @@ export class UploadService {
 
   async upload(archiveArtifacts: ArchiveArtifacts, projectName: string): Promise<artifact.UploadResponse> {
     // remove the filter once build-chain-config reader is refactored
-    const searchPaths = archiveArtifacts.paths.filter(pathItem => pathItem.path).reduce((prev: string, curr) => prev.concat(curr.path!, "\n"), "");
+    const searchPaths = archiveArtifacts.paths.filter(pathItem => pathItem.path).reduce((prev: string, curr) => prev.concat(curr.path, "\n"), "");
     const { filesToUpload, rootDirectory } = await this.findFilesToUpload(searchPaths);
-    const artifactName = archiveArtifacts.name ?? projectName;
+    const artifactName = this.validateArtifactName(archiveArtifacts.name ?? projectName);
 
     if (filesToUpload.length === 0) {
       this.noFileFound(archiveArtifacts, searchPaths);

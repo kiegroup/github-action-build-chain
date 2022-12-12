@@ -13,6 +13,7 @@ import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { GithubActionRunner } from "@bc/bin/runners/github-action-runner";
 import { JobSummaryService } from "@bc/service/job-summary/job-summary-service";
 import { defaultNodeValue } from "@bc/domain/node";
+import { ActionArguments } from "@bc/service/arguments/action/action-arguments";
 
 
 // disable logs
@@ -75,6 +76,7 @@ describe("execute", () => {
 
   beforeEach(() => {
     githubActionRunner = new GithubActionRunner();
+    jest.spyOn(ActionArguments.prototype, "parseInput").mockImplementation(() => undefined);
   });
 
   test("success", async () => {

@@ -1,13 +1,14 @@
 import { FlowType, InputValues, LoggerLevel } from "@bc/domain/inputs";
 import * as core from "@actions/core";
 import { OptionValues } from "commander";
-import Container from "typedi";
+import Container, { Service } from "typedi";
 import { InputService } from "@bc/service/inputs/input-service";
 import { InvalidInput } from "@bc/domain/errors";
 
 /**
  * Parses all inputs from github action workflow files
  */
+@Service()
 export class ActionArguments {
   /**
    * Converts user input to corresponding FlowType enum

@@ -6,6 +6,7 @@ import { EntryPoint } from "@bc/domain/entry-point";
 import Container from "typedi";
 import { JobSummaryService } from "@bc/service/job-summary/job-summary-service";
 import { defaultFlowResult } from "@bc/domain/flow";
+import { ActionArguments } from "@bc/service/arguments/action/action-arguments";
 
 export class GithubActionRunner extends Runner {
   constructor() {
@@ -13,6 +14,10 @@ export class GithubActionRunner extends Runner {
   }
 
   async execute(): Promise<void> {
+    // parse arguments
+    const args = Container.get(ActionArguments);
+    args.parseInput();
+
     // initialize configuration
     await this.initConfiguration();
 

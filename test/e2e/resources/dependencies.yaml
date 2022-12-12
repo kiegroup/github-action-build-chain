@@ -1,0 +1,12 @@
+version: 2.2
+dependencies:
+  - project: owner1/project1
+  - project: owner1/project2
+    dependencies:
+      - project: owner1/project1
+  - project: owner1/project3
+    dependencies:
+      - project: owner1/project1
+  - project: owner1/project4
+    dependencies:
+      - project: owner1/project3

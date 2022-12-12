@@ -15,14 +15,14 @@ export class PostExecutor extends PrePostExecutor {
     const post = this.configService.getPost();
     let result: ExecuteCommandResult[] = [];
     if (post) {
-      this.logger.startGroup("[POST] Executing post section");
+      this.logger.startGroup("Executing post section");
       if (this.executionSuccess) {
-        this.logger.info("[POST] execution result is OK, so 'success' and 'always' sections will be executed");
+        this.logger.info("execution result is OK, so 'success' and 'always' sections will be executed");
         if (post.success) {
           result = await this.execute(post.success);
         }
       } else {
-        this.logger.info("[POST] execution result is NOT OK, so 'failure' and 'always' sections will be executed");
+        this.logger.info("execution result is NOT OK, so 'failure' and 'always' sections will be executed");
         if (post.failure) {
           result = await this.execute(post.failure);
         }

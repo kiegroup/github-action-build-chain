@@ -60,32 +60,33 @@ export class CheckoutService {
   private async checkoutNode(node: Node): Promise<undefined | CheckoutInfo> {
     // Don't checkout this node if skipCheckout flag is set to true or project is listed in skipProjectCheckout flag
     if (this.config.skipCheckout(node)) {
-      this.logger.info(`[${node.project}] Checkout skipped`);
+      this.logger.debug(`[${node.project}] Checkout skipped`);
       return undefined;
     }
 
     const checkoutInfo = await this.getCheckoutInfo(node);
+    this.logger.debug(`[${node.project}] CheckoutInfo - ${JSON.stringify(checkoutInfo)}`);
     const gitCLIService = Container.get(GitCLIService);
 
     // get the url of the target repository that needs to be cloned
     const targetCloneUrl = this.config.getCloneUrl(checkoutInfo.targetGroup, checkoutInfo.targetName);
 
-    this.logger.info(`Checking out ${checkoutInfo.targetGroup}/${checkoutInfo.targetName}:${checkoutInfo.targetBranch} into ${checkoutInfo.repoDir}`);
-
     // clone the repository and switch to target branch (for branch flow target and source branch are the same)
-    await gitCLIService.clone(targetCloneUrl, checkoutInfo.repoDir, checkoutInfo.targetBranch).catch(() => {
+    await gitCLIService.clone(targetCloneUrl, checkoutInfo.repoDir, checkoutInfo.targetBranch).catch(err => {
+      this.logger.debug(JSON.stringify(err));
       logAndThrow(
         `[${node.project}] Error cloning ${checkoutInfo.targetGroup}/${checkoutInfo.targetName} and switching to target branch ${checkoutInfo.targetBranch}`
       );
     });
     if (checkoutInfo.merge) {
-      this.logger.info(`[${node.project}] Merging ${checkoutInfo.sourceGroup}/${checkoutInfo.sourceName}:${checkoutInfo.sourceBranch}
+      this.logger.debug(`[${node.project}] Merging ${checkoutInfo.sourceGroup}/${checkoutInfo.sourceName}:${checkoutInfo.sourceBranch}
       into ${checkoutInfo.targetGroup}/${checkoutInfo.targetName}:${checkoutInfo.targetBranch}`);
 
       // get url of the source for the merge
       const sourceCloneUrl = this.config.getCloneUrl(checkoutInfo.sourceGroup, checkoutInfo.sourceName);
 
-      await gitCLIService.merge(checkoutInfo.repoDir, sourceCloneUrl, checkoutInfo.sourceBranch).catch(() => {
+      await gitCLIService.merge(checkoutInfo.repoDir, sourceCloneUrl, checkoutInfo.sourceBranch).catch(err => {
+        this.logger.debug(JSON.stringify(err));
         logAndThrow(`[${node.project}] Error merging ${checkoutInfo.sourceGroup}/${checkoutInfo.sourceName}:${checkoutInfo.sourceBranch}
                       into ${checkoutInfo.targetGroup}/${checkoutInfo.targetName}:${checkoutInfo.targetBranch}`);
       });
@@ -93,7 +94,7 @@ export class CheckoutService {
     // clone multiple times if needed
     await this.cloneNode(node);
 
-    this.logger.info(`[${node.project}] Checked out`);
+    this.logger.debug(`[${node.project}] Checked out`);
 
     return checkoutInfo;
   }

@@ -105,6 +105,7 @@ test("PR from target:branchA to target:branchB", async () => {
     .setGithubToken("token")
     .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
     .setEnv("STARTING_PROJECT", "owner1/project2")
+    .setEnv("CLONE_DIR", path.join(parentDir, "project2"))
     .setEvent({
       pull_request: {
         head: {
@@ -146,7 +147,7 @@ test("PR from target:branchA to target:branchB", async () => {
         ]),
       ],
     });
-  expect(result.length).toBe(3);
+  expect(result.length).toBe(4);
   expect(result[0]).toStrictEqual({
     name: "Main actions/checkout@v2",
     status: 0,
@@ -215,6 +216,12 @@ test("PR from target:branchA to target:branchB", async () => {
   expect(group7.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
+
+  expect(result[2]).toStrictEqual({
+    name: "Main Check for clones",
+    status: 0,
+    output: "exist",
+  });
 });
 
 test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
@@ -227,6 +234,7 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
     .setGithubToken("token")
     .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
     .setEnv("STARTING_PROJECT", "owner1/project3")
+    .setEnv("CLONE_DIR", path.join(parentDir, "project3"))
     .setEvent({
       pull_request: {
         head: {
@@ -282,7 +290,7 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
       ],
     });
 
-  expect(result.length).toBe(3);
+  expect(result.length).toBe(4);
   expect(result[0]).toStrictEqual({
     name: "Main actions/checkout@v2",
     status: 0,
@@ -348,6 +356,12 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
   expect(group7.output).toEqual(
     expect.stringContaining("Artifact owner1_project3 uploaded 1 files")
   );
+
+  expect(result[2]).toStrictEqual({
+    name: "Main Check for clones",
+    status: 0,
+    output: "exist",
+  });
   
   // the first owner1_project3 is the parent dir of the artifact. The second one is 
   // because we didn't pass any artifact name so it uses the project name as the 
@@ -365,6 +379,7 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
     .setGithubToken("token")
     .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
     .setEnv("STARTING_PROJECT", "owner1/project1")
+    .setEnv("CLONE_DIR", path.join(parentDir, "project1"))
     .setEvent({
       pull_request: {
         head: {
@@ -416,7 +431,7 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
       ],
     });
 
-  expect(result.length).toBe(3);
+  expect(result.length).toBe(4);
   expect(result[0]).toStrictEqual({
     name: "Main actions/checkout@v2",
     status: 0,
@@ -488,4 +503,10 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
   expect(group7.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
+
+  expect(result[2]).toStrictEqual({
+    name: "Main Check for clones",
+    status: 0,
+    output: "exist",
+  });
 });

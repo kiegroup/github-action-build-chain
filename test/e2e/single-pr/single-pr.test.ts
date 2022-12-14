@@ -2,6 +2,8 @@ import { GitActionTypes, MockGithub, Moctokit } from "@kie/mock-github";
 import path from "path";
 import { Act } from "@kie/act-js";
 import { existsSync, rmSync } from "fs";
+import { logActOutput } from "../helper/helper";
+
 
 let mockGithub: MockGithub;
 beforeEach(async () => {
@@ -131,6 +133,7 @@ test("PR from target:branchA to target:branchB", async () => {
       },
     })
     .runEvent("pull_request", {
+      ...logActOutput("single-pr-1.log"),
       cwd: parentDir,
       workflowFile: repoPath,
       bind: true,
@@ -142,7 +145,6 @@ test("PR from target:branchA to target:branchB", async () => {
           })
           .setResponse({ status: 200, data: {} }),
         moctokit.rest.pulls.list().setResponse([
-          { status: 200, data: [] },
           { status: 200, data: [{ title: "pr" }] },
         ]),
       ],
@@ -260,6 +262,7 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
       },
     })
     .runEvent("pull_request", {
+      ...logActOutput("single-pr-2.log"),
       cwd: parentDir,
       workflowFile: repoPath,
       bind: true,
@@ -405,6 +408,7 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
       },
     })
     .runEvent("pull_request", {
+      ...logActOutput("single-pr-3.log"),
       cwd: parentDir,
       workflowFile: repoPath,
       bind: true,

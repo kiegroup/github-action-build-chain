@@ -1,6 +1,15 @@
 version: 2.2
 dependencies:
   - project: owner1/project1
+    mapping:
+      dependencies:
+        default:
+          - source: branchB
+            target: 8.x
+      dependant:
+        default:
+          - source: branchB
+            targetExpression: "process.env.GITHUB_BASE_REF.replace('branch', '8.')"
   - project: owner1/project2
     dependencies:
       - project: owner1/project1
@@ -10,3 +19,18 @@ dependencies:
   - project: owner1/project4
     dependencies:
       - project: owner1/project3
+      - project: owner1/project2
+    mapping:
+      dependencies:
+        default:
+          - source: branchB
+            target: 7.x
+        owner1/project3:
+          - source: branchB
+            target: branchC
+      dependant:
+        default:
+          - source: branch.*
+            target: 8.x
+      exclude:
+        - owner1/project2

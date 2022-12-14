@@ -1,7 +1,7 @@
 import { GitActionTypes, MockGithub, Moctokit } from "@kie/mock-github";
 import path from "path";
 import { Act } from "@kie/act-js";
-import { logActOutput } from "../helper/helper";
+import { logActOutput } from "../helper/logger";
 
 let mockGithub: MockGithub;
 beforeEach(async () => {
@@ -87,7 +87,6 @@ beforeEach(async () => {
               action: GitActionTypes.PUSH,
               branch: "branchA",
             },
-            
           ],
         },
         "owner2/project4": {
@@ -99,7 +98,6 @@ beforeEach(async () => {
             },
           ],
         },
-
       },
     },
     path.join(__dirname, "setup")
@@ -120,7 +118,13 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
     .setGithubToken("token")
     .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
     .setEnv("STARTING_PROJECT", "owner1/project4")
-    .setEnv("CLONE_DIR", `${path.join(parentDir, "project1")} ${path.join(parentDir, "project2")} ${path.join(parentDir, "project3")}`)
+    .setEnv(
+      "CLONE_DIR",
+      `${path.join(parentDir, "project1")} ${path.join(
+        parentDir,
+        "project2"
+      )} ${path.join(parentDir, "project3")}`
+    )
     .setEvent({
       pull_request: {
         head: {
@@ -167,12 +171,6 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
               },
             ],
           }),
-        moctokit.rest.pulls
-          .list({
-            owner: "owner1",
-            repo: "project4",
-          })
-          .setResponse([{ status: 200, data: [{ title: "pr" }] }]),
         moctokit.rest.repos
           .listForks({
             owner: "owner1",
@@ -182,45 +180,25 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
             status: 200,
             data: [{ name: "project3", owner: { login: "owner2" } }],
           }),
-        moctokit.rest.pulls
-          .list({
-            owner: "owner1",
-            repo: "project3",
-          })
-          .setResponse([{ status: 200, data: [{ title: "pr" }] }]),
         moctokit.rest.repos
           .listForks({
             owner: "owner1",
-            repo: "project2",
+            repo: /project(1|2)/,
           })
           .setResponse({
             status: 200,
             data: [],
+            repeat: 2,
           }),
         moctokit.rest.pulls
           .list({
             owner: "owner1",
-            repo: "project2",
+            repo: /project(1|2|3|4)/,
           })
-          .setResponse([{ status: 200, data: [{ title: "pr" }] }]),
-        moctokit.rest.repos
-          .listForks({
-            owner: "owner1",
-            repo: "project1",
-          })
-          .setResponse({
-            status: 200,
-            data: [],
-          }),
-        moctokit.rest.pulls
-          .list({
-            owner: "owner1",
-            repo: "project1",
-          })
-          .setResponse([{ status: 200, data: [{ title: "pr" }] }]),
+          .setResponse({ status: 200, data: [{ title: "pr" }], repeat: 4 }),
       ],
     });
-  
+
   expect(result.length).toBe(4);
   expect(result[0]).toStrictEqual({
     name: "Main actions/checkout@v2",
@@ -228,8 +206,8 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
     output: "",
   });
   expect(result[1]).toMatchObject({ name: "Main ./build-chain", status: 0 });
-  
-  // checking pre section
+
+  // pre section
   expect(result[1].groups?.length).toBe(7);
   const group1 = result[1].groups![0];
   expect(group1.name).toBe("Executing pre section");
@@ -239,8 +217,8 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
   expect(group1.output).toEqual(
     expect.stringContaining("Executing pre step 2")
   );
-  
-  // checking execution plan. making sure the correct level is taken for each project
+
+  // execution plan
   const group2 = result[1].groups![1];
   expect(group2.name).toBe("Execution Plan");
   expect(group2.output).toEqual(
@@ -251,13 +229,17 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
     expect.stringContaining("Level type: upstream")
   );
   expect(group2.output).toEqual(expect.stringContaining("[owner1/project2]"));
-  expect(group2.output).toEqual(expect.stringContaining("Level type: upstream"));
+  expect(group2.output).toEqual(
+    expect.stringContaining("Level type: upstream")
+  );
   expect(group2.output).toEqual(expect.stringContaining("[owner1/project3]"));
-  expect(group2.output).toEqual(expect.stringContaining("Level type: upstream"));  
+  expect(group2.output).toEqual(
+    expect.stringContaining("Level type: upstream")
+  );
   expect(group2.output).toEqual(expect.stringContaining("[owner1/project4]"));
   expect(group2.output).toEqual(expect.stringContaining("Level type: current"));
-  
-  // checking which project has been checked out and merged with with which branch. important to verify the mapped targets
+
+  // checkout project. important to verify the mapped targets
   const group3 = result[1].groups![2];
   expect(group3.name).toBe("Checking out owner1/project4 and its dependencies");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project1]"));
@@ -295,7 +277,7 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
     )
   );
 
-  // before section for each project
+  // before section
   const group4 = result[1].groups![3];
   expect(group4.name).toBe("Executing before");
   expect(group4.output).toEqual(
@@ -319,15 +301,15 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
   expect(group4.output).toEqual(
     expect.stringContaining("No commands were found for this project")
   );
-  
-  // current section for each project
+
+  // current section
   const group5 = result[1].groups![4];
   expect(group5.name).toBe("Executing commands");
   expect(group5.output).toEqual(expect.stringContaining("default upstream"));
-  expect(group5.output).toEqual(expect.stringContaining("upstream owner1/project2"));
   expect(group5.output).toEqual(
-    expect.stringContaining("default current")
+    expect.stringContaining("upstream owner1/project2")
   );
+  expect(group5.output).toEqual(expect.stringContaining("default current"));
   expect(group5.output).toEqual(expect.stringContaining("[owner1/project1]"));
   expect(group5.output).toEqual(
     expect.stringContaining("[OK] echo \"default upstream\" [Executed in")
@@ -344,9 +326,8 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
   expect(group5.output).toEqual(
     expect.stringContaining("[OK] echo \"default current\" [Executed in")
   );
-  
-  
-  // after section for each project
+
+  // after section
   const group6 = result[1].groups![5];
   expect(group6.name).toBe("Executing after");
   expect(group6.output).toEqual(
@@ -377,13 +358,15 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
   expect(group6.output).toEqual(
     expect.stringContaining("[OK] echo \"default after current\" [Executed in")
   );
-
+  
+  // artifacts
   const group7 = result[1].groups![6];
   expect(group7.name).toBe("Uploading artifacts");
   expect(group7.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
-
+  
+  // clone check is done during the workflow execution. just verify it succeeded here
   expect(result[2]).toStrictEqual({
     name: "Main Check for clones",
     status: 0,
@@ -400,7 +383,10 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
     .setGithubToken("token")
     .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
     .setEnv("STARTING_PROJECT", "owner1/project2")
-    .setEnv("CLONE_DIR", `${path.join(parentDir, "project1")} ${path.join(parentDir, "project2")}`)
+    .setEnv(
+      "CLONE_DIR",
+      `${path.join(parentDir, "project1")} ${path.join(parentDir, "project2")}`
+    )
     .setEvent({
       pull_request: {
         head: {
@@ -434,27 +420,15 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
         moctokit.rest.repos
           .get({
             owner: "owner1",
-            repo: "project1",
+            repo: /project(1|2)/,
           })
-          .setResponse({ status: 200, data: {} }),
-        moctokit.rest.repos
-          .get({
-            owner: "owner1",
-            repo: "project2",
-          })
-          .setResponse({ status: 200, data: {} }),
+          .setResponse({ status: 200, data: {}, repeat: 2 }),
         moctokit.rest.pulls
           .list({
             owner: "owner1",
-            repo: "project2",
+            repo: /project(1|2)/,
           })
-          .setResponse([{ status: 200, data: [{ title: "pr" }] }]),
-        moctokit.rest.pulls
-          .list({
-            owner: "owner1",
-            repo: "project1",
-          })
-          .setResponse([{ status: 200, data: [{ title: "pr" }] }]),
+          .setResponse({ status: 200, data: [{ title: "pr" }], repeat: 2 }),
       ],
     });
   expect(result.length).toBe(4);
@@ -465,6 +439,8 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
   });
   expect(result[1]).toMatchObject({ name: "Main ./build-chain", status: 0 });
   expect(result[1].groups?.length).toBe(7);
+  
+  // pre section
   const group1 = result[1].groups![0];
   expect(group1.name).toBe("Executing pre section");
   expect(group1.output).toEqual(
@@ -473,7 +449,8 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
   expect(group1.output).toEqual(
     expect.stringContaining("Executing pre step 2")
   );
-
+  
+  // execution plan
   const group2 = result[1].groups![1];
   expect(group2.name).toBe("Execution Plan");
   expect(group2.output).toEqual(
@@ -485,7 +462,8 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
   );
   expect(group2.output).toEqual(expect.stringContaining("[owner1/project2]"));
   expect(group2.output).toEqual(expect.stringContaining("Level type: current"));
-
+  
+  // checkout projects. important to verify the mapped targets
   const group3 = result[1].groups![2];
   expect(group3.name).toBe("Checking out owner1/project2 and its dependencies");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project1]"));
@@ -504,7 +482,8 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
       "Merged owner1/project2:branchA into branch branchB"
     )
   );
-
+  
+  // before section
   const group4 = result[1].groups![3];
   expect(group4.name).toBe("Executing before");
   expect(group4.output).toEqual(
@@ -520,7 +499,8 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
   expect(group4.output).toEqual(
     expect.stringContaining("No commands were found for this project")
   );
-
+  
+  // current section
   const group5 = result[1].groups![4];
   expect(group5.name).toBe("Executing commands");
   expect(group5.output).toEqual(expect.stringContaining("default upstream"));
@@ -535,7 +515,8 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
   expect(group5.output).toEqual(
     expect.stringContaining("[OK] echo \"current owner1/project2\" [Executed in")
   );
-
+  
+  // after section
   const group6 = result[1].groups![5];
   expect(group6.name).toBe("Executing after");
   expect(group6.output).toEqual(
@@ -552,13 +533,15 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
   expect(group6.output).toEqual(
     expect.stringContaining("[OK] echo \"default after current\" [Executed in")
   );
-
+  
+  // artifacts
   const group7 = result[1].groups![6];
   expect(group7.name).toBe("Uploading artifacts");
   expect(group7.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
-
+  
+  // clone check is done during the workflow execution. just verify it succeeded here
   expect(result[2]).toStrictEqual({
     name: "Main Check for clones",
     status: 0,

@@ -10,4 +10,4 @@ test-report.xml
 .vscode/
 dist/
 build/
-**/*.log
+*.log

@@ -2,7 +2,7 @@ import { GitActionTypes, MockGithub, Moctokit } from "@kie/mock-github";
 import path from "path";
 import { Act } from "@kie/act-js";
 import { existsSync, rmSync } from "fs";
-import { logActOutput } from "../helper/helper";
+import { logActOutput } from "../helper/logger";
 
 
 let mockGithub: MockGithub;
@@ -157,6 +157,8 @@ test("PR from target:branchA to target:branchB", async () => {
   });
   expect(result[1]).toMatchObject({ name: "Main ./build-chain", status: 0 });
   expect(result[1].groups?.length).toBe(7);
+  
+  // pre section
   const group1 = result[1].groups![0];
   expect(group1.name).toBe("Executing pre section");
   expect(group1.output).toEqual(
@@ -165,7 +167,8 @@ test("PR from target:branchA to target:branchB", async () => {
   expect(group1.output).toEqual(
     expect.stringContaining("Executing pre step 2")
   );
-
+  
+  // execution plan
   const group2 = result[1].groups![1];
   expect(group2.name).toBe("Execution Plan");
   expect(group2.output).toEqual(
@@ -173,7 +176,8 @@ test("PR from target:branchA to target:branchB", async () => {
   );
   expect(group2.output).toEqual(expect.stringContaining("[owner1/project2]"));
   expect(group2.output).toEqual(expect.stringContaining("Level type: current"));
-
+  
+  // checkout project
   const group3 = result[1].groups![2];
   expect(group3.name).toBe("Checking out owner1/project2 and its dependencies");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project2]"));
@@ -185,14 +189,16 @@ test("PR from target:branchA to target:branchB", async () => {
       "Merged owner1/project2:branchA into branch branchB"
     )
   );
-
+  
+  // before section
   const group4 = result[1].groups![3];
   expect(group4.name).toBe("Executing before");
   expect(group4.output).toEqual(expect.stringContaining("[owner1/project2]"));
   expect(group4.output).toEqual(
     expect.stringContaining("No commands were found for this project")
   );
-
+  
+  // current section
   const group5 = result[1].groups![4];
   expect(group5.name).toBe("Executing commands");
   expect(group5.output).toEqual(
@@ -202,7 +208,8 @@ test("PR from target:branchA to target:branchB", async () => {
   expect(group5.output).toEqual(
     expect.stringContaining("[OK] echo \"current owner1/project2\" [Executed in")
   );
-
+  
+  // after section
   const group6 = result[1].groups![5];
   expect(group6.name).toBe("Executing after");
   expect(group6.output).toEqual(
@@ -212,13 +219,15 @@ test("PR from target:branchA to target:branchB", async () => {
   expect(group6.output).toEqual(
     expect.stringContaining("[OK] echo \"default after current\" [Executed in")
   );
-
+  
+  // artifacts
   const group7 = result[1].groups![6];
   expect(group7.name).toBe("Uploading artifacts");
   expect(group7.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
-
+  
+  // clone check is done during the workflow execution. just verify it succeeded here
   expect(result[2]).toStrictEqual({
     name: "Main Check for clones",
     status: 0,
@@ -301,6 +310,8 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
   });
   expect(result[1]).toMatchObject({ name: "Main ./build-chain", status: 0 });
   expect(result[1].groups?.length).toBe(7);
+  
+  // pre section
   const group1 = result[1].groups![0];
   expect(group1.name).toBe("Executing pre section");
   expect(group1.output).toEqual(
@@ -309,7 +320,8 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
   expect(group1.output).toEqual(
     expect.stringContaining("Executing pre step 2")
   );
-
+  
+  // execution plan
   const group2 = result[1].groups![1];
   expect(group2.name).toBe("Execution Plan");
   expect(group2.output).toEqual(
@@ -317,7 +329,8 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
   );
   expect(group2.output).toEqual(expect.stringContaining("[owner1/project3]"));
   expect(group2.output).toEqual(expect.stringContaining("Level type: current"));
-
+  
+  // checkout project
   const group3 = result[1].groups![2];
   expect(group3.name).toBe("Checking out owner1/project3 and its dependencies");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project3]"));
@@ -329,21 +342,24 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
       "Merged owner2/project3:branchA into branch branchB"
     )
   );
-
+  
+  // before section
   const group4 = result[1].groups![3];
   expect(group4.name).toBe("Executing before");
   expect(group4.output).toEqual(expect.stringContaining("[owner1/project3]"));
   expect(group4.output).toEqual(
     expect.stringContaining("No commands were found for this project")
   );
-
+  
+  // current section
   const group5 = result[1].groups![4];
   expect(group5.name).toBe("Executing commands");
   expect(group5.output).toEqual(expect.stringContaining("[owner1/project3]"));
   expect(group5.output).toEqual(
     expect.stringContaining("[OK] touch project3-current.log [Executed in")
   );
-
+  
+  // after section
   const group6 = result[1].groups![5];
   expect(group6.name).toBe("Executing after");
   expect(group6.output).toEqual(
@@ -353,13 +369,15 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
   expect(group6.output).toEqual(
     expect.stringContaining("[OK] echo \"default after current\" [Executed in")
   );
-
+  
+  // artifacts
   const group7 = result[1].groups![6];
   expect(group7.name).toBe("Uploading artifacts");
   expect(group7.output).toEqual(
     expect.stringContaining("Artifact owner1_project3 uploaded 1 files")
   );
-
+  
+  // clone check is done during the workflow execution. just verify it succeeded here
   expect(result[2]).toStrictEqual({
     name: "Main Check for clones",
     status: 0,
@@ -443,6 +461,8 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
   });
   expect(result[1]).toMatchObject({ name: "Main ./build-chain", status: 0 });
   expect(result[1].groups?.length).toBe(7);
+  
+  // pre section
   const group1 = result[1].groups![0];
   expect(group1.name).toBe("Executing pre section");
   expect(group1.output).toEqual(
@@ -451,7 +471,8 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
   expect(group1.output).toEqual(
     expect.stringContaining("Executing pre step 2")
   );
-
+  
+  // execution plan
   const group2 = result[1].groups![1];
   expect(group2.name).toBe("Execution Plan");
   expect(group2.output).toEqual(
@@ -460,6 +481,7 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
   expect(group2.output).toEqual(expect.stringContaining("[owner1/project1]"));
   expect(group2.output).toEqual(expect.stringContaining("Level type: current"));
 
+  // checkout project
   const group3 = result[1].groups![2];
   expect(group3.name).toBe("Checking out owner1/project1 and its dependencies");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project1]"));
@@ -472,6 +494,7 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
     )
   );
 
+  // before section
   const group4 = result[1].groups![3];
   expect(group4.name).toBe("Executing before");
   expect(group4.output).toEqual(
@@ -481,7 +504,8 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
   expect(group4.output).toEqual(
     expect.stringContaining("[OK] echo \"before current owner1/project1\" [Executed in")
   );
-
+  
+  // current section
   const group5 = result[1].groups![4];
   expect(group5.name).toBe("Executing commands");
   expect(group5.output).toEqual(
@@ -491,7 +515,8 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
   expect(group5.output).toEqual(
     expect.stringContaining("[OK] echo \"current owner1/project1\" [Executed in")
   );
-
+  
+  // after section
   const group6 = result[1].groups![5];
   expect(group6.name).toBe("Executing after");
   expect(group6.output).toEqual(
@@ -501,13 +526,15 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
   expect(group6.output).toEqual(
     expect.stringContaining("[OK] echo \"default after current\" [Executed in")
   );
-
+  
+  // artifacts
   const group7 = result[1].groups![6];
   expect(group7.name).toBe("Uploading artifacts");
   expect(group7.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
-
+  
+  // clone check is done during the workflow execution. just verify it succeeded here
   expect(result[2]).toStrictEqual({
     name: "Main Check for clones",
     status: 0,

@@ -106,7 +106,7 @@ export class GitCLIService {
    * @param branch branch to pull from
    */
   async merge(cwd: string, repositoryUrl: string, branch: string) {
-    await this.git(cwd).pull(repositoryUrl, branch, ["--no-rebase"]);
+    await this.git(cwd).pull(repositoryUrl, branch, ["--no-rebase", "--allow-unrelated-histories"]);
   }
 
   /**

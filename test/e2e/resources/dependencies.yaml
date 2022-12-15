@@ -9,7 +9,7 @@ dependencies:
       dependant:
         default:
           - source: branchB
-            targetExpression: "process.env.GITHUB_BASE_REF.replace('branch', '8.')"
+            targetExpression: "(process.env.GITHUB_BASE_REF === '' ? 'branchB' : process.env.GITHUB_BASE_REF).replace('branch', '8.')"
   - project: owner1/project2
     dependencies:
       - project: owner1/project1

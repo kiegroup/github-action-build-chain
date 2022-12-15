@@ -63,7 +63,7 @@ export class ActionArguments {
       .trim()
       .split(";")
       .forEach(flag => {
-        const opt: string[] = flag.split(" ");
+        const opt: string[] = flag.trim().split(" ");
         if (opt[0].startsWith("--")) {
           opt[0] = opt[0].substring(2);
         } else if (opt[0].startsWith("-")) {

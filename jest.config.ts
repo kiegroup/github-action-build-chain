@@ -11,6 +11,6 @@ const jestConfig: Config.InitialOptions = {
   clearMocks: true,
   resetMocks: true,
   coveragePathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/test/"],
-  testTimeout: 10000
+  testTimeout: 120000
 };
 export default jestConfig;

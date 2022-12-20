@@ -1,6 +1,6 @@
 import { exec } from "@actions/exec";
-import { Service } from "typedi";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
+import Container, { Service } from "typedi";
+import { LoggerService } from "@bc/service/logger/logger-service";
 
 @Service()
 export class ExportExecutor {
@@ -8,7 +8,7 @@ export class ExportExecutor {
   async execute(command: string, cwd?: string): Promise<void> {
     const expressionCommand = new ExpressionCommand(command);
     process.env[expressionCommand.variable] = await this.executeExpression(expressionCommand.expression, cwd);
-    LoggerServiceFactory.getInstance().debug(`The variable \`${expressionCommand.variable}\` has been set to the env with the value \`${process.env[expressionCommand.variable]}\``);
+    Container.get(LoggerService).logger.debug(`The variable \`${expressionCommand.variable}\` has been set to the env with the value \`${process.env[expressionCommand.variable]}\``);
   }
 
   private async executeExpression(expression: string, cwd?: string): Promise<string> {
@@ -45,7 +45,7 @@ class ExpressionCommand {
     const commandArray = command.match(/^export (\w+)=(.*)/);
     if (!commandArray || commandArray.length !== 3) {
       const message = `The export command ${command} is not properly defined. It should be something like "export VARIBLE=expression". Please fix it an try again.`;
-      LoggerServiceFactory.getInstance().error(message);
+      Container.get(LoggerService).logger.error(message);
       throw new Error(message);
     }
     return commandArray;

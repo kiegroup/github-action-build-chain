@@ -1,8 +1,8 @@
-import { Service } from "typedi";
+import Container, { Service } from "typedi";
 import { BashExecutor } from "@bc/service/command/executor/bash-executor";
 import { ExportExecutor } from "@bc/service/command/executor/export-executor";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
+import { LoggerService } from "@bc/service/logger/logger-service";
 import { hrtimeToMs } from "@bc/utils/date";
 
 @Service()
@@ -23,7 +23,7 @@ export class CommandExecutorDelegator {
       result = ExecutionResult.OK;
     } catch (ex) {
       errorMessage = (ex instanceof Error) ? ex.message : "unknown";
-      LoggerServiceFactory.getInstance().error(`Error executing command ${command}. ${errorMessage}`);
+      Container.get(LoggerService).logger.error(`Error executing command ${command}. ${errorMessage}`);
       result = ExecutionResult.NOT_OK;
     }
     return {

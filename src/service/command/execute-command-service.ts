@@ -1,9 +1,9 @@
-import { Service } from "typedi";
+import Container, { Service } from "typedi";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
 import { CommandTreatmentDelegator } from "@bc/service/command/treatment/command-treatment-delegator";
 import { CommandExecutorDelegator } from "@bc/service/command/executor/command-executor-delegator";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
+import { LoggerService } from "@bc/service/logger/logger-service";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { NodeExecution, NodeExecutionLevel } from "@bc/domain/node-execution";
@@ -38,10 +38,10 @@ export class ExecuteCommandService {
       levelCommands = commands[`${nodeExecutionLevel}`].length ? commands[`${nodeExecutionLevel}`] : commands[`${NodeExecutionLevel.CURRENT}`];
     }
     if (!commands) {
-      LoggerServiceFactory.getInstance().debug(`No commands defined for project ${node.project} and phase ${executionPhase}`);
+      Container.get(LoggerService).logger.debug(`No commands defined for project ${node.project} and phase ${executionPhase}`);
     } else if (!levelCommands || !levelCommands.length) {
       const levelMsg = nodeExecutionLevel !== NodeExecutionLevel.CURRENT ? `${nodeExecutionLevel} or ${NodeExecutionLevel.CURRENT}` : NodeExecutionLevel.CURRENT;
-      LoggerServiceFactory.getInstance().debug(`No commands defined for project ${node.project} phase ${executionPhase} and level ${levelMsg}`);
+      Container.get(LoggerService).logger.debug(`No commands defined for project ${node.project} phase ${executionPhase} and level ${levelMsg}`);
     }
     return levelCommands;
   }

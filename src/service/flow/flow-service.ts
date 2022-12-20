@@ -8,8 +8,8 @@ import { ArtifactService } from "@bc/service/artifacts/artifact-service";
 import { CheckoutService } from "@bc/service/checkout/checkout-service";
 import { ExecuteCommandService } from "@bc/service/command/execute-command-service";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import Container, { Service } from "typedi";
 
 @Service()
@@ -17,7 +17,7 @@ export class FlowService {
   private configService: ConfigurationService;
   private checkoutService: CheckoutService;
   private executor: ExecuteCommandService;
-  private logger: LoggerService;
+  private logger: BaseLoggerService;
   private artifactService: ArtifactService;
 
   constructor() {
@@ -25,7 +25,7 @@ export class FlowService {
     this.checkoutService = Container.get(CheckoutService);
     this.executor = Container.get(ExecuteCommandService);
     this.artifactService = Container.get(ArtifactService);
-    this.logger = LoggerServiceFactory.getInstance();
+    this.logger = Container.get(LoggerService).logger;
   }
 
   async run(): Promise<FlowResult> {

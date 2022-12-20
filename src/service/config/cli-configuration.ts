@@ -2,7 +2,7 @@ import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/co
 import { constants } from "@bc/domain/constants";
 import { FlowType } from "@bc/domain/inputs";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
-import { OctokitFactory } from "@bc/service/git/octokit";
+import { OctokitService } from "@bc/service/git/octokit";
 import { logAndThrow } from "@bc/utils/log";
 import Container from "typedi";
 
@@ -66,7 +66,7 @@ export class CLIConfiguration extends BaseConfiguration {
     if (prCheck) {
       this.logger.debug("Getting pull request information");
       try {
-        const { data } = await OctokitFactory.getOctokitInstance().pulls.get({
+        const { data } = await Container.get(OctokitService).octokit.pulls.get({
           owner: prCheck[1],
           repo: prCheck[2],
           pull_number: parseInt(prCheck[3]),

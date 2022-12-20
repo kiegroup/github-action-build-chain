@@ -1,6 +1,5 @@
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { getMappedTarget, Node } from "@kie/build-chain-configuration-reader";
 import Container, { Service } from "typedi";
 import { copy } from "fs-extra";
@@ -10,15 +9,16 @@ import { GithubAPIService } from "@bc/service/git/github-api";
 import { GitCLIService } from "@bc/service/git/git-cli";
 import { logAndThrow } from "@bc/utils/log";
 import { NotFoundError } from "@bc/domain/errors";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 
 @Service()
 export class CheckoutService {
   private readonly config: ConfigurationService;
-  private readonly logger: LoggerService;
+  private readonly logger: BaseLoggerService;
 
   constructor() {
     this.config = Container.get(ConfigurationService);
-    this.logger = LoggerServiceFactory.getInstance();
+    this.logger = Container.get(LoggerService).logger;
   }
   /**
    * A node is cloned into a directory which is named as following:

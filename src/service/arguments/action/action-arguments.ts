@@ -82,7 +82,7 @@ export class ActionArguments {
   /**
    * Gets the actual input from github action event and sets it in parsed input object
    */
-  parseInput() {
+  parse() {
     const input: InputValues = {
       definitionFile: core.getInput("definition-file"),
       flowType: this.getFlowType(core.getInput("flow-type")),
@@ -98,7 +98,6 @@ export class ActionArguments {
       ...this.getAdditionalFlags(core.getInput("additional-flags")),
     };
 
-    const parsedInput = Container.get(InputService);
-    parsedInput.updateInputs(input);
+    Container.get(InputService).updateInputs(input);
   }
 }

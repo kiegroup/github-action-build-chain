@@ -1,14 +1,21 @@
+import "reflect-metadata";
 import { CommandExecutorDelegator } from "@bc/service/command/executor/command-executor-delegator";
 import { BashExecutor } from "@bc/service/command/executor/bash-executor";
 import { ExportExecutor } from "@bc/service/command/executor/export-executor";
-import { TestLoggerService } from "@bc/service/logger/__mocks__/test-logger-service";
 import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { hrtimeToMs } from "@bc/utils/date";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
+import Container from "typedi";
+import { constants } from "@bc/domain/constants";
+import { EntryPoint } from "@bc/domain/entry-point";
 
-jest.mock("@bc/service/logger/logger-service-factory");
+jest.mock("@bc/service/logger/base-logger-service");
 jest.mock("@bc/utils/date");
 
 describe("constructor", () => {
+  // entry point for logging doesn't make a difference
+  Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
+  
   test("ok", () => {
     // Arrange
     const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, true);
@@ -113,8 +120,8 @@ describe("isExport", () => {
     expect(bashExecutor.execute).toHaveBeenCalledTimes(0);
     expect(exportExecutor.execute).toHaveBeenCalledTimes(1);
     expect(exportExecutor.execute).toHaveBeenCalledWith(command, undefined);
-    expect(TestLoggerService.prototype.error).toHaveBeenCalledTimes(1);
-    expect(TestLoggerService.prototype.error).toHaveBeenCalledWith(`Error executing command ${command}. ${errorMessage}`);
+    expect(BaseLoggerService.prototype.error).toHaveBeenCalledTimes(1);
+    expect(BaseLoggerService.prototype.error).toHaveBeenCalledWith(`Error executing command ${command}. ${errorMessage}`);
   });
 });
 
@@ -208,7 +215,7 @@ describe("not export command", () => {
     expect(bashExecutor.execute).toHaveBeenCalledTimes(1);
     expect(exportExecutor.execute).toHaveBeenCalledTimes(0);
     expect(bashExecutor.execute).toHaveBeenCalledWith(command, undefined);
-    expect(TestLoggerService.prototype.error).toHaveBeenCalledTimes(1);
-    expect(TestLoggerService.prototype.error).toHaveBeenCalledWith(`Error executing command ${command}. ${errorMessage}`);
+    expect(BaseLoggerService.prototype.error).toHaveBeenCalledTimes(1);
+    expect(BaseLoggerService.prototype.error).toHaveBeenCalledWith(`Error executing command ${command}. ${errorMessage}`);
   });
 });

@@ -2,12 +2,22 @@ import "reflect-metadata";
 import { Container } from "typedi";
 import * as exec from "@actions/exec";
 import { ExportExecutor } from "@bc/service/command/executor/export-executor";
-import { TestLoggerService } from "@bc/service/logger/__mocks__/test-logger-service";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
+import { InputService } from "@bc/service/inputs/input-service";
+import { defaultInputValues, LoggerLevel } from "@bc/domain/inputs";
+import { constants } from "@bc/domain/constants";
+import { EntryPoint } from "@bc/domain/entry-point";
 
 jest.mock("@actions/exec");
-jest.mock("@bc/service/logger/logger-service-factory");
+jest.mock("@bc/service/logger/base-logger-service");
 
 describe("Export Command Executor", () => {
+  beforeEach(() => {
+    // entry point for logging doesn't make a difference
+    Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
+    jest.spyOn(InputService.prototype, "inputs", "get").mockReturnValueOnce({...defaultInputValues, loggerLevel: LoggerLevel.DEBUG});
+  });
+
   test("no export command", async () => {
     // Arrange
     const exportCommandExecutor = Container.get(ExportExecutor);
@@ -22,8 +32,8 @@ describe("Export Command Executor", () => {
 
     // Arrange
     expect(exec.exec).toHaveBeenCalledTimes(0);
-    expect(TestLoggerService.prototype.error).toHaveBeenCalledTimes(1);
-    expect(TestLoggerService.prototype.error).toHaveBeenCalledWith("The export command command x is not properly defined. It should be something like \"export VARIBLE=expression\". Please fix it an try again.");
+    expect(BaseLoggerService.prototype.error).toHaveBeenCalledTimes(1);
+    expect(BaseLoggerService.prototype.error).toHaveBeenCalledWith("The export command command x is not properly defined. It should be something like \"export VARIBLE=expression\". Please fix it an try again.");
   });
 
   test("simple export command", async () => {
@@ -36,9 +46,9 @@ describe("Export Command Executor", () => {
 
     // Arrange
     expect(exec.exec).toHaveBeenCalledTimes(0);
-    expect(TestLoggerService.prototype.warn).toHaveBeenCalledTimes(0);
-    expect(TestLoggerService.prototype.debug).toHaveBeenCalledTimes(1);
-    expect(TestLoggerService.prototype.debug).toHaveBeenCalledWith("The variable `VARIABLE1` has been set to the env with the value `newvalue`");
+    expect(BaseLoggerService.prototype.warn).toHaveBeenCalledTimes(0);
+    expect(BaseLoggerService.prototype.debug).toHaveBeenCalledTimes(1);
+    expect(BaseLoggerService.prototype.debug).toHaveBeenCalledWith("The variable `VARIABLE1` has been set to the env with the value `newvalue`");
     expect(process.env["VARIABLE1"]).toBe("newvalue");
   });
 
@@ -52,9 +62,9 @@ describe("Export Command Executor", () => {
 
     // Arrange
     expect(exec.exec).toHaveBeenCalledTimes(0);
-    expect(TestLoggerService.prototype.warn).toHaveBeenCalledTimes(0);
-    expect(TestLoggerService.prototype.debug).toHaveBeenCalledTimes(1);
-    expect(TestLoggerService.prototype.debug).toHaveBeenCalledWith("The variable `VARIABLE2` has been set to the env with the value `VALUE1 VALUE 2`");
+    expect(BaseLoggerService.prototype.warn).toHaveBeenCalledTimes(0);
+    expect(BaseLoggerService.prototype.debug).toHaveBeenCalledTimes(1);
+    expect(BaseLoggerService.prototype.debug).toHaveBeenCalledWith("The variable `VARIABLE2` has been set to the env with the value `VALUE1 VALUE 2`");
     expect(process.env["VARIABLE2"]).toBe("VALUE1 VALUE 2");
   });
 
@@ -68,9 +78,9 @@ describe("Export Command Executor", () => {
 
     // Arrange
     expect(exec.exec).toHaveBeenCalledTimes(0);
-    expect(TestLoggerService.prototype.warn).toHaveBeenCalledTimes(0);
-    expect(TestLoggerService.prototype.debug).toHaveBeenCalledTimes(1);
-    expect(TestLoggerService.prototype.debug).toHaveBeenCalledWith("The variable `VARIABLE3` has been set to the env with the value `VALUE1 VALUE 2`");
+    expect(BaseLoggerService.prototype.warn).toHaveBeenCalledTimes(0);
+    expect(BaseLoggerService.prototype.debug).toHaveBeenCalledTimes(1);
+    expect(BaseLoggerService.prototype.debug).toHaveBeenCalledWith("The variable `VARIABLE3` has been set to the env with the value `VALUE1 VALUE 2`");
     expect(process.env["VARIABLE3"]).toBe("VALUE1 VALUE 2");
   });
 
@@ -89,7 +99,7 @@ describe("Export Command Executor", () => {
         "listeners": { "stdout": expect.anything() },
       },
     );
-    expect(TestLoggerService.prototype.warn).toHaveBeenCalledTimes(0);
+    expect(BaseLoggerService.prototype.warn).toHaveBeenCalledTimes(0);
   });
 
   test("no export command", async () => {

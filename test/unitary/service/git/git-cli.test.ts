@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import { GitCLIService } from "@bc/service/git/git-cli";

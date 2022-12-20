@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import Container from "typedi";

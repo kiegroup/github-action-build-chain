@@ -159,7 +159,7 @@ test("run flow", async () => {
   const result = await flowService.run();
 
   // execution plan
-  expect(groupSpy).toHaveBeenNthCalledWith(1, `[${flowType}] Execution Plan`);
+  expect(groupSpy).toHaveBeenNthCalledWith(1, "Execution Plan");
   expect(infoSpy).toHaveBeenNthCalledWith(1, `${nodeChain.length} projects will be executed`);
   expect(infoSpy).toHaveBeenNthCalledWith(2, `[${nodeChain[0].project}]`);
   expect(infoSpy).toHaveBeenNthCalledWith(3, `\t Level type: ${NodeExecutionLevel.UPSTREAM}`);
@@ -176,8 +176,8 @@ test("run flow", async () => {
   expect(infoSpy).toHaveBeenNthCalledWith(14, "\t\t cmd3");
 
   // checkout summary
-  expect(infoSpy).toHaveBeenNthCalledWith(15, `[${flowType}] Checking out ${nodeChain[1].project} and its dependencies`);
-  expect(groupSpy).toHaveBeenNthCalledWith(2, `[${flowType}] Checkout Summary`);
+  expect(groupSpy).toHaveBeenNthCalledWith(2, `Checking out ${nodeChain[1].project} and its dependencies`);
+  expect(infoSpy).toHaveBeenNthCalledWith(15, "Checkout summary");
   expect(infoSpy).toHaveBeenNthCalledWith(16, `[${nodeChain[0].project}]`);
   expect(infoSpy).toHaveBeenNthCalledWith(17, "\t This project wasn't checked out");
   expect(infoSpy).toHaveBeenNthCalledWith(18, `[${nodeChain[1].project}]`);
@@ -187,8 +187,8 @@ test("run flow", async () => {
   expect(infoSpy).toHaveBeenNthCalledWith(22, "\t Merged owner3-forked/project3-forked:dev into branch main");
 
   // execution summary: BEFORE
-  expect(infoSpy).toHaveBeenNthCalledWith(23, `[${flowType}] Executing ${ExecutionPhase.BEFORE}`);
-  expect(groupSpy).toHaveBeenNthCalledWith(3, `Execution summary for phase ${ExecutionPhase.BEFORE}`);
+  expect(groupSpy).toHaveBeenNthCalledWith(3, `Executing ${ExecutionPhase.BEFORE}`);
+  expect(infoSpy).toHaveBeenNthCalledWith(23, `Execution summary for phase ${ExecutionPhase.BEFORE}`);
   expect(infoSpy).toHaveBeenNthCalledWith(24, `[${nodeChain[0].project}]`);
   expect(infoSpy).toHaveBeenNthCalledWith(25, "\t No commands were found for this project");
   expect(infoSpy).toHaveBeenNthCalledWith(26, `[${nodeChain[1].project}]`);
@@ -198,8 +198,8 @@ test("run flow", async () => {
   expect(infoSpy).toHaveBeenNthCalledWith(30, "\t\t Error: error");
 
   // execution summary: CURRENT
-  expect(infoSpy).toHaveBeenNthCalledWith(31, `[${flowType}] Executing ${ExecutionPhase.CURRENT}`);
-  expect(groupSpy).toHaveBeenNthCalledWith(4, `Execution summary for phase ${ExecutionPhase.CURRENT}`);
+  expect(groupSpy).toHaveBeenNthCalledWith(4, `Executing ${ExecutionPhase.CURRENT}`);
+  expect(infoSpy).toHaveBeenNthCalledWith(31, `Execution summary for phase ${ExecutionPhase.CURRENT}`);
   expect(infoSpy).toHaveBeenNthCalledWith(32, `[${nodeChain[0].project}]`);
   expect(infoSpy).toHaveBeenNthCalledWith(33, "\t No commands were found for this project");
   expect(infoSpy).toHaveBeenNthCalledWith(34, `[${nodeChain[1].project}]`);
@@ -209,8 +209,8 @@ test("run flow", async () => {
   expect(infoSpy).toHaveBeenNthCalledWith(38, "\t\t Error: error");
 
   // execution summary: AFTER
-  expect(infoSpy).toHaveBeenNthCalledWith(39, `[${flowType}] Executing ${ExecutionPhase.AFTER}`);
-  expect(groupSpy).toHaveBeenNthCalledWith(5, `Execution summary for phase ${ExecutionPhase.AFTER}`);
+  expect(groupSpy).toHaveBeenNthCalledWith(5, `Executing ${ExecutionPhase.AFTER}`);
+  expect(infoSpy).toHaveBeenNthCalledWith(39, `Execution summary for phase ${ExecutionPhase.AFTER}`);
   expect(infoSpy).toHaveBeenNthCalledWith(40, `[${nodeChain[0].project}]`);
   expect(infoSpy).toHaveBeenNthCalledWith(41, "\t No commands were found for this project");
   expect(infoSpy).toHaveBeenNthCalledWith(42, `[${nodeChain[1].project}]`);
@@ -219,7 +219,7 @@ test("run flow", async () => {
   expect(infoSpy).toHaveBeenNthCalledWith(45, `\t [${ExecutionResult.NOT_OK}] cmd3 [Executed in 3 ms]`);
   expect(infoSpy).toHaveBeenNthCalledWith(46, "\t\t Error: error");
 
-  expect(groupSpy).toHaveBeenNthCalledWith(6, `[${flowType}] Uploading artifacts`);
+  expect(groupSpy).toHaveBeenNthCalledWith(6, "Uploading artifacts");
 
   expect(result).toStrictEqual({
     checkoutInfo,

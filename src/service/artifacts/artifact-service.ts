@@ -20,7 +20,7 @@ export class ArtifactService {
     let result: Node[];
     switch (dependencies) {
       case ArchiveDependencies.NONE:
-        result = [startingNode];
+        result = startingNode.archiveArtifacts ? [startingNode] : [];
         break;
       case ArchiveDependencies.ALL:
         result = nodeChain.filter(node => !!node.archiveArtifacts);

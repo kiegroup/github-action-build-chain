@@ -8,7 +8,7 @@ export class PreExecutor extends PrePostExecutor {
     const pre = this.configService.getPre();
     let result: ExecuteCommandResult[] = [];
     if (pre) {
-      this.logger.startGroup("[PRE] Executing pre section");
+      this.logger.startGroup("Executing pre section");
       result = await this.execute(pre);
       this.logger.endGroup();
     }

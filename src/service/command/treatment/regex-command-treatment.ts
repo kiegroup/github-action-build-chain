@@ -8,12 +8,12 @@ export class RegexCommandTreatment implements CommandTreatment {
 
   public treat(command: string, options?: TreatmentOptions): string {
     if (options?.replaceExpressions) {
-      LoggerServiceFactory.getInstance().info(`[${RegexCommandTreatment.name}] Replacing command: \`${command}\` by expressions: '${options.replaceExpressions}'`);
+      LoggerServiceFactory.getInstance().debug(`[${RegexCommandTreatment.name}] Replacing command: \`${command}\` by expressions: '${options.replaceExpressions}'`);
       const result = options.replaceExpressions.reduce(
         (acc, replaceEx) => this.treatReplaceEx(acc, replaceEx),
         command,
       );
-      LoggerServiceFactory.getInstance().info(
+      LoggerServiceFactory.getInstance().debug(
         result === command
           ? `[${RegexCommandTreatment.name}] No replacement for \`${command}\``
           : `[${RegexCommandTreatment.name}] Replaced to: \`${result}\``,

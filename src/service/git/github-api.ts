@@ -106,7 +106,7 @@ export class GithubAPIService {
         throw new NotFoundError();
       }
     } catch (err) {
-      this.logger.error(`Error getting project name for ${targetOwner}/${repo} with owner ${sourceOwner}`);
+      this.logger.error(`Error getting fork name for ${targetOwner}/${repo} where owner is ${sourceOwner}`);
       throw err;
     }
   }

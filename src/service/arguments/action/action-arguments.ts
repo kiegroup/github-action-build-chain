@@ -1,13 +1,14 @@
 import { FlowType, InputValues, LoggerLevel } from "@bc/domain/inputs";
 import * as core from "@actions/core";
 import { OptionValues } from "commander";
-import Container from "typedi";
+import Container, { Service } from "typedi";
 import { InputService } from "@bc/service/inputs/input-service";
 import { InvalidInput } from "@bc/domain/errors";
 
 /**
  * Parses all inputs from github action workflow files
  */
+@Service()
 export class ActionArguments {
   /**
    * Converts user input to corresponding FlowType enum
@@ -62,7 +63,7 @@ export class ActionArguments {
       .trim()
       .split(";")
       .forEach(flag => {
-        const opt: string[] = flag.split(" ");
+        const opt: string[] = flag.trim().split(" ");
         if (opt[0].startsWith("--")) {
           opt[0] = opt[0].substring(2);
         } else if (opt[0].startsWith("-")) {

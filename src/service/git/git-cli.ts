@@ -30,7 +30,7 @@ export class GitCLIService {
    * @returns {Promise<string>}
    */
   async version(): Promise<string | undefined> {
-    const rawOutput = await this.git().raw("version");
+    const rawOutput = await simpleGit().raw("version");
     const match = rawOutput.match(/(\d+\.\d+(\.\d+)?)/);
     return match ? match[1] : undefined;
   }
@@ -43,7 +43,8 @@ export class GitCLIService {
    */
   async clone(from: string, to: string, branch: string) {
     if (!fs.existsSync(to)) {
-      await this.git().clone(from, to, ["--quiet", "--shallow-submodules", "--no-tags", "--branch", branch]);
+      // don't use this.git since it will configure git with local user.name and user.email which requires cwd to be a git repo
+      await simpleGit().clone(from, to, ["--quiet", "--shallow-submodules", "--no-tags", "--branch", branch]);
     } else {
       this.logger.warn(`Folder ${to} already exist. Won't clone`);
     }
@@ -105,7 +106,7 @@ export class GitCLIService {
    * @param branch branch to pull from
    */
   async merge(cwd: string, repositoryUrl: string, branch: string) {
-    await this.git(cwd).pull(repositoryUrl, branch, ["--no-rebase"]);
+    await this.git(cwd).pull(repositoryUrl, branch, ["--no-rebase", "--allow-unrelated-histories"]);
   }
 
   /**

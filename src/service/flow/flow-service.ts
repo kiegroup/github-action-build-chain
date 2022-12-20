@@ -29,15 +29,15 @@ export class FlowService {
   }
 
   async run(): Promise<FlowResult> {
-    const flowType = this.configService.getFlowType();
-    this.logger.startGroup(`[${flowType}] Execution Plan`);
+    this.logger.startGroup("Execution Plan");
     this.printExecutionPlan();
     this.logger.endGroup();
 
-    this.logger.info(`[${flowType}] Checking out ${this.configService.getStarterProjectName()} and its dependencies`);
+    this.logger.startGroup(
+      `Checking out ${this.configService.getStarterProjectName()} and its dependencies`
+    );
     const checkoutInfo = await this.checkoutService.checkoutDefinitionTree();
-
-    this.logger.startGroup(`[${flowType}] Checkout Summary`);
+    this.logger.info("Checkout summary");
     this.printCheckoutSummary(checkoutInfo);
     this.logger.endGroup();
 
@@ -57,7 +57,7 @@ export class FlowService {
     const after = await this.executeAndPrint(nodeChainForExecution, ExecutionPhase.AFTER);
 
     // archive artifacts
-    this.logger.startGroup(`[${flowType}] Uploading artifacts`);
+    this.logger.startGroup("Uploading artifacts");
     const artifactUploadResults = await this.artifactService.uploadNodes(this.configService.nodeChain, this.configService.getStarterNode());
     this.logger.endGroup();
 
@@ -173,9 +173,9 @@ export class FlowService {
   }
 
   private async executeAndPrint(chain: NodeExecution[], phase: ExecutionPhase): Promise<ExecuteNodeResult[]> {
-    this.logger.info(`[${this.configService.getFlowType()}] Executing ${phase}`);
+    this.logger.startGroup(`Executing ${phase}`);
     const result = await this.executor.executeChainCommands(chain, phase);
-    this.logger.startGroup(`Execution summary for phase ${phase}`);
+    this.logger.info(`Execution summary for phase ${phase}`);
     this.printExecutionSummary(result);
     this.logger.endGroup();
     return result;

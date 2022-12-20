@@ -25,6 +25,6 @@ describe("RegexCommandTreatment", () => {
 
     // Assert
     expect(result).toBe(expected);
-    expect(TestLoggerService.prototype.info).toHaveBeenCalledTimes(times);
+    expect(TestLoggerService.prototype.debug).toHaveBeenCalledTimes(times);
   });
 });

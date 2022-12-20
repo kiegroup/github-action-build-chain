@@ -12,6 +12,7 @@ import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-comman
 import { UploadResponse } from "@actions/artifact";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { defaultNodeValue } from "@bc/domain/node";
+import { Command } from "commander";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -73,6 +74,7 @@ describe("execute", () => {
 
   beforeEach(() => {
     cliRunner = new CLIRunner();
+    jest.spyOn(Command.prototype, "parse").mockImplementation(() => undefined!);
   });
 
   test("success", async () => {

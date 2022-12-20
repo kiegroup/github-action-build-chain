@@ -76,7 +76,7 @@ describe("execute", () => {
 
   beforeEach(() => {
     githubActionRunner = new GithubActionRunner();
-    jest.spyOn(ActionArguments.prototype, "parseInput").mockImplementation(() => undefined);
+    jest.spyOn(ActionArguments.prototype, "parse").mockImplementation(() => undefined);
   });
 
   test("success", async () => {

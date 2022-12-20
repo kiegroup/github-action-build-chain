@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { CLIActionType } from "@bc/domain/cli";
-import { MainCommandFactory } from "@bc/service/arguments/cli/main-command-factory";
+import { CLIArguments } from "@bc/service/arguments/cli/cli-arguments";
 import { InputService } from "@bc/service/inputs/input-service";
 import { formatDate } from "@bc/utils/date";
 import { Command, CommanderError } from "commander";
@@ -19,7 +19,7 @@ const parsedInputs = Container.get(InputService);
 
 beforeEach(() => {
   // Construct the a fresh instance of the cli each time
-  program = MainCommandFactory.getCommand({ exitOverride: true, suppressOutput: true });
+  program = Container.get(CLIArguments).getCommand({ exitOverride: true, suppressOutput: true });
 });
 
 describe("build cross pull request flow cli", () => {

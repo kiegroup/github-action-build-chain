@@ -1,8 +1,8 @@
 import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/configuration";
 import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { InputService } from "@bc/service/inputs/input-service";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { logAndThrow } from "@bc/utils/log";
 import Container from "typedi";
 
@@ -12,10 +12,10 @@ export abstract class BaseConfiguration {
   protected _sourceProject: ProjectConfiguration;
   protected _targetProject: ProjectConfiguration;
   protected _parsedInputs: InputValues;
-  protected readonly logger: LoggerService;
+  protected readonly logger: BaseLoggerService;
 
   constructor() {
-    this.logger = LoggerServiceFactory.getInstance();
+    this.logger = Container.get(LoggerService).logger;
     this._parsedInputs = defaultInputValues;
     this._gitEventData = {};
     this._gitConfiguration = {};

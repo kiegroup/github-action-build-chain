@@ -1,19 +1,19 @@
-import { Service } from "typedi";
+import Container, { Service } from "typedi";
 import { CommandTreatment } from "@bc/service/command/treatment/command-treatment";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
+import { LoggerService } from "@bc/service/logger/logger-service";
 
 @Service()
 export class RegexCommandTreatment implements CommandTreatment {
 
   public treat(command: string, options?: TreatmentOptions): string {
     if (options?.replaceExpressions) {
-      LoggerServiceFactory.getInstance().debug(`[${RegexCommandTreatment.name}] Replacing command: \`${command}\` by expressions: '${options.replaceExpressions}'`);
+      Container.get(LoggerService).logger.debug(`[${RegexCommandTreatment.name}] Replacing command: \`${command}\` by expressions: '${options.replaceExpressions}'`);
       const result = options.replaceExpressions.reduce(
         (acc, replaceEx) => this.treatReplaceEx(acc, replaceEx),
         command,
       );
-      LoggerServiceFactory.getInstance().debug(
+      Container.get(LoggerService).logger.debug(
         result === command
           ? `[${RegexCommandTreatment.name}] No replacement for \`${command}\``
           : `[${RegexCommandTreatment.name}] Replaced to: \`${result}\``,

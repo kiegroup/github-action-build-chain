@@ -1,11 +1,14 @@
+import "reflect-metadata";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { RegexCommandTreatment } from "@bc/service/command/treatment/regex-command-treatment";
 import { Container } from "typedi";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
-import { TestLoggerService } from "@bc/service/logger/__mocks__/test-logger-service";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
+import { InputService } from "@bc/service/inputs/input-service";
+import { defaultInputValues, LoggerLevel } from "@bc/domain/inputs";
 
-jest.mock("@bc/service/logger/logger-service-factory");
+jest.mock("@bc/service/logger/base-logger-service");
 
 describe("RegexCommandTreatment", () => {
   Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
@@ -20,11 +23,13 @@ describe("RegexCommandTreatment", () => {
     ["No replacement. Regex not matching", "maven clean install", { replaceExpressions: ["/(mvn .*)/i||$1 -s settings.xml"] }, "maven clean install", 2],
     ["No replacement. No replacement expression", "mvn clean install", {}, "mvn clean install", 0],
   ])("%p", (title: string, command: string, options: TreatmentOptions, expected: string, times: number) => {
+    jest.spyOn(InputService.prototype, "inputs", "get").mockReturnValueOnce({...defaultInputValues, loggerLevel: LoggerLevel.DEBUG});
+    
     // Act
     const result = new RegexCommandTreatment().treat(command, options);
 
     // Assert
     expect(result).toBe(expected);
-    expect(TestLoggerService.prototype.debug).toHaveBeenCalledTimes(times);
+    expect(BaseLoggerService.prototype.debug).toHaveBeenCalledTimes(times);
   });
 });

@@ -1,18 +1,18 @@
 import { ExecuteCommandResult } from "@bc/domain/execute-command-result";
 import { ExecuteCommandService } from "@bc/service/command/execute-command-service";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import Container from "typedi";
 
 export abstract class PrePostExecutor {
   protected configService: ConfigurationService;
-  protected logger: LoggerService;
+  protected logger: BaseLoggerService;
   protected executeService: ExecuteCommandService;
 
   constructor() {
     this.configService = Container.get(ConfigurationService);
-    this.logger = LoggerServiceFactory.getInstance();
+    this.logger = Container.get(LoggerService).logger;
     this.executeService = Container.get(ExecuteCommandService);
   }
 

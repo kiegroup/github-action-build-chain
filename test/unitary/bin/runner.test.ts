@@ -8,7 +8,7 @@ import { FlowResult } from "@bc/domain/flow";
 import { PreExecutor } from "@bc/service/pre-post/pre";
 import { PostExecutor } from "@bc/service/pre-post/post";
 import { FlowService } from "@bc/service/flow/flow-service";
-import { AbstractLoggerService } from "@bc/service/logger/abstract-logger-service";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import { defaultNodeValue } from "@bc/domain/node";
 
 
@@ -165,7 +165,7 @@ test.each([
   ["no failure", [okResult, okResult, skipResult], 0],
   ["failure", [okResult, okResult, skipResult, notOkResult], 3],
 ])("printExecutionFailure - %p", (_title: string, result: ExecuteCommandResult[], numOfLogCalls: number) => {
-  const loggerSpy = jest.spyOn(AbstractLoggerService.prototype, "error");
+  const loggerSpy = jest.spyOn(BaseLoggerService.prototype, "error");
   dummyRunner.testPrintExecutionFailure(result);
   expect(loggerSpy).toBeCalledTimes(numOfLogCalls);
 });
@@ -174,7 +174,7 @@ test.each([
   ["no failure", [nodeOk, nodeOk], 0],
   ["failure", [nodeOk, nodeNotOk, nodeOk], 4],
 ])("printNodeExecutionFailure - %p", (_title: string, result: ExecuteNodeResult[], numOfLogCalls: number) => {
-  const loggerSpy = jest.spyOn(AbstractLoggerService.prototype, "error");
+  const loggerSpy = jest.spyOn(BaseLoggerService.prototype, "error");
   dummyRunner.testPrintNodeExecutionFailure(result);
   expect(loggerSpy).toBeCalledTimes(numOfLogCalls);
 });

@@ -8,7 +8,7 @@ import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import { create } from "@actions/artifact";
 import * as core from "@actions/core";
-import { AbstractLoggerService } from "@bc/service/logger/abstract-logger-service";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 
 jest.mock("@actions/artifact");
 
@@ -243,10 +243,10 @@ describe("search files", () => {
 
 describe("upload", () => {
   test.each([
-    ["default", jest.spyOn(AbstractLoggerService.prototype, "warn")],
-    ["warn", jest.spyOn(AbstractLoggerService.prototype, "warn")],
-    ["ignore", jest.spyOn(AbstractLoggerService.prototype, "info")],
-    ["error", jest.spyOn(AbstractLoggerService.prototype, "error")],
+    ["default", jest.spyOn(BaseLoggerService.prototype, "warn")],
+    ["warn", jest.spyOn(BaseLoggerService.prototype, "warn")],
+    ["ignore", jest.spyOn(BaseLoggerService.prototype, "info")],
+    ["error", jest.spyOn(BaseLoggerService.prototype, "error")],
   ])("with no files found - %p", async (ifNoFilesFound: string, spy: jest.SpyInstance) => {
     const archiveConfig = constructArchiveArtifacts([path.join(__dirname, "does-not-exist.txt")], ifNoFilesFound as IfNoFile);
     const uploadArtifact = jest.fn().mockResolvedValue({ failedItems: [], artifactName: archiveConfig.name });

@@ -1,12 +1,16 @@
+import { LoggerLevel } from "@bc/domain/inputs";
+import { InputService } from "@bc/service/inputs/input-service";
 import { Logger } from "@bc/service/logger/logger";
-import { LoggerService } from "@bc/service/logger/logger-service";
+import Container from "typedi";
 
-export abstract class AbstractLoggerService implements LoggerService {
+export abstract class BaseLoggerService {
 
   private readonly _logger: Logger;
+  private readonly input: InputService;
 
   protected constructor() {
     this._logger = new Logger();
+    this.input = Container.get(InputService);
   }
 
   abstract startGroup(message: string): void;
@@ -14,7 +18,9 @@ export abstract class AbstractLoggerService implements LoggerService {
   abstract endGroup(): void;
 
   public debug(message: string): void {
-    this._logger.log("[DEBUG]", message);
+    if (this.input.inputs.loggerLevel == LoggerLevel.DEBUG) {
+      this._logger.log("[DEBUG]", message);
+    }
   }
 
   public info(message: string): void {
@@ -22,7 +28,9 @@ export abstract class AbstractLoggerService implements LoggerService {
   }
 
   public trace(message: string): void {
-    this._logger.log("[TRACE]", message);
+    if (this.input.inputs.loggerLevel == LoggerLevel.TRACE) {
+      this._logger.log("[TRACE]", message);
+    }
   }
 
   public warn(message: string): void {

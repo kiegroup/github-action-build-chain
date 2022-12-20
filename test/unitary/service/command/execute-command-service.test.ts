@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { ExecuteCommandService } from "@bc/service/command/execute-command-service";
 import { CommandTreatmentDelegator } from "@bc/service/command/treatment/command-treatment-delegator";
 import { CommandExecutorDelegator } from "@bc/service/command/executor/command-executor-delegator";
@@ -5,14 +6,22 @@ import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
 import { defaultNodeValue } from "@bc/domain/node";
 import { NodeExecutionLevel } from "@bc/domain/node-execution";
-import { TestLoggerService } from "@bc/service/logger/__mocks__/test-logger-service";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { Node } from "@kie/build-chain-configuration-reader";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
+import Container from "typedi";
+import { constants } from "@bc/domain/constants";
+import { EntryPoint } from "@bc/domain/entry-point";
 
-jest.mock("@bc/service/logger/logger-service-factory");
+// disable logs
+jest.spyOn(global.console, "log");
+jest.mock("@bc/service/logger/base-logger-service");
 jest.mock("@bc/service/command/treatment/command-treatment-delegator");
 jest.mock("@bc/service/command/executor/command-executor-delegator");
 jest.mock("@bc/service/config/configuration-service");
+
+// entry point for logging doesn't make a difference
+Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
 
 describe("ExecuteCommandService", () => {
   test("executeCommand without cwd", async () => {
@@ -207,9 +216,9 @@ describe("executeChainCommands", () => {
       expectedCalls.forEach(node => node.forEach(call => expect(commandTreatmentDelegator.treatCommand).toHaveBeenCalledWith(call.command, undefined)));
       expectedCalls.forEach(node => node.forEach(call => expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledWith(undefined, call.cwd)));
     }
-    expect(TestLoggerService.prototype.debug).toHaveBeenCalledTimes(2);
-    expect(TestLoggerService.prototype.debug).toHaveBeenCalledWith(`No commands defined for project project4 and phase ${executionPhase}`);
-    expect(TestLoggerService.prototype.debug).toHaveBeenCalledWith(`No commands defined for project project5 phase ${executionPhase} and level ${nodeExecutionLevel !== NodeExecutionLevel.CURRENT ? `${nodeExecutionLevel} or ${NodeExecutionLevel.CURRENT}` : NodeExecutionLevel.CURRENT}`);
+    expect(BaseLoggerService.prototype.debug).toHaveBeenCalledTimes(2);
+    expect(BaseLoggerService.prototype.debug).toHaveBeenCalledWith(`No commands defined for project project4 and phase ${executionPhase}`);
+    expect(BaseLoggerService.prototype.debug).toHaveBeenCalledWith(`No commands defined for project project5 phase ${executionPhase} and level ${nodeExecutionLevel !== NodeExecutionLevel.CURRENT ? `${nodeExecutionLevel} or ${NodeExecutionLevel.CURRENT}` : NodeExecutionLevel.CURRENT}`);
 
     const expectedResult = nodes.map((node, index) => ({
       node, executeCommandResults: expectedCalls[index] ? skipExecution ? expectedCalls[index].map(ec => ({

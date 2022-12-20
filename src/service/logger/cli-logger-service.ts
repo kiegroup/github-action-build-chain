@@ -1,6 +1,6 @@
-import { AbstractLoggerService } from "@bc/service/logger/abstract-logger-service";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 
-export class CLILoggerService extends AbstractLoggerService {
+export class CLILoggerService extends BaseLoggerService {
 
   constructor() {
     super();

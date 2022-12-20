@@ -10,14 +10,14 @@ import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { UploadResponse } from "@actions/artifact";
 import { FlowResult } from "@bc/domain/flow";
 import { LoggerService } from "@bc/service/logger/logger-service";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 
 export abstract class Runner {
-  private logger: LoggerService;
+  private logger: BaseLoggerService;
 
   constructor(entryPoint: EntryPoint) {
     Container.set(constants.CONTAINER.ENTRY_POINT, entryPoint);
-    this.logger = LoggerServiceFactory.getInstance();
+    this.logger = Container.get(LoggerService).logger;
   }
 
   abstract execute(): Promise<void>;

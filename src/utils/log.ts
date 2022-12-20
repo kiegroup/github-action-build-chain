@@ -1,6 +1,7 @@
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
+import { LoggerService } from "@bc/service/logger/logger-service";
+import Container from "typedi";
 
 export function logAndThrow(errorMessage: string): never {
-  LoggerServiceFactory.getInstance().error(errorMessage);
+  Container.get(LoggerService).logger.error(errorMessage);
   throw new Error(errorMessage);
 }

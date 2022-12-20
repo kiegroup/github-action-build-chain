@@ -1,22 +1,22 @@
 import { create, GlobOptions } from "@actions/glob";
 import path from "path";
-import { Service } from "typedi";
+import Container, { Service } from "typedi";
 import { stat } from "fs";
 import { promisify } from "util";
 import { LoggerService } from "@bc/service/logger/logger-service";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { ArchiveArtifacts, IfNoFile } from "@kie/build-chain-configuration-reader";
 import * as artifact from "@actions/artifact";
 import { logAndThrow } from "@bc/utils/log";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 
 const stats = promisify(stat);
 type SearchResult = { filesToUpload: string[]; rootDirectory: string };
 
 @Service()
 export class UploadService {
-  private readonly logger: LoggerService;
+  private readonly logger: BaseLoggerService;
   constructor() {
-    this.logger = LoggerServiceFactory.getInstance();
+    this.logger = Container.get(LoggerService).logger;
   }
 
   private validateArtifactName(name: string) {

@@ -1,19 +1,19 @@
 import { NotFoundError } from "@bc/domain/errors";
 import { OctokitFactory } from "@bc/service/git/octokit";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { logAndThrow } from "@bc/utils/log";
 import { Octokit } from "@octokit/rest";
 import { Endpoints } from "@octokit/types";
-import { Service } from "typedi";
+import Container, { Service } from "typedi";
 
 @Service()
 export class GithubAPIService {
-  private readonly logger: LoggerService;
+  private readonly logger: BaseLoggerService;
   private readonly octokit: Octokit;
 
   constructor() {
-    this.logger = LoggerServiceFactory.getInstance();
+    this.logger = Container.get(LoggerService).logger;
     this.octokit = OctokitFactory.getOctokitInstance();
   }
 

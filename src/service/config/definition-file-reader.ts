@@ -1,8 +1,8 @@
 import { constants } from "@bc/domain/constants";
 import { FlowType } from "@bc/domain/inputs";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { logAndThrow } from "@bc/utils/log";
 import {
   DefinitionFile,
@@ -17,11 +17,11 @@ import Container from "typedi";
 
 export class DefinitionFileReader {
   private configuration: BaseConfiguration;
-  private logger: LoggerService;
+  private logger: BaseLoggerService;
 
   constructor(configuration: BaseConfiguration) {
     this.configuration = configuration;
-    this.logger = LoggerServiceFactory.getInstance();
+    this.logger = Container.get(LoggerService).logger;
   }
 
   private async generateNodeChainWithOptions(

@@ -2,17 +2,17 @@ import Container, { Service } from "typedi";
 import { Node, ArchiveDependencies } from "@kie/build-chain-configuration-reader";
 import { UploadService } from "@bc/service/artifacts/upload-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { UploadResponse } from "@actions/artifact";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 
 @Service()
 export class ArtifactService {
   private readonly uploadService: UploadService;
-  private readonly logger: LoggerService;
+  private readonly logger: BaseLoggerService;
 
   constructor() {
     this.uploadService = Container.get(UploadService);
-    this.logger = LoggerServiceFactory.getInstance();
+    this.logger = Container.get(LoggerService).logger;
   }
 
   private getNodesToArchive(nodeChain: Node[], startingNode: Node): Node[] {

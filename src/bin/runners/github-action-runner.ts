@@ -16,7 +16,7 @@ export class GithubActionRunner extends Runner {
   async execute(): Promise<void> {
     // parse arguments
     const args = Container.get(ActionArguments);
-    args.parseInput();
+    args.parse();
 
     // initialize configuration
     await this.initConfiguration();

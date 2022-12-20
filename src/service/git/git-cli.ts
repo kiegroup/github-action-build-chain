@@ -1,18 +1,18 @@
 import simpleGit, { SimpleGit } from "simple-git";
-import { Service } from "typedi";
+import Container, { Service } from "typedi";
 import fs from "fs";
 import { LoggerService } from "@bc/service/logger/logger-service";
-import { LoggerServiceFactory } from "@bc/service/logger/logger-service-factory";
 import { GitExecutorResult } from "simple-git/dist/src/lib/types";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 
 type GitErrorHandlerFunction = (error: Buffer | Error | undefined, result: Omit<GitExecutorResult, "rejection">) => Buffer | Error | undefined;
 
 @Service()
 export class GitCLIService {
-  private readonly logger: LoggerService;
+  private readonly logger: BaseLoggerService;
 
   constructor() {
-    this.logger = LoggerServiceFactory.getInstance();
+    this.logger = Container.get(LoggerService).logger;
   }
 
   /**

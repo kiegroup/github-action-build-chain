@@ -1,7 +1,7 @@
-import { AbstractLoggerService } from "@bc/service/logger/abstract-logger-service";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import * as core from "@actions/core";
 
-export class GithubActionLoggerService extends AbstractLoggerService {
+export class GithubActionLoggerService extends BaseLoggerService {
 
   constructor() {
     super();

@@ -41,7 +41,7 @@ describe("Different flow types", () => {
     const parser = new ActionArguments();
     setGeneralInputs(flowType);
     try {
-      parser.parseInput();
+      parser.parse();
       const vals = parsedInput.inputs;
       expect(vals.definitionFile).toBe(definitionFile);
       expect(vals.skipProjectCheckout).toStrictEqual(skipProject);
@@ -72,7 +72,7 @@ describe("Different log levels", () => {
     setGeneralInputs("pull-request");
     process.env = { ...process.env, "INPUT_LOGGER-LEVEL": logLevel };
     try {
-      parser.parseInput();
+      parser.parse();
       const vals = parsedInput.inputs;
       expect(vals.definitionFile).toBe(definitionFile);
       expect(vals.skipProjectCheckout).toStrictEqual(skipProject);

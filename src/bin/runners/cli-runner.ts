@@ -3,6 +3,8 @@
 import "reflect-metadata";
 import { Runner } from "@bc/bin/runners/runner";
 import { EntryPoint } from "@bc/domain/entry-point";
+import Container from "typedi";
+import { CLIArguments } from "@bc/service/arguments/cli/cli-arguments";
 
 export class CLIRunner extends Runner {
   constructor() {
@@ -10,6 +12,10 @@ export class CLIRunner extends Runner {
   }
 
   async execute(): Promise<void> {
+    // parse arguments
+    const args = Container.get(CLIArguments);
+    args.getCommand().parse();
+
     // initialize configuration
     await this.initConfiguration();
 

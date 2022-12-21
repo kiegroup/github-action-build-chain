@@ -1,17 +1,19 @@
 import { BuildSubCommandFactory } from "@bc/service/arguments/cli/build/build-subcommand-factory";
 import { ToolSubCommandFactory } from "@bc/service/arguments/cli/tools/tool-subcommand-factory";
 import { Command } from "commander";
+import { Service } from "typedi";
 
 /**
  * Constructs and compiles all the subcommands together to produce the main cli parser
  */
-export class MainCommandFactory {
+@Service()
+export class CLIArguments {
   /**
    * Constructs the argument parser for the main command line utility
    * @param options [OPTIONAL] configure the parser to not throw errors or write output. Useful for testing
    * @returns {Command} Returns command parser object
    */
-  static getCommand(options?: { exitOverride?: boolean; suppressOutput?: boolean }): Command {
+  getCommand(options?: { exitOverride?: boolean; suppressOutput?: boolean }): Command {
     const program = new Command();
 
     program.name("build-chain").description("A CLI tool to perform the build chain github actions");
@@ -30,7 +32,7 @@ export class MainCommandFactory {
    * @param options additional options to configure program instance
    * @returns {Command} configured command line parser
    */
-  private static setConfig(program: Command, options?: { exitOverride?: boolean; suppressOutput?: boolean }): Command {
+  private setConfig(program: Command, options?: { exitOverride?: boolean; suppressOutput?: boolean }): Command {
     if (options?.exitOverride) {
       program.exitOverride();
     }

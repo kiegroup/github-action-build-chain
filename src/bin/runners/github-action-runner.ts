@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import "reflect-metadata";
 import { Runner } from "@bc/bin/runners/runner";
 import { EntryPoint } from "@bc/domain/entry-point";

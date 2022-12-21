@@ -1,3 +1,4 @@
+import { CLIActionType } from "@bc/domain/cli";
 import { BuildSubCommandFactory } from "@bc/service/arguments/cli/build/build-subcommand-factory";
 import { ToolSubCommandFactory } from "@bc/service/arguments/cli/tools/tool-subcommand-factory";
 import { Command } from "commander";
@@ -18,10 +19,16 @@ export class CLIArguments {
 
     program.name("build-chain").description("A CLI tool to perform the build chain github actions");
 
-    BuildSubCommandFactory.getAllCommands().forEach(cmd => program.addCommand(this.setConfig(cmd, options)));
-    ToolSubCommandFactory.getAllCommands().forEach(cmd => program.addCommand(this.setConfig(cmd, options)));
+    const buildSubProgram = new Command(CLIActionType.BUILD).description("Execute different flows");
+    const toolSubProgram = new Command(CLIActionType.TOOLS).description("A bunch of utility tools");
 
-    return this.setConfig(program, options);
+    BuildSubCommandFactory.getAllCommands().forEach(cmd => buildSubProgram.addCommand(this.setConfig(cmd, options)));
+    ToolSubCommandFactory.getAllCommands().forEach(cmd => toolSubProgram.addCommand(this.setConfig(cmd, options)));
+
+    program.addCommand(buildSubProgram);
+    program.addCommand(toolSubProgram);
+
+    return program;
   }
 
   /**

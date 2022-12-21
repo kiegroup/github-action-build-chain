@@ -13,7 +13,7 @@ export abstract class AbstractPullRequestCommand implements CommandConstructor {
   }
 
   createCommand(): Command {
-    return new Command(`${CLIActionType.BUILD} ${this.type}`)
+    return new Command(this.type)
       .description(this.description)
       .requiredOption("-u, --url <event_url>", "pull request event url")
       .option("-p, --startProject <project>", "The project to start the build from");

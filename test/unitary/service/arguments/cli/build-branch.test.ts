@@ -15,7 +15,7 @@ const definitionFile = "/path/to/file";
 const branch = "main";
 
 // command to be executed
-const command = `${CLIActionType.BUILD} ${FlowType.BRANCH}`;
+const command = [CLIActionType.BUILD, FlowType.BRANCH];
 const parsedInputs = Container.get(InputService);
 
 beforeEach(() => {
@@ -25,7 +25,7 @@ beforeEach(() => {
 
 describe("build branch flow cli", () => {
   test("only required options", () => {
-    program.parse([command, "-f", definitionFile, "-p", startProject, "-b", branch], { from: "user" });
+    program.parse([...command, "-f", definitionFile, "-p", startProject, "-b", branch], { from: "user" });
 
     // check all the required options are set and all the optional ones have the right default value if any
     const option = parsedInputs.inputs;
@@ -46,9 +46,9 @@ describe("build branch flow cli", () => {
 
   // check for missing required options
   test.each([
-    ["definition file", [command, "-p", startProject, "-b", branch]],
-    ["starting project", [command, "-f", definitionFile, "-b", branch]],
-    ["branch", [command, "-f", definitionFile, "-p", startProject]],
+    ["definition file", [...command, "-p", startProject, "-b", branch]],
+    ["starting project", [...command, "-f", definitionFile, "-b", branch]],
+    ["branch", [...command, "-f", definitionFile, "-p", startProject]],
   ])("missing %p", (title: string, cmd: string[]) => {
     try {
       program.parse(cmd, { from: "user" });
@@ -70,7 +70,7 @@ describe("build branch flow cli", () => {
 
     program.parse(
       [
-        command,
+        ...command,
         "-f",
         definitionFile,
         "-p",

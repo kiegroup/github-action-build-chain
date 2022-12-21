@@ -14,7 +14,7 @@ const url = "test.com";
 const definitionFile = "/path/to/file";
 
 // Command to be executed
-const command = `${CLIActionType.BUILD} ${FlowType.SINGLE_PULL_REQUEST}`;
+const command = [CLIActionType.BUILD, FlowType.SINGLE_PULL_REQUEST];
 const parsedInputs = Container.get(InputService);
 
 beforeEach(() => {
@@ -24,7 +24,7 @@ beforeEach(() => {
 
 describe("build single pull request flow cli", () => {
   test("only required options", () => {
-    program.parse([command, "-f", definitionFile, "-u", url], { from: "user" });
+    program.parse([...command, "-f", definitionFile, "-u", url], { from: "user" });
 
     // check all the required options are set and all the optional ones have the right default value if any
     const option = parsedInputs.inputs;
@@ -43,8 +43,8 @@ describe("build single pull request flow cli", () => {
 
   // check for missing required options
   test.each([
-    ["definition file", [command, "-u", url]],
-    ["url", [command, "-f", definitionFile]],
+    ["definition file", [...command, "-u", url]],
+    ["url", [...command, "-f", definitionFile]],
   ])("missing %p", (title: string, cmd: string[]) => {
     try {
       program.parse(cmd, { from: "user" });
@@ -65,7 +65,7 @@ describe("build single pull request flow cli", () => {
 
     program.parse(
       [
-        command,
+        ...command,
         "-f",
         definitionFile,
         "-u",

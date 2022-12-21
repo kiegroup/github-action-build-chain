@@ -9,7 +9,7 @@ import { LoggerLevel } from "@bc/domain/inputs";
 let program: Command;
 
 // Command to be executed
-const command = `${CLIActionType.TOOLS} ${ToolType.PROJECT_LIST}`;
+const command = [CLIActionType.TOOLS, ToolType.PROJECT_LIST];
 
 // Define required arguments to be reused for each test
 const definitionFile = "/path/to/file";
@@ -22,7 +22,7 @@ beforeEach(() => {
 
 describe("build single pull request flow cli", () => {
   test("only required options", () => {
-    program.parse([command, "-f", definitionFile], { from: "user" });
+    program.parse([...command, "-f", definitionFile], { from: "user" });
 
     // check all the required options are set and all the optional ones have the right default value if any
     const option = parsedInputs.inputs;
@@ -35,9 +35,9 @@ describe("build single pull request flow cli", () => {
   });
 
   // check for missing required options
-  test.each([["definition file", [command]]])("missing %p", (title: string, cmd: string[]) => {
+  test("missing definition file", () => {
     try {
-      program.parse(cmd, { from: "user" });
+      program.parse(command, { from: "user" });
     } catch (err) {
       expect(err).toBeInstanceOf(CommanderError);
       if (err instanceof CommanderError) {
@@ -50,7 +50,7 @@ describe("build single pull request flow cli", () => {
     const skipGroup = ["gr1", "gr2"];
     const token = "abc";
 
-    program.parse([command, "-f", definitionFile, "--token", token, "-s", ...skipGroup, "-d"], { from: "user" });
+    program.parse([...command, "-f", definitionFile, "--token", token, "-s", ...skipGroup, "-d"], { from: "user" });
 
     // check all the required options and optional options are set correctly
     const option = parsedInputs.inputs;

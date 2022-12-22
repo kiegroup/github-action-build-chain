@@ -17,6 +17,7 @@
 - [ISSUE 216] remove -project flag from build branch command
 - [ISSUE 217] add skip project execution (spe) feature
 - [ISSUE 225] add secrets information for forked projects
+- [ISSUE 315] improve message when token is wrong
 
 ## Bugs
 

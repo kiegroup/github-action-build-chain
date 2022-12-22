@@ -781,6 +781,33 @@ During a workflow run, files are uploaded and downloaded individually using the 
 
 :exclamation: File uploads are case insensitive :exclamation: If you upload `A.txt` and `a.txt` with the same root path, only a single file will be saved and available during download.
 
+## About Commands to Execute
+
+Just consider the library used behind the scenes in order to execute commands is [@actions/exec](https://github.com/actions/toolkit/tree/main/packages/exec), this library has a limitation at https://github.com/actions/toolkit/blob/b5f31bb5a25d129441c294fc81ba7f92f3e978ba/packages/exec/src/exec.ts#L27 where it tries to decide the "tool" to be executed, so in case you need to execute bash or windows commands like conditionals you should use it like this
+
+### Bash
+`bash -c "my command"`
+`bash -c  "if true; then echo 'it's TRUE'; else echo 'it's FALSE'; fi"`
+
+### Windows
+`cmd /c "my command"`
+
+> **_Note:_** thanks to https://github.com/actions/toolkit/issues/461#issuecomment-743750804
+
+# Limitations
+
+### Zipped Artifact Downloads
+
+During a workflow run, files are uploaded and downloaded individually using the `upload-artifact` and `download-artifact` actions. However, when a workflow run finishes and an artifact is downloaded from either the UI or through the [download api](https://developer.github.com/v3/actions/artifacts/#download-an-artifact), a zip is dynamically created with all the file contents that were uploaded. There is currently no way to download artifacts after a workflow run finishes in a format other than a zip or to download artifact contents individually. One of the consequences of this limitation is that if a zip is uploaded during a workflow run and then downloaded from the UI, there will be a double zip created.
+
+### Permission Loss
+
+:exclamation: File permissions are not maintained during artifact upload :exclamation: For example, if you make a file executable using `chmod` and then upload that file, post-download the file is no longer guaranteed to be set as an executable.
+
+### Case Insensitive Uploads
+
+:exclamation: File uploads are case insensitive :exclamation: If you upload `A.txt` and `a.txt` with the same root path, only a single file will be saved and available during download.
+
 ## Github limitations
 
 ### Using secrets on a forked project Github Action

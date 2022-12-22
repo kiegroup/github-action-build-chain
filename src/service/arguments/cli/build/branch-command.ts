@@ -9,7 +9,7 @@ import { FlowType } from "@bc/domain/inputs";
  */
 export class BranchCommand implements CommandConstructor {
   createCommand(): Command {
-    const program = new Command(`${CLIActionType.BUILD} ${FlowType.BRANCH}`);
+    const program = new Command(FlowType.BRANCH);
     program
       .description("Execute branch build chain workflow")
       .requiredOption("-p, --startProject <project>", "The project to start the build from")

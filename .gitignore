@@ -8,6 +8,5 @@ coverage/
 test-report.xml
 .idea/
 .vscode/
-dist/
 build/
 *.log

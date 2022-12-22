@@ -19,7 +19,7 @@ export class ActionArguments {
     switch (flowType) {
       case "pull-request":
         return FlowType.CROSS_PULL_REQUEST;
-      case "full-downstream":
+      case "fdb":
         return FlowType.FULL_DOWNSTREAM;
       case "single":
         return FlowType.SINGLE_PULL_REQUEST;

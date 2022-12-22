@@ -24,15 +24,17 @@ Table of content
 * **[How to clone project in more than one folder](#how-to-clone-project-in-more-than-one-folder)**
 * **[Execution environment](#execution-environment)**
 * **[Usage example](#usage-example)**
-* **[Execution](#execution)**
+* **[Local Execution](#local-execution)**
 * **[About Commands to Execute](#about-commands-to-execute)**
 * **[Limitations](#limitations)**
+* **[Development](#development)**
 * **[System Requirements](#system-requirements)**
 
 
 ## Allowed configuration files versions
 
 - 2.1
+- 2.2
 
 ## Build Chain Flows
 
@@ -535,130 +537,193 @@ In case you want to build it for a different openjdk version you just specify a 
 docker build --build-arg OPENJDK_VERSION=11 .
 ```
 
-## Execution
-
-It is possible to execute build-chain flow anywhere you want (just remember your machine would need to meet requirements to execute commands). In order to execute it locally (wherever) you just run `env GITHUB_TOKEN=%TOKEN% ./bin/build-chain-cli.js -df %DEFINITION_FILE% -url %GITHUB_EVENT_URL%` where:
-
-- %TOKEN%: is your personal token, like `1e2ca1ac1252121d83fbe69ab3c4dd92bcb1ae32`.
-- %GITHUB_EVENT_URL%: the url to your event to test, like `https://github.com/kiegroup/kogito-images/pull/220`.
-- %DEFINITION_FILE%: The workflow definition file path, it can be a path in the filesystem or a URL to the file.
-
-So the final command would look like `env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40 ./bin/build-chain-cli.js -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml build pr -url https://github.com/kiegroup/lienzo-core/pull/3`.
-
-### Local execution
+## Local execution
 
 It's possible to use this tool locally, just follow this steps
 
 ```
-(sudo) npm install -g @kie/build-chain-action
-(env GITHUB_TOKEN=3e6ce1ac1772121d83fbe69ab3c4dd92dad1ae40) build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml build pr -url https://github.com/kiegroup/lienzo-core/pull/3
+$ npm install -g @kie/build-chain-action
+$ build-chain help
+Usage: build-chain [options] [command]
+
+A CLI tool to perform the build chain github actions
+
+Options:
+  -h, --help      display help for command
+
+Commands:
+  build           Execute different flows
+  tools           A bunch of utility tools
+  help [command]  display help for command
 ```
 
 either `sudo` and `env GITHUB_TOKEN=...` are optional depending on your local setup.
 
 > Keep in mind: Whenever the tool is executed from a github check run, the `Printing local execution command` section is printed with the exact command you could copy/paste in order to reproduce it locally.
 
-**Arguments**
+### build command
 
-- **\*-df**: the definition file, either a path to the filesystem o a URL to it. `-df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml`
-- **actions**: The action to execute. Possible values `build`, `tools`
-  - **build**: See [Build Action](#execution-build-action)
-  - **tools**: See [Tools Action](#execution-tools-action)
-- **-folder** (default: `build_chain_%TIMESTAMP%`): The folder path to store projects.
+The build command is used to execute the different flows locally
 
-#### Execution Build Action
+```shell
+$ build-chain build help
+Usage: build-chain build [options] [command]
 
-To choose between `pr`, `fd` or `single`
+Execute different flows
 
-##### Execution Build Action - Pull Request
+Options:
+  -h, --help                 display help for command
 
-**Arguments**:
-
-- **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
-- **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
-- **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
-- **skipParallelCheckout**: Checkout the project sequentially.
-- **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
-- **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
-- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checkout information will be printed anyway. E.g. `--skipCheckout`
-
-Examples:
-
-```
-build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml build pr -url https://github.com/kiegroup/kie-wb-distributions/pull/1068
+Commands:
+  cross_pr [options]         Execute cross pull request build chain workflow
+  full_downstream [options]  Execute full downstream build chain workflow
+  single_pr [options]        Execute single pull request build chain workflow
+  branch [options]           Execute branch build chain workflow
+  help [command]             display help for command
 ```
 
-##### Execution Build Action - Full Downstream Build
+### build command: cross_pr
 
-**Arguments**:
+Execute pull-request flow
 
-- **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
-- **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
-- **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
-- **skipParallelCheckout**: Checkout the project sequentially.
-- **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
-- **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
-- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checkout information will be printed anyway. E.g. `--skipCheckout`
+```shell
+$ build-chain build cross_pr --help
+Usage: build-chain build cross_pr [options]
 
-Examples:
+Execute cross pull request build chain workflow
 
-```
-build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml build fdb -url https://github.com/kiegroup/kie-wb-distributions/pull/1068
-```
-
-##### Execution Build Action - Single Build
-
-**Arguments**:
-
-- **\*-url**: the event URL. Pull Request URL for instance `-url https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/1489`
-- **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
-- **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
-- **skipParallelCheckout**: Checkout the project sequentially.
-- **-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
-- **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
-- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checkout information will be printed anyway. E.g. `--skipCheckout`
-
-Examples:
-
-```
-build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml build single -url https://github.com/kiegroup/kie-wb-distributions/pull/1068
+Options:
+  -u, --url <event_url>                  pull request event url
+  -p, --startProject <project>           The project to start the build from
+  -f, --defintionFile <path_or_url>      The definition file, either a path to the filesystem or a URL to it
+  -o, --outputFolder <path>              The folder path to store projects. Default is of the format 'build_chain_yyyymmddHHMMss' (default:
+                                         "build_chain_202211229567")
+  --token <token>                        The GITHUB_TOKEN. It can be set as an environment variable instead
+  -d, --debug                            Set debugging mode to true (default: false)
+  --skipExecution                        A flag to skip execution and artifacts archiving for all projects. Overrides skipProjectExecution (default:
+                                         false)
+  --skipProjectExecution <projects...>   A flag to skip execution and artifacts archiving for certain projects only
+  --skipParallelCheckout                 Checkout the project sequentially (default: false)
+  -t, --customCommandTreatment <exp...>  Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want
+                                         to replace with the ReplacementEx
+  --skipProjectCheckout <projects...>    A list of projects to skip checkout.
+  --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -h, --help                             display help for command
 ```
 
-##### Execution Build Action - Branch flow arguments
+Example:
 
-**Arguments**:
-
-- **\*-sp**: The project to start the build from. Something like `-sp=kiegroup/appformer`.
-- **\*-b, -branch**: The branch to get projects. E.g. `-b=main`
-- **-g** (group from project argument): The group to take projects. In case you want to build projects from a different group than the one defined in "definition file". E.g. `-g=Ginxo`
-- **-c, -command**: A command to execute for all the projects, no matter what's defined in "definition file". E.g. `-c="mvn clean"`
-- **-cct**: You can define a custom command treatment expression. See [Custom Command Replacement](#custom-command-replacement)
-- **-spc**: a list of projects to skip checkout. Something like `-spc 'kiegroup/appformer=./' 'kiegroup/drools=/folderX' `
-- **skipParallelCheckout**: Checkout the project sequentially.
-- **--skipExecution**: A flag to skip execution and artifacts archiving, no matter what's defined in "definition file" or in `--command` argument. E.g. `--skipExecution`
-- **--skipCheckout**: A flag to skip project checkout. No `git clone/checkout` command will be executed, checkout information will be printed anyway. E.g. `--skipCheckout`
-- **--fullProjectDependencyTree**: Checks out and execute the whole tree instead of the upstream build (fasle by default). E.g. `--fullProjectDependencyTree`
-
-Examples:
-
-```
-build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml build branch -url https://github.com/kiegroup/kie-wb-distributions/pull/1068
-
-build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml build branch -p=kiegroup/lienzo-tests -b=main
-
-build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml build branch -p=kiegroup/optaplanner -b=7.x -folder=myfolder
+```shell
+$ build-chain build cross_pr -f https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml -u https://github.com/kiegroup/kie-wb-distributions/pull/1068
 ```
 
-#### Execution Tools Action
+### build command: full_downstream
 
-Additionally the tool provides several useful tools
+Execute full downstream (fdb) flow
 
-##### Execution Tools Action - Project List
+```shell
+$ build-chain build full_downstream --help
+Usage: build-chain build full_downstream [options]
 
-Examples:
+Execute full downstream build chain workflow
 
+Options:
+  -u, --url <event_url>                  pull request event url
+  -p, --startProject <project>           The project to start the build from
+  -f, --defintionFile <path_or_url>      The definition file, either a path to the filesystem or a URL to it
+  -o, --outputFolder <path>              The folder path to store projects. Default is of the format 'build_chain_yyyymmddHHMMss' (default:
+                                         "build_chain_2022112295741")
+  --token <token>                        The GITHUB_TOKEN. It can be set as an environment variable instead
+  -d, --debug                            Set debugging mode to true (default: false)
+  --skipExecution                        A flag to skip execution and artifacts archiving for all projects. Overrides skipProjectExecution (default:
+                                         false)
+  --skipProjectExecution <projects...>   A flag to skip execution and artifacts archiving for certain projects only
+  --skipParallelCheckout                 Checkout the project sequentially (default: false)
+  -t, --customCommandTreatment <exp...>  Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want
+                                         to replace with the ReplacementEx
+  --skipProjectCheckout <projects...>    A list of projects to skip checkout.
+  --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -h, --help                             display help for command
 ```
-build-chain-action -df https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml tools project-list
+
+Example:
+
+```shell
+$ build-chain build full_downstream -f https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml -u https://github.com/kiegroup/kie-wb-distributions/pull/1068
+```
+
+### build command: single_pr
+
+Execute single pr flow
+
+```shell
+$ build-chain build single_pr --help
+Usage: build-chain build single_pr [options]
+
+Execute single pull request build chain workflow
+
+Options:
+  -u, --url <event_url>                  pull request event url
+  -p, --startProject <project>           The project to start the build from
+  -f, --defintionFile <path_or_url>      The definition file, either a path to the filesystem or a URL to it
+  -o, --outputFolder <path>              The folder path to store projects. Default is of the format 'build_chain_yyyymmddHHMMss' (default:
+                                         "build_chain_2022112295912")
+  --token <token>                        The GITHUB_TOKEN. It can be set as an environment variable instead
+  -d, --debug                            Set debugging mode to true (default: false)
+  --skipExecution                        A flag to skip execution and artifacts archiving for all projects. Overrides skipProjectExecution (default:
+                                         false)
+  --skipProjectExecution <projects...>   A flag to skip execution and artifacts archiving for certain projects only
+  --skipParallelCheckout                 Checkout the project sequentially (default: false)
+  -t, --customCommandTreatment <exp...>  Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want
+                                         to replace with the ReplacementEx
+  --skipProjectCheckout <projects...>    A list of projects to skip checkout.
+  --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -h, --help                             display help for command
+```
+
+Example: 
+
+```shell
+$ build-chain build single_pr -f https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml -u https://github.com/kiegroup/kie-wb-distributions/pull/1068
+```
+
+### build command: branch
+
+Execute branch flow
+
+```shell
+$ build-chain build branch --help
+Usage: build-chain build branch [options]
+
+Execute branch build chain workflow
+
+Options:
+  -p, --startProject <project>           The project to start the build from
+  -b, --branch <branch>                  The branch to get the project from
+  --fullProjectDependencyTree            Checks out and execute the whole tree instead of the upstream build (default: false)
+  -c, --command <commands...>            The command(s) to execute for every project. This will override definition file configuration (just
+                                         dependency tree will be taken into account)
+  -g, --group <group>                    The group to execute flow. It will take it from project argument in case it's not specified
+  -f, --defintionFile <path_or_url>      The definition file, either a path to the filesystem or a URL to it
+  -o, --outputFolder <path>              The folder path to store projects. Default is of the format 'build_chain_yyyymmddHHMMss' (default:
+                                         "build_chain_202211221013")
+  --token <token>                        The GITHUB_TOKEN. It can be set as an environment variable instead
+  -d, --debug                            Set debugging mode to true (default: false)
+  --skipExecution                        A flag to skip execution and artifacts archiving for all projects. Overrides skipProjectExecution (default:
+                                         false)
+  --skipProjectExecution <projects...>   A flag to skip execution and artifacts archiving for certain projects only
+  --skipParallelCheckout                 Checkout the project sequentially (default: false)
+  -t, --customCommandTreatment <exp...>  Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want
+                                         to replace with the ReplacementEx
+  --skipProjectCheckout <projects...>    A list of projects to skip checkout.
+  --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -h, --help                             display help for command
+```
+
+Example:
+
+```shell
+$ build-chain build branch -f https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml -p=kiegroup/lienzo-tests -b=main
 ```
 
 #### Custom Command Replacement
@@ -671,16 +736,23 @@ It is possible to define custom expression to replace commands. The expression s
 
 So basically at left side of `||` you define the regular expression where you want to apply string replacement from right side. For example, considering command `mvn clean install` in case we apply `(^mvn .*)||$1 -s ~/.m2/settings.xml` the final command will be `mvn clean install -s ~/.m2/settings.xml`
 
-## Development
+### tool command
 
-### build-chain-configuration-reader dependency
+There are some utility tools as well
 
-The definition files are read thanks to [build-chain-configuration-reader](https://github.com/kiegroup/build-chain-configuration-reader) library so in case you want to modify something from there it's easier if you just [npm link](https://docs.npmjs.com/cli/link) it:
+```shell
+$ build-chain tools help
+Usage: build-chain tools [options] [command]
 
-- clone repository and browse to the folder
-- `npm install` it
-- (`sudo`) `npm link`
-- and then from this project folder execute `npm link @kie/build-chain-configuration-reader`
+A bunch of utility tools
+
+Options:
+  -h, --help              display help for command
+
+Commands:
+  project-list [options]  Prints a ordered  by precendence list of projects
+  help [command]          display help for command
+```
 
 ## About Commands to Execute
 
@@ -740,6 +812,17 @@ Nothing but `GITHUB_TOKEN` secret can be used from a forked project Github Actio
 
 It's not possible to use expressions like `image: "docker://kie-group:github-action-build-chain:{{ inputs.build-chain-build-system }}"`. This way it would be easy to dynamically select image to run with a simple `with` input from flow yml file and we could skip errors like [matrix in uses](#matrix-in-uses).
 Just because of this we have to maintain different Dockerfile definitions in different branches and to tag every branch for every version we release like `python3-cekit-v1`.
+
+## Development
+
+### build-chain-configuration-reader dependency
+
+The definition files are read thanks to [build-chain-configuration-reader](https://github.com/kiegroup/build-chain-configuration-reader) library so in case you want to modify something from there it's easier if you just [npm link](https://docs.npmjs.com/cli/link) it:
+
+- clone repository and browse to the folder
+- `npm install` it
+- (`sudo`) `npm link`
+- and then from this project folder execute `npm link @kie/build-chain-configuration-reader`
 
 # System Requirements
 

@@ -1,5 +1,11 @@
 # Changelog
 
+# V3.0.0
+
+## Enhancements:
+- Complete refactor to typescript
+- implemented end to end tests
+
 # V2.6.1
 
 ## Enhancements:

@@ -1,0 +1,36 @@
+on:
+  push:
+    branches:
+      - main
+      - typescript/main
+
+name: coverage report
+
+jobs:
+  test-coverage:
+    name: Publish coverage report
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup sonarqube
+        uses: warchant/setup-sonar-scanner@v3
+      - name: coverage report
+        uses: actions/setup-node@v1
+        with:
+          # node 12 support is deprecated in sonar
+          node-version: 14
+      - run: npm ci
+      - run: npm run test:report
+      - run: sonar-scanner
+          -Dsonar.organization=kiegroup
+          -Dsonar.projectKey=github-action-build-chain
+          -Dsonar.projectName="Build Chain"
+          -Dsonar.sources=$GITHUB_WORKSPACE
+          -Dsonar.host.url=${{ secrets.SONAR_URL }}
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.tests=test
+          -Dsonar.testExecutionReportPaths=test-report.xml
+          -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+          -Dsonar.exclusions=test/**,**/__mocks__/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

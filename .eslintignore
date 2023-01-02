@@ -1,2 +1,3 @@
-dist/index.js
-locally_execution/**
+node_modules/
+build/
+./jest.config.ts

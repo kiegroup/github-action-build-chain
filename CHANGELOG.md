@@ -1,5 +1,10 @@
 # Changelog
 
+# V3.0.1
+
+## Bugs:
+- [ISSUE 331] Typo in `definitionFile` option for CLI which lead an invalid definition file location
+
 # V3.0.0
 
 ## Enhancements:

@@ -101,6 +101,8 @@ export abstract class BaseConfiguration {
       logAndThrow("Invalid start project. Start project must be of the form OWNER/PROJECT");
     }
 
+    this.logger.debug(`Received input: ${JSON.stringify(inputs)}`);
+
     // parsed inputs will always have the default value. No need to check whether it is empty or not
     return inputs;
   }

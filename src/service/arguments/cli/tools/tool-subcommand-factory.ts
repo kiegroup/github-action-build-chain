@@ -27,7 +27,7 @@ export class ToolSubCommandFactory {
 
     return commandFactory
       .createCommand()
-      .requiredOption("-f, --defintionFile <path_or_url>", "The definition file, either a path to the filesystem or a URL to it")
+      .requiredOption("-f, --definitionFile <path_or_url>", "The definition file, either a path to the filesystem or a URL to it")
       .option("-t, --token <token>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
       .option("-d, --debug", "Set debugging mode to true", false)
       .action(options => {

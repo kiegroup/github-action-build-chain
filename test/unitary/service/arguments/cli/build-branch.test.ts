@@ -31,7 +31,7 @@ describe("build branch flow cli", () => {
     const option = parsedInputs.inputs;
     expect(option.startProject).toBe(startProject);
     expect(option.branch).toBe(branch);
-    expect(option.defintionFile).toBe(definitionFile);
+    expect(option.definitionFile).toBe(definitionFile);
     expect(option.outputFolder).toMatch(new RegExp(`^build_chain_${formatDate(new Date()).slice(0, -2)}\\d\\d`));
     expect(option.loggerLevel).toBe(LoggerLevel.INFO);
     expect(option.skipExecution).toBe(false);
@@ -102,7 +102,7 @@ describe("build branch flow cli", () => {
 
     // check all the required options and optional options are set correctly
     const option = parsedInputs.inputs;
-    expect(option.defintionFile).toBe(definitionFile);
+    expect(option.definitionFile).toBe(definitionFile);
     expect(option.outputFolder).toBe(outputFolder);
     expect(option.loggerLevel).toBe(LoggerLevel.DEBUG);
     expect(option.skipExecution).toBe(true);

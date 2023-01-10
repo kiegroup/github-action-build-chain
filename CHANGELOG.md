@@ -1,5 +1,10 @@
 # Changelog
 
+# V3.0.2
+
+## Bugs:
+- [ISSUE 333] Fix CLI ignoring the `--token` flag
+
 # V3.0.1
 
 ## Bugs:

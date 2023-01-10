@@ -45,7 +45,7 @@ flowchart LR;
 <details open><summary><h2>Post</h2></summary><table><tr><th>Command</th><th>Execution Result</th><th>Execution Time</th></tr><tr><td>cmd1</td><td>✅</td><td>1</td></tr><tr><td>cmd2</td><td>❌</td><td>2</td></tr><tr><td>cmd3</td><td>✅</td><td>3</td></tr></table>
 </details>
 <details open><summary><h2>Local Execution</h2></summary>You can copy paste the following commands to locally execute build chain tool.
-<pre><code>npm i @kie/build-chain-action@3.0.1 -g build-chain-action -f definitionFile build cross_pr -u eventUrl</code></pre>
+<pre><code>npm i @kie/build-chain-action@3.0.2 -g build-chain-action -f definitionFile build cross_pr -u eventUrl</code></pre>
 
 **Git Version**: `1.0.1`
 > **_Notice_**: The `GITHUB_TOKEN` should be set in the environment.

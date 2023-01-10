@@ -24,8 +24,8 @@ export abstract class BaseConfiguration {
   }
 
   async init() {
-    this.loadToken();
     this._parsedInputs = this.loadParsedInput();
+    this.loadToken();
     this._gitEventData = await this.loadGitEvent();
     this._gitConfiguration = this.loadGitConfiguration();
     const { source, target } = this.loadProject();

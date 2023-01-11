@@ -1,9 +1,14 @@
 # Changelog
 
+# V3.0.3
+
+## Bugs:
+- [ISSUE 338] Fixed `${{ env.VAR }}` not being substituted correctly
+
 # V3.0.2
 
 ## Bugs:
-- [ISSUE 333] Fix CLI ignoring the `--token` flag
+- [ISSUE 333] Fixed CLI ignoring the `--token` flag
 
 # V3.0.1
 

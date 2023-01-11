@@ -1,6 +1,6 @@
 # Changelog
 
-# V3.0.2
+# V3.0.3
 
 ## Bugs:
 - [ISSUE 338] Fixed `${{ env.VAR }}` not being substituted correctly

@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "node",
+        "request": "launch",
+        "name": "Debug cross_pr",
+        "program": "${workspaceFolder}/src/bin/entry-point/cli.ts",
+        "preLaunchTask": "npm: dev:build",
+        "outFiles": ["${workspaceFolder}/build/**/*.js"],
+        "args": ["build", "cross_pr", "-f", "https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml", "--url", "https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/2187", "-p", "kiegroup/droolsjbpm-build-bootstrap"]
+      }
+    ]
+  }

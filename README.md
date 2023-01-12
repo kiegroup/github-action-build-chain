@@ -852,7 +852,7 @@ npm run build:cli
 
 ### Debug
 
-A specific `.vscode/launch.json` has been provided for debugging purposes. So just open `Run and Debug` VSCode tab and you will be able to run whatever the taska available in the file. 
+A specific `.vscode/launch.json` has been provided for debugging purposes. So just open `Run and Debug` VSCode tab and you will be able to run whatever the tasks are available in the file. 
 
 
 ### build-chain-configuration-reader dependency

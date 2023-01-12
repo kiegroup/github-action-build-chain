@@ -198,8 +198,15 @@ test("non-branch flow", async () => {
     prePostResult,
     prePostResult
   );
-
-  expect(readFileSync(filename, "utf8")).toBe(readFileSync(path.join(__dirname, "expected-summary"), "utf8"));
+  
+  const expected = readFileSync(
+    path.join(__dirname, "expected-summary"),
+    "utf8"
+  ).replace(
+    /\${{ PACKAGE_NAME_AND_VERSION }}/,
+    `${process.env.npm_package_name}@${process.env.npm_package_version}`
+  );
+  expect(readFileSync(filename, "utf8")).toBe(expected);
 });
 
 test("branch flow", async () => {

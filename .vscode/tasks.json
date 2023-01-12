@@ -1,0 +1,54 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Dev Build",
+            "type": "npm",
+            "script": "dev:build",
+            "presentation": {
+                "reveal": "always"
+            },
+        },
+        {
+            "label": "Run Build CLI",
+            "type": "shell",
+            "command": "node ${workspaceFolder}/src/bin/entry-point/cli.ts",
+            "presentation": {
+                "reveal": "always"
+            },
+            "args": ["build", "${input:flowType}", "-f", "${input:definitionFile}", "--url", "${input:pullRequestUrl}", "-p", "${input:startingProject}"]
+        }
+    ],
+    "inputs": [
+        {
+            "type": "pickString",
+            "id": "flowType",
+            "description": "The flow type to build",
+            "options": [
+                "cross_pr",
+                "full_downstream",
+                "single_pr",
+                "branch"
+            ],
+            "default": "cross_pr"
+        },
+        {
+            "type": "promptString",
+            "id": "definitionFile",
+            "description": "The definition file to execute",
+            "default": "https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml"
+        },
+        {
+            "type": "promptString",
+            "id": "pullRequestUrl",
+            "description": "The pull request URL",
+            "default": "https://github.com/kiegroup/droolsjbpm-build-bootstrap/pull/2187"
+        },
+        {
+            "type": "promptString",
+            "id": "startingProject",
+            "description": "The starting project ID",
+            "default": "kiegroup/droolsjbpm-build-bootstrap"
+        }
+    ]
+}

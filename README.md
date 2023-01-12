@@ -38,7 +38,7 @@ Table of content
 
 ## Build Chain Flows
 
-### Pull request flow
+### Cross Pull request flow
 
 - It checks out the current project and reads the workflow information from the YAML file triggering the job.
 
@@ -79,7 +79,7 @@ Table of content
 
 - It will archive artifacts in case `archive-artifacts-path` input is defined.
 
-### Single flow
+### Single Pull Request flow
 
 - It checks out the current project and reads the workflow information from the YAML file triggering the job.
 
@@ -135,12 +135,12 @@ See [action.yml](action.yml)
 
 > **_Note:_** In case you use URL way, remember you should point the file content itself, so in case you want to use https://github.com/kiegroup/droolsjbpm-build-bootstrap/blob/a1efb55f17fd0fd9001b073c999e3fd2a80600a6/.ci/pull-request-config.yaml, `definition-file` value should be https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/a1efb55f17fd0fd9001b073c999e3fd2a80600a6/.ci/pull-request-config.yaml (Raw one for this case) or (using dynamic placeholders) https://raw.githubusercontent.com/${GROUP}/${PROJECT_NAME}/${BRANCH}/.ci/pull-request-config.yaml.
 
-- **flow-type** (optional. 'pull-request' by default): The flow you want to execute. Possible values
+- **flow-type** (optional. 'cross_pr' by default): The flow you want to execute. Possible values
 
-  - pull-request: executes the pull request flow
-  - fdb: executes the full downstream flow
-  - branch: executes the tool for a specific branch
-  - single: executes the tool for a single project
+  - cross_pr: executes the cross pull request flow
+  - full_downstream: executes the full downstream flow
+  - branch: executes the branch flow
+  - single_pr: executes the single pull request flow
 
 - **starting-project** (optional. the project triggering the job by default): The project you want start building from. It's not the same as the project triggering the job (which will remain the same), but the project to take tree from. For instance
 

@@ -32,9 +32,9 @@ const setGeneralInputs = (flowType: string) => {
 
 describe("Different flow types", () => {
   test.each([
-    ["pull-request", FlowType.CROSS_PULL_REQUEST],
-    ["full-downstream", FlowType.FULL_DOWNSTREAM],
-    ["single", FlowType.SINGLE_PULL_REQUEST],
+    ["cross_pr", FlowType.CROSS_PULL_REQUEST],
+    ["full_downstream", FlowType.FULL_DOWNSTREAM],
+    ["single_pr", FlowType.SINGLE_PULL_REQUEST],
     ["branch", FlowType.BRANCH],
     ["invalid", undefined],
   ])("%p", (flowType: string, expectedFlowType: FlowType | undefined) => {

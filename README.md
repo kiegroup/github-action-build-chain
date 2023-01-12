@@ -850,11 +850,6 @@ npm run build:cli
 ./build/index.js build ...
 ```
 
-### Debug
-
-A specific `.vscode/launch.json` has been provided for debugging purposes. So just open `Run and Debug` VSCode tab and you will be able to run whatever the tasks are available in the file. 
-
-
 ### build-chain-configuration-reader dependency
 
 The definition files are read thanks to [build-chain-configuration-reader](https://github.com/kiegroup/build-chain-configuration-reader) library so in case you want to modify something from there it's easier if you just [npm link](https://docs.npmjs.com/cli/link) it:

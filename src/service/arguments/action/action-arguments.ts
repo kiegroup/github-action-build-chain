@@ -16,17 +16,10 @@ export class ActionArguments {
    * @returns corresponding enum
    */
   private getFlowType(flowType: string): FlowType {
-    switch (flowType) {
-      case "pull-request":
-        return FlowType.CROSS_PULL_REQUEST;
-      case "fdb":
-        return FlowType.FULL_DOWNSTREAM;
-      case "single":
-        return FlowType.SINGLE_PULL_REQUEST;
-      case "branch":
-        return FlowType.BRANCH;
-      default:
-        throw new InvalidInput("Invalid flow-type");
+    if (Object.values(FlowType).includes(flowType as FlowType)) {
+      return flowType as FlowType;
+    } else {
+      throw new InvalidInput("Invalid flow-type");
     }
   }
 

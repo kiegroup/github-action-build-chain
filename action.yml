@@ -7,8 +7,8 @@ inputs:
     description: "the file where the build chain is defined. It can a file in the same repository (relative path) or a URL"
     required: true
   flow-type:
-    description: "the flow to execute, it can be 'pull-request', 'full-downstream', 'single' or 'branch'"
-    default: "pull-request"
+    description: "the flow to execute, it can be 'cross_pr', 'full_downstream', 'single_pr' or 'branch'"
+    default: "cross_pr"
     required: false
   starting-project:
     description: "the project to start flow from. By default is the project triggering the job"

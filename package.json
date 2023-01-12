@@ -13,7 +13,7 @@
     "build": "run-p build:*",
     "build:cli": "ncc build -o build --minify src/bin/entry-point/cli.ts",
     "build:action": "ncc build -o dist --minify src/bin/entry-point/github-action.ts",
-    "dev:build": "tsc -p tsconfig.json && tsc-alias -p tsconfig.json",
+    "dev:build": "tsc && tsc-alias",
     "test": "jest unitary/",
     "pretest:e2e": "npm run build:action",
     "test:e2e": "jest --runInBand e2e/",

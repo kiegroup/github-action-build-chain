@@ -1,0 +1,41 @@
+name: Publish CLI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "package.json"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: https://registry.npmjs.org/
+      
+      - name: check for version change
+        id: version-check
+        uses: EndBug/version-check@v2
+        with:
+          file-url: https://unpkg.com/@kie/build-chain-action@latest/package.json
+          static-checking: localIsNew    
+      
+      - run: npm install
+        if: steps.version-check.outputs.changed == 'true'
+        
+      - run: npm run build:cli
+        if: steps.version-check.outputs.changed == 'true'
+      
+      - run: npm publish --access public
+        if: steps.version-check.outputs.changed == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
+
+      - run: echo "No change detected in package.json. Won't publish"
+        if: steps.version-check.outputs.changed == 'false'
+

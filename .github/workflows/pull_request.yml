@@ -39,3 +39,16 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: npm run test:e2e
+      
+  package-lock-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - run: npm install
+      - name: Check if package-lock.json was updated
+        # Check that Git working tree is clean after running `npm install` 
+        # The `git` command exits with 1 and fails the build if there are any uncommitted changes.
+        run: git diff HEAD --exit-code

@@ -1,5 +1,5 @@
 import { InvalidInput } from "@bc/domain/errors";
-import { FlowType, LoggerLevel } from "@bc/domain/inputs";
+import { FlowType, InputValues, LoggerLevel } from "@bc/domain/inputs";
 import { ActionArguments } from "@bc/service/arguments/action/action-arguments";
 import { InputService } from "@bc/service/inputs/input-service";
 import "reflect-metadata";
@@ -89,5 +89,19 @@ describe("Different log levels", () => {
     } catch (err) {
       expect(err).toBeInstanceOf(InvalidInput);
     }
+  });
+});
+
+describe("undefined inputs", () => {
+  test.each([
+    ["empty string", "INPUT_STARTING-PROJECT", "startProject" as keyof InputValues],
+    ["array of empty strings", "INPUT_SKIP-PROJECT-CHECKOUT", "skipProjectCheckout" as keyof InputValues]
+  ])("undefined input should return undefined instead of %p", (_title: string, key: string, toCheckKey: keyof InputValues) => {
+    setGeneralInputs(FlowType.CROSS_PULL_REQUEST);
+    delete process.env[key];
+    const parser = new ActionArguments();
+    parser.parse();
+    const vals = parsedInput.inputs;
+    expect(vals[toCheckKey]).toBe(undefined);
   });
 });

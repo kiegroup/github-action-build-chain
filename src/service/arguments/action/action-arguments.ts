@@ -72,6 +72,16 @@ export class ActionArguments {
     return flags;
   }
 
+  private getStringInput(key: string) {
+    const input = core.getInput(key);
+    return input === "" ? undefined : input;
+  }
+
+  private getArrayInput(key: string) {
+    const input = this.getStringInput(key);
+    return input?.split(",").map(str => str.trim());
+  }
+
   /**
    * Gets the actual input from github action event and sets it in parsed input object
    */
@@ -81,13 +91,13 @@ export class ActionArguments {
       flowType: this.getFlowType(core.getInput("flow-type")),
       skipExecution: core.getBooleanInput("skip-execution"),
       skipParallelCheckout: core.getBooleanInput("skip-parallel-checkout"),
-      skipProjectCheckout: core.getInput("skip-project-checkout").split(",").map(str => str.trim()),
-      skipProjectExecution: core.getInput("skip-project-execution").split(",").map(str => str.trim()),
+      skipProjectCheckout: this.getArrayInput("skip-project-checkout"),
+      skipProjectExecution: this.getArrayInput("skip-project-execution"),
       skipCheckout: core.getBooleanInput("skip-checkout"),
-      startProject: core.getInput("starting-project"),
+      startProject: this.getStringInput("starting-project"),
       loggerLevel: this.getLoggerLevel(core.getInput("logger-level")),
-      annotationsPrefix: core.getInput("annotations-prefix"),
-      customCommandTreatment: core.getInput("custom-command-treatment") === "" ? [] : core.getInput("custom-command-treatment").split(","),
+      annotationsPrefix: this.getStringInput("annotations-prefix"),
+      customCommandTreatment: this.getArrayInput("custom-command-treatment"),
       ...this.getAdditionalFlags(core.getInput("additional-flags")),
     };
 

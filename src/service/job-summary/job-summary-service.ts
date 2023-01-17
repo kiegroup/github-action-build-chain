@@ -28,9 +28,7 @@ export class JobSummaryService {
       .emptyBuffer()
       .addRaw("You can copy paste the following commands to locally execute build chain tool.", true)
       .addCodeBlock(
-        `npm i ${process.env.npm_package_name}@${
-          process.env.npm_package_version
-        } -g build-chain-action -f ${this.configService.getDefinitionFileUrl()} build ${flowType} -u ${this.configService.getEventUrl()}`
+        `npm i @kie/build-chain-action -g\nbuild-chain build ${flowType} -f ${this.configService.getDefinitionFileUrl()} -u ${this.configService.getEventUrl()}`
       )
       .addEOL()
       .addRaw(`**Git Version**: \`${await this.gitService.version()}\``, true)

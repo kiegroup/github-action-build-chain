@@ -203,8 +203,8 @@ test("non-branch flow", async () => {
     path.join(__dirname, "expected-summary"),
     "utf8"
   ).replace(
-    /\${{ PACKAGE_NAME_AND_VERSION }}/,
-    `${process.env.npm_package_name}@${process.env.npm_package_version}`
+    /\${{ PACKAGE_NAME }}/,
+    `${process.env.npm_package_name}`
   );
   expect(readFileSync(filename, "utf8")).toBe(expected);
 });

@@ -4,6 +4,8 @@ import { UploadService } from "@bc/service/artifacts/upload-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { UploadResponse } from "@actions/artifact";
 import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
+import { constants } from "@bc/domain/constants";
+import { EntryPoint } from "@bc/domain/entry-point";
 
 @Service()
 export class ArtifactService {
@@ -32,6 +34,11 @@ export class ArtifactService {
   }
 
   async uploadNodes(nodeChain: Node[], startingNode: Node): Promise<PromiseSettledResult<UploadResponse>[]> {
+    if (Container.get(constants.CONTAINER.ENTRY_POINT) === EntryPoint.CLI) {
+      this.logger.info("Will not upload any artifacts in CLI environment");
+      return [];
+    }
+    
     const nodesToArchive = this.getNodesToArchive(nodeChain, startingNode);
     this.logger.info(nodesToArchive.length > 0 ? `Archiving artifacts for ${nodesToArchive.map(node => node.project)}` : "No artifacts to archive");
     const promises = nodesToArchive.map(async node => {

@@ -176,7 +176,7 @@ test("run flow", async () => {
   expect(infoSpy).toHaveBeenNthCalledWith(14, "\t\t cmd3");
 
   // checkout summary
-  expect(groupSpy).toHaveBeenNthCalledWith(2, `Checking out ${nodeChain[1].project} and its dependencies`);
+  expect(groupSpy).toHaveBeenNthCalledWith(2, `Checking out ${nodeChain[1].project} and its dependencies (${nodeChain.length} projects in total). It can take some time.`);
   expect(infoSpy).toHaveBeenNthCalledWith(15, "Checkout summary");
   expect(infoSpy).toHaveBeenNthCalledWith(16, `[${nodeChain[0].project}]`);
   expect(infoSpy).toHaveBeenNthCalledWith(17, "\t This project wasn't checked out");

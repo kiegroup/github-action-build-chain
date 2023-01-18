@@ -23,7 +23,7 @@ beforeEach(async () => {
               dest: "action.yml",
             },
             {
-              src: path.resolve(__dirname, "..", "..", "..", "dist"),
+              src: path.resolve(__dirname, "..", "..", "..", "dist-e2e"),
               dest: "dist",
             },
           ],

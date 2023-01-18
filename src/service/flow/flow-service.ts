@@ -34,7 +34,7 @@ export class FlowService {
     this.logger.endGroup();
 
     this.logger.startGroup(
-      `Checking out ${this.configService.getStarterProjectName()} and its dependencies`
+      `Checking out ${this.configService.getStarterProjectName()} and its dependencies (${this.configService.nodeChain.length} projects in total). It can take some time.`
     );
     const checkoutInfo = await this.checkoutService.checkoutDefinitionTree();
     this.logger.info("Checkout summary");
@@ -159,16 +159,20 @@ export class FlowService {
    */
   private printExecutionSummary(result: ExecuteNodeResult[]) {
     result.forEach(res => {
-      this.logger.info(`[${res.node.project}]`);
-      if (!res.executeCommandResults.length) {
-        this.logger.info("\t No commands were found for this project");
-      }
-      res.executeCommandResults.forEach(cmdRes => {
-        this.logger.info(`\t [${cmdRes.result}] ${cmdRes.command} [Executed in ${cmdRes.time} ms]`);
-        if (cmdRes.result === ExecutionResult.NOT_OK) {
-          this.logger.info(`\t\t Error: ${cmdRes.errorMessage}`);
+      if (this.isNodeExecutionSkipped(res)) {
+        this.logger.info(`Skipped ${res.node.project}`);
+      } else {
+        this.logger.info(`[${res.node.project}]`);
+        if (!res.executeCommandResults.length) {
+          this.logger.info("\t No commands were found for this project");
         }
-      });
+        res.executeCommandResults.forEach(cmdRes => {
+          this.logger.info(`\t [${cmdRes.result}] ${cmdRes.command} [Executed in ${cmdRes.time} ms]`);
+          if (cmdRes.result === ExecutionResult.NOT_OK) {
+            this.logger.info(`\t\t Error: ${cmdRes.errorMessage}`);
+          }
+        });
+      }
     });
   }
 
@@ -179,5 +183,9 @@ export class FlowService {
     this.printExecutionSummary(result);
     this.logger.endGroup();
     return result;
+  }
+
+  private isNodeExecutionSkipped(result: ExecuteNodeResult) {
+    return !!result.executeCommandResults.find(res => res.result === ExecutionResult.SKIP);
   }
 }

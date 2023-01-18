@@ -157,7 +157,7 @@ test("full downstream where 1 project has a PR and one doesn't", async () => {
 
   // checkout projects
   const group3 = result[1].groups![2];
-  expect(group3.name).toBe("Checking out owner1/project2 and its dependencies");
+  expect(group3.name).toBe("Checking out owner1/project2 and its dependencies (3 projects in total). It can take some time.");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project1]"));
   expect(group3.output).toEqual(
     expect.stringContaining("Project taken from owner1/project1:8.B")
@@ -333,7 +333,7 @@ test("cross-pr with no PRs", async () => {
 
   // checkout projects. important to verify the mapped targets
   const group3 = result[1].groups![2];
-  expect(group3.name).toBe("Checking out owner1/project2 and its dependencies");
+  expect(group3.name).toBe("Checking out owner1/project2 and its dependencies (2 projects in total). It can take some time.");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project1]"));
   expect(group3.output).toEqual(
     expect.stringContaining("Project taken from owner1/project1:8.B")

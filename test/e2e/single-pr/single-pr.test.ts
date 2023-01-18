@@ -179,7 +179,7 @@ test("PR from target:branchA to target:branchB", async () => {
   
   // checkout project
   const group3 = result[1].groups![2];
-  expect(group3.name).toBe("Checking out owner1/project2 and its dependencies");
+  expect(group3.name).toBe("Checking out owner1/project2 and its dependencies (1 projects in total). It can take some time.");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project2]"));
   expect(group3.output).toEqual(
     expect.stringContaining("Project taken from owner1/project2:branchB")
@@ -332,7 +332,7 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
   
   // checkout project
   const group3 = result[1].groups![2];
-  expect(group3.name).toBe("Checking out owner1/project3 and its dependencies");
+  expect(group3.name).toBe("Checking out owner1/project3 and its dependencies (1 projects in total). It can take some time.");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project3]"));
   expect(group3.output).toEqual(
     expect.stringContaining("Project taken from owner1/project3:branchB")
@@ -483,7 +483,7 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
 
   // checkout project
   const group3 = result[1].groups![2];
-  expect(group3.name).toBe("Checking out owner1/project1 and its dependencies");
+  expect(group3.name).toBe("Checking out owner1/project1 and its dependencies (1 projects in total). It can take some time.");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project1]"));
   expect(group3.output).toEqual(
     expect.stringContaining("Project taken from owner1/project1:branchB")

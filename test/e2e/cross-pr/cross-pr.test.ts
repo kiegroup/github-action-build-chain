@@ -241,7 +241,7 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
 
   // checkout project. important to verify the mapped targets
   const group3 = result[1].groups![2];
-  expect(group3.name).toBe("Checking out owner1/project4 and its dependencies");
+  expect(group3.name).toBe("Checking out owner1/project4 and its dependencies (4 projects in total). It can take some time.");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project1]"));
   expect(group3.output).toEqual(
     expect.stringContaining("Project taken from owner1/project1:7.x")
@@ -465,7 +465,7 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
   
   // checkout projects. important to verify the mapped targets
   const group3 = result[1].groups![2];
-  expect(group3.name).toBe("Checking out owner1/project2 and its dependencies");
+  expect(group3.name).toBe("Checking out owner1/project2 and its dependencies (2 projects in total). It can take some time.");
   expect(group3.output).toEqual(expect.stringContaining("[owner1/project1]"));
   expect(group3.output).toEqual(
     expect.stringContaining("Project taken from owner1/project1:8.B")

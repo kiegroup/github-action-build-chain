@@ -16,7 +16,7 @@
     "dev:build": "tsc && tsc-alias",
     "test": "jest unitary/",
     "pretest:e2e": "ncc build -o dist-e2e --minify src/bin/entry-point/github-action.ts",
-    "test:e2e": "jest --runInBand e2e/",
+    "test:e2e": "jest e2e/",
     "posttest:e2e": "rm -rf dist-e2e",
     "test:report": "npm test -- --coverage --testResultsProcessor=jest-sonar-reporter",
     "lint": "eslint . --ext .ts",

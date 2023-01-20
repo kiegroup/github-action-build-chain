@@ -857,7 +857,29 @@ The definition files are read thanks to [build-chain-configuration-reader](https
 - clone repository and browse to the folder
 - `npm install` it
 - (`sudo`) `npm link`
-- and then from this project folder execute `npm link @kie/build-chain-configuration-reader`
+- and then from this project folder execute `npm link @kie/build-chain-configuration-reader`  
+
+### Testing
+
+#### unit tests
+To test your changes you can run
+```
+npm test
+```
+And to test with coverage report you can run
+```
+npm run test:report
+```
+#### e2e tests
+
+To run e2e tests you need [Docker](https://docs.docker.com/get-docker/). Once you have setup docker you can run
+```
+npm run test:e2e
+```
+To generate log files containing the raw output of the worflows executed during e2e tests you can run
+```
+ACT_LOG=true npm run test:e2e
+```
 
 # System Requirements
 

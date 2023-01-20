@@ -170,7 +170,7 @@ export class FlowService {
           this.logger.startGroup(`[${phase.toUpperCase()}] [${res.node.project}] ${cmdRes.command}`);
           this.logger.info(`${cmdRes.result} [Executed in ${cmdRes.time} ms]`);
           if (cmdRes.result === ExecutionResult.NOT_OK) {
-            this.logger.info(`Error: ${cmdRes.errorMessage}`);
+            this.logger.error(cmdRes.errorMessage);
           }
           this.logger.endGroup();
         });

@@ -154,6 +154,7 @@ test("run flow", async () => {
   jest.spyOn(GithubActionLoggerService.prototype, "endGroup").mockImplementation(() => undefined);
   jest.spyOn(GithubActionLoggerService.prototype, "debug").mockImplementation(_msg => undefined);
   const infoSpy = jest.spyOn(GithubActionLoggerService.prototype, "info").mockImplementation(_msg => undefined);
+  const errorSpy = jest.spyOn(GithubActionLoggerService.prototype, "error").mockImplementation(_msg => undefined);
 
   const flowService = Container.get(FlowService);
   const result = await flowService.run();
@@ -194,27 +195,27 @@ test("run flow", async () => {
   expect(infoSpy).toHaveBeenNthCalledWith(24, `${ExecutionResult.OK} [Executed in 2 ms]`);
   expect(groupSpy).toHaveBeenNthCalledWith(6, `[${ExecutionPhase.BEFORE.toUpperCase()}] [${nodeChain[2].project}] cmd3`);
   expect(infoSpy).toHaveBeenNthCalledWith(25, `${ExecutionResult.NOT_OK} [Executed in 3 ms]`);
-  expect(infoSpy).toHaveBeenNthCalledWith(26, "Error: error");
+  expect(errorSpy).toHaveBeenNthCalledWith(1, "error");
 
   // execution summary: CURRENT
   expect(groupSpy).toHaveBeenNthCalledWith(7, `Executing ${ExecutionPhase.CURRENT}`);
-  expect(infoSpy).toHaveBeenNthCalledWith(27, `Execution summary for phase ${ExecutionPhase.CURRENT}`);
-  expect(infoSpy).toHaveBeenNthCalledWith(28, `[${ExecutionPhase.CURRENT.toUpperCase()}] No commands were found for ${nodeChain[0].project}`);
+  expect(infoSpy).toHaveBeenNthCalledWith(26, `Execution summary for phase ${ExecutionPhase.CURRENT}`);
+  expect(infoSpy).toHaveBeenNthCalledWith(27, `[${ExecutionPhase.CURRENT.toUpperCase()}] No commands were found for ${nodeChain[0].project}`);
   expect(groupSpy).toHaveBeenNthCalledWith(8, `[${ExecutionPhase.CURRENT.toUpperCase()}] [${nodeChain[1].project}] cmd2`);
-  expect(infoSpy).toHaveBeenNthCalledWith(29, `${ExecutionResult.OK} [Executed in 2 ms]`);
+  expect(infoSpy).toHaveBeenNthCalledWith(28, `${ExecutionResult.OK} [Executed in 2 ms]`);
   expect(groupSpy).toHaveBeenNthCalledWith(9, `[${ExecutionPhase.CURRENT.toUpperCase()}] [${nodeChain[2].project}] cmd3`);
-  expect(infoSpy).toHaveBeenNthCalledWith(30, `${ExecutionResult.NOT_OK} [Executed in 3 ms]`);
-  expect(infoSpy).toHaveBeenNthCalledWith(31, "Error: error");
+  expect(infoSpy).toHaveBeenNthCalledWith(29, `${ExecutionResult.NOT_OK} [Executed in 3 ms]`);
+  expect(errorSpy).toHaveBeenNthCalledWith(2, "error");
 
   // execution summary: AFTER
   expect(groupSpy).toHaveBeenNthCalledWith(10, `Executing ${ExecutionPhase.AFTER}`);
-  expect(infoSpy).toHaveBeenNthCalledWith(32, `Execution summary for phase ${ExecutionPhase.AFTER}`);
-  expect(infoSpy).toHaveBeenNthCalledWith(33, `[${ExecutionPhase.AFTER.toUpperCase()}] No commands were found for ${nodeChain[0].project}`);
+  expect(infoSpy).toHaveBeenNthCalledWith(30, `Execution summary for phase ${ExecutionPhase.AFTER}`);
+  expect(infoSpy).toHaveBeenNthCalledWith(31, `[${ExecutionPhase.AFTER.toUpperCase()}] No commands were found for ${nodeChain[0].project}`);
   expect(groupSpy).toHaveBeenNthCalledWith(11, `[${ExecutionPhase.AFTER.toUpperCase()}] [${nodeChain[1].project}] cmd2`);
-  expect(infoSpy).toHaveBeenNthCalledWith(34, `${ExecutionResult.OK} [Executed in 2 ms]`);
+  expect(infoSpy).toHaveBeenNthCalledWith(32, `${ExecutionResult.OK} [Executed in 2 ms]`);
   expect(groupSpy).toHaveBeenNthCalledWith(12, `[${ExecutionPhase.AFTER.toUpperCase()}] [${nodeChain[2].project}] cmd3`);
-  expect(infoSpy).toHaveBeenNthCalledWith(35, `${ExecutionResult.NOT_OK} [Executed in 3 ms]`);
-  expect(infoSpy).toHaveBeenNthCalledWith(36, "Error: error");
+  expect(infoSpy).toHaveBeenNthCalledWith(33, `${ExecutionResult.NOT_OK} [Executed in 3 ms]`);
+  expect(errorSpy).toHaveBeenNthCalledWith(3, "error");
 
   expect(groupSpy).toHaveBeenNthCalledWith(13, "Uploading artifacts");
 

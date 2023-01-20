@@ -1,4 +1,4 @@
-name: push checks
+name: Branch
 
 on: push
 jobs:

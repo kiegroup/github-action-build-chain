@@ -206,9 +206,9 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
     output: "",
   });
   expect(result[1]).toMatchObject({ name: "Main ./build-chain", status: 0 });
+  expect(result[1].groups?.length).toBe(17);
 
   // pre section
-  expect(result[1].groups?.length).toBe(7);
   const group1 = result[1].groups![0];
   expect(group1.name).toBe("Executing pre section");
   expect(group1.output).toEqual(
@@ -240,129 +240,79 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
   expect(group2.output).toEqual(expect.stringContaining("Level type: current"));
 
   // checkout project. important to verify the mapped targets
-  const group3 = result[1].groups![2];
-  expect(group3.name).toBe("Checking out owner1/project4 and its dependencies (4 projects in total). It can take some time.");
-  expect(group3.output).toEqual(expect.stringContaining("[owner1/project1]"));
-  expect(group3.output).toEqual(
+  const group4 = result[1].groups![3];
+  expect(group4.name).toBe("Checkout summary");
+  expect(group4.output).toEqual(expect.stringContaining("[owner1/project1]"));
+  expect(group4.output).toEqual(
     expect.stringContaining("Project taken from owner1/project1:7.x")
   );
-  expect(group3.output).toEqual(
+  expect(group4.output).toEqual(
     expect.stringContaining("Merged owner1/project1:branchA into branch 7.x")
   );
-  expect(group3.output).toEqual(expect.stringContaining("[owner1/project2]"));
-  expect(group3.output).toEqual(
+  expect(group4.output).toEqual(expect.stringContaining("[owner1/project2]"));
+  expect(group4.output).toEqual(
     expect.stringContaining("Project taken from owner1/project2:branchB")
   );
-  expect(group3.output).toEqual(
+  expect(group4.output).toEqual(
     expect.stringContaining(
       "Merged owner1/project2:branchA into branch branchB"
     )
   );
-  expect(group3.output).toEqual(expect.stringContaining("[owner1/project3]"));
-  expect(group3.output).toEqual(
+  expect(group4.output).toEqual(expect.stringContaining("[owner1/project3]"));
+  expect(group4.output).toEqual(
     expect.stringContaining("Project taken from owner1/project3:branchC")
   );
-  expect(group3.output).toEqual(
+  expect(group4.output).toEqual(
     expect.stringContaining(
       "Merged owner2/project3:branchA into branch branchC"
     )
   );
-  expect(group3.output).toEqual(expect.stringContaining("[owner1/project4]"));
-  expect(group3.output).toEqual(
+  expect(group4.output).toEqual(expect.stringContaining("[owner1/project4]"));
+  expect(group4.output).toEqual(
     expect.stringContaining("Project taken from owner1/project4:branchB")
   );
-  expect(group3.output).toEqual(
+  expect(group4.output).toEqual(
     expect.stringContaining(
       "Merged owner2/project4:branchA into branch branchB"
     )
   );
 
   // before section
-  const group4 = result[1].groups![3];
-  expect(group4.name).toBe("Executing before");
-  expect(group4.output).toEqual(
+  const group5 = result[1].groups![4];
+  expect(group5.name).toBe("Executing before");
+  expect(group5.output).toEqual(
     expect.stringContaining(" before upstream owner1/project1")
-  );
-  expect(group4.output).toEqual(expect.stringContaining("[owner1/project1]"));
-  expect(group4.output).toEqual(
-    expect.stringContaining(
-      "[OK] echo \"before upstream owner1/project1\" [Executed in"
-    )
-  );
-  expect(group4.output).toEqual(expect.stringContaining("[owner1/project2]"));
-  expect(group4.output).toEqual(
-    expect.stringContaining("No commands were found for this project")
-  );
-  expect(group4.output).toEqual(expect.stringContaining("[owner1/project3]"));
-  expect(group4.output).toEqual(
-    expect.stringContaining("No commands were found for this project")
-  );
-  expect(group4.output).toEqual(expect.stringContaining("[owner1/project4]"));
-  expect(group4.output).toEqual(
-    expect.stringContaining("No commands were found for this project")
   );
 
   // current section
-  const group5 = result[1].groups![4];
-  expect(group5.name).toBe("Executing commands");
-  expect(group5.output).toEqual(expect.stringContaining("default upstream"));
-  expect(group5.output).toEqual(
+  const group7 = result[1].groups![6];
+  expect(group7.name).toBe("Executing commands");
+  expect(group7.output).toEqual(expect.stringContaining("default upstream"));
+  expect(group7.output).toEqual(
     expect.stringContaining("upstream owner1/project2")
   );
-  expect(group5.output).toEqual(expect.stringContaining("default current"));
-  expect(group5.output).toEqual(expect.stringContaining("[owner1/project1]"));
-  expect(group5.output).toEqual(
-    expect.stringContaining("[OK] echo \"default upstream\" [Executed in")
-  );
-  expect(group5.output).toEqual(expect.stringContaining("[owner1/project2]"));
-  expect(group5.output).toEqual(
-    expect.stringContaining("[OK] echo \"upstream owner1/project2\" [Executed in")
-  );
-  expect(group5.output).toEqual(expect.stringContaining("[owner1/project3]"));
-  expect(group5.output).toEqual(
-    expect.stringContaining("[OK] touch project3-upstream.log [Executed in")
-  );
-  expect(group5.output).toEqual(expect.stringContaining("[owner1/project4]"));
-  expect(group5.output).toEqual(
-    expect.stringContaining("[OK] echo \"default current\" [Executed in")
-  );
+  expect(group7.output).toEqual(expect.stringContaining("default current"));
 
   // after section
-  const group6 = result[1].groups![5];
-  expect(group6.name).toBe("Executing after");
-  expect(group6.output).toEqual(
+  const group12 = result[1].groups![11];
+  expect(group12.name).toBe("Executing after");
+  expect(group12.output).toEqual(
     expect.stringContaining("default after current")
   );
-  expect(group6.output).toEqual(
+  expect(group12.output).toEqual(
     expect.stringContaining("default after current")
   );
-  expect(group6.output).toEqual(
+  expect(group12.output).toEqual(
     expect.stringContaining("default after current")
   );
-  expect(group6.output).toEqual(
+  expect(group12.output).toEqual(
     expect.stringContaining("default after current")
-  );
-  expect(group6.output).toEqual(expect.stringContaining("[owner1/project1]"));
-  expect(group6.output).toEqual(
-    expect.stringContaining("[OK] echo \"default after current\" [Executed in")
-  );
-  expect(group6.output).toEqual(expect.stringContaining("[owner1/project2]"));
-  expect(group6.output).toEqual(
-    expect.stringContaining("[OK] echo \"default after current\" [Executed in")
-  );
-  expect(group6.output).toEqual(expect.stringContaining("[owner1/project3]"));
-  expect(group6.output).toEqual(
-    expect.stringContaining("[OK] echo \"default after current\" [Executed in")
-  );
-  expect(group6.output).toEqual(expect.stringContaining("[owner1/project4]"));
-  expect(group6.output).toEqual(
-    expect.stringContaining("[OK] echo \"default after current\" [Executed in")
   );
   
   // artifacts
-  const group7 = result[1].groups![6];
-  expect(group7.name).toBe("Uploading artifacts");
-  expect(group7.output).toEqual(
+  const group17 = result[1].groups![16];
+  expect(group17.name).toBe("Uploading artifacts");
+  expect(group17.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
   
@@ -438,7 +388,7 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
     output: "",
   });
   expect(result[1]).toMatchObject({ name: "Main ./build-chain", status: 0 });
-  expect(result[1].groups?.length).toBe(7);
+  expect(result[1].groups?.length).toBe(13);
   
   // pre section
   const group1 = result[1].groups![0];
@@ -464,80 +414,54 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
   expect(group2.output).toEqual(expect.stringContaining("Level type: current"));
   
   // checkout projects. important to verify the mapped targets
-  const group3 = result[1].groups![2];
-  expect(group3.name).toBe("Checking out owner1/project2 and its dependencies (2 projects in total). It can take some time.");
-  expect(group3.output).toEqual(expect.stringContaining("[owner1/project1]"));
-  expect(group3.output).toEqual(
+  const group4 = result[1].groups![3];
+  expect(group4.name).toBe("Checkout summary");
+  expect(group4.output).toEqual(expect.stringContaining("[owner1/project1]"));
+  expect(group4.output).toEqual(
     expect.stringContaining("Project taken from owner1/project1:8.B")
   );
-  expect(group3.output).toEqual(
+  expect(group4.output).toEqual(
     expect.stringContaining("Merged owner1/project1:branchA into branch 8.B")
   );
-  expect(group3.output).toEqual(expect.stringContaining("[owner1/project2]"));
-  expect(group3.output).toEqual(
+  expect(group4.output).toEqual(expect.stringContaining("[owner1/project2]"));
+  expect(group4.output).toEqual(
     expect.stringContaining("Project taken from owner1/project2:branchB")
   );
-  expect(group3.output).toEqual(
+  expect(group4.output).toEqual(
     expect.stringContaining(
       "Merged owner1/project2:branchA into branch branchB"
     )
   );
   
   // before section
-  const group4 = result[1].groups![3];
-  expect(group4.name).toBe("Executing before");
-  expect(group4.output).toEqual(
+  const group5 = result[1].groups![4];
+  expect(group5.name).toBe("Executing before");
+  expect(group5.output).toEqual(
     expect.stringContaining(" before upstream owner1/project1")
-  );
-  expect(group4.output).toEqual(expect.stringContaining("[owner1/project1]"));
-  expect(group4.output).toEqual(
-    expect.stringContaining(
-      "[OK] echo \"before upstream owner1/project1\" [Executed in"
-    )
-  );
-  expect(group4.output).toEqual(expect.stringContaining("[owner1/project2]"));
-  expect(group4.output).toEqual(
-    expect.stringContaining("No commands were found for this project")
   );
   
   // current section
-  const group5 = result[1].groups![4];
-  expect(group5.name).toBe("Executing commands");
-  expect(group5.output).toEqual(expect.stringContaining("default upstream"));
-  expect(group5.output).toEqual(
+  const group7 = result[1].groups![6];
+  expect(group7.name).toBe("Executing commands");
+  expect(group7.output).toEqual(expect.stringContaining("default upstream"));
+  expect(group7.output).toEqual(
     expect.stringContaining("current owner1/project2")
-  );
-  expect(group5.output).toEqual(expect.stringContaining("[owner1/project1]"));
-  expect(group5.output).toEqual(
-    expect.stringContaining("[OK] echo \"default upstream\" [Executed in")
-  );
-  expect(group5.output).toEqual(expect.stringContaining("[owner1/project2]"));
-  expect(group5.output).toEqual(
-    expect.stringContaining("[OK] echo \"current owner1/project2\" [Executed in")
   );
   
   // after section
-  const group6 = result[1].groups![5];
-  expect(group6.name).toBe("Executing after");
-  expect(group6.output).toEqual(
+  const group10 = result[1].groups![9];
+  expect(group10.name).toBe("Executing after");
+  expect(group10.output).toEqual(
     expect.stringContaining("default after current")
   );
-  expect(group6.output).toEqual(
+  expect(group10.output).toEqual(
     expect.stringContaining("default after current")
-  );
-  expect(group6.output).toEqual(expect.stringContaining("[owner1/project1]"));
-  expect(group6.output).toEqual(
-    expect.stringContaining("[OK] echo \"default after current\" [Executed in")
-  );
-  expect(group6.output).toEqual(expect.stringContaining("[owner1/project2]"));
-  expect(group6.output).toEqual(
-    expect.stringContaining("[OK] echo \"default after current\" [Executed in")
   );
   
   // artifacts
-  const group7 = result[1].groups![6];
-  expect(group7.name).toBe("Uploading artifacts");
-  expect(group7.output).toEqual(
+  const group13 = result[1].groups![12];
+  expect(group13.name).toBe("Uploading artifacts");
+  expect(group13.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
   

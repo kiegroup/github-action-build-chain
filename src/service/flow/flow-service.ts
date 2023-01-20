@@ -37,7 +37,8 @@ export class FlowService {
       `Checking out ${this.configService.getStarterProjectName()} and its dependencies (${this.configService.nodeChain.length} projects in total). It can take some time.`
     );
     const checkoutInfo = await this.checkoutService.checkoutDefinitionTree();
-    this.logger.info("Checkout summary");
+    this.logger.endGroup();
+    this.logger.startGroup("Checkout summary");
     this.printCheckoutSummary(checkoutInfo);
     this.logger.endGroup();
 
@@ -157,20 +158,21 @@ export class FlowService {
    *    [NOT_OK] cmd2 [Executed in: 5s]
    *        Error: msg
    */
-  private printExecutionSummary(result: ExecuteNodeResult[]) {
+  private printExecutionSummary(result: ExecuteNodeResult[], phase: ExecutionPhase) {
     result.forEach(res => {
       if (this.isNodeExecutionSkipped(res)) {
-        this.logger.info(`Skipped ${res.node.project}`);
+        this.logger.info(`[${phase.toUpperCase()}] Skipped ${res.node.project}`);
       } else {
-        this.logger.info(`[${res.node.project}]`);
         if (!res.executeCommandResults.length) {
-          this.logger.info("\t No commands were found for this project");
+          this.logger.info(`[${phase.toUpperCase()}] No commands were found for ${res.node.project}`);
         }
         res.executeCommandResults.forEach(cmdRes => {
-          this.logger.info(`\t [${cmdRes.result}] ${cmdRes.command} [Executed in ${cmdRes.time} ms]`);
+          this.logger.startGroup(`[${phase.toUpperCase()}] [${res.node.project}] ${cmdRes.command}`);
+          this.logger.info(`${cmdRes.result} [Executed in ${cmdRes.time} ms]`);
           if (cmdRes.result === ExecutionResult.NOT_OK) {
-            this.logger.info(`\t\t Error: ${cmdRes.errorMessage}`);
+            this.logger.error(cmdRes.errorMessage);
           }
+          this.logger.endGroup();
         });
       }
     });
@@ -180,7 +182,7 @@ export class FlowService {
     this.logger.startGroup(`Executing ${phase}`);
     const result = await this.executor.executeChainCommands(chain, phase);
     this.logger.info(`Execution summary for phase ${phase}`);
-    this.printExecutionSummary(result);
+    this.printExecutionSummary(result, phase);
     this.logger.endGroup();
     return result;
   }

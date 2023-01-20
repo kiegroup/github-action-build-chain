@@ -60,7 +60,7 @@ export class CheckoutService {
   private async checkoutNode(node: Node): Promise<undefined | CheckoutInfo> {
     // Don't checkout this node if skipCheckout flag is set to true or project is listed in skipProjectCheckout flag
     if (this.config.skipCheckout(node)) {
-      this.logger.debug(`[${node.project}] Checkout skipped`);
+      this.logger.info(`${node.project} checkout skipped`);
       return undefined;
     }
 
@@ -94,7 +94,7 @@ export class CheckoutService {
     // clone multiple times if needed
     await this.cloneNode(node);
 
-    this.logger.debug(`[${node.project}] Checked out`);
+    this.logger.info(`${node.project} checked out`);
 
     return checkoutInfo;
   }

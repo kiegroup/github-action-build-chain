@@ -53,7 +53,8 @@ export class DefinitionFileReader {
       case FlowType.CROSS_PULL_REQUEST: {
         const node = await getTreeForProject(
           this.configuration.parsedInputs.definitionFile,
-          starterProject
+          starterProject,
+          options
         );
         if (!node) {
           throw new Error("Starting project not found");

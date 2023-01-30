@@ -19,6 +19,17 @@ export class ActionArguments {
     if (Object.values(FlowType).includes(flowType as FlowType)) {
       return flowType as FlowType;
     } else {
+      // deprecated flowtype. Keep until full compatibility is reached with existing ci
+      switch (flowType) {
+        case "pull-request":
+          return FlowType.CROSS_PULL_REQUEST;
+        case "full-downstream":
+          return FlowType.FULL_DOWNSTREAM;
+        case "single":
+          return FlowType.SINGLE_PULL_REQUEST;
+        case "branch":
+          return FlowType.BRANCH;
+      }
       throw new InvalidInput("Invalid flow-type");
     }
   }

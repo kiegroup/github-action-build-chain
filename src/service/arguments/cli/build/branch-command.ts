@@ -1,6 +1,5 @@
 import { Command } from "commander";
 import { CommandConstructor } from "@bc/service/arguments/cli/command-constructor";
-import { CLIActionType } from "@bc/domain/cli";
 import { FlowType } from "@bc/domain/inputs";
 
 /**

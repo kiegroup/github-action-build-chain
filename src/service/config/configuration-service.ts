@@ -56,7 +56,10 @@ export class ConfigurationService {
    * @returns {string}
    */
   getStarterProjectName(): string {
-    const startProject = this.configuration.parsedInputs.startProject ?? process.env.GITHUB_REPOSITORY;
+    const startProject =
+      this.configuration.parsedInputs.startProject ??
+      process.env.GITHUB_REPOSITORY ??
+      this.configuration.gitEventData.base.repo.full_name;
     if (!startProject) {
       logAndThrow("Start project needs to be defined or build chain must be run in a Github environment");
     }

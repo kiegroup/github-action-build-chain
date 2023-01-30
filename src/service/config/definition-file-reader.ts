@@ -87,7 +87,7 @@ export class DefinitionFileReader {
 
   async getDefinitionFile(): Promise<DefinitionFile> {
     try {
-      return readDefinitionFile(
+      return await readDefinitionFile(
         this.configuration.parsedInputs.definitionFile,
         {
           ...this.configuration.sourceProject,
@@ -96,12 +96,12 @@ export class DefinitionFileReader {
       );
     } catch (err) {
       this.logger.debug(
-        "Did not find correct definition on file, trying target"
+        "Did not find correct definition file, trying target"
       );
     }
 
     try {
-      return readDefinitionFile(
+      return await readDefinitionFile(
         this.configuration.parsedInputs.definitionFile,
         {
           ...this.configuration.targetProject,

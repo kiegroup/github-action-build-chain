@@ -109,7 +109,19 @@ export class DefinitionFileReader {
         }
       );
     } catch (err) {
-      logAndThrow("Invalid definition file");
+      this.logger.debug(
+        "Did not find correct definition file, trying with default placeholder values"
+      );
+    }
+
+    try {
+      return await readDefinitionFile(
+        this.configuration.parsedInputs.definitionFile, { 
+          token: Container.get(constants.GITHUB.TOKEN)
+        }
+      );
+    } catch(err) {
+      logAndThrow(`Invalid definition file. ${err}`);
     }
   }
 
@@ -131,7 +143,17 @@ export class DefinitionFileReader {
         token: Container.get(constants.GITHUB.TOKEN),
       });
     } catch (err) {
-      logAndThrow("Invalid definition file");
+      this.logger.debug(
+        "Did not find correct definition file, trying with default placeholder values"
+      );
+    }
+
+    try {
+      return await this.generateNodeChainWithOptions(starterProject, {
+        token: Container.get(constants.GITHUB.TOKEN),
+      });
+    } catch(err) {
+      logAndThrow(`Invalid definition file. ${err}`);
     }
   }
 }

@@ -4,7 +4,6 @@ import { CheckedOutNode } from "@bc/domain/checkout";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
-import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { FlowType } from "@bc/domain/inputs";
 import { defaultNodeValue } from "@bc/domain/node";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
@@ -93,47 +92,47 @@ const checkoutInfo: CheckedOutNode[] = [
   },
 ];
 
-const executionResult: ExecuteNodeResult[] = [
-  {
-    node: nodeChain[0],
-    executeCommandResults: [
-      {
-        startingDate: 0,
-        endingDate: 0,
-        time: 0,
-        command: "cmd1",
-        result: ExecutionResult.SKIP,
-        errorMessage: "error",
-      },
-    ],
-  },
-  {
-    node: nodeChain[1],
-    executeCommandResults: [
-      {
-        startingDate: 0,
-        endingDate: 2,
-        time: 2,
-        command: "cmd2",
-        result: ExecutionResult.OK,
-        errorMessage: "",
-      },
-    ],
-  },
-  {
-    node: nodeChain[2],
-    executeCommandResults: [
-      {
-        startingDate: 0,
-        endingDate: 3,
-        time: 3,
-        command: "cmd3",
-        result: ExecutionResult.NOT_OK,
-        errorMessage: "error",
-      },
-    ],
-  },
-];
+const executionResult1 = {
+  node: nodeChain[0],
+  executeCommandResults: [
+    {
+      startingDate: 0,
+      endingDate: 0,
+      time: 0,
+      command: "cmd1",
+      result: ExecutionResult.SKIP,
+      errorMessage: "error",
+    },
+  ],
+};
+
+const executionResult2 = {
+  node: nodeChain[1],
+  executeCommandResults: [
+    {
+      startingDate: 0,
+      endingDate: 2,
+      time: 2,
+      command: "cmd2",
+      result: ExecutionResult.OK,
+      errorMessage: "",
+    },
+  ],
+};
+
+const executionResult3 = {
+  node: nodeChain[2],
+  executeCommandResults: [
+    {
+      startingDate: 0,
+      endingDate: 3,
+      time: 3,
+      command: "cmd3",
+      result: ExecutionResult.NOT_OK,
+      errorMessage: "error",
+    },
+  ],
+};
 
 const artifactUploadResults: PromiseSettledResult<UploadResponse>[] = [];
 
@@ -193,7 +192,11 @@ test("non-branch flow", async () => {
     {
       checkoutInfo,
       artifactUploadResults,
-      executionResult: { before: executionResult, after: executionResult, commands: executionResult },
+      executionResult: [
+        [executionResult1, executionResult1, executionResult1], 
+        [executionResult2, executionResult2, executionResult2], 
+        [executionResult3, executionResult3, executionResult3]
+      ]
     },
     prePostResult,
     prePostResult
@@ -216,7 +219,11 @@ test("branch flow", async () => {
     {
       checkoutInfo,
       artifactUploadResults,
-      executionResult: { before: executionResult, after: executionResult, commands: executionResult },
+      executionResult: [
+        [executionResult1, executionResult1, executionResult1], 
+        [executionResult2, executionResult2, executionResult2], 
+        [executionResult3, executionResult3, executionResult3]
+      ]
     },
     prePostResult,
     prePostResult

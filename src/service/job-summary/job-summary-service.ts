@@ -35,9 +35,9 @@ export class JobSummaryService {
       .addRaw("> **_Notice_**: The `GITHUB_TOKEN` should be set in the environment.", true)
       .stringify();
 
-    const before = this.constructExecutionResult(flowResult.executionResult.before, flowResult.checkoutInfo);
-    const current = this.constructExecutionResult(flowResult.executionResult.commands, flowResult.checkoutInfo);
-    const after = this.constructExecutionResult(flowResult.executionResult.after, flowResult.checkoutInfo);
+    const before = this.constructExecutionResult(flowResult.executionResult.map(res => res[0]), flowResult.checkoutInfo);
+    const current = this.constructExecutionResult(flowResult.executionResult.map(res => res[1]), flowResult.checkoutInfo);
+    const after = this.constructExecutionResult(flowResult.executionResult.map(res => res[2]), flowResult.checkoutInfo);
     const pre = this.constructPrePostResult(preResult);
     const post = this.constructPrePostResult(postResult);
 

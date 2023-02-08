@@ -34,7 +34,7 @@ class DummyRunner extends Runner {
     this.printExecutionFailure(res);
   }
 
-  testPrintNodeExecutionFailure(res: ExecuteNodeResult[]) {
+  testPrintNodeExecutionFailure(res: ExecuteNodeResult[][]) {
     this.printNodeExecutionFailure(res);
   }
 }
@@ -117,34 +117,16 @@ test.each([
     {
       artifactUploadResults: [artifactOk],
       checkoutInfo: [],
-      executionResult: { after: [nodeOk], commands: [nodeOk], before: [nodeOk] },
+      executionResult: [[nodeOk, nodeOk, nodeOk]]
     },
   ],
   [
-    "executeFlow: failure - before execution phase",
+    "executeFlow: failure",
     true,
     {
       artifactUploadResults: [artifactOk],
       checkoutInfo: [],
-      executionResult: { after: [nodeOk], commands: [nodeOk], before: [nodeNotOk] },
-    },
-  ],
-  [
-    "executeFlow: failure - commands execution phase",
-    true,
-    {
-      artifactUploadResults: [artifactOk],
-      checkoutInfo: [],
-      executionResult: { after: [nodeOk], commands: [nodeNotOk], before: [nodeOk] },
-    },
-  ],
-  [
-    "executeFlow: failure - after execution phase",
-    true,
-    {
-      artifactUploadResults: [artifactOk],
-      checkoutInfo: [],
-      executionResult: { after: [nodeNotOk], commands: [nodeOk], before: [nodeOk] },
+      executionResult: [[nodeNotOk, nodeOk, nodeOk]],
     },
   ],
   [
@@ -153,7 +135,7 @@ test.each([
     {
       artifactUploadResults: [artifactNotOk],
       checkoutInfo: [],
-      executionResult: { after: [nodeOk], commands: [nodeOk], before: [nodeOk] },
+      executionResult: [[nodeOk, nodeOk, nodeOk]],
     },
   ],
 ])("%p", async (_title: string, isFailure: boolean, output: FlowResult) => {
@@ -171,9 +153,9 @@ test.each([
 });
 
 test.each([
-  ["no failure", [nodeOk, nodeOk], 0],
-  ["failure", [nodeOk, nodeNotOk, nodeOk], 4],
-])("printNodeExecutionFailure - %p", (_title: string, result: ExecuteNodeResult[], numOfLogCalls: number) => {
+  ["no failure", [[nodeOk, nodeOk]], 0],
+  ["failure", [[nodeOk, nodeNotOk, nodeOk]], 4],
+])("printNodeExecutionFailure - %p", (_title: string, result: ExecuteNodeResult[][], numOfLogCalls: number) => {
   const loggerSpy = jest.spyOn(BaseLoggerService.prototype, "error");
   dummyRunner.testPrintNodeExecutionFailure(result);
   expect(loggerSpy).toBeCalledTimes(numOfLogCalls);

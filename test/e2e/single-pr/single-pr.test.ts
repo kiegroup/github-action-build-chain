@@ -107,7 +107,7 @@ test("PR from target:branchA to target:branchB", async () => {
     .setGithubToken("token")
     .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
     .setEnv("STARTING_PROJECT", "owner1/project2")
-    .setEnv("CLONE_DIR", path.join(parentDir, "project2"))
+    .setEnv("CLONE_DIR", path.join(parentDir, "owner1_project2", "project2"))
     .setEvent({
       pull_request: {
         head: {
@@ -236,7 +236,7 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
     .setGithubToken("token")
     .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
     .setEnv("STARTING_PROJECT", "owner1/project3")
-    .setEnv("CLONE_DIR", path.join(parentDir, "project3"))
+    .setEnv("CLONE_DIR", path.join(parentDir, "owner1_project3", "project3"))
     .setEvent({
       pull_request: {
         head: {
@@ -385,7 +385,7 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
     .setGithubToken("token")
     .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
     .setEnv("STARTING_PROJECT", "owner1/project1")
-    .setEnv("CLONE_DIR", path.join(parentDir, "project1"))
+    .setEnv("CLONE_DIR", path.join(parentDir, "owner1_project1", "project1"))
     .setEvent({
       pull_request: {
         head: {

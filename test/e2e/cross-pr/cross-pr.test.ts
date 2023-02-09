@@ -120,10 +120,11 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
     .setEnv("STARTING_PROJECT", "owner1/project4")
     .setEnv(
       "CLONE_DIR",
-      `${path.join(parentDir, "project1")} ${path.join(
+      `${path.join(parentDir, "owner1_project1", "project1")} ${path.join(
         parentDir,
+        "owner1_project2",
         "project2"
-      )} ${path.join(parentDir, "project3")}`
+      )} ${path.join(parentDir, "owner1_project3", "project3")}`
     )
     .setEvent({
       pull_request: {
@@ -335,7 +336,7 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
     .setEnv("STARTING_PROJECT", "owner1/project2")
     .setEnv(
       "CLONE_DIR",
-      `${path.join(parentDir, "project1")} ${path.join(parentDir, "project2")}`
+      `${path.join(parentDir, "owner1_project1", "project1")} ${path.join(parentDir, "owner1_project2", "project2")}`
     )
     .setEvent({
       pull_request: {

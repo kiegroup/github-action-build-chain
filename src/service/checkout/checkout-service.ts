@@ -2,7 +2,7 @@ import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { getMappedTarget, Node } from "@kie/build-chain-configuration-reader";
 import Container, { Service } from "typedi";
-import { copy } from "fs-extra";
+import { copy, move } from "fs-extra";
 import path from "path";
 import { CheckedOutNode, CheckoutInfo } from "@bc/domain/checkout";
 import { GithubAPIService } from "@bc/service/git/github-api";
@@ -41,7 +41,14 @@ export class CheckoutService {
   private async cloneNode(node: Node): Promise<void> {
     const promises: Promise<void>[] = [];
     node.clone?.forEach(folder => {
-      promises.push(copy(this.getProjectDir(node), path.join(this.config.getRootFolder(), folder)));
+      const projectDir = this.getProjectDir(node);
+      const rootDir = this.config.getRootFolder();
+      promises.push(
+        copy(projectDir, path.join(rootDir, folder))
+          .then(
+            async () => move(path.join(rootDir, folder), path.join(projectDir, folder))
+          )
+      );
     });
     await Promise.all(promises);
   }

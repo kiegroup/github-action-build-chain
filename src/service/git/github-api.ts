@@ -5,6 +5,7 @@ import { LoggerService } from "@bc/service/logger/logger-service";
 import { logAndThrow } from "@bc/utils/log";
 import { Octokit } from "@octokit/rest";
 import { Endpoints } from "@octokit/types";
+import { RequestError } from "@octokit/request-error";
 import Container, { Service } from "typedi";
 
 @Service()
@@ -29,7 +30,12 @@ export class GithubAPIService {
       await this.octokit.repos.getBranch({ owner, repo, branch });
       return true;
     } catch (err) {
-      this.logger.warn(`project github.com/${owner}/${repo}:${branch} does not exist. It's not necessarily an error.`);
+      this.logger.warn(
+        this.getErrorMessage(
+          err, 
+          `project github.com/${owner}/${repo}:${branch} does not exist. It's not necessarily an error.`
+        )
+      );
       return false;
     }
   }
@@ -64,7 +70,8 @@ export class GithubAPIService {
       if (head) {
         msg += `&head=${head}`;
       }
-      this.logger.error(msg);
+
+      this.logger.error(this.getErrorMessage(err, msg));
       throw err;
     }
   }
@@ -106,8 +113,31 @@ export class GithubAPIService {
         throw new NotFoundError();
       }
     } catch (err) {
-      this.logger.error(`Error getting fork name for ${targetOwner}/${repo} where owner is ${sourceOwner}`);
+      this.logger.error(
+        this.getErrorMessage(
+          err, 
+          `Error getting fork name for ${targetOwner}/${repo} where owner is ${sourceOwner}`
+        )
+      );
       throw err;
     }
+  }
+
+  private getErrorMessage(err: unknown, msg: string): string {
+    if (err instanceof RequestError) {
+      let reason;
+      switch (err.status) {
+        case 401:
+          reason = "Failed to authenticate with provided token, please use -token argument to provide a new one. You can also check your GITHUB_TOKEN environment variable and check whether the provided token is still valid.";
+        case 404:
+          reason = "Failed to fetch GitHub URL, please check if the URL used in -url argument is valid and if the token you are using have permissions to access it.";
+        case 403:
+          reason = "Failed to fetch resource. Either your github token does not have access to the requested resource or you have reached your github api rate limit.";
+      }
+      if (reason) {
+        msg += ` Reason: ${reason}`;
+      }
+    }
+    return msg;
   }
 }

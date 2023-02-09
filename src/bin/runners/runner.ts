@@ -78,14 +78,16 @@ export abstract class Runner {
    * @param result
    */
   protected printNodeExecutionFailure(chainResult: ExecuteNodeResult[][]) {
-    for (const nodeResult of chainResult) {
-      for (const result of nodeResult) {
-        if (this.commandExecutionFailure(result.executeCommandResults)) {
+    chainResult.forEach(nodeResult =>
+      nodeResult
+        .filter(result =>
+          this.commandExecutionFailure(result.executeCommandResults)
+        )
+        .forEach(result => {
           this.logger.error(`Failed to execute commands for ${result.node.project}`);
           this.printExecutionFailure(result.executeCommandResults);
-        }
-      }
-    }
+        })
+    );
   }
 
   private archiveArtifactsFailure(result: PromiseSettledResult<UploadResponse>[]) {

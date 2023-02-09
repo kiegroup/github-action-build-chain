@@ -38,7 +38,14 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
-      - run: npm run test:e2e
+      - run: ACT_LOG=true npm run test:e2e
+      - name: Upload raw e2e output
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-logs-${{ matrix.node-version }}.zip
+          path: '*.log'
+          retention-days: 5 
       
   package-lock-check:
     runs-on: ubuntu-latest

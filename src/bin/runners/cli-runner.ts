@@ -32,9 +32,7 @@ export class CLIRunner extends Runner {
       const postResult = await this.executePost(flowResult.isFailure);
 
       if (flowResult.isFailure || postResult.isFailure) {
-        this.printNodeExecutionFailure(flowResult.output.executionResult.before);
-        this.printNodeExecutionFailure(flowResult.output.executionResult.commands);
-        this.printNodeExecutionFailure(flowResult.output.executionResult.after);
+        this.printNodeExecutionFailure(flowResult.output.executionResult);
         this.printExecutionFailure(postResult.output);
         return process.exit(1);
       }

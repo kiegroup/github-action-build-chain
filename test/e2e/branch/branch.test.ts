@@ -183,33 +183,35 @@ test("full downstream where 1 project has a PR and one doesn't", async () => {
       "Merged owner1/project4:branchB into branch branchB"
     )
   );
-
-  // before section
+  
+  // owner1/project1 execution
   const group5 = result[1].groups![4];
-  expect(group5.name).toBe("Executing before");
+  expect(group5.name).toBe("Executing owner1/project1");
   expect(group5.output).toEqual(
-    expect.stringContaining(" before upstream owner1/project1")
+    expect.stringContaining("before upstream owner1/project1")
+  );
+  expect(group5.output).toEqual(
+    expect.stringContaining("default upstream")
+  );
+  expect(group5.output).toEqual(
+    expect.stringContaining("default after current")
   );
 
-  // current section
-  const group7 = result[1].groups![6];
-  expect(group7.name).toBe("Executing commands");
-  expect(group7.output).toEqual(expect.stringContaining("default upstream"));
-  expect(group7.output).toEqual(
+  // owner1/project2 execution
+  const group9 = result[1].groups![8];
+  expect(group9.name).toBe("Executing owner1/project2");
+  expect(group9.output).toEqual(
     expect.stringContaining("current owner1/project2")
   );
-  expect(group7.output).toEqual(expect.stringContaining("default current"));
+  expect(group9.output).toEqual(expect.stringContaining("default after current"));
 
-  // after section
-  const group11 = result[1].groups![10];
-  expect(group11.name).toBe("Executing after");
-  expect(group11.output).toEqual(
-    expect.stringContaining("default after current")
+  // owner1/project4 execution
+  const group12 = result[1].groups![11];
+  expect(group12.name).toBe("Executing owner1/project4");
+  expect(group12.output).toEqual(
+    expect.stringContaining("default current")
   );
-  expect(group11.output).toEqual(
-    expect.stringContaining("default after current")
-  );
-  expect(group11.output).toEqual(
+  expect(group12.output).toEqual(
     expect.stringContaining("default after current")
   );
  
@@ -267,7 +269,7 @@ test("cross-pr with no PRs", async () => {
     output: "",
   });
   expect(result[1]).toMatchObject({ name: "Main ./build-chain", status: 0 });
-  expect(result[1].groups?.length).toBe(13);
+  expect(result[1].groups?.length).toBe(12);
 
   // pre section
   const group1 = result[1].groups![0];
@@ -312,35 +314,31 @@ test("cross-pr with no PRs", async () => {
     )
   );
 
-  // before section
+  // owner1/project1 section
   const group5 = result[1].groups![4];
-  expect(group5.name).toBe("Executing before");
+  expect(group5.name).toBe("Executing owner1/project1");
   expect(group5.output).toEqual(
-    expect.stringContaining(" before upstream owner1/project1")
+    expect.stringContaining("before upstream owner1/project1")
+  );
+  expect(group5.output).toEqual(
+    expect.stringContaining("default upstream")
+  );
+  expect(group5.output).toEqual(
+    expect.stringContaining("default after current")
   );
 
-  // current section
-  const group7 = result[1].groups![6];
-  expect(group7.name).toBe("Executing commands");
-  expect(group7.output).toEqual(expect.stringContaining("default upstream"));
-  expect(group7.output).toEqual(
+  // owner1/project2 section
+  const group9 = result[1].groups![8];
+  expect(group9.name).toBe("Executing owner1/project2");
+  expect(group9.output).toEqual(
     expect.stringContaining("current owner1/project2")
   );
-
-  // after section
-  const group10 = result[1].groups![9];
-  expect(group10.name).toBe("Executing after");
-  expect(group10.output).toEqual(
-    expect.stringContaining("default after current")
-  );
-  expect(group10.output).toEqual(
-    expect.stringContaining("default after current")
-  );
+  expect(group9.output).toEqual(expect.stringContaining("default after current"));
 
   // artifacts
-  const group13 = result[1].groups![12];
-  expect(group13.name).toBe("Uploading artifacts");
-  expect(group13.output).toEqual(
+  const group12 = result[1].groups![11];
+  expect(group12.name).toBe("Uploading artifacts");
+  expect(group12.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
 

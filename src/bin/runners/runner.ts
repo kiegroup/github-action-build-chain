@@ -36,12 +36,12 @@ export abstract class Runner {
   protected async executeFlow(): Promise<{ isFailure: boolean; output: FlowResult }> {
     const flowService = Container.get(FlowService);
     const flowResult = await flowService.run();
+    let isFailure = this.archiveArtifactsFailure(flowResult.artifactUploadResults);
+    flowResult.executionResult.forEach(res => {
+      isFailure ||= this.nodeExecutionFailure(res);
+    });
     return {
-      isFailure:
-        this.nodeExecutionFailure(flowResult.executionResult.before) ||
-        this.nodeExecutionFailure(flowResult.executionResult.commands) ||
-        this.nodeExecutionFailure(flowResult.executionResult.after) ||
-        this.archiveArtifactsFailure(flowResult.artifactUploadResults),
+      isFailure,
       output: flowResult,
     };
   }
@@ -77,13 +77,17 @@ export abstract class Runner {
    * [Error] broken down line wise
    * @param result
    */
-  protected printNodeExecutionFailure(result: ExecuteNodeResult[]) {
-    result.forEach(res => {
-      if (this.commandExecutionFailure(res.executeCommandResults)) {
-        this.logger.error(`Failed to execute commands for ${res.node.project}`);
-        this.printExecutionFailure(res.executeCommandResults);
-      }
-    });
+  protected printNodeExecutionFailure(chainResult: ExecuteNodeResult[][]) {
+    chainResult.forEach(nodeResult =>
+      nodeResult
+        .filter(result =>
+          this.commandExecutionFailure(result.executeCommandResults)
+        )
+        .forEach(result => {
+          this.logger.error(`Failed to execute commands for ${result.node.project}`);
+          this.printExecutionFailure(result.executeCommandResults);
+        })
+    );
   }
 
   private archiveArtifactsFailure(result: PromiseSettledResult<UploadResponse>[]) {

@@ -71,7 +71,7 @@ describe("execute", () => {
   const flowOk: FlowResult = {
     artifactUploadResults: [artifactOk],
     checkoutInfo: [],
-    executionResult: { after: [nodeOk], commands: [nodeOk], before: [nodeOk] },
+    executionResult: [[nodeOk, nodeOk, nodeOk]],
   };
 
   beforeEach(() => {
@@ -137,11 +137,7 @@ describe("execute", () => {
     expect(jobSummarySpy).toHaveBeenCalledWith(flowOk, [okResult], [notOkResult]);
   });
 
-  test.each([
-    ["before", { after: [nodeOk], commands: [nodeOk], before: [nodeNotOk] }],
-    ["commands", { after: [nodeOk], commands: [nodeNotOk], before: [nodeOk] }],
-    ["after", { after: [nodeNotOk], commands: [nodeOk], before: [nodeOk] }],
-  ])("failure: flow - %p phase execution", async (_title, executionResult) => {
+  test("failure: flow - %p phase execution", async () => {
     const configSpy = jest.spyOn(ConfigurationService.prototype, "init").mockImplementation(async () => undefined);
     const preSpy = jest.spyOn(PreExecutor.prototype, "run").mockImplementation(async () => [okResult]);
     const postSpy = jest.spyOn(PostExecutor.prototype, "run").mockImplementation(async () => [okResult]);
@@ -149,7 +145,7 @@ describe("execute", () => {
     const flowResult = {
       artifactUploadResults: [artifactOk],
       checkoutInfo: [],
-      executionResult,
+      executionResult: [[nodeOk, nodeNotOk, nodeNotOk]],
     };
     const flowSpy = jest.spyOn(FlowService.prototype, "run").mockImplementation(async () => flowResult);
     const exitSpy = jest.spyOn(process, "exit").mockImplementation((_code?: number) => undefined as never);

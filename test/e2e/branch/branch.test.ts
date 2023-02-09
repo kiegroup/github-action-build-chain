@@ -50,6 +50,15 @@ beforeEach(async () => {
             },
           ],
         },
+        "owner1/project3": {
+          pushedBranches: ["branchB"],
+          history: [
+            {
+              action: GitActionTypes.PUSH,
+              branch: "branchB",
+            },
+          ],
+        },
         "owner1/project4": {
           pushedBranches: ["branchB"],
           history: [
@@ -102,15 +111,15 @@ test("full downstream where 1 project has a PR and one doesn't", async () => {
         moctokit.rest.repos
           .get({
             owner: "owner1",
-            repo: /project(1|2|4)/,
+            repo: /project(1|2|4|3)/,
           })
-          .setResponse({ status: 200, data: {}, repeat: 3 }),
+          .setResponse({ status: 200, data: {}, repeat: 4 }),
         moctokit.rest.pulls
           .list({
             owner: "owner1",
-            repo: /project(2|4)/,
+            repo: /project(2|4|3)/,
           })
-          .setResponse({ status: 200, data: [], repeat: 4 }),
+          .setResponse({ status: 200, data: [], repeat: 6 }),
         moctokit.rest.pulls
           .list({
             owner: "owner1",
@@ -126,7 +135,7 @@ test("full downstream where 1 project has a PR and one doesn't", async () => {
     output: "",
   });
   expect(result[1]).toMatchObject({ name: "Main ./build-chain", status: 0 });
-  expect(result[1].groups?.length).toBe(15);
+  expect(result[1].groups?.length).toBe(18);
 
   // pre section
   const group1 = result[1].groups![0];
@@ -142,9 +151,13 @@ test("full downstream where 1 project has a PR and one doesn't", async () => {
   const group2 = result[1].groups![1];
   expect(group2.name).toBe("Execution Plan");
   expect(group2.output).toEqual(
-    expect.stringContaining("3 projects will be executed")
+    expect.stringContaining("4 projects will be executed")
   );
   expect(group2.output).toEqual(expect.stringContaining("[owner1/project1]"));
+  expect(group2.output).toEqual(
+    expect.stringContaining("Level type: upstream")
+  );
+  expect(group2.output).toEqual(expect.stringContaining("[owner1/project3]"));
   expect(group2.output).toEqual(
     expect.stringContaining("Level type: upstream")
   );
@@ -164,6 +177,10 @@ test("full downstream where 1 project has a PR and one doesn't", async () => {
   );
   expect(group4.output).toEqual(
     expect.stringContaining("Merged owner1/project1:branchB into branch 8.B")
+  );
+  expect(group4.output).toEqual(expect.stringContaining("[owner1/project3]"));
+  expect(group4.output).toEqual(
+    expect.stringContaining("Project taken from owner1/project3:branchB")
   );
   expect(group4.output).toEqual(expect.stringContaining("[owner1/project2]"));
   expect(group4.output).toEqual(
@@ -197,27 +214,33 @@ test("full downstream where 1 project has a PR and one doesn't", async () => {
     expect.stringContaining("default after current")
   );
 
-  // owner1/project2 execution
+  // owner1/project3 execution
   const group9 = result[1].groups![8];
-  expect(group9.name).toBe("Executing owner1/project2");
+  expect(group9.name).toBe("Executing owner1/project3");
   expect(group9.output).toEqual(
-    expect.stringContaining("current owner1/project2")
-  );
-  expect(group9.output).toEqual(expect.stringContaining("default after current"));
-
-  // owner1/project4 execution
-  const group12 = result[1].groups![11];
-  expect(group12.name).toBe("Executing owner1/project4");
-  expect(group12.output).toEqual(
-    expect.stringContaining("default current")
-  );
-  expect(group12.output).toEqual(
     expect.stringContaining("default after current")
   );
- 
+
+  // owner1/project2 execution
+  const group12 = result[1].groups![11];
+  expect(group12.name).toBe("Executing owner1/project2");
+  expect(group12.output).toEqual(
+    expect.stringContaining("current owner1/project2")
+  );
+  expect(group12.output).toEqual(expect.stringContaining("default after current"));
+
+  // owner1/project4 execution
   const group15 = result[1].groups![14];
-  expect(group15.name).toBe("Uploading artifacts");
+  expect(group15.name).toBe("Executing owner1/project4");
   expect(group15.output).toEqual(
+    expect.stringContaining("default current")
+  );
+  expect(group15.output).toEqual(
+    expect.stringContaining("default after current")
+  );
+  const group18 = result[1].groups![17];
+  expect(group18.name).toBe("Uploading artifacts");
+  expect(group18.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
 

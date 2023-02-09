@@ -43,9 +43,7 @@ export class GithubActionRunner extends Runner {
       const promise = jobSummaryService.generateSummary(flowResult.output, preResult.output, postResult.output);
 
       if (flowResult.isFailure || postResult.isFailure) {
-        this.printNodeExecutionFailure(flowResult.output.executionResult.before);
-        this.printNodeExecutionFailure(flowResult.output.executionResult.commands);
-        this.printNodeExecutionFailure(flowResult.output.executionResult.after);
+        this.printNodeExecutionFailure(flowResult.output.executionResult);
         this.printExecutionFailure(postResult.output);
         await promise;
         return process.exit(1);

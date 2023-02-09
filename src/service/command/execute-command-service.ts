@@ -22,12 +22,16 @@ export class ExecuteCommandService {
     return this._commandExecutorDelegator.executeCommand(treatedCommand, cwd);
   }
 
-  public async executeChainCommands(nodes: NodeExecution[], executionPhase: ExecutionPhase): Promise<ExecuteNodeResult[]> {
+  public async executeNodeCommands(nodeToBeExecuted: NodeExecution): Promise<ExecuteNodeResult[]> {
     const result: ExecuteNodeResult[] = [];
-    for (const {node, cwd} of nodes) {
-      const commands = this.getNodeCommands(node, executionPhase, this._configurationService.getNodeExecutionLevel(node));
-      result.push(await this.executeNodeCommands(node, commands ?? [], this._configurationService.skipExecution(node), cwd));
-    }
+    const {node, cwd} = nodeToBeExecuted;
+    const before = this.getNodeCommands(node, ExecutionPhase.BEFORE, this._configurationService.getNodeExecutionLevel(node));
+    const current = this.getNodeCommands(node, ExecutionPhase.CURRENT, this._configurationService.getNodeExecutionLevel(node));
+    const after = this.getNodeCommands(node, ExecutionPhase.AFTER, this._configurationService.getNodeExecutionLevel(node));
+    const skipExecution = this._configurationService.skipExecution(node);
+    result.push(await this.executeCommands(node, before ?? [], skipExecution, cwd));
+    result.push(await this.executeCommands(node, current ?? [], skipExecution, cwd));
+    result.push(await this.executeCommands(node, after ?? [], skipExecution, cwd));
     return result;
   }
 
@@ -46,7 +50,7 @@ export class ExecuteCommandService {
     return levelCommands;
   }
 
-  private async executeNodeCommands(node: Node, commands: string[], skipExecution: boolean, cwd?: string): Promise<ExecuteNodeResult> {
+  private async executeCommands(node: Node, commands: string[], skipExecution: boolean, cwd?: string): Promise<ExecuteNodeResult> {
     const result: ExecuteNodeResult = {
       node,
       executeCommandResults: [],

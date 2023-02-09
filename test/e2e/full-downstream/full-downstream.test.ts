@@ -231,7 +231,7 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
     output: "",
   });
   expect(result[1]).toMatchObject({ name: "Main ./build-chain", status: 0 });
-  expect(result[1].groups?.length).toBe(17);
+  expect(result[1].groups?.length).toBe(18);
   
   // pre section
   const group1 = result[1].groups![0];
@@ -302,42 +302,48 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
     )
   );
 
-  // before section
+  // owner1/project1 section
   const group5 = result[1].groups![4];
-  expect(group5.name).toBe("Executing before");
+  expect(group5.name).toBe("Executing owner1/project1");
   expect(group5.output).toEqual(
-    expect.stringContaining(" before current owner1/project1")
+    expect.stringContaining("before current owner1/project1")
+  );
+  expect(group5.output).toEqual(
+    expect.stringContaining("current owner1/project1")
+  );
+  expect(group5.output).toEqual(
+    expect.stringContaining("default after current")
   );
 
-  // current section
-  const group7 = result[1].groups![6];
-  expect(group7.name).toBe("Executing commands");
-  expect(group7.output).toEqual(expect.stringContaining("current owner1/project1"));
-  expect(group7.output).toEqual(
+  // owner1/project2 section
+  const group9 = result[1].groups![8];
+  expect(group9.name).toBe("Executing owner1/project2");
+  expect(group9.output).toEqual(
     expect.stringContaining("current owner1/project2")
   );
-  expect(group7.output).toEqual(expect.stringContaining("default current"));
+  expect(group9.output).toEqual(expect.stringContaining("after downstream owner1/project2"));
 
-  // after section
+  // owner1/project4 section
   const group12 = result[1].groups![11];
-  expect(group12.name).toBe("Executing after");
+  expect(group12.name).toBe("Executing owner1/project4");
   expect(group12.output).toEqual(
-    expect.stringContaining("default after current")
-  );
-  expect(group12.output).toEqual(
-    expect.stringContaining("after downstream owner1/project2")
+    expect.stringContaining("default current")
   );
   expect(group12.output).toEqual(
     expect.stringContaining("default after current")
   );
-  expect(group12.output).toEqual(
+
+  // owner1/project3 section
+  const group15 = result[1].groups![14];
+  expect(group15.name).toBe("Executing owner1/project3");
+  expect(group15.output).toEqual(
     expect.stringContaining("default after current")
   );
   
   // artifacts
-  const group17 = result[1].groups![16];
-  expect(group17.name).toBe("Uploading artifacts");
-  expect(group17.output).toEqual(
+  const group18 = result[1].groups![17];
+  expect(group18.name).toBe("Uploading artifacts");
+  expect(group18.output).toEqual(
     expect.stringContaining("No artifacts to archive")
   );
   
@@ -468,32 +474,34 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
     )
   );
 
-  // before section
+  // owner1/project1 section
   const group5 = result[1].groups![4];
-  expect(group5.name).toBe("Executing before");
+  expect(group5.name).toBe("Executing owner1/project1");
   expect(group5.output).toEqual(
-    expect.stringContaining(" before upstream owner1/project1")
+    expect.stringContaining("before upstream owner1/project1")
+  );
+  expect(group5.output).toEqual(
+    expect.stringContaining("default upstream")
+  );
+  expect(group5.output).toEqual(
+    expect.stringContaining("default after current")
   );
 
-  // current section
-  const group7 = result[1].groups![6];
-  expect(group7.name).toBe("Executing commands");
-  expect(group7.output).toEqual(expect.stringContaining("default upstream"));
-  expect(group7.output).toEqual(
+  // owner1/project2 section
+  const group9 = result[1].groups![8];
+  expect(group9.name).toBe("Executing owner1/project2");
+  expect(group9.output).toEqual(
     expect.stringContaining("current owner1/project2")
   );
-  expect(group7.output).toEqual(expect.stringContaining("default current"));
+  expect(group9.output).toEqual(expect.stringContaining("default after current"));
 
-  // after section
-  const group11 = result[1].groups![10];
-  expect(group11.name).toBe("Executing after");
-  expect(group11.output).toEqual(
-    expect.stringContaining("default after current")
+  // owner1/project4 section
+  const group12 = result[1].groups![11];
+  expect(group12.name).toBe("Executing owner1/project4");
+  expect(group12.output).toEqual(
+    expect.stringContaining("default current")
   );
-  expect(group11.output).toEqual(
-    expect.stringContaining("default after current")
-  );
-  expect(group11.output).toEqual(
+  expect(group12.output).toEqual(
     expect.stringContaining("default after current")
   );
 

@@ -52,17 +52,14 @@ export class FlowService {
       cwd: checkoutInfo.find(info => info.node.project === node.project)!.checkoutInfo?.repoDir,
     }));
 
-    // not looping through the keys of ExecutionPhase just so that we can enforce the order in which the phases need to be executed
-    const before = await this.executeAndPrint(nodeChainForExecution, ExecutionPhase.BEFORE);
-    const commands = await this.executeAndPrint(nodeChainForExecution, ExecutionPhase.CURRENT);
-    const after = await this.executeAndPrint(nodeChainForExecution, ExecutionPhase.AFTER);
+    const executionResult = await this.executeAndPrint(nodeChainForExecution);
 
     // archive artifacts
     this.logger.startGroup("Uploading artifacts");
     const artifactUploadResults = await this.artifactService.uploadNodes(this.configService.nodeChain, this.configService.getStarterNode());
     this.logger.endGroup();
 
-    return { checkoutInfo, artifactUploadResults, executionResult: { after, commands, before } };
+    return { checkoutInfo, artifactUploadResults, executionResult };
   }
 
   /**
@@ -158,32 +155,40 @@ export class FlowService {
    *    [NOT_OK] cmd2 [Executed in: 5s]
    *        Error: msg
    */
-  private printExecutionSummary(result: ExecuteNodeResult[], phase: ExecutionPhase) {
-    result.forEach(res => {
-      if (this.isNodeExecutionSkipped(res)) {
-        this.logger.info(`[${phase.toUpperCase()}] Skipped ${res.node.project}`);
-      } else {
-        if (!res.executeCommandResults.length) {
-          this.logger.info(`[${phase.toUpperCase()}] No commands were found for ${res.node.project}`);
-        }
-        res.executeCommandResults.forEach(cmdRes => {
-          this.logger.startGroup(`[${phase.toUpperCase()}] [${res.node.project}] ${cmdRes.command}`);
-          this.logger.info(`${cmdRes.result} [Executed in ${cmdRes.time} ms]`);
-          if (cmdRes.result === ExecutionResult.NOT_OK) {
-            this.logger.error(cmdRes.errorMessage);
-          }
-          this.logger.endGroup();
-        });
-      }
-    });
+  private printExecutionSummary(result: ExecuteNodeResult[]) {
+    this.printExecutionSummaryForPhase(result[0], ExecutionPhase.BEFORE);
+    this.printExecutionSummaryForPhase(result[1], ExecutionPhase.CURRENT);
+    this.printExecutionSummaryForPhase(result[2], ExecutionPhase.AFTER);
   }
 
-  private async executeAndPrint(chain: NodeExecution[], phase: ExecutionPhase): Promise<ExecuteNodeResult[]> {
-    this.logger.startGroup(`Executing ${phase}`);
-    const result = await this.executor.executeChainCommands(chain, phase);
-    this.logger.info(`Execution summary for phase ${phase}`);
-    this.printExecutionSummary(result, phase);
-    this.logger.endGroup();
+  private printExecutionSummaryForPhase(result: ExecuteNodeResult, phase: ExecutionPhase) {
+    if (this.isNodeExecutionSkipped(result)) {
+      this.logger.info(`[${phase.toUpperCase()}] Skipped ${result.node.project}`);
+    } else {
+      if (!result.executeCommandResults.length) {
+        this.logger.info(`[${phase.toUpperCase()}] No commands were found for ${result.node.project}`);
+      }
+      result.executeCommandResults.forEach(cmdRes => {
+        this.logger.startGroup(`[${phase.toUpperCase()}] [${result.node.project}] ${cmdRes.command}`);
+        this.logger.info(`${cmdRes.result} [Executed in ${cmdRes.time} ms]`);
+        if (cmdRes.result === ExecutionResult.NOT_OK) {
+          this.logger.error(cmdRes.errorMessage);
+        }
+        this.logger.endGroup();
+      });
+    }
+  }
+
+  private async executeAndPrint(chain: NodeExecution[]): Promise<ExecuteNodeResult[][]> {
+    const result: ExecuteNodeResult[][] = [];
+    for (const node of chain) {
+      this.logger.startGroup(`Executing ${node.node.project}`);
+      const currentNodeResult = await this.executor.executeNodeCommands(node);
+      result.push(currentNodeResult);
+      this.logger.info(`Execution summary for ${node.node.project}`);
+      this.printExecutionSummary(currentNodeResult);
+      this.logger.endGroup();
+    }
     return result;
   }
 

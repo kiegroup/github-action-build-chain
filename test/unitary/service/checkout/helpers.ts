@@ -70,7 +70,7 @@ export const fakeClone = async (to: string) => {
 export const checkClone = async (rootFolder: string) => {
   const promises: Promise<void>[] = [];
   clones.forEach(clone => {
-    const fullClonePath = path.join(rootFolder, clone);
+    const fullClonePath = path.join(rootFolder, "owner1_project1", clone);
     promises.push(
       expect(readFile(path.join(fullClonePath, filename), "utf8")).resolves.toBe(filedata),
       expect(readFile(path.join(fullClonePath, depth1Dir, filename), "utf8")).resolves.toBe(filedata),

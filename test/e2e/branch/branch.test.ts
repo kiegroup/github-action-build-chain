@@ -90,7 +90,7 @@ test("full downstream where 1 project has a PR and one doesn't", async () => {
     .setEnv("STARTING_PROJECT", "owner1/project2")
     .setEnv(
       "CLONE_DIR",
-      `${path.join(parentDir, "project2")} ${path.join(parentDir, "project1")}`
+      `${path.join(parentDir, "owner1_project2", "project2")} ${path.join(parentDir, "owner1_project1", "project1")}`
     )
     .setEnv("ADDITIONAL_FLAGS", "--fullProjectDependencyTree; --branch branchB")
     .runEvent("push", {
@@ -239,7 +239,7 @@ test("cross-pr with no PRs", async () => {
     .setEnv("STARTING_PROJECT", "owner1/project2")
     .setEnv(
       "CLONE_DIR",
-      `${path.join(parentDir, "project1")} ${path.join(parentDir, "project2")}`
+      `${path.join(parentDir, "owner1_project1", "project1")} ${path.join(parentDir, "owner1_project2", "project2")}`
     )
     .setEnv("ADDITIONAL_FLAGS", "--branch branchB")
     .runEvent("push", {

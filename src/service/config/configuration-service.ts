@@ -213,4 +213,8 @@ export class ConfigurationService {
   getEventUrl(): string {
     return this.getFlowType() === FlowType.BRANCH ? "" : this.configuration.gitEventData.html_url;
   }
+
+  getGroupName(): string | undefined {
+    return this.getFlowType() === FlowType.BRANCH ? this.configuration.parsedInputs.group : undefined;
+  }
 }

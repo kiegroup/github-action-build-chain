@@ -122,7 +122,7 @@ export class CheckoutService {
       // target branch is guaranteed to exist since base always exist
       mappedBranch: getMappedTarget(starterNode.project, starterNode.mapping, node.project, node.mapping, originalTarget.branch!),
       name: node.project.split("/")[1],
-      group: node.project.split("/")[0],
+      group: this.config.getGroupName() ?? node.project.split("/")[0],
     };
 
     const originalSource = this.config.getSourceProject();

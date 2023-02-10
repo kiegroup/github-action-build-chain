@@ -365,4 +365,16 @@ describe("methods", () => {
       .mockImplementationOnce(() => ({ html_url: expected } as EventData));
     expect(config.getEventUrl()).toBe(expected);
   });
+
+  test.each([
+    ["branch flow", FlowType.BRANCH, "group"],
+    ["non branch flow", FlowType.CROSS_PULL_REQUEST, undefined],
+  ])("getGroupName", (title: string, flowType: FlowType, group?: string) => {
+    currentInput = {
+      ...defaultInputValues,
+      CLISubCommand: flowType,
+      group
+    };
+    expect(config.getGroupName()).toBe(group);
+  });
 });

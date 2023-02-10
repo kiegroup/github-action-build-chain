@@ -135,6 +135,8 @@ export class GithubAPIService {
           break;
         case 403:
           reason = "Failed to fetch resource. Either your github token does not have access to the requested resource or you have reached your github api rate limit.";
+          break;
+        default: // let reason be undefined for all other codes
       }
     }
     return reason ? `${msg} Reason: ${reason}` : msg;

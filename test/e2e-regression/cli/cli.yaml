@@ -1,0 +1,20 @@
+name: Custom e2e
+on: pull_request
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install npm packages
+        run: npm i
+      - name: Build CLI
+        run: npm run build:cli
+      - name: Rename cli
+        run: mv ./build/index.js ./build/build-chain
+      - name: Add to path
+        run: echo "$PWD/build/" >> $GITHUB_PATH
+      - name: Execute build-chain
+        run: build-chain help

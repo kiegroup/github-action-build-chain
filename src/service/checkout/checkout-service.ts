@@ -114,13 +114,19 @@ export class CheckoutService {
    */
   private async getCheckoutInfo(node: Node): Promise<CheckoutInfo> {
     const githubAPIService = Container.get(GithubAPIService);
-    const starterNode = this.config.getStarterNode();
+    const projectTriggeringTheJob = this.config.getProjectTriggeringTheJob();
     const originalTarget = this.config.getTargetProject();
     // the current node is the current target
     const currentTarget = {
       // map the starting project target branch to the corresponding branch defined in the mapping for the current node
       // target branch is guaranteed to exist since base always exist
-      mappedBranch: getMappedTarget(starterNode.project, starterNode.mapping, node.project, node.mapping, originalTarget.branch!),
+      mappedBranch: getMappedTarget(
+        projectTriggeringTheJob.project, 
+        projectTriggeringTheJob.mapping, 
+        node.project, 
+        node.mapping, 
+        originalTarget.branch!
+      ),
       name: node.project.split("/")[1],
       group: this.config.getGroupName() ?? node.project.split("/")[0],
     };

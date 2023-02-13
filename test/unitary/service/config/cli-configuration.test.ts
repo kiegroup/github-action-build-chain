@@ -86,9 +86,19 @@ describe("load event data", () => {
   });
 
   test("success: branch flow build", async () => {
-    currentInput = { ...defaultInputValues, CLISubCommand: FlowType.BRANCH };
+    currentInput = { 
+      ...defaultInputValues, 
+      CLISubCommand: FlowType.BRANCH, 
+      group: "kiegroup",
+      branch: "main",
+      startProject: "kiegroup/drools" 
+    };
     const eventData = await cliConfig.loadGitEvent();
     expect(eventData).toStrictEqual({});
+    expect(process.env["GITHUB_ACTOR"]).toBe("kiegroup");
+    expect(process.env["GITHUB_HEAD_REF"]).toBe("main");
+    expect(process.env["GITHUB_BASE_REF"]).toBe("main");
+    expect(process.env["GITHUB_REPOSITORY"]).toBe("kiegroup/drools");
   });
 
   test("failure: no url defined", async () => {

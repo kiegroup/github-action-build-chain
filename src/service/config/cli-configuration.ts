@@ -58,6 +58,10 @@ export class CLIConfiguration extends BaseConfiguration {
    */
   async loadGitEvent(): Promise<EventData> {
     if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
+      process.env["GITHUB_HEAD_REF"] = this.parsedInputs.branch;
+      process.env["GITHUB_BASE_REF"] = this.parsedInputs.branch;
+      process.env["GITHUB_REPOSITORY"] = this.parsedInputs.startProject;
+      process.env["GITHUB_ACTOR"] = this.parsedInputs.group ?? this.parsedInputs.startProject!.split("/")[0];
       return {};
     }
     if (!this.parsedInputs.url) {
@@ -81,7 +85,7 @@ export class CLIConfiguration extends BaseConfiguration {
         process.env["GITHUB_BASE_REF"] = data.base.ref;
         process.env["GITHUB_REPOSITORY"] = data.base.repo.full_name;
         process.env["GITHUB_REF"] = `refs/pull/${prCheck[4]}/merge`;
-        
+
         return data;
       } catch (err) {
         logAndThrow(`Invalid event url ${this.parsedInputs.url}`);

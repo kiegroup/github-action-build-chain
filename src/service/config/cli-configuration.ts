@@ -46,6 +46,8 @@ export class CLIConfiguration extends BaseConfiguration {
         actor: group,
         ref: this.parsedInputs.branch,
       };
+
+
     }
     return gitConfig;
   }
@@ -61,16 +63,25 @@ export class CLIConfiguration extends BaseConfiguration {
     if (!this.parsedInputs.url) {
       logAndThrow("If running from the CLI, event url needs to be defined");
     }
-    const PR_URL = /^https?:\/\/.+\/([^/\s]+)\/([^/\s]+)\/pull\/(\d+)$/;
+    const PR_URL = /^(https?:\/\/.+\/)([^/\s]+)\/([^/\s]+)\/pull\/(\d+)$/;
     const prCheck = this.parsedInputs.url.match(PR_URL);
     if (prCheck) {
       this.logger.debug("Getting pull request information");
       try {
         const { data } = await Container.get(OctokitService).octokit.pulls.get({
-          owner: prCheck[1],
-          repo: prCheck[2],
-          pull_number: parseInt(prCheck[3]),
+          owner: prCheck[2],
+          repo: prCheck[3],
+          pull_number: parseInt(prCheck[4]),
         });
+        
+        process.env["GITHUB_SERVER_URL"] = prCheck[1];
+        delete process.env["GITHUB_ACTION"]; // doing process.env["GITHUB_ACTION"] = undefined will set to the string "undefined"
+        process.env["GITHUB_ACTOR"] = data.head.user.login;
+        process.env["GITHUB_HEAD_REF"] = data.head.ref;
+        process.env["GITHUB_BASE_REF"] = data.base.ref;
+        process.env["GITHUB_REPOSITORY"] = data.base.repo.full_name;
+        process.env["GITHUB_REF"] = `refs/pull/${prCheck[4]}/merge`;
+        
         return data;
       } catch (err) {
         logAndThrow(`Invalid event url ${this.parsedInputs.url}`);

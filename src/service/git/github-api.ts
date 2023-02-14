@@ -128,10 +128,10 @@ export class GithubAPIService {
     if (err instanceof RequestError) {
       switch (err.status) {
         case 401:
-          reason = "Failed to authenticate with provided token, please use -token argument to provide a new one. You can also check your GITHUB_TOKEN environment variable and check whether the provided token is still valid.";
+          reason = "Failed to authenticate with provided token, please use --token argument to provide a new one. You can also check your GITHUB_TOKEN environment variable and check whether the provided token is still valid.";
           break;
         case 404:
-          reason = "Failed to fetch GitHub URL, please check if the URL used in -url argument is valid and if the token you are using have permissions to access it.";
+          reason = "Failed to fetch GitHub resource, please check if resource you requested does exits, the URL used in -u argument is valid, and if the token you are using have permissions to access it.";
           break;
         case 403:
           reason = "Failed to fetch resource. Either your github token does not have access to the requested resource or you have reached your github api rate limit.";

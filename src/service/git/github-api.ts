@@ -123,6 +123,32 @@ export class GithubAPIService {
     }
   }
 
+  /**
+   * Returns the pull request info of a given repo and pr number
+   * @param owner the owner of the repo
+   * @param repo the name of the repo
+   * @param pullNumber the pr number
+   * @returns pull request info
+   */
+  async getPullRequest(owner: string, repo: string, pullNumber: number) {
+    try {
+      const { data } = await this.octokit.pulls.get({
+          owner,
+          repo,
+          pull_number: pullNumber,
+      });
+      return data;
+    } catch(err) {
+      this.logger.error(
+        this.getErrorMessage(
+          err,
+          `Failed to fetch pull ${pullNumber} for ${owner}/${repo}.`
+        )
+      );
+      throw err;
+    }
+  }
+
   private getErrorMessage(err: unknown, msg: string): string {
     let reason;
     if (err instanceof RequestError) {

@@ -2,7 +2,7 @@ import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/co
 import { constants } from "@bc/domain/constants";
 import { FlowType } from "@bc/domain/inputs";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
-import { OctokitService } from "@bc/service/git/octokit";
+import { GithubAPIService } from "@bc/service/git/github-api";
 import { logAndThrow } from "@bc/utils/log";
 import Container from "typedi";
 
@@ -71,25 +71,22 @@ export class CLIConfiguration extends BaseConfiguration {
     const prCheck = this.parsedInputs.url.match(PR_URL);
     if (prCheck) {
       this.logger.debug("Getting pull request information");
-      try {
-        const { data } = await Container.get(OctokitService).octokit.pulls.get({
-          owner: prCheck[2],
-          repo: prCheck[3],
-          pull_number: parseInt(prCheck[4]),
-        });
+      
+      const data = await Container.get(GithubAPIService).getPullRequest(
+        prCheck[2],
+        prCheck[3],
+        parseInt(prCheck[4]),
+      );
         
-        process.env["GITHUB_SERVER_URL"] = prCheck[1];
-        delete process.env["GITHUB_ACTION"]; // doing process.env["GITHUB_ACTION"] = undefined will set to the string "undefined"
-        process.env["GITHUB_ACTOR"] = data.head.user.login;
-        process.env["GITHUB_HEAD_REF"] = data.head.ref;
-        process.env["GITHUB_BASE_REF"] = data.base.ref;
-        process.env["GITHUB_REPOSITORY"] = data.base.repo.full_name;
-        process.env["GITHUB_REF"] = `refs/pull/${prCheck[4]}/merge`;
+      process.env["GITHUB_SERVER_URL"] = prCheck[1];
+      delete process.env["GITHUB_ACTION"]; // doing process.env["GITHUB_ACTION"] = undefined will set to the string "undefined"
+      process.env["GITHUB_ACTOR"] = data.head.user.login;
+      process.env["GITHUB_HEAD_REF"] = data.head.ref;
+      process.env["GITHUB_BASE_REF"] = data.base.ref;
+      process.env["GITHUB_REPOSITORY"] = data.base.repo.full_name;
+      process.env["GITHUB_REF"] = `refs/pull/${prCheck[4]}/merge`;
 
-        return data;
-      } catch (err) {
-        logAndThrow(`Invalid event url ${this.parsedInputs.url}`);
-      }
+      return data;
     }
     logAndThrow(`Invalid event url ${this.parsedInputs.url}. URL must be a github pull request event url or a github tree url`);
   }

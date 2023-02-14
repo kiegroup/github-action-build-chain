@@ -73,7 +73,7 @@ describe.each([
     jest.spyOn(ConfigurationService.prototype, "getRootFolder").mockImplementation(() => rootFolder);
     jest.spyOn(ConfigurationService.prototype, "getSourceProject").mockImplementation(() => originalSource);
     jest.spyOn(ConfigurationService.prototype, "getTargetProject").mockImplementation(() => originalTarget);
-    jest.spyOn(ConfigurationService.prototype, "getStarterNode").mockImplementation(() => nodeChain[1]);
+    jest.spyOn(ConfigurationService.prototype, "getProjectTriggeringTheJob").mockImplementation(() => nodeChain[1]);
     jest.spyOn(ConfigurationService.prototype, "skipParallelCheckout").mockImplementation(() => skipParallelCheckout);
   });
 
@@ -291,7 +291,7 @@ describe.each([
     jest.spyOn(ConfigurationService.prototype, "getRootFolder").mockImplementation(() => rootFolder);
     jest.spyOn(ConfigurationService.prototype, "getSourceProject").mockImplementation(() => originalSource);
     jest.spyOn(ConfigurationService.prototype, "getTargetProject").mockImplementation(() => originalTarget);
-    jest.spyOn(ConfigurationService.prototype, "getStarterNode").mockImplementation(() => nodeChain[1]);
+    jest.spyOn(ConfigurationService.prototype, "getProjectTriggeringTheJob").mockImplementation(() => nodeChain[1]);
     jest.spyOn(ConfigurationService.prototype, "skipParallelCheckout").mockImplementation(() => skipParallelCheckout);
   });
 
@@ -507,7 +507,7 @@ describe.each([
     jest.spyOn(ConfigurationService.prototype, "getRootFolder").mockImplementation(() => rootFolder);
     jest.spyOn(ConfigurationService.prototype, "getSourceProject").mockImplementation(() => originalSource);
     jest.spyOn(ConfigurationService.prototype, "getTargetProject").mockImplementation(() => originalTarget);
-    jest.spyOn(ConfigurationService.prototype, "getStarterNode").mockImplementation(() => nodeChain[1]);
+    jest.spyOn(ConfigurationService.prototype, "getProjectTriggeringTheJob").mockImplementation(() => nodeChain[1]);
     jest.spyOn(ConfigurationService.prototype, "skipParallelCheckout").mockImplementation(() => skipParallelCheckout);
   });
 

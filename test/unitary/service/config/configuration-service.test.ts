@@ -47,6 +47,7 @@ describe("methods", () => {
   let config: ConfigurationService;
   let currentInput: InputValues;
   const startProject = "owner/project";
+  const projectTriggeringTheJob = "owner/job";
 
   beforeAll(() => {
     // doesn't matter whether it is a CLI or action
@@ -376,5 +377,39 @@ describe("methods", () => {
       group
     };
     expect(config.getGroupName()).toBe(group);
+  });
+
+  test.each([
+    ["github env is defined", projectTriggeringTheJob, undefined, projectTriggeringTheJob],
+    ["github event is defined", undefined, projectTriggeringTheJob, projectTriggeringTheJob],
+    ["neither is defined use startProject", undefined, undefined, startProject],
+  ])("getProjectTriggeringTheJobName: %p", (_title, githubEnv, githubEvent, expected) => {
+    if (githubEnv) {
+      process.env["GITHUB_REPOSITORY"] = githubEnv;
+    }
+    jest
+      .spyOn(BaseConfiguration.prototype, "gitEventData", "get")
+      .mockImplementationOnce(() => ({ base: {repo: {full_name: githubEvent}} }) as never);
+    expect(config.getProjectTriggeringTheJobName()).toBe(expected);
+    delete process.env["GITHUB_REPOSITORY"];
+  });
+
+  test.each([
+    ["projectTriggeringTheJob is found", projectTriggeringTheJob, projectTriggeringTheJob],
+    ["projectTriggeringTheJob is not found", undefined, startProject],
+  ])("getProjectTriggeringTheJob: %p", (_title, getProjectTriggeringTheJobName, expectedProject) => {
+    const chain: Node[] = [
+      { ...defaultNodeValue, project: "abc" },
+      { ...defaultNodeValue, project: startProject },
+      { ...defaultNodeValue, project: projectTriggeringTheJob },
+    ];
+    const nodeFound: Node = { ...defaultNodeValue, project: expectedProject };
+    jest
+      .spyOn(ConfigurationService.prototype, "nodeChain", "get")
+      .mockImplementation(() => chain);
+    jest
+      .spyOn(ConfigurationService.prototype, "getProjectTriggeringTheJobName")
+      .mockImplementation(() => getProjectTriggeringTheJobName!);
+    expect(config.getProjectTriggeringTheJob()).toStrictEqual(nodeFound);
   });
 });

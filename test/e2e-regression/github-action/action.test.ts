@@ -41,8 +41,8 @@ describe("test custom e2e commands", () => {
           "build-chain": {
             files: [
               {
-                src: path.join(__dirname, "custom.yaml"),
-                dest: ".github/workflows/custom.yaml",
+                src: path.join(__dirname, "test.yaml"),
+                dest: ".github/workflows/test.yaml",
               },
               {
                 src: path.resolve(__dirname, "..", "..", "..", "action.yml"),
@@ -67,9 +67,9 @@ describe("test custom e2e commands", () => {
 
   for (const testCase of testCases) {
     test(testCase.name, async () => {
-      const act = new Act().setGithubToken(
-        process.env["GITHUB_TOKEN"] ?? "token"
-      );
+      const act = new Act()
+        .setGithubStepSummary("/dev/stdout")
+        .setGithubToken(process.env["GITHUB_TOKEN"] ?? "token");
 
       for (const key of Object.keys(testCase.env ?? {})) {
         act.setEnv(key, testCase.env![key]);

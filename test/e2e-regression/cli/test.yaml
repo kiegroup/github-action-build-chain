@@ -16,5 +16,10 @@ jobs:
         run: mv ./build/index.js ./build/build-chain
       - name: Add to path
         run: echo "$PWD/build/" >> $GITHUB_PATH
+      - uses: kiegroup/kogito-pipelines/.ci/actions/maven@main
+        with:
+          java-version: ${{ inputs.java-version }}
+          maven-version: ${{ inputs.maven-version }}
+          cache-key-prefix: ${{ inputs.maven-version }}
       - name: Execute build-chain
         run: build-chain help

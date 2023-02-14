@@ -28,21 +28,22 @@ describe("test custom cli e2e commands", () => {
   });
   
   beforeEach(() => {
-    cpSync(path.join(__dirname, "cli.yaml"), path.join(tmpFolder, "cli.yaml"));
+    cpSync(path.join(__dirname, "test.yaml"), path.join(tmpFolder, "test.yaml"));
   });
 
   for (const testCase of testCases) {
     test(testCase.name, async () => {
-      let act = new Act()
+      const act = new Act()
+        .setGithubStepSummary("/dev/stdout")
         .setGithubToken(process.env["GITHUB_TOKEN"] ?? "token")
         .setEnv("GITHUB_REPOSITORY", "");
 
       for (const key of Object.keys(testCase.env ?? {})) {
-        act = act.setEnv(key, testCase.env![key]);
+        act.setEnv(key, testCase.env![key]);
       }
 
       if (testCase.eventPayload) {
-        act = act.setEvent(testCase.eventPayload);
+        act.setEvent(testCase.eventPayload);
       }
 
       const result = await act.runEvent("pull_request", {
@@ -58,9 +59,9 @@ describe("test custom cli e2e commands", () => {
         },
       });
 
-      expect(result.length).toBe(7);
-      expect(result[6].name).toBe("Main Execute build-chain");
-      expect(result[6].status).toBe(testCase.shouldFail ? 1 : 0);
+      expect(result.length).toBe(8);
+      expect(result[7].name).toBe("Main Execute build-chain");
+      expect(result[7].status).toBe(testCase.shouldFail ? 1 : 0);
     });
   }
 });

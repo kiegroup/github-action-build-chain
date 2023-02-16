@@ -24,7 +24,7 @@ Container.set(constants.GITHUB.TOKEN, "faketoken");
 
 const checkoutService = Container.get(CheckoutService);
 const moctokit = new Moctokit();
-let cloneSpy: jest.SpyInstance, mergeSpy: jest.SpyInstance;
+let cloneSpy: jest.SpyInstance, mergeSpy: jest.SpyInstance, renameSpy: jest.SpyInstance;
 
 beforeEach(async () => {
   //set node chain
@@ -48,6 +48,7 @@ beforeEach(async () => {
     .mockImplementationOnce(async (_from: string, to: string, _branch: string) => fakeClone(to))
     .mockImplementationOnce(async () => undefined);
   mergeSpy = jest.spyOn(GitCLIService.prototype, "merge").mockImplementation(async () => undefined);
+  renameSpy = jest.spyOn(GitCLIService.prototype, "rename").mockImplementation(async () => undefined);
 });
 
 
@@ -106,6 +107,10 @@ describe.each([
     expect(mergeSpy).toHaveBeenCalledTimes(2);
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), `${serverUrl}/owner2/project1-forked`, "sbranch2");
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), `${serverUrl}/owner2/project2`, "sbranch2");
+
+    expect(renameSpy).toHaveBeenCalledTimes(2);
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "sbranch2");
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2");
 
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
@@ -170,6 +175,10 @@ describe.each([
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), `${serverUrl}/owner1/project1`, "sbranch2");
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), `${serverUrl}/owner2/project2`, "sbranch2");
 
+    expect(renameSpy).toHaveBeenCalledTimes(2);
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "sbranch2");
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2");
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -230,6 +239,9 @@ describe.each([
 
     expect(mergeSpy).toHaveBeenCalledTimes(1);
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), `${serverUrl}/owner2/project2`, "sbranch2");
+
+    expect(renameSpy).toHaveBeenCalledTimes(1);
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2");
 
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
@@ -324,6 +336,10 @@ describe.each([
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), `${serverUrl}/owner4/project1-forked`, "sbranch2-forked");
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), `${serverUrl}/owner4/project2-forked`, "sbranch2-forked");
 
+    expect(renameSpy).toHaveBeenCalledTimes(2);
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "sbranch2-forked");
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2-forked");
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -385,6 +401,10 @@ describe.each([
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), `${serverUrl}/owner1/project1`, "sbranch2-forked");
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), `${serverUrl}/owner4/project2-forked`, "sbranch2-forked");
 
+    expect(renameSpy).toHaveBeenCalledTimes(2);
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "sbranch2-forked");
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2-forked");
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -445,6 +465,9 @@ describe.each([
 
     expect(mergeSpy).toHaveBeenCalledTimes(1);
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), `${serverUrl}/owner4/project2-forked`, "sbranch2-forked");
+
+    expect(renameSpy).toHaveBeenCalledTimes(1);
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2-forked");
 
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
@@ -539,6 +562,9 @@ describe.each([
     expect(mergeSpy).toHaveBeenCalledTimes(1);
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), `${serverUrl}/owner2/project1-forked`, "tbranch2");
 
+    expect(renameSpy).toHaveBeenCalledTimes(1);
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "tbranch2");
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -600,6 +626,9 @@ describe.each([
     expect(mergeSpy).toHaveBeenCalledTimes(1);
     expect(mergeSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), `${serverUrl}/owner1/project1`, "tbranch2");
 
+    expect(renameSpy).toHaveBeenCalledTimes(1);
+    expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "tbranch2");
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -660,6 +689,7 @@ describe.each([
     expect(cloneSpy).toHaveBeenCalledWith(`${serverUrl}/owner2/project2`, path.join(rootFolder, "owner2_project2"), "tbranch2");
 
     expect(mergeSpy).toHaveBeenCalledTimes(0);
+    expect(renameSpy).toHaveBeenCalledTimes(0);
 
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);

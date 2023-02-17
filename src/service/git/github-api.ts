@@ -132,6 +132,7 @@ export class GithubAPIService {
    */
   async getPullRequest(owner: string, repo: string, pullNumber: number) {
     try {
+      this.logger.debug(`Making a github API call to get pull request info for ${owner}/${repo} PR #${pullNumber}`);
       const { data } = await this.octokit.pulls.get({
           owner,
           repo,

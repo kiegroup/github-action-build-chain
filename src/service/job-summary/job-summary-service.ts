@@ -1,4 +1,5 @@
 import Container, { Service } from "typedi";
+import * as ms from "ms-typescript";
 import * as core from "@actions/core";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { FlowType } from "@bc/domain/inputs";
@@ -64,7 +65,7 @@ export class JobSummaryService {
       { data: "Execution Result", header: true },
       { data: "Execution Time", header: true },
     ];
-    const data = result.map(res => [res.command, this.getExecutionResultString(res.result), `${res.time}`]);
+    const data = result.map(res => [res.command, this.getExecutionResultString(res.result), `${ms.fromMs(res.time)}`]);
     return core.summary
       .emptyBuffer()
       .addTable([prePostTableHeaders, ...data])
@@ -117,7 +118,7 @@ export class JobSummaryService {
         nodeCheckoutInfo?.merge ? "\u2705" : "\u274C",
         result,
         res.executeCommandResults.length > 0
-          ? `${res.executeCommandResults.reduce((prev, curr) => prev + curr.time, 0) / res.executeCommandResults.length}`
+          ? `${ms.fromMs(res.executeCommandResults.reduce((prev, curr) => prev + curr.time, 0) / res.executeCommandResults.length)}`
           : "0",
       ];
     });

@@ -845,7 +845,7 @@ Just because of this we have to maintain different Dockerfile definitions in dif
 ### Execute CLI
 
 ```
-npm run install
+npm install
 npm run build:cli
 ./build/index.js build ...
 ```

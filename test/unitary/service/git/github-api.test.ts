@@ -167,3 +167,28 @@ test.each([
     }
   }
 );
+
+test.each([
+  ["success", 200],
+  ["failure", 404],
+])("getPullRequest %p", async (_title: string, status: number) => {
+  const moctokit = new Moctokit();
+  moctokit.rest.pulls.get({
+    owner: "owner",
+    repo: "repo",
+    pull_number: 128
+  }).reply({
+    status: status as 200 | 404,
+    data: {title: "some_pr"}
+  });
+
+  if (status == 200) {
+    await expect(git.getPullRequest("owner", "repo", 128)).resolves.toStrictEqual(
+      {
+        title: "some_pr"
+      }
+    );
+  } else {
+    await expect(git.getPullRequest("owner", "repo", 128)).rejects.toThrowError();
+  }
+});

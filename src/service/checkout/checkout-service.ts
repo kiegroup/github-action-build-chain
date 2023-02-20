@@ -92,11 +92,14 @@ export class CheckoutService {
       // get url of the source for the merge
       const sourceCloneUrl = this.config.getCloneUrl(checkoutInfo.sourceGroup, checkoutInfo.sourceName);
 
-      await gitCLIService.merge(checkoutInfo.repoDir, sourceCloneUrl, checkoutInfo.sourceBranch).catch(err => {
-        this.logger.debug(JSON.stringify(err));
-        logAndThrow(`[${node.project}] Error merging ${checkoutInfo.sourceGroup}/${checkoutInfo.sourceName}:${checkoutInfo.sourceBranch}
+      await gitCLIService
+        .merge(checkoutInfo.repoDir, sourceCloneUrl, checkoutInfo.sourceBranch)
+        .then(async () => gitCLIService.rename(checkoutInfo.repoDir, checkoutInfo.sourceBranch)) // need to rename target to source so that sonar cloud can run PR analysis on source
+        .catch(err => {
+          this.logger.debug(JSON.stringify(err));
+          logAndThrow(`[${node.project}] Error merging ${checkoutInfo.sourceGroup}/${checkoutInfo.sourceName}:${checkoutInfo.sourceBranch}
                       into ${checkoutInfo.targetGroup}/${checkoutInfo.targetName}:${checkoutInfo.targetBranch}`);
-      });
+        });
     }
     // clone multiple times if needed
     await this.cloneNode(node);

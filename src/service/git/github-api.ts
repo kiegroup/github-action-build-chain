@@ -97,12 +97,8 @@ export class GithubAPIService {
     try {
       // ensure that repo exists
       if (targetOwner === sourceOwner) {
-        this.logger.debug(`Making a github API call to check whether ${sourceOwner}/${repo} exists`);
-        await this.octokit.repos.get({
-          owner: sourceOwner,
-          repo,
-        });
-        return repo;
+        // awaiting it here so that the catch block in this method can handle any errors
+        return await this.checkIfRepositoryExists(sourceOwner, repo);
       } else {
         // find repo from fork list
         let page = 1;
@@ -157,6 +153,15 @@ export class GithubAPIService {
       );
       throw err;
     }
+  }
+
+  private async checkIfRepositoryExists(owner: string, repo: string) {
+    this.logger.debug(`Making a github API call to check whether ${owner}/${repo} exists`);
+    await this.octokit.repos.get({
+      owner,
+      repo,
+    });
+    return repo;
   }
 
   private getErrorMessage(err: unknown, msg: string): string {

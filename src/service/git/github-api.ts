@@ -27,6 +27,7 @@ export class GithubAPIService {
    */
   async doesBranchExist(owner: string, repo: string, branch: string): Promise<boolean> {
     try {
+      this.logger.debug(`Making a github API call to get branch ${branch} for ${owner}/${repo}`);
       await this.octokit.repos.getBranch({ owner, repo, branch });
       return true;
     } catch (err) {
@@ -60,6 +61,9 @@ export class GithubAPIService {
       query = { ...query, head };
     }
     try {
+      this.logger.debug(
+        `Making a github API call to check whether there is any open pull request from ${head} to ${base} for ${owner}/${repo}`
+      );
       const { status, data } = await this.octokit.pulls.list(query);
       return status === 200 && data.length > 0;
     } catch (err) {
@@ -93,21 +97,22 @@ export class GithubAPIService {
     try {
       // ensure that repo exists
       if (targetOwner === sourceOwner) {
-        await this.octokit.repos.get({
-          owner: sourceOwner,
-          repo,
-        });
-        return repo;
+        // awaiting it here so that the catch block in this method can handle any errors
+        return await this.checkIfRepositoryExists(sourceOwner, repo);
       } else {
         // find repo from fork list
+        let page = 1;
         for await (const response of this.octokit.paginate.iterator(this.octokit.repos.listForks, {
           owner: targetOwner,
           repo,
+          per_page: 100
         })) {
+          this.logger.debug(`Making a github API call to find a fork for ${targetOwner}/${repo} (page ${page})`);
           const forkedRepo = response.data.find(project => project.owner.login === sourceOwner);
           if (forkedRepo) {
             return forkedRepo.name;
           }
+          page += 1;
         }
 
         throw new NotFoundError();
@@ -148,6 +153,15 @@ export class GithubAPIService {
       );
       throw err;
     }
+  }
+
+  private async checkIfRepositoryExists(owner: string, repo: string) {
+    this.logger.debug(`Making a github API call to check whether ${owner}/${repo} exists`);
+    await this.octokit.repos.get({
+      owner,
+      repo,
+    });
+    return repo;
   }
 
   private getErrorMessage(err: unknown, msg: string): string {

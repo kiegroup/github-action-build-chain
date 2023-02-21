@@ -1,6 +1,6 @@
 {
   "name": "@kie/build-chain-action",
-  "version": "3.0.20",
+  "version": "3.0.21",
   "description": "Library to execute commands based on github projects dependencies.",
   "main": "dist/index.js",
   "author": "",
@@ -57,7 +57,7 @@
     "@actions/core": "^1.8.2",
     "@actions/exec": "^1.1.1",
     "@actions/glob": "^0.3.0",
-    "@kie/build-chain-configuration-reader": "^3.0.10",
+    "@kie/build-chain-configuration-reader": "^3.0.11",
     "@octokit/request-error": "^2.1.0",
     "@octokit/rest": "^18.12.0",
     "@octokit/types": "^6.39.0",

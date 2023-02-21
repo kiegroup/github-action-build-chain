@@ -92,13 +92,14 @@ const checkoutInfo: CheckedOutNode[] = [
   },
 ];
 
+const thirtySeconds = (30) * 1000;
 const executionResult1 = {
   node: nodeChain[0],
   executeCommandResults: [
     {
       startingDate: 0,
-      endingDate: 0,
-      time: 0,
+      endingDate: thirtySeconds,
+      time: thirtySeconds,
       command: "cmd1",
       result: ExecutionResult.SKIP,
       errorMessage: "error",
@@ -106,13 +107,14 @@ const executionResult1 = {
   ],
 };
 
+const fiveMinutes = (5 * 60) * 1000;
 const executionResult2 = {
   node: nodeChain[1],
   executeCommandResults: [
     {
       startingDate: 0,
-      endingDate: 2,
-      time: 2,
+      endingDate: fiveMinutes,
+      time: fiveMinutes,
       command: "cmd2",
       result: ExecutionResult.OK,
       errorMessage: "",
@@ -120,13 +122,14 @@ const executionResult2 = {
   ],
 };
 
+const twoHours = (2 * 60 * 60) * 1000;
 const executionResult3 = {
   node: nodeChain[2],
   executeCommandResults: [
     {
       startingDate: 0,
-      endingDate: 3,
-      time: 3,
+      endingDate: twoHours,
+      time: twoHours,
       command: "cmd3",
       result: ExecutionResult.NOT_OK,
       errorMessage: "error",

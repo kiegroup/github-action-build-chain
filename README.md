@@ -26,6 +26,7 @@ Table of content
 * **[Usage example](#usage-example)**
 * **[Local Execution](#local-execution)**
 * **[About Commands to Execute](#about-commands-to-execute)**
+* **[v2 to v3](#v2-to-v3)**
 * **[Limitations](#limitations)**
 * **[Development](#development)**
 * **[System Requirements](#system-requirements)**
@@ -766,6 +767,25 @@ Just consider the library used behind the scenes in order to execute commands is
 `cmd /c "my command"`
 
 > **_Note:_** thanks to https://github.com/actions/toolkit/issues/461#issuecomment-743750804
+
+# v2 to v3
+
+List of breaking changes from v2 to v3:
+
+- v2 flow types are deprecated but still supported. Since they are deprecated they might be removed in future releases. Acceptable v3 flowtypes which are consistent across CLI and github action are:
+  - cross_pr (know as pr or pull-request in v2)
+  - full_downstream (know as fd or fdb in v2)
+  - single_pr (know as single in v2)
+  - branch
+- v3 now accepts definition file version 2.2
+- CLI options that have changed:
+  - v2: `-df` to v3: `-f`
+  - v2: `-url` to v3: `-u` or `--url`
+  - v2: `-folder` to v3: `-o`
+  - v2: `-cct` to v3: `-t`
+  - v2: `-spc` to v3: `--skipProjectCheckout`
+  - v2: `-sp` to v3: `-p`
+- Project naming convention while checking out a project is now - `OWNER_PROJECT-NAME`. For example if we have `owner/some-name` the project will be checked out as `owner_some-name`. In v2 this would have been checked out as `owner_some_name`
 
 # Limitations
 

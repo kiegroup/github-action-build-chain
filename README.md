@@ -172,13 +172,13 @@ See [action.yml](action.yml)
   > annotations-prefix: "OS ${{ matrix.os }}"
   > ```
 
-- **additional-flags** (optional. '' by default): The chance to define additional flags for the execution, as it is done on the CLI side. Just semicolon (;) separated, like '--skipParallelCheckout;--skipExecution;-cct (mvn .\*)||\$1 -s settings.xml'.
+- **additional-flags** (optional. '' by default): The chance to define additional flags for the execution, as it is done on the CLI side. Just semicolon (;) separated, like '--skipParallelCheckout;--skipExecution;-t (mvn .\*)||\$1 -s settings.xml'.
 
   > ```
   > additional-flags: "--fullProjectDependencyTree"
   > additional-flags: "--fullProjectDependencyTree;--skipParallelCheckout"
   > additional-flags: "--skipParallelCheckout; --fullProjectDependencyTree"
-  > additional-flags: "--skipParallelCheckout; -cct (mvn .*)||$1 -s settings.xml"
+  > additional-flags: "--skipParallelCheckout; -t (mvn .*)||$1 -s settings.xml"
   > ```
 
   > **_Note:_** It has a limitation, the flag values can't contain semicolons (;), otherwise it will be treated as a new flag.

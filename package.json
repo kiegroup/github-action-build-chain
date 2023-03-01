@@ -36,7 +36,7 @@
   },
   "homepage": "https://github.com/kiegroup/github-action-build-chain#readme",
   "devDependencies": {
-    "@kie/act-js": "^2.0.1",
+    "@kie/act-js": "^2.0.2",
     "@kie/mock-github": "^1.0.0",
     "@types/fs-extra": "^9.0.13",
     "@types/jest": "^28.1.1",

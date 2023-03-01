@@ -95,8 +95,8 @@ test("full downstream where 1 project has a PR and one doesn't", async () => {
   const parentDir = path.dirname(repoPath!);
   const result = await act
     .setGithubToken("token")
-    .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
-    .setEnv("STARTING_PROJECT", "owner1/project2")
+    .setEnv("GITHUB_SERVER_URL", `${parentDir}${path.sep}`)
+    .setEnv("GITHUB_REPOSITORY", "owner1/project2")
     .setEnv(
       "CLONE_DIR",
       `${path.join(parentDir, "owner1_project2", "project2")} ${path.join(parentDir, "owner1_project1", "project1")}`
@@ -258,8 +258,8 @@ test("cross-pr with no PRs", async () => {
   const parentDir = path.dirname(repoPath!);
   const result = await act
     .setGithubToken("token")
-    .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
-    .setEnv("STARTING_PROJECT", "owner1/project2")
+    .setEnv("GITHUB_SERVER_URL", `${parentDir}${path.sep}`)
+    .setEnv("GITHUB_REPOSITORY", "owner1/project2")
     .setEnv(
       "CLONE_DIR",
       `${path.join(parentDir, "owner1_project1", "project1")} ${path.join(parentDir, "owner1_project2", "project2")}`

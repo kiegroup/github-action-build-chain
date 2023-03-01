@@ -145,8 +145,8 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
   const parentDir = path.dirname(repoPath!);
   const result = await act
     .setGithubToken("token")
-    .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
-    .setEnv("STARTING_PROJECT", "owner1/project1")
+    .setEnv("GITHUB_SERVER_URL", `${parentDir}${path.sep}`)
+    .setEnv("GITHUB_REPOSITORY", "owner1/project1")
     .setEnv(
       "CLONE_DIR",
       `${path.join(parentDir, "owner1_project1", "project1")} ${path.join(
@@ -367,8 +367,8 @@ test("PR from target:branchA to target:branchB while using mapping of a non-star
   const parentDir = path.dirname(repoPath!);
   const result = await act
     .setGithubToken("token")
-    .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
-    .setEnv("STARTING_PROJECT", "owner1/project2")
+    .setEnv("GITHUB_SERVER_URL", `${parentDir}${path.sep}`)
+    .setEnv("GITHUB_REPOSITORY", "owner1/project2")
     .setEnv("CLONE_DIR", path.join(parentDir, "owner1_project2", "project2"))
     .setEvent({
       pull_request: {

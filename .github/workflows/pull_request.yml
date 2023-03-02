@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -32,7 +32,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -50,13 +50,13 @@ jobs:
   e2e-regression:
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [16.x, 18.x]
         os: [ubuntu-latest]
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
@@ -70,11 +70,13 @@ jobs:
           name: e2e-regression-logs-${{ matrix.node-version }}.zip
           path: '*.log'
           retention-days: 5  
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
   package-lock-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 16

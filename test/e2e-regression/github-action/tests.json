@@ -30,5 +30,34 @@
     "matchOutput": [
       "4 projects will be executed"
     ]
+  },
+  {
+    "name": "issue-401",
+    "definition-file": "https://raw.githubusercontent.com/kiegroup/kogito-pipelines/%{process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)}/.ci/pull-request-config.yaml",
+    "starting-project": "kiegroup/optaplanner",
+    "flow-type": "cross_pr",
+    "skip-execution": "true",
+    "eventPayload": {
+      "head": {
+        "ref": "revert-2332-revert-2303-bump-1.13.x-quarkus-2.13.4.Final",
+        "repo": {
+          "full_name": "kiegroup/optaplanner",
+          "name": "optaplanner",
+          "owner": {
+            "login": "kiegroup"
+          }
+        }
+      },
+      "base": {
+        "ref": "8.13.x",
+        "repo": {
+          "full_name": "kiegroup/optaplanner",
+          "name": "optaplanner",
+          "owner": {
+            "login": "kiegroup"
+          }
+        }
+      }
+    } 
   }
 ]

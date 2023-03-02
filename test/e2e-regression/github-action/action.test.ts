@@ -74,7 +74,8 @@ describe("test custom e2e github action", () => {
       const act = new Act()
         .setGithubStepSummary("/dev/stdout")
         .setGithubToken(process.env["GITHUB_TOKEN"] ?? "token")
-        .setEnv("GITHUB_REPOSITORY", testCase.eventPayload.base.repo.full_name);
+        .setEnv("GITHUB_REPOSITORY", testCase.eventPayload.base.repo.full_name)
+        .setEnv("GITHUB_BASE_REF", testCase.eventPayload.base.ref);
 
       for (const key of Object.keys(testCase.env ?? {})) {
         act.setEnv(key, testCase.env![key]);

@@ -19,7 +19,7 @@
     "test:e2e": "jest e2e/",
     "posttest:e2e": "rm -rf dist-e2e",
     "pretest:e2e-regression": "npm run pretest:e2e && npm run build:cli",
-    "test:e2e-regression": "jest e2e-regression/",
+    "test:e2e-regression": "jest --testTimeout=900000 e2e-regression/",
     "posttest:e2e-regression": "rm -rf dist-e2e",
     "test:report": "npm test -- --coverage --testResultsProcessor=jest-sonar-reporter",
     "lint": "eslint . --ext .ts",

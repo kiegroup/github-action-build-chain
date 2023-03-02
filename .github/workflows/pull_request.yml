@@ -45,7 +45,31 @@ jobs:
         with:
           name: e2e-logs-${{ matrix.node-version }}.zip
           path: '*.log'
-          retention-days: 5 
+          retention-days: 5
+
+  e2e-regression:
+    strategy:
+      matrix:
+        node-version: [16.x]
+        os: [ubuntu-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: ACT_LOG=true npm run test:e2e-regression
+      - name: Upload raw e2e regression output
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-regression-logs-${{ matrix.node-version }}.zip
+          path: '*.log'
+          retention-days: 5  
       
   package-lock-check:
     runs-on: ubuntu-latest

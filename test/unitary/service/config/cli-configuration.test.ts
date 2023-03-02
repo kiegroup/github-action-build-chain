@@ -22,6 +22,9 @@ const event = {
         login: "owner",
       },
     },
+    user: {
+      login: "owner"
+    }
   },
   base: {
     ref: "main",
@@ -73,12 +76,29 @@ describe("load event data", () => {
     Container.set(constants.GITHUB.TOKEN, "faketoken");
     const eventData = await cliConfig.loadGitEvent();
     expect(eventData).toStrictEqual(event);
+    expect(process.env["GITHUB_SERVER_URL"]).toBe("http://github.com/");
+    expect(process.env["GITHUB_ACTION"]).toBe(undefined);
+    expect(process.env["GITHUB_ACTOR"]).toBe(event.head.user.login);
+    expect(process.env["GITHUB_HEAD_REF"]).toBe(event.head.ref);
+    expect(process.env["GITHUB_BASE_REF"]).toBe(event.base.ref);
+    expect(process.env["GITHUB_REPOSITORY"]).toBe(event.base.repo.full_name);
+    expect(process.env["GITHUB_REF"]).toBe("refs/pull/270/merge");
   });
 
   test("success: branch flow build", async () => {
-    currentInput = { ...defaultInputValues, CLISubCommand: FlowType.BRANCH };
+    currentInput = { 
+      ...defaultInputValues, 
+      CLISubCommand: FlowType.BRANCH, 
+      group: "kiegroup",
+      branch: "main",
+      startProject: "kiegroup/drools" 
+    };
     const eventData = await cliConfig.loadGitEvent();
     expect(eventData).toStrictEqual({});
+    expect(process.env["GITHUB_ACTOR"]).toBe("kiegroup");
+    expect(process.env["GITHUB_HEAD_REF"]).toBe("main");
+    expect(process.env["GITHUB_BASE_REF"]).toBe("main");
+    expect(process.env["GITHUB_REPOSITORY"]).toBe("kiegroup/drools");
   });
 
   test("failure: no url defined", async () => {

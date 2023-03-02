@@ -1,5 +1,10 @@
 # Changelog
 
+# V3.1.8
+
+## Enhancements:
+- [ISSUE 391] Make execution summary times easier to read
+
 # V3.0.3
 
 ## Bugs:

@@ -52,7 +52,7 @@ export class ConfigurationService {
   }
 
   /**
-   * Get the name of the project starting the build-chain
+   * Get the name of the start project which produces node chain for build-chain
    * @returns {string}
    */
   getStarterProjectName(): string {
@@ -67,12 +67,31 @@ export class ConfigurationService {
   }
 
   /**
+   * Get the name of the project triggering build-chain
+   * @returns {string}
+    */
+  getProjectTriggeringTheJobName(): string {
+    return process.env.GITHUB_REPOSITORY ??
+      this.configuration.gitEventData.base.repo.full_name ??
+      this.configuration.parsedInputs.startProject;
+  }
+
+  /**
    * Check whether the given node is the starter project
    * @param node
    * @returns {Boolean} true if the node is the starter project
    */
   isNodeStarter(node: Node): boolean {
     return node.project === this.getStarterProjectName();
+  }
+
+  /**
+   * Check whether the given node is the triggering node
+   * @param node
+   * @returns {Boolean} true if the node is the triggering node
+   */
+  isNodeTriggeringTheJob(node: Node): boolean {
+      return node.project === this.getProjectTriggeringTheJobName();
   }
 
   /**
@@ -87,6 +106,14 @@ export class ConfigurationService {
             Please choose a different project like starter or define the project ${this.getStarterProjectName()} in the tree.`);
     }
     return starterNode;
+  }
+
+  /**
+   * Finds the node triggering the job
+   * @returns {Node} starter node
+   */
+  getProjectTriggeringTheJob(): Node {
+    return this.nodeChain.find(node => this.isNodeTriggeringTheJob(node)) ?? this.getStarterNode();
   }
 
   /**
@@ -209,5 +236,9 @@ export class ConfigurationService {
 
   getEventUrl(): string {
     return this.getFlowType() === FlowType.BRANCH ? "" : this.configuration.gitEventData.html_url;
+  }
+
+  getGroupName(): string | undefined {
+    return this.getFlowType() === FlowType.BRANCH ? this.configuration.parsedInputs.group : undefined;
   }
 }

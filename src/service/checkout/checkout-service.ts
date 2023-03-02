@@ -92,11 +92,14 @@ export class CheckoutService {
       // get url of the source for the merge
       const sourceCloneUrl = this.config.getCloneUrl(checkoutInfo.sourceGroup, checkoutInfo.sourceName);
 
-      await gitCLIService.merge(checkoutInfo.repoDir, sourceCloneUrl, checkoutInfo.sourceBranch).catch(err => {
-        this.logger.debug(JSON.stringify(err));
-        logAndThrow(`[${node.project}] Error merging ${checkoutInfo.sourceGroup}/${checkoutInfo.sourceName}:${checkoutInfo.sourceBranch}
+      await gitCLIService
+        .merge(checkoutInfo.repoDir, sourceCloneUrl, checkoutInfo.sourceBranch)
+        .then(async () => gitCLIService.rename(checkoutInfo.repoDir, checkoutInfo.sourceBranch)) // need to rename target to source so that sonar cloud can run PR analysis on source
+        .catch(err => {
+          this.logger.debug(JSON.stringify(err));
+          logAndThrow(`[${node.project}] Error merging ${checkoutInfo.sourceGroup}/${checkoutInfo.sourceName}:${checkoutInfo.sourceBranch}
                       into ${checkoutInfo.targetGroup}/${checkoutInfo.targetName}:${checkoutInfo.targetBranch}`);
-      });
+        });
     }
     // clone multiple times if needed
     await this.cloneNode(node);
@@ -114,15 +117,21 @@ export class CheckoutService {
    */
   private async getCheckoutInfo(node: Node): Promise<CheckoutInfo> {
     const githubAPIService = Container.get(GithubAPIService);
-    const starterNode = this.config.getStarterNode();
+    const projectTriggeringTheJob = this.config.getProjectTriggeringTheJob();
     const originalTarget = this.config.getTargetProject();
     // the current node is the current target
     const currentTarget = {
       // map the starting project target branch to the corresponding branch defined in the mapping for the current node
       // target branch is guaranteed to exist since base always exist
-      mappedBranch: getMappedTarget(starterNode.project, starterNode.mapping, node.project, node.mapping, originalTarget.branch!),
+      mappedBranch: getMappedTarget(
+        projectTriggeringTheJob.project, 
+        projectTriggeringTheJob.mapping, 
+        node.project, 
+        node.mapping, 
+        originalTarget.branch!
+      ),
       name: node.project.split("/")[1],
-      group: node.project.split("/")[0],
+      group: this.config.getGroupName() ?? node.project.split("/")[0],
     };
 
     const originalSource = this.config.getSourceProject();

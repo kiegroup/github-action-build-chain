@@ -142,7 +142,7 @@ See [action.yml](action.yml)
   - branch: executes the branch flow
   - single_pr: executes the single pull request flow
 
-- **starting-project** (optional. the project triggering the job by default): The project you want start building from. It's not the same as the project triggering the job (which will remain the same), but the project to take tree from. For instance
+- **starting-project** (optional. the project triggering the job by default): The project you want start building from. The project to construct the tree from. It's not the same as the project triggering the job which is taken from `GITHUB_REPOSITORY` env variable or the github pull request event payload. For instance
 
   > ```
   > starting-project: 'groupX/projectX' // it will get project dependencies tree from 'groupX/projectX'
@@ -494,7 +494,7 @@ Let's suppose
 
 #### mapping.dependencies
 
-It is used to define branch mapping between E and its dependencies in case `E` is `startingProject`/`projectTriggeringTheJob`.
+It is used to define branch mapping between E and its dependencies in case `E` is `projectTriggeringTheJob`.
 
 In case the `E:7.x` branch build or PR is triggered for this `7.x` target branch:
 
@@ -518,7 +518,7 @@ In case the `E:anyotherbranch` branch build or PR is triggered for this `anyothe
 
 #### mapping.dependant
 
-It is used to define branch mapping between the rest of the projects and project A in case `E` is NOT `startingProject`/`projectTriggeringTheJob`.
+It is used to define branch mapping between the rest of the projects and project A in case `E` is NOT `projectTriggeringTheJob`.
 
 In case the `A:7.x` or any other (except `main`) branch build or PR is triggered -> `E:7.x` will be taken (since there's not `mapping.dependant` for `7.x` source)
 In case the `A:main` branch build or PR is triggered -> `E:7.x` (due to `mapping.dependant.default` mapping)
@@ -845,7 +845,7 @@ Just because of this we have to maintain different Dockerfile definitions in dif
 ### Execute CLI
 
 ```
-npm run install
+npm install
 npm run build:cli
 ./build/index.js build ...
 ```

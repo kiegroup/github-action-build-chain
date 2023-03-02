@@ -1,6 +1,9 @@
 [
   {
     "name": "issue-372",
-    "cmd": "build-chain build full_downstream -f 'https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/${BRANCH:main}/.ci/compilation-config.yaml' -o bc -u https://github.com/kiegroup/drools/pull/4978 --skipExecution"
+    "cmd": "build-chain build cross_pr -f 'https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/${BRANCH:main}/.ci/compilation-config.yaml' -o bc -u https://github.com/kiegroup/drools/pull/4978 --skipExecution",
+    "matchOutput": [
+      "4 projects will be executed"
+    ]
   }
 ]

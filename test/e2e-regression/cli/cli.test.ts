@@ -1,5 +1,4 @@
 import { Act } from "@kie/act-js";
-import { EventJSON } from "@kie/act-js/build/src/action-event/action-event.types";
 import { cpSync, mkdirSync, readFileSync, rmSync } from "fs";
 import path from "path";
 import { logActOutput } from "../../e2e/helper/logger";
@@ -8,8 +7,8 @@ type TestCommand = {
   name: string;
   cmd: string;
   env?: Record<string, string>;
-  eventPayload?: EventJSON;
   shouldFail?: boolean;
+  matchOutput?: string[]
 };
 
 describe("test custom cli e2e commands", () => {
@@ -35,18 +34,14 @@ describe("test custom cli e2e commands", () => {
     test(testCase.name, async () => {
       const act = new Act()
         .setGithubStepSummary("/dev/stdout")
-        .setGithubToken(process.env["GITHUB_TOKEN"] ?? "token")
-        .setEnv("GITHUB_REPOSITORY", "");
+        .setEnv("GITHUB_REPOSITORY", extractGithubRepository(testCase.cmd))
+        .setGithubToken(process.env["GITHUB_TOKEN"] ?? "");
 
       for (const key of Object.keys(testCase.env ?? {})) {
         act.setEnv(key, testCase.env![key]);
       }
 
-      if (testCase.eventPayload) {
-        act.setEvent(testCase.eventPayload);
-      }
-
-      const result = await act.runEvent("pull_request", {
+      const result = await act.runEvent("workflow_dispatch", {
         ...logActOutput(`${testCase.name}-cli.log`),
         workflowFile: tmpFolder,
         mockSteps: {
@@ -59,9 +54,23 @@ describe("test custom cli e2e commands", () => {
         },
       });
 
-      expect(result.length).toBe(8);
-      expect(result[7].name).toBe("Main Execute build-chain");
-      expect(result[7].status).toBe(testCase.shouldFail ? 1 : 0);
+      expect(result.length).toBe(18);
+      expect(result[13].name).toBe("Main Execute build-chain");
+      expect(result[13].status).toBe(testCase.shouldFail ? 1 : 0);
+      if (testCase.matchOutput) {
+        testCase.matchOutput.forEach(output => {
+          expect(result[13].output).toEqual(expect.stringContaining(output));
+        });
+      }
     });
   }
 });
+
+function extractGithubRepository(cmd: string) {
+  const urlRegex = /-u https?:\/\/.+\/([^/\s]+\/[^/\s]+)\/pull\/(\d+)/;
+  const urlCheck = cmd.match(urlRegex);
+  if (urlCheck) {
+    return urlCheck[1];
+  }
+  return "";
+}

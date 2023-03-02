@@ -1,5 +1,16 @@
-name: Custom e2e
-on: pull_request
+name: Custom cli e2e
+on:
+  workflow_dispatch:
+    inputs:
+      java-version:
+        default: "11"
+        required: false
+      maven-version:
+        default: "3.8.7"
+        required: false
+      cache-key-prefix:
+        default: "Linux-11-maven3.8.7"
+        required: false
 jobs:
   build:
     runs-on: ubuntu-latest

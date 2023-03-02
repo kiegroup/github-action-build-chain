@@ -1,15 +1,17 @@
 import { Act } from "@kie/act-js";
-import { EventJSON } from "@kie/act-js/build/src/action-event/action-event.types";
 import { MockGithub } from "@kie/mock-github";
+import { Endpoints } from "@octokit/types";
 import { readFileSync } from "fs";
 import path from "path";
 import { logActOutput } from "../../e2e/helper/logger";
+
+type PullRequestPayload = Endpoints["GET /repos/{owner}/{repo}/pulls/{pull_number}"]["response"]["data"];
 
 type TestCommand = {
   name: string;
   "definition-file": string;
   "flow-type": string;
-  "starting-project"?: string;
+  "starting-project?": string;
   "skip-execution"?: string;
   "skip-project-execution"?: string;
   "skip-checkout"?: string;
@@ -22,12 +24,14 @@ type TestCommand = {
   "java-version"?: string;
   "maven-version"?: string;
   "cache-key-prefix"?: string;
-  eventPayload?: EventJSON
+  eventPayload: PullRequestPayload;
   env?: Record<string, string>
-  shouldFail?: boolean
+  shouldFail?: boolean;
+  matchOutput?: string[]
 };
 
-describe("test custom e2e commands", () => {
+
+describe("test custom e2e github action", () => {
   const testCases: TestCommand[] = JSON.parse(
     readFileSync(path.join(__dirname, "tests.json"), "utf8")
   ) as TestCommand[];
@@ -69,14 +73,15 @@ describe("test custom e2e commands", () => {
     test(testCase.name, async () => {
       const act = new Act()
         .setGithubStepSummary("/dev/stdout")
-        .setGithubToken(process.env["GITHUB_TOKEN"] ?? "token");
+        .setGithubToken(process.env["GITHUB_TOKEN"] ?? "token")
+        .setEnv("GITHUB_REPOSITORY", testCase.eventPayload.base.repo.full_name);
 
       for (const key of Object.keys(testCase.env ?? {})) {
         act.setEnv(key, testCase.env![key]);
       }
 
       if (testCase.eventPayload) {
-        act.setEvent(testCase.eventPayload);
+        act.setEvent({pull_request: testCase.eventPayload});
       }
       
       for (const [key, value] of Object.entries(testCase)) {
@@ -92,10 +97,15 @@ describe("test custom e2e commands", () => {
         cwd: mockGithub.repo.getPath("build-chain"),
         workflowFile: mockGithub.repo.getPath("build-chain")
       });
-
-      expect(result.length).toBe(3);
-      expect(result[2].name).toBe("Main ./build-chain");
-      expect(result[2].status).toBe(testCase.shouldFail ? 1 : 0);
+      
+      expect(result.length).toBe(12);
+      expect(result[8].name).toBe("Main ./build-chain");
+      expect(result[8].status).toBe(testCase.shouldFail ? 1 : 0);
+      if (testCase.matchOutput) {
+        testCase.matchOutput.forEach(output => {
+          expect(result[8].output).toEqual(expect.stringContaining(output));
+        });
+      }
     });
   }
 });

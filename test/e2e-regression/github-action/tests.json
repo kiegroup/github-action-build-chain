@@ -4,30 +4,31 @@
     "definition-file": "https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/${BRANCH:main}/.ci/compilation-config.yaml",
     "flow-type": "cross_pr",
     "starting-project": "kiegroup/drools",
-    "shouldFail": true,
+    "skip-execution": "true",
     "eventPayload": {
-      "pull_request": {
-        "head": {
-          "ref": "tarilabs-20230207-RHDM-1957",
-          "repo": {
-            "full_name": "tarilabs/drools",
-            "name": "drools",
-            "owner": {
-              "login": "tarilabs"
-            }
+      "head": {
+        "ref": "tarilabs-20230207-RHDM-1957",
+        "repo": {
+          "full_name": "tarilabs/drools",
+          "name": "drools",
+          "owner": {
+            "login": "tarilabs"
           }
-        },
-        "base": {
-          "ref": "7.x",
-          "repo": {
-            "full_name": "kiegroup/drools",
-            "name": "drools",
-            "owner": {
-              "login": "kiegroup"
-            }
+        }
+      },
+      "base": {
+        "ref": "7.x",
+        "repo": {
+          "full_name": "kiegroup/drools",
+          "name": "drools",
+          "owner": {
+            "login": "kiegroup"
           }
         }
       }
-    }
+    },
+    "matchOutput": [
+      "4 projects will be executed"
+    ]
   }
 ]

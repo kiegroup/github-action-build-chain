@@ -47,7 +47,7 @@ jobs:
           path: '*.log'
           retention-days: 5
 
-  e2e-regression:
+  e2e-regression-cli:
     strategy:
       matrix:
         node-version: [14.x, 16.x]
@@ -62,12 +62,38 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
-      - run: ACT_LOG=true npm run test:e2e-regression
+      - run: ACT_LOG=true npm run test:e2e-regression-cli
       - name: Upload raw e2e regression output
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: e2e-regression-logs-${{ matrix.node-version }}.zip
+          name: e2e-regression-cli-logs-${{ matrix.node-version }}
+          path: '*.log'
+          retention-days: 5  
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  e2e-regression-action:
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x]
+        os: [ubuntu-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: ACT_LOG=true npm run test:e2e-regression-action
+      - name: Upload raw e2e regression output
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: e2e-regression-action-logs-${{ matrix.node-version }}
           path: '*.log'
           retention-days: 5  
     env:

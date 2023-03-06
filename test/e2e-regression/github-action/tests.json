@@ -5,31 +5,8 @@
     "flow-type": "cross_pr",
     "starting-project": "kiegroup/drools",
     "skip-execution": "true",
-    "eventPayload": {
-      "head": {
-        "ref": "tarilabs-20230207-RHDM-1957",
-        "repo": {
-          "full_name": "tarilabs/drools",
-          "name": "drools",
-          "owner": {
-            "login": "tarilabs"
-          }
-        }
-      },
-      "base": {
-        "ref": "7.x",
-        "repo": {
-          "full_name": "kiegroup/drools",
-          "name": "drools",
-          "owner": {
-            "login": "kiegroup"
-          }
-        }
-      }
-    },
-    "matchOutput": [
-      "4 projects will be executed"
-    ]
+    "event": "https://github.com/kiegroup/drools/pull/4978",
+    "description": "To test that definition file url placeholders fallback to using default value. Checking whether build succeeded is enough"
   },
   {
     "name": "issue-401",
@@ -37,27 +14,27 @@
     "starting-project": "kiegroup/optaplanner",
     "flow-type": "cross_pr",
     "skip-execution": "true",
-    "eventPayload": {
-      "head": {
-        "ref": "revert-2332-revert-2303-bump-1.13.x-quarkus-2.13.4.Final",
-        "repo": {
-          "full_name": "kiegroup/optaplanner",
-          "name": "optaplanner",
-          "owner": {
-            "login": "kiegroup"
-          }
-        }
-      },
+    "event": "https://github.com/kiegroup/optaplanner/pull/2634",
+    "description": "To test that definition file url placeholders as well as expressions work when defined together. Checking whether build succeeded is enough"
+  },
+  {
+    "name": "issue-376",
+    "definition-file": "https://raw.githubusercontent.com/kiegroup/optaplanner/65755865acb320558410a7ad77edf69ba2ecdc7a/.ci/pull-request-config-rhbop.yaml",
+    "flow-type": "branch",
+    "additional-flags": "--branch main",
+    "starting-project": "kiegroup/optaplanner",
+    "skip-execution": "true",
+    "event": {
       "base": {
-        "ref": "8.13.x",
+        "ref": "main",
         "repo": {
-          "full_name": "kiegroup/optaplanner",
-          "name": "optaplanner",
-          "owner": {
-            "login": "kiegroup"
-          }
+          "full_name": "kiegroup/optaplanner"
         }
       }
-    } 
+    },
+    "matchOutput": [
+      "[BEFORE] No commands were found for kiegroup/optaplanner\n[INFO] [COMMANDS] Skipped kiegroup/optaplanner\n[INFO] [AFTER] Skipped kiegroup/optaplanner"
+    ],
+    "description": "Ensure that before, current and after are executed per project. Need to check the order of logging of before, current and after for the same project"
   }
 ]

@@ -6,9 +6,11 @@ import { logActOutput } from "../../e2e/helper/logger";
 type TestCommand = {
   name: string;
   cmd: string;
+  description?: string;
   env?: Record<string, string>;
   shouldFail?: boolean;
   matchOutput?: string[]
+  dontMatchOutput?: string[]
 };
 
 describe("test custom cli e2e commands", () => {
@@ -60,6 +62,12 @@ describe("test custom cli e2e commands", () => {
       if (testCase.matchOutput) {
         testCase.matchOutput.forEach(output => {
           expect(result[13].output).toEqual(expect.stringContaining(output));
+        });
+      }
+
+      if (testCase.dontMatchOutput) {
+        testCase.dontMatchOutput.forEach(output => {
+          expect(result[13].output).not.toEqual(expect.stringContaining(output));
         });
       }
     });

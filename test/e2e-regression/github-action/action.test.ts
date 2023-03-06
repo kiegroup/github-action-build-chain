@@ -9,7 +9,13 @@ import { logActOutput } from "../../e2e/helper/logger";
 type PullRequestPayload = Endpoints["GET /repos/{owner}/{repo}/pulls/{pull_number}"]["response"]["data"];
 
 type TestCommand = {
-  name: string;
+  name: string; 
+  event: PullRequestPayload | string;
+  env?: Record<string, string>
+  shouldFail?: boolean;
+  matchOutput?: string[];
+  dontMatchOutput?: string[];
+  description?: string;
   "definition-file": string;
   "flow-type": string;
   "starting-project?": string;
@@ -25,12 +31,7 @@ type TestCommand = {
   "java-version"?: string;
   "maven-version"?: string;
   "cache-key-prefix"?: string;
-  event: PullRequestPayload | string;
-  env?: Record<string, string>
-  shouldFail?: boolean;
-  matchOutput?: string[]
-};
-
+}
 
 describe("test custom e2e github action", () => {
   const testCases: TestCommand[] = JSON.parse(
@@ -92,7 +93,7 @@ describe("test custom e2e github action", () => {
       
       for (const [key, value] of Object.entries(testCase)) {
         if (value && 
-          !["name", "event", "env", "shouldFail", "matchOutput"].includes(key) &&
+          !["name", "event", "env", "shouldFail", "matchOutput", "description"].includes(key) &&
           typeof value === "string") {
             act.setInput(key, value);
         }
@@ -110,6 +111,12 @@ describe("test custom e2e github action", () => {
       if (testCase.matchOutput) {
         testCase.matchOutput.forEach(output => {
           expect(result[8].output).toEqual(expect.stringContaining(output));
+        });
+      }
+
+      if (testCase.dontMatchOutput) {
+        testCase.dontMatchOutput.forEach(output => {
+          expect(result[13].output).not.toEqual(expect.stringContaining(output));
         });
       }
     });

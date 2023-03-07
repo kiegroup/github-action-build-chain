@@ -1,5 +1,5 @@
 import { Act } from "@kie/act-js";
-import { cpSync, mkdirSync, readFileSync, rmSync } from "fs-extra";
+import { copyFileSync, mkdirSync, readFileSync, rmSync } from "fs-extra";
 import path from "path";
 import { logActOutput } from "../../e2e/helper/logger";
 
@@ -24,12 +24,12 @@ describe("test custom cli e2e commands", () => {
     mkdirSync(tmpFolder);
   });
 
-  afterEach(() => {
+  afterAll(() => {
     rmSync(tmpFolder, { recursive: true });
   });
   
   beforeEach(() => {
-    cpSync(path.join(__dirname, "test.yaml"), path.join(tmpFolder, "test.yaml"));
+    copyFileSync(path.join(__dirname, "test.yaml"), path.join(tmpFolder, "test.yaml"));
   });
 
   for (const testCase of testCases) {

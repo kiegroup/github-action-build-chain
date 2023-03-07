@@ -787,6 +787,54 @@ List of breaking changes from v2 to v3:
   - v2: `-sp` to v3: `-p`
 - Project naming convention while checking out a project is now - `OWNER_PROJECT-NAME`. For example if we have `owner/some-name` the project will be checked out as `owner_some-name`. In v2 this would have been checked out as `owner_some_name`
 
+## Found a regression?  
+
+We have a built a dynamic agonistic end to end regression testing suite to avoid breaking major features that were working in previous versions. Its dynamic since all the test cases are determined by a json file that anyone can update without knowing the details about the implementation. It is agnostic since it just cares about the final executable that is produced and is not implementation specific.
+
+If you found a regression please add it to the test.json file is the below format:
+
+- For cli regression tests each test case is defined in [test/e2e-regression/cli/test.json](test/e2e-regression/cli/tests.json) in the format:
+
+```typescript
+{
+  name: string; // name of the test case. typically you can name it corresponding to the issue
+  cmd: string; // the build-chain cli command used to reproduce the issue
+  description?: string; // further description of the issue
+  env?: Record<string, string>; // any env setup needed
+  shouldFail?: boolean; // whether the expected result after execution of build-chain is success or failure. by default it expects success
+  matchOutput?: string[] // any particular strings to match in the output
+  dontMatchOutput?: string[] // any particular strings we want to make sure aren't there in the output
+}
+```
+
+- For action regression tests each test case is defined in [test/e2e-regression/github-action/test.json](test/e2e-regression/github-action/test.json) in the format:
+
+```typescript
+{
+  name: string; // name of the test case. typically you can name it corresponding to the issue
+  event: string | PullRequestPayload; // it can either be a link to a PR or a JSON object similar to a pull request event payload
+  description?: string; // further description of the issue
+  env?: Record<string, string>; // any env setup needed
+  shouldFail?: boolean; // whether the expected result after execution of build-chain is success or failure. by default it expects success
+  matchOutput?: string[] // any particular strings to match in the output
+  dontMatchOutput?: string[] // any particular strings we want to make sure aren't there in the output
+  
+  // it accepts all the inputs that are needed to run build-chain as a github action
+  "definition-file": string;
+  "flow-type": string;
+  "starting-project?": string;
+  "skip-execution"?: string;
+  "skip-project-execution"?: string;
+  "skip-checkout"?: string;
+  "skip-project-checkout"?: string;
+  "skip-parallel-checkout"?: string;
+  "custom-command-treatment"?: string;
+  "additional-flags"?: string;
+  "logger-level"?: string;
+  "annotations-prefix"?: string;
+}
+```
+
 # Limitations
 
 ### Zipped Artifact Downloads

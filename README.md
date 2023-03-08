@@ -27,6 +27,7 @@ Table of content
 * **[Local Execution](#local-execution)**
 * **[About Commands to Execute](#about-commands-to-execute)**
 * **[v2 to v3](#v2-to-v3)**
+  * **[Found a regression?](#found-a-regression)**
 * **[Limitations](#limitations)**
 * **[Development](#development)**
 * **[System Requirements](#system-requirements)**

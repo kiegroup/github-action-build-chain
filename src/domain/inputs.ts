@@ -36,7 +36,7 @@ export interface InputValues extends OptionValues {
   loggerLevel: LoggerLevel;
   annotationsPrefix?: string;
   customCommandTreatment?: string[];
-  token?: string;
+  token?: string[];
   url?: string;
   branch?: string;
   group?: string;

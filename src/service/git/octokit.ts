@@ -109,24 +109,23 @@ export class OctokitService {
    * Refer: https://github.com/octokit/authentication-strategies.js/#how-authentication-strategies-work
    * @returns 
    */
-  private createTokenAuth: StrategyInterface = () => {
-    return Object.assign(this.auth.bind(this), {
+  private createTokenAuth: StrategyInterface = () => Object.assign(
+    this.auth.bind(this), 
+    {
       hook: this.hook.bind(this)
-    });
-  };
+    }
+  );
 
   /**
    * Utility function to satisfy octokit's auth strategy interface
    * Don't really need it otherwise
    * @returns 
    */
-  private async auth(): Promise<Authentication> {
-    return {
-      type: "token",
-      token: this.currentToken,
-      tokenType: "oauth"
-    };
-  }
+  private auth: () => Promise<Authentication> = async () => ({
+    type: "token",
+    token: this.currentToken,
+    tokenType: "oauth"
+  });
 
   /**
    * The main logic for the custom auth strategy. Called before each request

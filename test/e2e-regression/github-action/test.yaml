@@ -1,0 +1,72 @@
+name: custom github action e2e
+
+on:
+  workflow_dispatch:
+    inputs:
+      definition-file:
+        required: true
+      flow-type:
+        required: true
+      starting-project:
+        required: false
+      skip-execution:
+        required: false
+        default: "false"
+      skip-project-execution:
+        required: false
+      skip-checkout:
+        required: false
+        default: "false"
+      skip-project-checkout:
+        required: false
+      skip-parallel-checkout:
+        required: false
+        default: "false"
+      custom-command-treatment:
+        required: false
+      additional-flags:
+        required: false
+      logger-level:
+        default: "debug"
+        required: false
+      annotations-prefix:
+        required: false
+      java-version:
+        default: "11"
+        required: false
+      maven-version:
+        default: "3.8.7"
+        required: false
+      cache-key-prefix:
+        default: "Linux-11-maven3.8.7"
+        required: false
+      
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: build-chain
+      - uses: kiegroup/kogito-pipelines/.ci/actions/maven@main
+        with:
+          java-version: ${{ inputs.java-version }}
+          maven-version: ${{ inputs.maven-version }}
+          cache-key-prefix: ${{ inputs.maven-version }}
+      - uses: ./build-chain
+        with:
+          definition-file: ${{ inputs.definition-file }}
+          flow-type: ${{ inputs.flow-type }}
+          starting-project: ${{ inputs.starting-project }}
+          skip-execution: ${{ inputs.skip-execution }}
+          skip-project-execution: ${{ inputs.skip-project-execution }}
+          skip-checkout: ${{ inputs.skip-checkout }}
+          skip-project-checkout: ${{ inputs.skip-project-checkout }}
+          skip-parallel-checkout: ${{ inputs.skip-parallel-checkout }}
+          custom-command-treatment: ${{ inputs.custom-command-treatment }}
+          additional-flags: ${{ inputs.additional-flags }}
+          logger-level: ${{ inputs.logger-level }}
+          annotations-prefix: ${{ inputs.annotations-prefix }}
+
+
+

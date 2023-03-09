@@ -10,7 +10,6 @@ jobs:
         with:
           definition-file: build-chain/.github/definition-file.yaml
           flow-type: single_pr
-          starting-project: ${{ env.STARTING_PROJECT }}
       - name: Check for clones
         run: test -d $CLONE_DIR && echo "exist" || echo "does not exist"
       - name: clean up

@@ -42,7 +42,7 @@ export class BuildSubCommandFactory {
       .createCommand()
       .requiredOption("-f, --definitionFile <path_or_url>", "The definition file, either a path to the filesystem or a URL to it")
       .option("-o, --outputFolder <path>", "The folder path to store projects. Default is of the format 'build_chain_yyyymmddHHMMss'", `build_chain_${formatDate(new Date())}`)
-      .option("--token <token>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
+      .option("--token <token...>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
       .option("-d, --debug", "Set debugging mode to true", false)
       .option("--skipExecution", "A flag to skip execution and artifacts archiving for all projects. Overrides skipProjectExecution", false)
       .option("--skipProjectExecution <projects...>", "A flag to skip execution and artifacts archiving for certain projects only")

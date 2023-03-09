@@ -77,6 +77,8 @@ describe("build branch flow cli", () => {
         startProject,
         "--token",
         token,
+        "--token",
+        token,
         "-b",
         branch,
         "-o",
@@ -110,7 +112,7 @@ describe("build branch flow cli", () => {
     expect(option.skipParallelCheckout).toBe(true);
     expect(option.fullProjectDependencyTree).toBe(true);
     expect(option.startProject).toBe(startProject);
-    expect(option.token).toBe(token);
+    expect(option.token).toStrictEqual([token, token]);
     expect(option.customCommandTreatment).toStrictEqual(customCommandTreatment);
     expect(option.skipProjectCheckout).toStrictEqual(skipProject);
     expect(option.skipProjectExecution).toStrictEqual(skipProject);

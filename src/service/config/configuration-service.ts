@@ -219,9 +219,6 @@ export class ConfigurationService {
    * @returns
    */
   getCloneUrl(group: string, repoName: string): string {
-    if (process.env.ACT) {
-      return `${process.env.ACT_REPO}${group}/${repoName}`;
-    }
     return `${this.configuration.gitConfiguration.serverUrlWithToken}/${group}/${repoName}`;
   }
 

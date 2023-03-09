@@ -105,8 +105,8 @@ test("PR from target:branchA to target:branchB", async () => {
   const parentDir = path.dirname(repoPath!);
   const result = await act
     .setGithubToken("token")
-    .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
-    .setEnv("STARTING_PROJECT", "owner1/project2")
+    .setEnv("GITHUB_SERVER_URL", `${parentDir}${path.sep}`)
+    .setEnv("GITHUB_REPOSITORY", "owner1/project2")
     .setEnv("CLONE_DIR", path.join(parentDir, "owner1_project2", "project2"))
     .setEvent({
       pull_request: {
@@ -223,8 +223,8 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
   const artifactPath = path.join(__dirname, "artifacts");
   const result = await act
     .setGithubToken("token")
-    .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
-    .setEnv("STARTING_PROJECT", "owner1/project3")
+    .setEnv("GITHUB_SERVER_URL", `${parentDir}${path.sep}`)
+    .setEnv("GITHUB_REPOSITORY", "owner1/project3")
     .setEnv("CLONE_DIR", path.join(parentDir, "owner1_project3", "project3"))
     .setEvent({
       pull_request: {
@@ -358,8 +358,8 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
   const parentDir = path.dirname(repoPath!);
   const result = await act
     .setGithubToken("token")
-    .setEnv("ACT_REPO", `${parentDir}${path.sep}` ?? "")
-    .setEnv("STARTING_PROJECT", "owner1/project1")
+    .setEnv("GITHUB_SERVER_URL", `${parentDir}${path.sep}`)
+    .setEnv("GITHUB_REPOSITORY", "owner1/project1")
     .setEnv("CLONE_DIR", path.join(parentDir, "owner1_project1", "project1"))
     .setEvent({
       pull_request: {

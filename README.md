@@ -599,7 +599,7 @@ Options:
   -f, --defintionFile <path_or_url>      The definition file, either a path to the filesystem or a URL to it
   -o, --outputFolder <path>              The folder path to store projects. Default is of the format 'build_chain_yyyymmddHHMMss' (default:
                                          "build_chain_202211229567")
-  --token <token>                        The GITHUB_TOKEN. It can be set as an environment variable instead
+  --token <token...>                     The GITHUB_TOKEN. It can be set as an environment variable instead. You can specify multiple tokens
   -d, --debug                            Set debugging mode to true (default: false)
   --skipExecution                        A flag to skip execution and artifacts archiving for all projects. Overrides skipProjectExecution (default:
                                          false)
@@ -634,7 +634,7 @@ Options:
   -f, --defintionFile <path_or_url>      The definition file, either a path to the filesystem or a URL to it
   -o, --outputFolder <path>              The folder path to store projects. Default is of the format 'build_chain_yyyymmddHHMMss' (default:
                                          "build_chain_2022112295741")
-  --token <token>                        The GITHUB_TOKEN. It can be set as an environment variable instead
+  --token <token...>                     The GITHUB_TOKEN. It can be set as an environment variable instead. You can specify multiple tokens
   -d, --debug                            Set debugging mode to true (default: false)
   --skipExecution                        A flag to skip execution and artifacts archiving for all projects. Overrides skipProjectExecution (default:
                                          false)
@@ -669,7 +669,7 @@ Options:
   -f, --defintionFile <path_or_url>      The definition file, either a path to the filesystem or a URL to it
   -o, --outputFolder <path>              The folder path to store projects. Default is of the format 'build_chain_yyyymmddHHMMss' (default:
                                          "build_chain_2022112295912")
-  --token <token>                        The GITHUB_TOKEN. It can be set as an environment variable instead
+  --token <token...>                     The GITHUB_TOKEN. It can be set as an environment variable instead. You can specify multiple tokens
   -d, --debug                            Set debugging mode to true (default: false)
   --skipExecution                        A flag to skip execution and artifacts archiving for all projects. Overrides skipProjectExecution (default:
                                          false)
@@ -708,7 +708,7 @@ Options:
   -f, --defintionFile <path_or_url>      The definition file, either a path to the filesystem or a URL to it
   -o, --outputFolder <path>              The folder path to store projects. Default is of the format 'build_chain_yyyymmddHHMMss' (default:
                                          "build_chain_202211221013")
-  --token <token>                        The GITHUB_TOKEN. It can be set as an environment variable instead
+  --token <token...>                     The GITHUB_TOKEN. It can be set as an environment variable instead. You can specify multiple tokens
   -d, --debug                            Set debugging mode to true (default: false)
   --skipExecution                        A flag to skip execution and artifacts archiving for all projects. Overrides skipProjectExecution (default:
                                          false)

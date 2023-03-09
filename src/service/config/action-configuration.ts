@@ -70,6 +70,7 @@ export class ActionConfiguration extends BaseConfiguration {
   loadToken(): void {
     if (process.env.GITHUB_TOKEN) {
       Container.set(constants.GITHUB.TOKEN, process.env.GITHUB_TOKEN);
+      Container.set(constants.GITHUB.TOKEN_POOL, [process.env.GITHUB_TOKEN]);
     } else {
       logAndThrow("A github token is needed");
     }

@@ -21,8 +21,8 @@ describe("initialization", () => {
   beforeEach(() => {
     jest
       .spyOn(ConfigurationService.prototype, "init")
-      .mockImplementationOnce(async () =>
-        Container.get(constants.CONTAINER.ENTRY_POINT)
+      .mockImplementationOnce(async () => 
+        Container.get(constants.CONTAINER.ENTRY_POINT) as never
       );
   });
   test("action", async () => {

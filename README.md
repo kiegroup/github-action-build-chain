@@ -928,6 +928,14 @@ The definition files are read thanks to [build-chain-configuration-reader](https
 - (`sudo`) `npm link`
 - and then from this project folder execute `npm link @kie/build-chain-configuration-reader`  
 
+### Multi token usage with the help of octokit throttling  
+
+To avoid rate limiting errors, users can pass in multiple tokens that octokit can use while making Github API calls.The idea is that when octokit gets a rate limit error for one token it will use another token from the pool and retry the same request.  
+
+To implement this we used features and plugins from octokit itself. Using the [octokit throttling plugin](https://github.com/octokit/plugin-throttling.js), we attached hooks that are triggered whenever octokit gets a rate limit error. This hook switches out the current token with a new token from a whitelist pool of tokens (these tokens haven't reached their rate limit) and sets that token as the current token. The token which had reached its rate limit is then added to a blacklist where we keep track of after what time that token can become usable. Each time when this hook is triggered we also check whether a token from the blacklist is now available or not. If it is then we add it back to the whitelist for future use.
+
+Now since we have a dynamically changing current token, we had to create a custom auth strategy for octokit. This auth strategy also installs a hook which is triggered each time octokit makes a request. So before each request, this hook adds the current token to the authorization header.
+
 ### Testing
 
 #### unit tests

@@ -21,6 +21,7 @@ jest.spyOn(global.console, "log");
  */
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
 Container.set(constants.GITHUB.TOKEN, "faketoken");
+Container.set(constants.GITHUB.TOKEN_POOL, ["faketoken"]);
 
 const checkoutService = Container.get(CheckoutService);
 const moctokit = new Moctokit();

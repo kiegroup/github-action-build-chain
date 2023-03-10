@@ -16,6 +16,7 @@ beforeEach(() => {
   // create a fresh instance of git before each test
   Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
   Container.set(constants.GITHUB.TOKEN, "fake_token");
+  Container.set(constants.GITHUB.TOKEN_POOL, ["fake_token"]);
   git = new GithubAPIService();
 });
 

@@ -96,9 +96,11 @@ export class CLIConfiguration extends BaseConfiguration {
    * @returns
    */
   loadToken(): void {
-    if (this.parsedInputs.token) {
-      Container.set(constants.GITHUB.TOKEN, this.parsedInputs.token);
+    if (this.parsedInputs.token && this.parsedInputs.token.length > 0) {
+      Container.set(constants.GITHUB.TOKEN_POOL, this.parsedInputs.token);
+      Container.set(constants.GITHUB.TOKEN, this.parsedInputs.token[0]);
     } else if (process.env.GITHUB_TOKEN) {
+      Container.set(constants.GITHUB.TOKEN_POOL, [process.env.GITHUB_TOKEN]);
       Container.set(constants.GITHUB.TOKEN, process.env.GITHUB_TOKEN);
     } else {
       logAndThrow("A github token is needed");

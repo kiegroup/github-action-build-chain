@@ -74,6 +74,8 @@ describe("load event data", () => {
         data: event,
       });
     Container.set(constants.GITHUB.TOKEN, "faketoken");
+    Container.set(constants.GITHUB.TOKEN_POOL, ["faketoken"]);
+
     const eventData = await cliConfig.loadGitEvent();
     expect(eventData).toStrictEqual(event);
     expect(process.env["GITHUB_SERVER_URL"]).toBe("http://github.com/");
@@ -300,12 +302,12 @@ describe("load source and target project", () => {
 
 describe("load token", () => {
   test("success: via token flag", () => {
-    const token = "tokenflag";
+    const token = ["tokenflag"];
     jest.spyOn(cliConfig, "parsedInputs", "get").mockImplementation(() => {
       return { ...defaultInputValues, token };
     });
     cliConfig.loadToken();
-    expect(Container.get(constants.GITHUB.TOKEN)).toBe(token);
+    expect(Container.get(constants.GITHUB.TOKEN)).toBe(token[0]);
   });
 
   test("success: via env", async () => {

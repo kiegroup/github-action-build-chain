@@ -100,7 +100,7 @@ describe("build single pull request flow cli", () => {
     expect(option.skipCheckout).toBe(true);
     expect(option.skipParallelCheckout).toBe(true);
     expect(option.startProject).toBe(startProject);
-    expect(option.token).toBe(token);
+    expect(option.token).toStrictEqual([token]);
     expect(option.customCommandTreatment).toStrictEqual(customCommandTreatment);
     expect(option.skipProjectCheckout).toStrictEqual(skipProject);
     expect(option.skipProjectExecution).toStrictEqual(skipProject);

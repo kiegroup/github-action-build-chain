@@ -74,6 +74,8 @@ describe("build full downstream pull request flow cli", () => {
         startProject,
         "--token",
         token,
+        "--token",
+        token,
         "--skipProjectExecution",
         ...skipProject,
         "-o",
@@ -100,7 +102,7 @@ describe("build full downstream pull request flow cli", () => {
     expect(option.skipCheckout).toBe(true);
     expect(option.skipParallelCheckout).toBe(true);
     expect(option.startProject).toBe(startProject);
-    expect(option.token).toBe(token);
+    expect(option.token).toStrictEqual([token, token]);
     expect(option.customCommandTreatment).toStrictEqual(customCommandTreatment);
     expect(option.skipProjectCheckout).toStrictEqual(skipProject);
     expect(option.skipProjectExecution).toStrictEqual(skipProject);

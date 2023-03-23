@@ -261,20 +261,18 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
       },
       mockApi: [
         moctokit.rest.repos
-          .listForks({
+          .get({
             owner: "owner1",
             repo: "project3",
           })
           .setResponse({
             status: 200,
-            data: [
-              {
-                name: "project3",
-                owner: {
-                  login: "owner2",
-                },
+            data: {
+              name: "project3",
+              owner: {
+                login: "owner1",
               },
-            ],
+            },
           }),
         moctokit.rest.pulls
           .list()
@@ -391,6 +389,15 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
       workflowFile: repoPath,
       bind: true,
       mockApi: [
+        moctokit.rest.repos
+          .get({
+            owner: "owner1",
+            repo: "project1",
+          })
+          .setResponse({
+            status: 404,
+            data: {},
+          }),
         moctokit.rest.repos
           .listForks({
             owner: "owner1",

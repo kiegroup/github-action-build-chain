@@ -95,12 +95,17 @@ export class GithubAPIService {
    */
   async getForkName(targetOwner: string, sourceOwner: string, repo: string): Promise<string> {
     try {
-      // ensure that repo exists
-      if (targetOwner === sourceOwner) {
-        // awaiting it here so that the catch block in this method can handle any errors
-        return await this.checkIfRepositoryExists(sourceOwner, repo);
-      } else {
-        // find repo from fork list
+      
+      // check whether there is a fork with the same name as repo name
+      const repoName = await this.checkIfRepositoryExists(targetOwner, repo);
+
+      if (repoName) {
+        return repoName;
+      } else if (targetOwner !== sourceOwner) {
+        /**
+         * find repo from fork list. we reach this case only if we are in the edge case where the forked repo's name is different 
+         * from the original one
+         */ 
         let page = 1;
         for await (const response of this.octokit.paginate.iterator(this.octokit.repos.listForks, {
           owner: targetOwner,
@@ -114,10 +119,9 @@ export class GithubAPIService {
           }
           page += 1;
         }
-
-        throw new NotFoundError();
       }
-    } catch (err) {
+      throw new NotFoundError();
+    } catch(err) {
       this.logger.error(
         this.getErrorMessage(
           err, 
@@ -156,12 +160,22 @@ export class GithubAPIService {
   }
 
   private async checkIfRepositoryExists(owner: string, repo: string) {
-    this.logger.debug(`Making a github API call to check whether ${owner}/${repo} exists`);
-    await this.octokit.repos.get({
-      owner,
-      repo,
-    });
-    return repo;
+    try {
+      this.logger.debug(`Making a github API call to check whether ${owner}/${repo} exists`);
+      await this.octokit.repos.get({
+        owner,
+        repo,
+      });
+      return repo;
+    } catch (err) {
+      this.logger.error(
+        this.getErrorMessage(
+          err,
+          `Failed to get ${owner}/${repo}.`
+        )
+      );
+      return undefined;
+    }
   }
 
   private getErrorMessage(err: unknown, msg: string): string {

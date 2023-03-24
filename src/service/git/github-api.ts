@@ -159,7 +159,7 @@ export class GithubAPIService {
     }
   }
 
-  private async checkIfRepositoryExists(owner: string, repo: string) {
+  private async checkIfRepositoryExists(owner: string, repo: string): Promise<string | undefined> {
     try {
       this.logger.debug(`Making a github API call to check whether ${owner}/${repo} exists`);
       await this.octokit.repos.get({

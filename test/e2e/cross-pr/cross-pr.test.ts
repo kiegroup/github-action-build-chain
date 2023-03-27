@@ -157,6 +157,16 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
       bind: true,
       mockApi: [
         moctokit.rest.repos
+          .get({
+            owner: "owner1",
+            repo: /project(1|2|4)/,
+          })
+          .setResponse({
+            status: 404,
+            data: {},
+            repeat: 3
+          }),
+        moctokit.rest.repos
           .listForks({
             owner: "owner1",
             repo: "project4",
@@ -173,13 +183,13 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
             ],
           }),
         moctokit.rest.repos
-          .listForks({
+          .get({
             owner: "owner1",
             repo: "project3",
           })
           .setResponse({
             status: 200,
-            data: [{ name: "project3", owner: { login: "owner2" } }],
+            data: { name: "project3", owner: { login: "owner1" } },
           }),
         moctokit.rest.repos
           .listForks({

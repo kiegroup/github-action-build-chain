@@ -186,6 +186,16 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
       bind: true,
       mockApi: [
         moctokit.rest.repos
+          .get({
+            owner: "owner1",
+            repo: /project(1|2|3|4)/,
+          })
+          .setResponse({
+            status: 404,
+            data: {},
+            repeat: 4
+          }),
+        moctokit.rest.repos
           .listForks({
             owner: "owner1",
             repo: "project1",

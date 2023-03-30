@@ -4,7 +4,7 @@ import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import { defaultInputValues, FlowType } from "@bc/domain/inputs";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
-import { getOrderedListForProject, getTreeForProject, parentChainFromNode, readDefinitionFile, Node } from "@kie/build-chain-configuration-reader";
+import { getTreeForProject, readDefinitionFile, Node, getFullDownstreamProjects, getUpstreamProjects } from "@kie/build-chain-configuration-reader";
 import fs from "fs";
 import path from "path";
 import Container from "typedi";
@@ -55,28 +55,28 @@ describe.each([
   });
 
   test("success: from source generated placeholder", async () => {
-    const getOrderedListProjectMock = getOrderedListForProject as jest.Mock;
-    getOrderedListProjectMock.mockReturnValueOnce(mockData);
+    const getFullDownstreamProjectsMock = getFullDownstreamProjects as jest.Mock;
+    getFullDownstreamProjectsMock.mockReturnValueOnce(mockData);
 
     await definitionFileReader.generateNodeChain(mockData[0].project);
-    expect(getOrderedListProjectMock).toHaveBeenCalledTimes(1);
+    expect(getFullDownstreamProjectsMock).toHaveBeenCalledTimes(1);
   });
 
   test("success: from target generated placeholder", async () => {
-    const getOrderedListProjectMock = getOrderedListForProject as jest.Mock;
-    getOrderedListProjectMock
+    const getFullDownstreamProjectsMock = getFullDownstreamProjects as jest.Mock;
+    getFullDownstreamProjectsMock
       .mockImplementationOnce(() => {
         throw new Error("Invalid definition file");
       })
       .mockReturnValueOnce(mockData);
 
     await definitionFileReader.generateNodeChain(mockData[0].project);
-    expect(getOrderedListProjectMock).toHaveBeenCalledTimes(2);
+    expect(getFullDownstreamProjectsMock).toHaveBeenCalledTimes(2);
   });
 
   test("failure", async () => {
-    const getOrderedListProjectMock = getOrderedListForProject as jest.Mock;
-    getOrderedListProjectMock.mockImplementation(() => {
+    const getFullDownstreamProjectsMock = getFullDownstreamProjects as jest.Mock;
+    getFullDownstreamProjectsMock.mockImplementation(() => {
       throw new Error("Invalid definition file");
     });
     await expect(definitionFileReader.generateNodeChain("test")).rejects.toThrowError();
@@ -96,32 +96,26 @@ describe.each([
   });
 
   test("success: from source generated placeholder", async () => {
-    const getTreeForProjectMock = getTreeForProject as jest.Mock;
-    const parentChainFromNodeMock = parentChainFromNode as jest.Mock;
-    getTreeForProjectMock.mockReturnValueOnce({project: "abc"});
-    parentChainFromNodeMock.mockReturnValueOnce(mockData);
+    const getUpstreamProjectsMock = getUpstreamProjects as jest.Mock;
+    getUpstreamProjectsMock.mockReturnValueOnce(mockData);
 
     await definitionFileReader.generateNodeChain(mockData[0].project);
-    expect(parentChainFromNodeMock).toHaveBeenCalledTimes(1);
-    expect(getTreeForProjectMock).toHaveBeenCalledTimes(1);
+    expect(getUpstreamProjectsMock).toHaveBeenCalledTimes(1);
   });
 
   test("success: from target generated placeholder", async () => {
-    const getTreeForProjectMock = getTreeForProject as jest.Mock;
-    const parentChainFromNodeMock = parentChainFromNode as jest.Mock;
-    getTreeForProjectMock.mockImplementationOnce(() => {
+    const getUpstreamProjectsMock = getUpstreamProjects as jest.Mock;
+    getUpstreamProjectsMock.mockImplementationOnce(() => {
       throw new Error("Invalid definition file");
-    }).mockReturnValueOnce({project: "abc"});
-    parentChainFromNodeMock.mockReturnValueOnce(mockData);
+    }).mockReturnValueOnce(mockData);
 
     await definitionFileReader.generateNodeChain(mockData[0].project);
-    expect(parentChainFromNodeMock).toHaveBeenCalledTimes(1);
-    expect(getTreeForProjectMock).toHaveBeenCalledTimes(2);
+    expect(getUpstreamProjectsMock).toHaveBeenCalledTimes(2);
   });
 
   test("failure", async () => {
-    const getTreeForProjectMock = getTreeForProject as jest.Mock;
-    getTreeForProjectMock.mockImplementation(() => {
+    const getUpstreamProjectsMock = getUpstreamProjects as jest.Mock;
+    getUpstreamProjectsMock.mockImplementation(() => {
       throw new Error("Invalid definition file");
     });
     await expect(definitionFileReader.generateNodeChain("test")).rejects.toThrowError();

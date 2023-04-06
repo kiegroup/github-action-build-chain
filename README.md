@@ -385,11 +385,11 @@ archive-artifacts:
 
 ### archive-artifacts dependencies usage
 
-The idea of the property `dependencies` is to allow to define from the project triggering the job which artifacts you want to archive from the whole chain. Possible values:
+The `dependencies` field allows us to define a set of projects for which we want to upload the artifacts.
 
-- `none` no artifact from its dependencies will be uploaded, no matter what the dependencies projects define.
-- `all` all artifacts from its dependencies will be uploaded, depending on what the dependencies define.
-- `list of projects` define which of the projects in the chain will be treated to upload artifacts, depending on what the dependencies define.
+- `none` only artifacts from the starting project will be uploaded
+- `all` artifacts from all projects will be uploaded
+- `list of projects` artifacts from only a given list of projects will be uploaded
 
 ```yaml
 archive-artifacts:

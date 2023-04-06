@@ -214,20 +214,20 @@ test("full downstream where 1 project has a PR and one doesn't", async () => {
     expect.stringContaining("default after current")
   );
 
-  // owner1/project3 execution
-  const group9 = result[1].groups![8];
-  expect(group9.name).toBe("Executing owner1/project3");
-  expect(group9.output).toEqual(
-    expect.stringContaining("default after current")
-  );
-
   // owner1/project2 execution
-  const group12 = result[1].groups![11];
-  expect(group12.name).toBe("Executing owner1/project2");
-  expect(group12.output).toEqual(
+  const group9 = result[1].groups![8];
+  expect(group9.name).toBe("Executing owner1/project2");
+  expect(group9.output).toEqual(
     expect.stringContaining("current owner1/project2")
   );
-  expect(group12.output).toEqual(expect.stringContaining("default after current"));
+  expect(group9.output).toEqual(expect.stringContaining("default after current"));
+
+  // owner1/project3 execution
+  const group12 = result[1].groups![11];
+  expect(group12.name).toBe("Executing owner1/project3");
+  expect(group12.output).toEqual(
+    expect.stringContaining("default after current")
+  );
 
   // owner1/project4 execution
   const group15 = result[1].groups![14];

@@ -6,12 +6,12 @@ import { LoggerService } from "@bc/service/logger/logger-service";
 import { logAndThrow } from "@bc/utils/log";
 import {
   DefinitionFile,
-  getOrderedListForProject,
   getTreeForProject,
-  parentChainFromNode,
   readDefinitionFile,
   Node,
   ReaderOpts,
+  getFullDownstreamProjects,
+  getUpstreamProjects
 } from "@kie/build-chain-configuration-reader";
 import Container from "typedi";
 
@@ -32,38 +32,30 @@ export class DefinitionFileReader {
     switch (this.configuration.getFlowType()) {
       case FlowType.BRANCH: {
         if (this.configuration.parsedInputs.fullProjectDependencyTree) {
-          nodeChain = await getOrderedListForProject(
+          nodeChain = await getFullDownstreamProjects(
             this.configuration.parsedInputs.definitionFile,
             starterProject,
             options
           );
         } else {
-          const node = await getTreeForProject(
+          nodeChain = await getUpstreamProjects(
             this.configuration.parsedInputs.definitionFile,
             starterProject,
             options
           );
-          if (!node) {
-            throw new Error("Starting project not found");
-          }
-          nodeChain = parentChainFromNode(node);
         }
         break;
       }
       case FlowType.CROSS_PULL_REQUEST: {
-        const node = await getTreeForProject(
+        nodeChain = await getUpstreamProjects(
           this.configuration.parsedInputs.definitionFile,
           starterProject,
           options
         );
-        if (!node) {
-          throw new Error("Starting project not found");
-        }
-        nodeChain = parentChainFromNode(node);
         break;
       }
       case FlowType.FULL_DOWNSTREAM: {
-        nodeChain = await getOrderedListForProject(
+        nodeChain = await getFullDownstreamProjects(
           this.configuration.parsedInputs.definitionFile,
           starterProject,
           options

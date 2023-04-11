@@ -21,10 +21,11 @@
     ]
   },
   {
-    "name": "pr-388",
-    "cmd": "build-chain build cross_pr -f https://raw.githubusercontent.com/kiegroup/optaplanner/main/.ci/buildchain-config.yaml -o bc -p kiegroup/optaplanner-quickstarts -u https://github.com/kiegroup/optaplanner/pull/2580 --skipExecution",
+    "name": "pr-388,build-chain-config-reader-issue-91",
+    "cmd": "build-chain build branch -f 'https://raw.githubusercontent.com/${GROUP:kiegroup}/optaplanner/main/.ci/nightly-build-config.yaml' -b main -o bc -p kiegroup/optaplanner --fullProjectDependencyTree --skipParallelCheckout --skipExecution --skipProjectCheckout 'jboss-integration/rhbop-optaplanner'",
     "description": "There needs to be a clear difference between project triggering the job and starting project. Checking which branch is checked out should verify this since if there was no distinction then we would have incorrect mapping",
     "matchOutput": [
+      "Project taken from kiegroup/drools:main-integration-quarkus-lts",
       "Project taken from kiegroup/optaplanner:main",
       "Project taken from kiegroup/optaplanner-quickstarts:development"
     ]

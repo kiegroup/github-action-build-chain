@@ -933,5 +933,5 @@ ACT_LOG=true npm run test:e2e
 # System Requirements
 
 * **Git** >=2.28
-* **NodeJS** >= 14
+* **NodeJS** >= 16
 

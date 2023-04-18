@@ -1,3 +1,4 @@
+import { CLIActionType, ToolType } from "@bc/domain/cli";
 import { constants } from "@bc/domain/constants";
 import { FlowType } from "@bc/domain/inputs";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
@@ -24,6 +25,22 @@ export class DefinitionFileReader {
     this.logger = Container.get(LoggerService).logger;
   }
 
+  private async getUpstreamOrFullDownstreamProjects(starterProject: string, options: ReaderOpts): Promise<Node[]> {
+    if (this.configuration.parsedInputs.fullProjectDependencyTree) {
+      return getFullDownstreamProjects(
+        this.configuration.parsedInputs.definitionFile,
+        starterProject,
+        options
+      );
+    } else {
+      return getUpstreamProjects(
+        this.configuration.parsedInputs.definitionFile,
+        starterProject,
+        options
+      );
+    }
+  }
+
   private async generateNodeChainWithOptions(
     starterProject: string,
     options: ReaderOpts
@@ -31,19 +48,10 @@ export class DefinitionFileReader {
     let nodeChain: Node[];
     switch (this.configuration.getFlowType()) {
       case FlowType.BRANCH: {
-        if (this.configuration.parsedInputs.fullProjectDependencyTree) {
-          nodeChain = await getFullDownstreamProjects(
-            this.configuration.parsedInputs.definitionFile,
-            starterProject,
-            options
-          );
-        } else {
-          nodeChain = await getUpstreamProjects(
-            this.configuration.parsedInputs.definitionFile,
-            starterProject,
-            options
-          );
-        }
+        nodeChain = await this.getUpstreamOrFullDownstreamProjects(
+          starterProject, 
+          options
+        );
         break;
       }
       case FlowType.CROSS_PULL_REQUEST: {
@@ -117,7 +125,7 @@ export class DefinitionFileReader {
     }
   }
 
-  async generateNodeChain(starterProject: string): Promise<Node[]> {
+  async generateNodeChainForBuild(starterProject: string): Promise<Node[]> {
     try {
       return await this.generateNodeChainWithOptions(starterProject, {
         ...this.configuration.sourceProject,
@@ -146,6 +154,23 @@ export class DefinitionFileReader {
       });
     } catch(err) {
       logAndThrow(`Invalid definition file. ${err}`);
+    }
+  }
+
+  async generateNodeChainForTools(starterProject: string): Promise<Node[]> {
+    switch(this.configuration.getToolType()) {
+      case ToolType.PROJECT_LIST:
+        return this.getUpstreamOrFullDownstreamProjects(starterProject, {token: Container.get(constants.GITHUB.TOKEN)});
+      default:
+        logAndThrow(`Invalid tool ${this.configuration.getToolType()}`);
+    }
+  }
+
+  async generateNodeChain(starterProject: string): Promise<Node[]> {
+    if (this.configuration.parsedInputs.CLICommand === CLIActionType.TOOLS) {
+      return this.generateNodeChainForTools(starterProject);
+    } else {
+      return this.generateNodeChainForBuild(starterProject);
     }
   }
 }

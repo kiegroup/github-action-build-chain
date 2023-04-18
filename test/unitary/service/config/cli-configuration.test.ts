@@ -7,6 +7,7 @@ import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { InputService } from "@bc/service/inputs/input-service";
 import { MockGithub, Moctokit } from "@kie/mock-github";
 import { EventData } from "@bc/domain/configuration";
+import { CLIActionType } from "@bc/domain/cli";
 jest.mock("@kie/build-chain-configuration-reader");
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
@@ -62,6 +63,15 @@ describe("load event data", () => {
       url: "http://github.com/owner/project/pull/270",
     };
   });
+
+  test("success: tools", async () => {
+    currentInput = {
+      ...currentInput,
+      CLICommand: CLIActionType.TOOLS
+    };
+    await expect(cliConfig.loadGitEvent()).resolves.toStrictEqual({});
+  });
+
   test("success: non-branch flow build", async () => {
     moctokit.rest.pulls
       .get({
@@ -261,6 +271,14 @@ describe("load source and target project", () => {
       branch: "main",
       url: "http://github.com/owner/project/pull/270",
     };
+  });
+
+  test("success: tools", () => {
+    currentInput = {
+      ...currentInput,
+      CLICommand: CLIActionType.TOOLS
+    };
+    expect(cliConfig.loadProject()).toStrictEqual({ source: {}, target: {} });
   });
 
   test("branch flow", () => {

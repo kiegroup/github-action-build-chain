@@ -1,3 +1,4 @@
+import { ToolType } from "@bc/domain/cli";
 import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/configuration";
 import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { InputService } from "@bc/service/inputs/input-service";
@@ -105,5 +106,9 @@ export abstract class BaseConfiguration {
 
     // parsed inputs will always have the default value. No need to check whether it is empty or not
     return inputs;
+  }
+
+  getToolType(): ToolType {
+    logAndThrow("tools are defined only in CLI");
   }
 }

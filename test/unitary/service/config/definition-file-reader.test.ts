@@ -2,13 +2,14 @@ import "reflect-metadata";
 import { EventData, GitConfiguration } from "@bc/domain/configuration";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
-import { defaultInputValues, FlowType } from "@bc/domain/inputs";
+import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { getTreeForProject, readDefinitionFile, Node, getFullDownstreamProjects, getUpstreamProjects } from "@kie/build-chain-configuration-reader";
 import fs from "fs";
 import path from "path";
 import Container from "typedi";
 import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
+import { CLIActionType, ToolType } from "@bc/domain/cli";
 jest.mock("@kie/build-chain-configuration-reader");
 
 // disable logs
@@ -21,6 +22,10 @@ Container.set(constants.GITHUB.TOKEN, "faketoken");
 class TestConfiguration extends BaseConfiguration {
   getFlowType(): FlowType {
     return FlowType.BRANCH;
+  }
+
+  getToolType(): ToolType {
+    return ToolType.PROJECT_LIST;
   }
 
   loadGitConfiguration(): GitConfiguration {
@@ -189,5 +194,53 @@ describe("get definition file", () => {
       throw new Error("Invalid definition file");
     });
     await expect(definitionFileReader.getDefinitionFile()).rejects.toThrowError();
+  });
+});
+
+describe("generate node chain: tools", () => {
+  const getUpstreamProjectsMock = getUpstreamProjects as jest.Mock;
+  const getFullDownstreamProjectsMock = getFullDownstreamProjects as jest.Mock;
+  let currentInput: InputValues;
+
+  beforeEach(async () => {
+    currentInput = {
+      ...defaultInputValues,
+      CLICommand: CLIActionType.TOOLS,
+    };
+
+    jest
+      .spyOn(BaseConfiguration.prototype, "parsedInputs", "get")
+      .mockImplementation(() => currentInput);
+  });
+
+  afterEach(() => {
+    currentInput = {
+      ...defaultInputValues,
+      CLICommand: CLIActionType.TOOLS,
+    };
+  });
+
+  test.each([
+    ["upstream", false, 1, 0],
+    ["full downstream", true, 0, 1]
+  ])("project list: %p", async (_title, fullProjectDependencyTree: boolean, numUpstream: number, numFDB: number) => {
+    currentInput = {
+      ...currentInput,
+      fullProjectDependencyTree
+    };
+    
+    jest.spyOn(TestConfiguration.prototype, "getToolType").mockImplementation(() => ToolType.PROJECT_LIST);
+    getUpstreamProjectsMock.mockReturnValueOnce([]);
+    getFullDownstreamProjectsMock.mockReturnValueOnce([]);
+    
+    await definitionFileReader.generateNodeChain("test");
+
+    expect(getUpstreamProjectsMock).toHaveBeenCalledTimes(numUpstream);
+    expect(getFullDownstreamProjectsMock).toHaveBeenCalledTimes(numFDB);
+  });
+
+  test("invalid tool", async () => {
+    jest.spyOn(TestConfiguration.prototype, "getToolType").mockImplementation(() => "something" as ToolType);
+    await expect(definitionFileReader.generateNodeChain("test")).rejects.toThrowError();
   });
 });

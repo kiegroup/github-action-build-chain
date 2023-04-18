@@ -294,6 +294,23 @@ describe("methods", () => {
     expect(() => config.getFlowType()).toThrowError();
   });
 
+  test("get tool type: success", () => {
+    currentInput = {
+      ...defaultInputValues,
+      CLISubCommand: ToolType.PROJECT_LIST,
+    };
+    expect(config.getToolType()).toBe(ToolType.PROJECT_LIST);
+
+  });
+
+  test("get tool type: failure", () => {
+    currentInput = {
+      ...defaultInputValues,
+      CLISubCommand: FlowType.CROSS_PULL_REQUEST,
+    };
+    expect(() => config.getToolType()).toThrowError();
+  });
+
   test("root folder from github workspace", () => {
     process.env["GITHUB_WORKSPACE"] = "workspace";
     expect(config.getRootFolder()).toBe("workspace");

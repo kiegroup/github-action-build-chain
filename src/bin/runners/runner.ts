@@ -22,9 +22,10 @@ export abstract class Runner {
 
   abstract execute(): Promise<void>;
 
-  protected async initConfiguration(): Promise<void> {
+  protected async initConfiguration(): Promise<ConfigurationService> {
     const configService = Container.get(ConfigurationService);
     await configService.init();
+    return configService;
   }
 
   protected async executePre(): Promise<{ isFailure: boolean; output: ExecuteCommandResult[] }> {

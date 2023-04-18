@@ -13,6 +13,8 @@ import { UploadResponse } from "@actions/artifact";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { defaultNodeValue } from "@bc/domain/node";
 import { Command } from "commander";
+import { ProjectList } from "@bc/service/tools/project-list";
+import { ToolType } from "@bc/domain/cli";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -26,7 +28,7 @@ test("initialization", () => {
   expect(Container.get(constants.CONTAINER.ENTRY_POINT)).toBe(EntryPoint.CLI);
 });
 
-describe("execute", () => {
+describe("execute:build", () => {
   let cliRunner: CLIRunner;
   const okResult: ExecuteCommandResult = {
     startingDate: 0,
@@ -75,6 +77,7 @@ describe("execute", () => {
   beforeEach(() => {
     cliRunner = new CLIRunner();
     jest.spyOn(Command.prototype, "parse").mockImplementation(() => undefined!);
+    jest.spyOn(ConfigurationService.prototype, "isToolsCommand").mockImplementation(() => false);
   });
 
   test("success", async () => {
@@ -161,5 +164,22 @@ describe("execute", () => {
     expect(postSpy).toHaveBeenCalledTimes(1);
     expect(flowSpy).toHaveBeenCalledTimes(1);
     expect(exitSpy).toHaveBeenCalledWith(1);
+  });
+});
+
+describe("execute:tools", () => {
+  let cliRunner: CLIRunner;
+
+  beforeEach(() => {
+    cliRunner = new CLIRunner();
+    jest.spyOn(Command.prototype, "parse").mockImplementation(() => undefined!);
+    jest.spyOn(ConfigurationService.prototype, "isToolsCommand").mockImplementation(() => true);
+  });
+
+  test("project-list", async () => {
+    const projectListSpy = jest.spyOn(ProjectList.prototype, "execute").mockImplementation(async () => undefined);
+    jest.spyOn(ConfigurationService.prototype, "getToolType").mockImplementation(() => ToolType.PROJECT_LIST);
+    await cliRunner.execute();
+    expect(projectListSpy).toHaveBeenCalledTimes(1);
   });
 });

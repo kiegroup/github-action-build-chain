@@ -51,7 +51,6 @@ export class CLIRunner extends Runner {
   }
 
   private async executeTools() {
-    const toolService = Container.get(ToolService);
-    return toolService.execute();
+    return Container.get(ToolService).execute();
   }
 }

@@ -10,8 +10,10 @@ export class ProjectListCommand implements CommandConstructor {
   createCommand(): Command {
     const program = new Command(ToolType.PROJECT_LIST);
     program
-      .description("Prints a ordered  by precendence list of projects")
-      .option("-s, --skipGroup <group_names...>", "Remove group from project list");
+      .description("Prints the projects that will be built given a starting project ordered by precedence")
+      .requiredOption("-p, --startProject <project>", "The project to start the build from")
+      .option("--fullProjectDependencyTree", "Checks out and execute the whole tree instead of the upstream build", false);
+
     return program;
   }
 }

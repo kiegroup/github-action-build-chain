@@ -11,6 +11,7 @@ import { ProjectConfiguration } from "@bc/domain/configuration";
 import { FlowType } from "@bc/domain/inputs";
 import { DefinitionFile, Post, Pre, Node } from "@kie/build-chain-configuration-reader";
 import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
+import { CLIActionType, ToolType } from "@bc/domain/cli";
 
 @Service()
 export class ConfigurationService {
@@ -240,5 +241,13 @@ export class ConfigurationService {
 
   getGroupName(): string | undefined {
     return this.getFlowType() === FlowType.BRANCH ? this.configuration.parsedInputs.group : undefined;
+  }
+
+  getToolType(): ToolType {
+    return this.configuration.getToolType();
+  }
+
+  isToolsCommand(): boolean {
+    return this.configuration.parsedInputs.CLICommand === CLIActionType.TOOLS; 
   }
 }

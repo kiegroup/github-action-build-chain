@@ -1,3 +1,4 @@
+import { CLIActionType, ToolType } from "@bc/domain/cli";
 import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/configuration";
 import { constants } from "@bc/domain/constants";
 import { FlowType } from "@bc/domain/inputs";
@@ -9,7 +10,10 @@ import Container from "typedi";
 export class CLIConfiguration extends BaseConfiguration {
   
   override loadProject(): { source: ProjectConfiguration; target: ProjectConfiguration } {
-    if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
+    if (this.parsedInputs.CLICommand === CLIActionType.TOOLS) {
+      return { source: {}, target: {} };
+    }
+    else if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
       const projectName = this.parsedInputs.startProject!.split("/");
       const projectConfig = {
         branch: this.parsedInputs.branch,
@@ -46,8 +50,6 @@ export class CLIConfiguration extends BaseConfiguration {
         actor: group,
         ref: this.parsedInputs.branch,
       };
-
-
     }
     return gitConfig;
   }
@@ -57,6 +59,10 @@ export class CLIConfiguration extends BaseConfiguration {
    * @returns
    */
   async loadGitEvent(): Promise<EventData> {
+    if (this.parsedInputs.CLICommand === CLIActionType.TOOLS) {
+      return {};
+    }
+
     if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
       process.env["GITHUB_HEAD_REF"] = this.parsedInputs.branch;
       process.env["GITHUB_BASE_REF"] = this.parsedInputs.branch;
@@ -64,6 +70,7 @@ export class CLIConfiguration extends BaseConfiguration {
       process.env["GITHUB_ACTOR"] = this.parsedInputs.group ?? this.parsedInputs.startProject!.split("/")[0];
       return {};
     }
+
     if (!this.parsedInputs.url) {
       logAndThrow("If running from the CLI, event url needs to be defined");
     }
@@ -116,6 +123,18 @@ export class CLIConfiguration extends BaseConfiguration {
     if (Object.values(FlowType).includes(subcmd as FlowType)) {
       return subcmd as FlowType;
     }
-    logAndThrow("The CLI subcommand is a tool commaand. No flow defined");
+    logAndThrow("The CLI subcommand is a tool command. No flow defined");
+  }
+
+  /**
+   * Get the flow type if defined otherwise throw an error
+   * @returns
+   */
+  override getToolType(): ToolType {
+    const subcmd = this.parsedInputs.CLISubCommand!;
+    if (Object.values(ToolType).includes(subcmd as ToolType)) {
+      return subcmd as ToolType;
+    }
+    logAndThrow("The CLI subcommand is a build command. No tools defined");
   }
 }

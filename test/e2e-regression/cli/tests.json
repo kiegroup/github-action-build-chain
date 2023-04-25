@@ -27,7 +27,7 @@
     "matchOutput": [
       "Project taken from kiegroup/drools:main-integration-quarkus-lts",
       "Project taken from kiegroup/optaplanner:main",
-      "Project taken from kiegroup/optaplanner-quickstarts:development"
+      "Project taken from kiegroup/optaplanner-quickstarts:8.x"
     ]
   },
   {

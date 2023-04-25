@@ -29,3 +29,4 @@ jobs:
             There is a new release of build-chain-configuration-reader. Verify that there are no breaking changes
           branch: build-chain-configuration-reader-${{ github.event.client_payload.version }}
           commit-message: build-chain-configuration-reader updated
+          team_reviewers: kiegroup/productization

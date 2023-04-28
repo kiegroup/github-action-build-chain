@@ -17,6 +17,7 @@ const nodeChain: Node[] = [
     project: "owner1/project1",
     parents: [],
     children: [],
+    depth: -1,
     archiveArtifacts: {
       name: "artifacts-project1",
       dependencies: "all",
@@ -28,6 +29,7 @@ const nodeChain: Node[] = [
     project: "owner2/project2",
     parents: [],
     children: [],
+    depth: -1,
     archiveArtifacts: {
       name: "artifacts-project1",
       dependencies: "none",
@@ -39,6 +41,7 @@ const nodeChain: Node[] = [
     project: "owner3/project3",
     parents: [],
     children: [],
+    depth: -1,
     archiveArtifacts: {
       name: "artifacts-project1",
       dependencies: ["owner1/project1"],

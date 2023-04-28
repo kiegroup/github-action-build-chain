@@ -8,6 +8,7 @@ export const nodeChain: Node[] = [
     project: "owner1/project1",
     parents: [],
     children: [],
+    depth: -1,
     clone: ["clone-1", "clone-2"],
     mapping: {
       dependant: {
@@ -23,6 +24,7 @@ export const nodeChain: Node[] = [
     project: "owner2/project2",
     parents: [],
     children: [],
+    depth: -1,
     mapping: {
       exclude: [],
       dependant: {
@@ -46,6 +48,7 @@ export const nodeChain: Node[] = [
   },
   {
     project: "owner3/project3",
+    depth: -1,
     parents: [],
     children: []
   },

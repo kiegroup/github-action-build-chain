@@ -85,6 +85,7 @@ describe("execute:build", () => {
     const preSpy = jest.spyOn(PreExecutor.prototype, "run").mockImplementation(async () => [okResult]);
     const postSpy = jest.spyOn(PostExecutor.prototype, "run").mockImplementation(async () => [okResult, okResult, okResult]);
     const flowSpy = jest.spyOn(FlowService.prototype, "run").mockImplementation(async () => flowOk);
+    const exitSpy = jest.spyOn(process, "exit").mockImplementation((_code?: number) => undefined as never);
 
     await cliRunner.execute();
 
@@ -92,6 +93,7 @@ describe("execute:build", () => {
     expect(preSpy).toHaveBeenCalledTimes(1);
     expect(postSpy).toHaveBeenCalledTimes(1);
     expect(flowSpy).toHaveBeenCalledTimes(1);
+    expect(exitSpy).toHaveBeenCalledWith(0);
   });
 
   test("failure: pre", async () => {

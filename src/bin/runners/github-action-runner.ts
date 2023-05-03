@@ -29,7 +29,7 @@ export class GithubActionRunner extends Runner {
         const promise = jobSummaryService.generateSummary(defaultFlowResult, preResult.output, []);
         this.printExecutionFailure(preResult.output);
         await promise;
-        return process.exit(1);
+        return await this.safeAsyncExit(1);
       }
 
       // execute flow: checkout node chain -> execute commands for each phase -> upload artifacts
@@ -41,17 +41,17 @@ export class GithubActionRunner extends Runner {
       // post a job summary
       // io task is involved so start it as a promise and wait for it when actually needed
       const promise = jobSummaryService.generateSummary(flowResult.output, preResult.output, postResult.output);
-
+      let exitCode = 0;
       if (flowResult.isFailure || postResult.isFailure) {
         this.printNodeExecutionFailure(flowResult.output.executionResult);
         this.printExecutionFailure(postResult.output);
-        await promise;
-        return process.exit(1);
+        exitCode = 1;
       }
-
       await promise;
+      
+      return await this.safeAsyncExit(exitCode);
     } catch (err) {
-      process.exit(1);
+      await this.safeAsyncExit(1);
     }
   }
 }

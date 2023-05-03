@@ -25,16 +25,16 @@ export class CLIRunner extends Runner {
         return await this.executeBuild(); 
       }      
     } catch (err) {
-      process.exit(1);
+      await this.safeAsyncExit(1);
     }
   }
 
-  private async executeBuild() {
+  private async executeBuild(): Promise<void> {
     // execute pre section
     const preResult = await this.executePre();
     if (preResult.isFailure) {
       this.printExecutionFailure(preResult.output);
-      return process.exit(1);
+      return this.safeAsyncExit(1);
     }
 
     // execute flow: checkout node chain -> execute commands for each phase -> upload artifacts
@@ -43,11 +43,13 @@ export class CLIRunner extends Runner {
     // execute post section
     const postResult = await this.executePost(flowResult.isFailure);
 
+    let exitCode = 0;
     if (flowResult.isFailure || postResult.isFailure) {
       this.printNodeExecutionFailure(flowResult.output.executionResult);
       this.printExecutionFailure(postResult.output);
-      return process.exit(1);
+      exitCode = 1;
     }
+    return this.safeAsyncExit(exitCode);
   }
 
   private async executeTools() {

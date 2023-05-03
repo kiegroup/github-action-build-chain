@@ -1,9 +1,9 @@
-import Container, { Service } from "typedi";
+import { Service } from "typedi";
 import { BashExecutor } from "@bc/service/command/executor/bash-executor";
 import { ExportExecutor } from "@bc/service/command/executor/export-executor";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
-import { LoggerService } from "@bc/service/logger/logger-service";
 import { hrtimeToMs } from "@bc/utils/date";
+import { ExecOptions } from "@actions/exec";
 
 @Service()
 export class CommandExecutorDelegator {
@@ -12,18 +12,17 @@ export class CommandExecutorDelegator {
               private _exportExecutor: ExportExecutor) {
   }
 
-  public async executeCommand(command: string, cwd?: string): Promise<ExecuteCommandResult> {
+  public async executeCommand(command: string, opts?: ExecOptions): Promise<ExecuteCommandResult> {
     const startHrTime = process.hrtime();
     const startingDate = Date.now();
     let result: ExecutionResult;
     let errorMessage = "";
     
     try {
-      this.isExport(command) ? await this._exportExecutor.execute(command, cwd) : await this._bashExecutor.execute(command, cwd);
+      this.isExport(command) ? await this._exportExecutor.execute(command, opts) : await this._bashExecutor.execute(command, opts);
       result = ExecutionResult.OK;
     } catch (ex) {
       errorMessage = (ex instanceof Error) ? ex.message : "unknown";
-      Container.get(LoggerService).logger.error(`Error executing command ${command}. ${errorMessage}`);
       result = ExecutionResult.NOT_OK;
     }
     return {

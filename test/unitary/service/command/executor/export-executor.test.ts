@@ -24,7 +24,7 @@ describe("Export Command Executor", () => {
 
     // Act
     try {
-      await exportCommandExecutor.execute("command x", "whateverthepath");
+      await exportCommandExecutor.execute("command x", {cwd: "whateverthepath"});
       expect(true).toBe(false);
     } catch (ex: unknown) {
       expect((ex as Error).message).toBe("The export command command x is not properly defined. It should be something like \"export VARIBLE=expression\". Please fix it an try again.");
@@ -42,7 +42,7 @@ describe("Export Command Executor", () => {
     (exec as jest.Mocked<typeof exec>).exec.mockResolvedValueOnce(Promise.resolve(0));
 
     // Act
-    await exportCommandExecutor.execute("export VARIABLE1=newvalue", "whateverthepath");
+    await exportCommandExecutor.execute("export VARIABLE1=newvalue", {cwd: "whateverthepath"});
 
     // Arrange
     expect(exec.exec).toHaveBeenCalledTimes(0);
@@ -58,7 +58,7 @@ describe("Export Command Executor", () => {
     (exec as jest.Mocked<typeof exec>).exec.mockResolvedValueOnce(Promise.resolve(0));
 
     // Act
-    await exportCommandExecutor.execute("export VARIABLE2=\"VALUE1 VALUE 2\"", "whateverthepath");
+    await exportCommandExecutor.execute("export VARIABLE2=\"VALUE1 VALUE 2\"", {cwd: "whateverthepath"});
 
     // Arrange
     expect(exec.exec).toHaveBeenCalledTimes(0);
@@ -74,7 +74,7 @@ describe("Export Command Executor", () => {
     (exec as jest.Mocked<typeof exec>).exec.mockResolvedValueOnce(Promise.resolve(0));
 
     // Act
-    await exportCommandExecutor.execute("export VARIABLE3='VALUE1 VALUE 2'", "whateverthepath");
+    await exportCommandExecutor.execute("export VARIABLE3='VALUE1 VALUE 2'", {cwd: "whateverthepath"});
 
     // Arrange
     expect(exec.exec).toHaveBeenCalledTimes(0);
@@ -90,7 +90,7 @@ describe("Export Command Executor", () => {
     (exec as jest.Mocked<typeof exec>).exec.mockResolvedValueOnce(Promise.resolve(0));
 
     // Act
-    await exportCommandExecutor.execute("export VARIABLE4=`whateverthecommand`", "whateverthepath");
+    await exportCommandExecutor.execute("export VARIABLE4=`whateverthecommand`", {cwd: "whateverthepath"});
 
     // Arrange
     expect(exec.exec).toHaveBeenCalledTimes(1);
@@ -108,7 +108,7 @@ describe("Export Command Executor", () => {
 
     // Act
     try {
-      await exportCommandExecutor.execute("whatever the command", "whateverthepath");
+      await exportCommandExecutor.execute("whatever the command", {cwd: "whateverthepath"});
       expect(false).toBe(true);
     } catch (ex: unknown) {
       expect((ex as Error).message).toBe("The export command whatever the command is not properly defined. It should be something like \"export VARIBLE=expression\". Please fix it an try again.");

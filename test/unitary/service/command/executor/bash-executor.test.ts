@@ -11,7 +11,7 @@ describe("Bash Executor", () => {
     (exec as jest.Mocked<typeof exec>).exec.mockResolvedValueOnce(Promise.resolve(0));
 
     // Act
-    await bashExecutor.execute("command x", "whateverthepath");
+    await bashExecutor.execute("command x", {cwd: "whateverthepath"});
 
     // Arrange
     expect(exec.exec).toHaveBeenCalledTimes(1);
@@ -28,7 +28,7 @@ describe("Bash Executor", () => {
 
     // Arrange
     expect(exec.exec).toHaveBeenCalledTimes(1);
-    expect(exec.exec).toHaveBeenCalledWith("command x", [], { cwd: undefined });
+    expect(exec.exec).toHaveBeenCalledWith("command x", [], undefined);
   });
 });
 

@@ -4,7 +4,6 @@ import { BashExecutor } from "@bc/service/command/executor/bash-executor";
 import { ExportExecutor } from "@bc/service/command/executor/export-executor";
 import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { hrtimeToMs } from "@bc/utils/date";
-import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import Container from "typedi";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
@@ -76,7 +75,7 @@ describe("isExport", () => {
     (hrtimeToMs as jest.Mocked<jest.Mock>).mockReturnValue(2000);
 
     // Act
-    const result = await commandExecutorDelegator.executeCommand(command, cwd);
+    const result = await commandExecutorDelegator.executeCommand(command, { cwd });
 
     // Assert
     expect(result).toStrictEqual({
@@ -89,7 +88,7 @@ describe("isExport", () => {
     });
     expect(bashExecutor.execute).toHaveBeenCalledTimes(0);
     expect(exportExecutor.execute).toHaveBeenCalledTimes(1);
-    expect(exportExecutor.execute).toHaveBeenCalledWith(command, cwd);
+    expect(exportExecutor.execute).toHaveBeenCalledWith(command, { cwd });
   });
 
   test("Error", async () => {
@@ -120,8 +119,6 @@ describe("isExport", () => {
     expect(bashExecutor.execute).toHaveBeenCalledTimes(0);
     expect(exportExecutor.execute).toHaveBeenCalledTimes(1);
     expect(exportExecutor.execute).toHaveBeenCalledWith(command, undefined);
-    expect(BaseLoggerService.prototype.error).toHaveBeenCalledTimes(1);
-    expect(BaseLoggerService.prototype.error).toHaveBeenCalledWith(`Error executing command ${command}. ${errorMessage}`);
   });
 });
 
@@ -171,7 +168,7 @@ describe("not export command", () => {
     (hrtimeToMs as jest.Mocked<jest.Mock>).mockReturnValue(1000);
 
     // Act
-    const result = await commandExecutorDelegator.executeCommand(command, cwd);
+    const result = await commandExecutorDelegator.executeCommand(command, { cwd });
 
     // Assert
     expect(result).toStrictEqual({
@@ -184,7 +181,7 @@ describe("not export command", () => {
     });
     expect(bashExecutor.execute).toHaveBeenCalledTimes(1);
     expect(exportExecutor.execute).toHaveBeenCalledTimes(0);
-    expect(bashExecutor.execute).toHaveBeenCalledWith(command, cwd);
+    expect(bashExecutor.execute).toHaveBeenCalledWith(command, { cwd });
   });
 
   test("Error", async () => {
@@ -215,7 +212,5 @@ describe("not export command", () => {
     expect(bashExecutor.execute).toHaveBeenCalledTimes(1);
     expect(exportExecutor.execute).toHaveBeenCalledTimes(0);
     expect(bashExecutor.execute).toHaveBeenCalledWith(command, undefined);
-    expect(BaseLoggerService.prototype.error).toHaveBeenCalledTimes(1);
-    expect(BaseLoggerService.prototype.error).toHaveBeenCalledWith(`Error executing command ${command}. ${errorMessage}`);
   });
 });

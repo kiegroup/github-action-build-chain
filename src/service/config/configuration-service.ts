@@ -167,6 +167,15 @@ export class ConfigurationService {
   }
 
   /**
+   * Checks whether projects should be executed sequential or parallel
+   * @returns {Boolean} true if project execution should be parallel otherwise false
+   */
+  isParallelExecutionEnabled(): boolean {
+    return this.configuration.parsedInputs.enableParallelExecution;
+  }
+  
+
+  /**
    * Parses user input from custom command treatment option to create the treatment option object
    * @returns {TreatmentOptions} Construct the treatment options domain object
    */

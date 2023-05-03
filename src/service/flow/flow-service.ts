@@ -52,8 +52,7 @@ export class FlowService {
       cwd: checkoutInfo.find(info => info.node.project === node.project)!.checkoutInfo?.repoDir,
     }));
 
-    const executionResult = await this.executeAndPrint(nodeChainForExecution);
-
+    const executionResult = await this.executor.executeNodeChain(nodeChainForExecution, this.printExecutionSummary.bind(this));
     // archive artifacts
     this.logger.startGroup("Uploading artifacts");
     const artifactUploadResults = await this.artifactService.uploadNodes(this.configService.nodeChain, this.configService.getStarterNode());

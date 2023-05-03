@@ -104,6 +104,7 @@ export class ActionArguments {
       skipParallelCheckout: core.getBooleanInput("skip-parallel-checkout"),
       skipProjectCheckout: this.getArrayInput("skip-project-checkout"),
       skipProjectExecution: this.getArrayInput("skip-project-execution"),
+      enableParallelExecution: core.getBooleanInput("enable-parallel-execution"),
       skipCheckout: core.getBooleanInput("skip-checkout"),
       startProject: this.getStringInput("starting-project"),
       loggerLevel: this.getLoggerLevel(core.getInput("logger-level")),

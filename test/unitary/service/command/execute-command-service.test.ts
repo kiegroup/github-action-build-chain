@@ -59,14 +59,14 @@ describe("ExecuteCommandService", () => {
     const executeCommandService = new ExecuteCommandService(commandTreatmentDelegator, commandExecutorDelegator, configurationService);
 
     // Act
-    const executeCommandResultPromise = await executeCommandService.executeCommand("command X", "cwd");
+    const executeCommandResultPromise = await executeCommandService.executeCommand("command X", { cwd: "cwd" });
 
     // Assert
     expect(executeCommandResultPromise).toStrictEqual({ result: ExecutionResult.OK });
     expect(CommandTreatmentDelegator.prototype.treatCommand).toHaveBeenCalledTimes(1);
     expect(CommandTreatmentDelegator.prototype.treatCommand).toHaveBeenCalledWith("command X", "treatmentOptions");
     expect(CommandExecutorDelegator.prototype.executeCommand).toHaveBeenCalledTimes(1);
-    expect(CommandExecutorDelegator.prototype.executeCommand).toHaveBeenCalledWith("command x treated", "cwd");
+    expect(CommandExecutorDelegator.prototype.executeCommand).toHaveBeenCalledWith("command x treated", {cwd: "cwd"});
   });
 });
 
@@ -141,7 +141,7 @@ describe("executeNodeCommands", () => {
     expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledTimes(expectedCalls.length);
     expect(commandTreatmentDelegator.treatCommand).toHaveBeenCalledTimes(expectedCalls.length);
     expectedCalls.forEach(call => expect(commandTreatmentDelegator.treatCommand).toHaveBeenCalledWith(call, undefined));
-    expectedCalls.forEach(_call => expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledWith(undefined, cwd));
+    expectedCalls.forEach(_call => expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledWith(undefined, { cwd }));
     expect(result.map(res => res.executeCommandResults)).toStrictEqual(
       expectedResult.map(res => (res !== "" ? [{
         startingDate: skipExecution ? expect.any(Number) : 1,

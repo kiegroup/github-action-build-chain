@@ -344,6 +344,13 @@ describe("methods", () => {
     );
   });
 
+  test("isParallelExecutionEnabled", () => {
+    currentInput = { ...defaultInputValues, enableParallelExecution: true };
+    expect(config.isParallelExecutionEnabled()).toBe(
+      currentInput.enableParallelExecution
+    );
+  });
+
   test("getPre", () => {
     jest
       .spyOn(ConfigurationService.prototype, "definitionFile", "get")

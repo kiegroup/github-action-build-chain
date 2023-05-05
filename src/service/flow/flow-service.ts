@@ -178,19 +178,6 @@ export class FlowService {
     }
   }
 
-  private async executeAndPrint(chain: NodeExecution[]): Promise<ExecuteNodeResult[][]> {
-    const result: ExecuteNodeResult[][] = [];
-    for (const node of chain) {
-      this.logger.startGroup(`Executing ${node.node.project}`);
-      const currentNodeResult = await this.executor.executeNodeCommands(node);
-      result.push(currentNodeResult);
-      this.logger.info(`Execution summary for ${node.node.project}`);
-      this.printExecutionSummary(currentNodeResult);
-      this.logger.endGroup();
-    }
-    return result;
-  }
-
   private isNodeExecutionSkipped(result: ExecuteNodeResult) {
     return !!result.executeCommandResults.find(res => res.result === ExecutionResult.SKIP);
   }

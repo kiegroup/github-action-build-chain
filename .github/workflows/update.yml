@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -22,7 +24,7 @@ jobs:
       - name: Create Pull Request
         uses: gr2m/create-or-update-pull-request-action@v1.x
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.UPDATE_BUILD_CHAIN }}
         with:
           title: Update build-chain-configuration-reader to ${{ github.event.client_payload.version }}
           body: >

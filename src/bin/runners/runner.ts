@@ -91,6 +91,18 @@ export abstract class Runner {
     );
   }
 
+  protected async safeAsyncExit(exitCode: number): Promise<void> {
+    if (process.stdout.writableNeedDrain) {
+      // wait for stdout to flush
+      await new Promise<void>((resolve, _reject) => {
+        process.stdout.once("drain", () => {
+          resolve();
+        });
+      });
+    }   
+    return process.exit(exitCode);   
+  }
+
   private archiveArtifactsFailure(result: PromiseSettledResult<UploadResponse>[]) {
     return !!result.find(res => res.status === "rejected");
   }

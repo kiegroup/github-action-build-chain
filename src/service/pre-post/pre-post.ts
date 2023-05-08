@@ -20,10 +20,10 @@ export abstract class PrePostExecutor {
     const result: ExecuteCommandResult[] = [];
     if (Array.isArray(cmds)) {
       for (const cmd of cmds) {
-        result.push(await this.executeService.executeCommand(cmd, process.cwd()));
+        result.push(await this.executeService.executeCommand(cmd, {cwd: process.cwd()}));
       }
     } else {
-      result.push(await this.executeService.executeCommand(cmds, process.cwd()));
+      result.push(await this.executeService.executeCommand(cmds, {cwd: process.cwd()}));
     }
     return result;
   }

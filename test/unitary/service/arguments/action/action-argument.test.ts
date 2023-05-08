@@ -10,6 +10,7 @@ const definitionFile = "/path/to/file";
 const skipProject = ["project1", "project2", "project3"];
 const skipAll = true;
 const skipParallelCheckout = false;
+const enableParallelExecution = false;
 const startProject = "project4";
 const fakeFlagValue = "abc";
 const additionaFlags = `--tempFlag;-z ${fakeFlagValue}`;
@@ -27,6 +28,7 @@ const setGeneralInputs = (flowType: string) => {
     "INPUT_ADDITIONAL-FLAGS": additionaFlags,
     "INPUT_FLOW-TYPE": flowType,
     "INPUT_CUSTOM-COMMAND-TREATMENT": customCommandTreatment.join(", "),
+    "INPUT_ENABLE-PARALLEL-EXECUTION": enableParallelExecution.toString()
   };
 };
 
@@ -49,6 +51,7 @@ describe("Different flow types", () => {
       expect(vals.skipExecution).toBe(skipAll);
       expect(vals.skipCheckout).toBe(skipAll);
       expect(vals.skipParallelCheckout).toBe(skipParallelCheckout);
+      expect(vals.enableParallelExecution).toBe(enableParallelExecution);
       expect(vals.startProject).toBe(startProject);
       expect(vals.tempFlag).toBe(true);
       expect(vals.z).toBe("abc");
@@ -80,6 +83,7 @@ describe("Different log levels", () => {
       expect(vals.skipExecution).toBe(skipAll);
       expect(vals.skipCheckout).toBe(skipAll);
       expect(vals.skipParallelCheckout).toBe(skipParallelCheckout);
+      expect(vals.enableParallelExecution).toBe(enableParallelExecution);
       expect(vals.startProject).toBe(startProject);
       expect(vals.tempFlag).toBe(true);
       expect(vals.z).toBe("abc");

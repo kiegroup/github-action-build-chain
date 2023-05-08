@@ -35,6 +35,7 @@ describe("build single pull request flow cli", () => {
     expect(option.skipExecution).toBe(false);
     expect(option.skipCheckout).toBe(false);
     expect(option.skipParallelCheckout).toBe(false);
+    expect(option.enableParallelExecution).toBe(false);
 
     // check that the executed command info is set correctly
     expect(option.CLICommand).toBe(CLIActionType.BUILD);
@@ -86,6 +87,7 @@ describe("build single pull request flow cli", () => {
         "--skipParallelCheckout",
         "--skipExecution",
         "--skipCheckout",
+        "--enableParallelExecution"
       ],
       { from: "user" }
     );
@@ -99,6 +101,7 @@ describe("build single pull request flow cli", () => {
     expect(option.skipExecution).toBe(true);
     expect(option.skipCheckout).toBe(true);
     expect(option.skipParallelCheckout).toBe(true);
+    expect(option.enableParallelExecution).toBe(true);
     expect(option.startProject).toBe(startProject);
     expect(option.token).toStrictEqual([token]);
     expect(option.customCommandTreatment).toStrictEqual(customCommandTreatment);

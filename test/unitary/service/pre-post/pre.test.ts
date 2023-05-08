@@ -8,6 +8,7 @@ import { ExecuteCommandService } from "@bc/service/command/execute-command-servi
 import * as core from "@actions/core";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
+import { ExecOptions } from "@actions/exec";
 
 // just for initialization otherwise not relevant to testing
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
@@ -31,18 +32,18 @@ test.each([
   ["multiple commands", ["cmd1", "cmd2"], ["cmd1", "cmd2"]],
 ])("%p", async (_title: string, cmds: Pre, executedCmds: string[]) => {
   jest.spyOn(ConfigurationService.prototype, "getPre").mockImplementation(() => cmds);
-  const execSpy = jest.spyOn(ExecuteCommandService.prototype, "executeCommand").mockImplementation(async (_cmd: string, _cwd?: string) => emptyCommandResult);
+  const execSpy = jest.spyOn(ExecuteCommandService.prototype, "executeCommand").mockImplementation(async (_cmd: string, _opts?: ExecOptions) => emptyCommandResult);
   const pre = Container.get(PreExecutor);
   await pre.run();
   expect(execSpy).toHaveBeenCalledTimes(executedCmds.length);
   executedCmds.forEach(cmd => {
-    expect(execSpy).toHaveBeenCalledWith(cmd, process.cwd());
+    expect(execSpy).toHaveBeenCalledWith(cmd, {cwd: process.cwd()});
   });
 });
 
 test("no pre", async () => {
   jest.spyOn(ConfigurationService.prototype, "getPre").mockImplementation(() => undefined);
-  const execSpy = jest.spyOn(ExecuteCommandService.prototype, "executeCommand").mockImplementation(async (_cmd: string, _cwd?: string) => emptyCommandResult);
+  const execSpy = jest.spyOn(ExecuteCommandService.prototype, "executeCommand").mockImplementation(async (_cmd: string, _opts?: ExecOptions) => emptyCommandResult);
   const pre = Container.get(PreExecutor);
   await pre.run();
   expect(execSpy).toHaveBeenCalledTimes(0);

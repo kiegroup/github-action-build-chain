@@ -173,6 +173,8 @@ See [action.yml](action.yml)
   > annotations-prefix: "OS ${{ matrix.os }}"
   > ```
 
+- **enable-parallel-execution** (optional. false by default): By enabling parallel execution, build-chain will try to detect projects that can be executed parallely without any conflicts i.e. no 2 projects where 1 depends on another will be executed parallely.
+
 - **additional-flags** (optional. '' by default): The chance to define additional flags for the execution, as it is done on the CLI side. Just semicolon (;) separated, like '--skipParallelCheckout;--skipExecution;-t (mvn .\*)||\$1 -s settings.xml'.
 
   > ```
@@ -606,6 +608,7 @@ Options:
                                          false)
   --skipProjectExecution <projects...>   A flag to skip execution and artifacts archiving for certain projects only
   --skipParallelCheckout                 Checkout the project sequentially (default: false)
+  --enableParallelExecution              Parallely execute projects (default: false)
   -t, --customCommandTreatment <exp...>  Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
@@ -641,6 +644,7 @@ Options:
                                          false)
   --skipProjectExecution <projects...>   A flag to skip execution and artifacts archiving for certain projects only
   --skipParallelCheckout                 Checkout the project sequentially (default: false)
+  --enableParallelExecution              Parallely execute projects (default: false)
   -t, --customCommandTreatment <exp...>  Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
@@ -676,6 +680,7 @@ Options:
                                          false)
   --skipProjectExecution <projects...>   A flag to skip execution and artifacts archiving for certain projects only
   --skipParallelCheckout                 Checkout the project sequentially (default: false)
+  --enableParallelExecution              Parallely execute projects (default: false)
   -t, --customCommandTreatment <exp...>  Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
@@ -715,6 +720,7 @@ Options:
                                          false)
   --skipProjectExecution <projects...>   A flag to skip execution and artifacts archiving for certain projects only
   --skipParallelCheckout                 Checkout the project sequentially (default: false)
+  --enableParallelExecution              Parallely execute projects (default: false)
   -t, --customCommandTreatment <exp...>  Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.

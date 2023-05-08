@@ -5,16 +5,18 @@ import { CommandExecutorDelegator } from "@bc/service/command/executor/command-e
 import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
 import { defaultNodeValue } from "@bc/domain/node";
-import { NodeExecutionLevel } from "@bc/domain/node-execution";
+import { NodeExecution, NodeExecutionLevel } from "@bc/domain/node-execution";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { Node } from "@kie/build-chain-configuration-reader";
 import Container from "typedi";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
+import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
+import { Logger } from "@bc/service/logger/logger";
+import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 
 // disable logs
 jest.spyOn(global.console, "log");
-jest.mock("@bc/service/logger/base-logger-service");
 jest.mock("@bc/service/command/treatment/command-treatment-delegator");
 jest.mock("@bc/service/command/executor/command-executor-delegator");
 jest.mock("@bc/service/config/configuration-service");
@@ -59,14 +61,14 @@ describe("ExecuteCommandService", () => {
     const executeCommandService = new ExecuteCommandService(commandTreatmentDelegator, commandExecutorDelegator, configurationService);
 
     // Act
-    const executeCommandResultPromise = await executeCommandService.executeCommand("command X", "cwd");
+    const executeCommandResultPromise = await executeCommandService.executeCommand("command X", { cwd: "cwd" });
 
     // Assert
     expect(executeCommandResultPromise).toStrictEqual({ result: ExecutionResult.OK });
     expect(CommandTreatmentDelegator.prototype.treatCommand).toHaveBeenCalledTimes(1);
     expect(CommandTreatmentDelegator.prototype.treatCommand).toHaveBeenCalledWith("command X", "treatmentOptions");
     expect(CommandExecutorDelegator.prototype.executeCommand).toHaveBeenCalledTimes(1);
-    expect(CommandExecutorDelegator.prototype.executeCommand).toHaveBeenCalledWith("command x treated", "cwd");
+    expect(CommandExecutorDelegator.prototype.executeCommand).toHaveBeenCalledWith("command x treated", {cwd: "cwd"});
   });
 });
 
@@ -141,7 +143,7 @@ describe("executeNodeCommands", () => {
     expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledTimes(expectedCalls.length);
     expect(commandTreatmentDelegator.treatCommand).toHaveBeenCalledTimes(expectedCalls.length);
     expectedCalls.forEach(call => expect(commandTreatmentDelegator.treatCommand).toHaveBeenCalledWith(call, undefined));
-    expectedCalls.forEach(_call => expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledWith(undefined, cwd));
+    expectedCalls.forEach(_call => expect(commandExecutorDelegator.executeCommand).toHaveBeenCalledWith(undefined, { cwd }));
     expect(result.map(res => res.executeCommandResults)).toStrictEqual(
       expectedResult.map(res => (res !== "" ? [{
         startingDate: skipExecution ? expect.any(Number) : 1,
@@ -209,5 +211,106 @@ describe("getNodeCommands", () => {
     };
     const commands = executeCommandService.getNodeCommands(node, ExecutionPhase.AFTER, nodeExecutionLevel);
     expect(commands).toStrictEqual(expectedOutput);
+  });
+});
+
+describe("executeNodeChain", () => {
+  let executeCommandService: ExecuteCommandService;
+  beforeEach(() => {
+    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, true);
+    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, true);
+    const configurationService = new ConfigurationService();
+    jest.spyOn(BaseLoggerService.prototype, "logger", "get").mockImplementation(() => ({log: () => undefined, emptyLine: () => undefined}) as Logger);
+
+    executeCommandService = new ExecuteCommandService(commandTreatmentDelegator, commandExecutorDelegator, configurationService);
+  });
+
+  test.each([
+    ["with print results", jest.fn((_node: ExecuteNodeResult[]) => undefined)],
+    ["without print results", undefined]
+  ])("sequential: %p", async (_title, printFn) => {
+    jest.spyOn(ConfigurationService.prototype, "isParallelExecutionEnabled").mockReturnValueOnce(false);
+    const execSpy = jest.spyOn(executeCommandService, "executeNodeCommands").mockResolvedValue([]);
+    
+    const nodeChain: NodeExecution[] = [
+      {
+        node: {
+          ...defaultNodeValue,
+          project: "project1"
+        }
+      },
+      {
+        node: {
+          ...defaultNodeValue,
+          project: "project2"
+        }
+      }
+    ];
+
+    await executeCommandService.executeNodeChain(nodeChain, printFn);
+    expect(execSpy).toHaveBeenCalledTimes(2);
+    if (printFn) {
+      expect(printFn).toHaveBeenCalledTimes(2);
+    }
+  });
+
+  test.each([
+    ["with print results", jest.fn((_node: ExecuteNodeResult[]) => undefined)],
+    ["without print results", undefined]
+  ])("parallel: %p", async (_title, printFn) => {
+    jest.spyOn(ConfigurationService.prototype, "isParallelExecutionEnabled").mockReturnValueOnce(true);
+    const execSpy = jest.spyOn(executeCommandService, "executeNodeCommands").mockResolvedValue([]);
+    const promiseSpy = jest.spyOn(Promise, "all");
+    const nodeChain: NodeExecution[] = [
+      {
+        node: {
+          ...defaultNodeValue,
+          project: "project1",
+          depth: 0
+        }
+      },
+      {
+        node: {
+          ...defaultNodeValue,
+          project: "project2",
+          depth: 1
+        }
+      },
+      {
+        node: {
+          ...defaultNodeValue,
+          project: "project3",
+          depth: 1
+        }
+      },
+      {
+        node: {
+          ...defaultNodeValue,
+          project: "project4",
+          depth: 2
+        }
+      }
+    ];
+
+    await executeCommandService.executeNodeChain(nodeChain, printFn);
+    expect(execSpy).toHaveBeenCalledTimes(4);
+    if (printFn) {
+      expect(printFn).toHaveBeenCalledTimes(4);
+    }
+
+    // check the number of arguments passed to Promise.all
+    expect(promiseSpy.mock.calls[0][0].length).toBe(1);
+    expect(promiseSpy.mock.calls[1][0].length).toBe(2);
+    expect(promiseSpy.mock.calls[2][0].length).toBe(1);
+
+    // first call to execSpy must be for the first node
+    expect(execSpy.mock.calls[0][0]).toStrictEqual(nodeChain[0]);
+    
+    // the second and third execSpy must be for 2nd and 3rd node (can be in any order due to promises)
+    expect([execSpy.mock.calls[1][0], execSpy.mock.calls[2][0]]).toContain(nodeChain[1]);
+    expect([execSpy.mock.calls[1][0], execSpy.mock.calls[2][0]]).toContain(nodeChain[2]);
+    
+    // last call to execSpy must be for the last node
+    expect(execSpy.mock.calls[3][0]).toStrictEqual(nodeChain[3]);
   });
 });

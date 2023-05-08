@@ -31,6 +31,10 @@ inputs:
     description: "Checkout the project sequentially or parallely"
     default: "false"
     required: false
+  enable-parallel-execution:
+    description: "Parallely execute projects"
+    default: "false"
+    required: false
   custom-command-treatment:
     description: "<RegEx||ReplacementEx> Regex defines the regular expression for what you want to replace with the ReplacementEx"
     required: false

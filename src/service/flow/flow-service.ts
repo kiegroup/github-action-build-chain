@@ -52,8 +52,7 @@ export class FlowService {
       cwd: checkoutInfo.find(info => info.node.project === node.project)!.checkoutInfo?.repoDir,
     }));
 
-    const executionResult = await this.executeAndPrint(nodeChainForExecution);
-
+    const executionResult = await this.executor.executeNodeChain(nodeChainForExecution, this.printExecutionSummary.bind(this));
     // archive artifacts
     this.logger.startGroup("Uploading artifacts");
     const artifactUploadResults = await this.artifactService.uploadNodes(this.configService.nodeChain, this.configService.getStarterNode());
@@ -177,19 +176,6 @@ export class FlowService {
         this.logger.endGroup();
       });
     }
-  }
-
-  private async executeAndPrint(chain: NodeExecution[]): Promise<ExecuteNodeResult[][]> {
-    const result: ExecuteNodeResult[][] = [];
-    for (const node of chain) {
-      this.logger.startGroup(`Executing ${node.node.project}`);
-      const currentNodeResult = await this.executor.executeNodeCommands(node);
-      result.push(currentNodeResult);
-      this.logger.info(`Execution summary for ${node.node.project}`);
-      this.printExecutionSummary(currentNodeResult);
-      this.logger.endGroup();
-    }
-    return result;
   }
 
   private isNodeExecutionSkipped(result: ExecuteNodeResult) {

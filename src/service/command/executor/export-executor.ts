@@ -1,28 +1,28 @@
-import { exec } from "@actions/exec";
+import { exec, ExecOptions } from "@actions/exec";
 import Container, { Service } from "typedi";
 import { LoggerService } from "@bc/service/logger/logger-service";
 
 @Service()
 export class ExportExecutor {
 
-  async execute(command: string, cwd?: string): Promise<void> {
+  async execute(command: string, opts?: ExecOptions): Promise<void> {
     const expressionCommand = new ExpressionCommand(command);
-    process.env[expressionCommand.variable] = await this.executeExpression(expressionCommand.expression, cwd);
+    process.env[expressionCommand.variable] = await this.executeExpression(expressionCommand.expression, opts);
     Container.get(LoggerService).logger.debug(`The variable \`${expressionCommand.variable}\` has been set to the env with the value \`${process.env[expressionCommand.variable]}\``);
   }
 
-  private async executeExpression(expression: string, cwd?: string): Promise<string> {
+  private async executeExpression(expression: string, opts?: ExecOptions): Promise<string> {
     const expressionMatch = expression.match(/`(.*)`/);
     const commandFromExpression = expressionMatch ? expressionMatch[1] : undefined;
     if (commandFromExpression) {
       let myOutput = "";
       const options = {
+        ...opts,
         listeners: {
           stdout: (data: Buffer) => {
             myOutput += data.toString();
           },
         },
-        cwd,
       };
       await exec(commandFromExpression, [], options);
       return myOutput;

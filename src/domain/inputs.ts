@@ -27,6 +27,7 @@ export interface InputValues extends OptionValues {
   flowType?: FlowType;
   CLICommand?: CLIActionType;
   CLISubCommand?: FlowType | ToolType;
+  enableParallelExecution: boolean;
   skipExecution: boolean;
   skipParallelCheckout: boolean;
   skipCheckout: boolean;
@@ -50,5 +51,6 @@ export const defaultInputValues: Readonly<InputValues> = {
   skipExecution: false,
   skipCheckout: false,
   skipParallelCheckout: false,
+  enableParallelExecution: false,
   loggerLevel: LoggerLevel.INFO,
 };

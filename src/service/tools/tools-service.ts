@@ -1,5 +1,6 @@
 import { ToolType } from "@bc/domain/cli";
 import { Tools } from "@bc/service/tools/abstract-tools";
+import { Plan } from "@bc/service/tools/plan";
 import { ProjectList } from "@bc/service/tools/project-list";
 import { logAndThrow } from "@bc/utils/log";
 import { Service } from "typedi";
@@ -11,6 +12,9 @@ export class ToolService extends Tools {
     switch(this.configService.getToolType()) {
       case ToolType.PROJECT_LIST:
         tool = new ProjectList();
+        break;
+      case ToolType.PLAN:
+        tool = new Plan();
         break;
       default:
         logAndThrow("Tool not found");

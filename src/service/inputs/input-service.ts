@@ -18,7 +18,7 @@ export class InputService {
    * Updates the parsed options
    * @param updatedInputs Options that were obtained from the parser
    */
-  updateInputs(updatedInputs: InputValues) {
+  updateInputs(updatedInputs: Partial<InputValues>) {
     this._inputs = { ...this.inputs, ...updatedInputs };
   }
 }

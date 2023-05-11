@@ -161,6 +161,8 @@ export class DefinitionFileReader {
     switch(this.configuration.getToolType()) {
       case ToolType.PROJECT_LIST:
         return this.getUpstreamOrFullDownstreamProjects(starterProject, {token: Container.get(constants.GITHUB.TOKEN)});
+      case ToolType.PLAN:
+        return [];
       default:
         logAndThrow(`Invalid tool ${this.configuration.getToolType()}`);
     }

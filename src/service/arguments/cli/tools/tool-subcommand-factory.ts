@@ -5,6 +5,7 @@ import { ProjectListCommand } from "@bc/service/arguments/cli/tools/project-list
 import { InputService } from "@bc/service/inputs/input-service";
 import Container from "typedi";
 import { LoggerLevel } from "@bc/domain/inputs";
+import { PlanCommand  } from "@bc/service/arguments/cli/tools/plan";
 
 /**
  * A factory to construct command line parsers for all the different kind of tools
@@ -21,15 +22,15 @@ export class ToolSubCommandFactory {
       case ToolType.PROJECT_LIST:
         commandFactory = new ProjectListCommand();
         break;
+      case ToolType.PLAN:
+        commandFactory = new PlanCommand();
+        break;
       default:
         throw new Error(`No command constructor specified for ${toolType}`);
     }
 
     return commandFactory
       .createCommand()
-      .requiredOption("-f, --definitionFile <path_or_url>", "The definition file, either a path to the filesystem or a URL to it")
-      .option("-t, --token <token>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
-      .option("-d, --debug", "Set debugging mode to true", false)
       .action(options => {
         const parsedInputs = Container.get(InputService);
         if (options.debug) {

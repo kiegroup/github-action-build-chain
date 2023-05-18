@@ -92,8 +92,8 @@ test("version", async () => {
 });
 
 test.each([
-  ["succes: destination does not exist", false],
-  ["failure: destination exists", true],
+  ["destination does not exist", false],
+  ["destination exists", true],
 ])("clone %p", async (_title: string, destExist: boolean) => {
   // Setup
   const dest = path.join(__dirname, "git-clone-test");
@@ -103,7 +103,8 @@ test.each([
     fs.mkdirSync(dest);
     await git.clone(cwd, dest, "main");
     const files = fs.readdirSync(dest);
-    expect(files.length).toBe(0);
+    expect(fs.existsSync(dest)).toBe(true);
+    expect(files.length).toBeGreaterThan(0);
   }
   // test for success
   else {

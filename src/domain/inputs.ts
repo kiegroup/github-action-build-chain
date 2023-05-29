@@ -41,6 +41,7 @@ export interface InputValues extends OptionValues {
   url?: string;
   branch?: string;
   group?: string;
+  failAtEnd?: boolean;
 }
 
 /**

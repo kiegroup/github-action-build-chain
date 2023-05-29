@@ -313,4 +313,38 @@ describe("executeNodeChain", () => {
     // last call to execSpy must be for the last node
     expect(execSpy.mock.calls[3][0]).toStrictEqual(nodeChain[3]);
   });
+
+  test.each([
+    ["sequential: fail fast", false, false, 1],
+    ["sequential: fail at end", false, true, 2],
+    ["parallel: fail fast", true, true, 2],
+    ["parallel: fail at end", true, true, 2],
+  ])("%p", async (_title, isParallel, failAtEnd, numExecCalls) => {
+    jest.spyOn(ConfigurationService.prototype, "isParallelExecutionEnabled").mockReturnValueOnce(isParallel);
+    jest.spyOn(ConfigurationService.prototype, "failAtEnd").mockReturnValueOnce(failAtEnd);
+    const execSpy = jest.spyOn(executeCommandService, "executeNodeCommands");
+    execSpy.mockResolvedValueOnce([{executeCommandResults: [{result: ExecutionResult.NOT_OK}]} as unknown as ExecuteNodeResult]);
+    execSpy.mockResolvedValueOnce([{executeCommandResults: [{result: ExecutionResult.OK}]} as unknown as ExecuteNodeResult]);
+    
+    const nodeChain: NodeExecution[] = [
+      {
+        node: {
+          ...defaultNodeValue,
+          project: "project1",
+          depth: 0
+        }
+      },
+      {
+        node: {
+          ...defaultNodeValue,
+          project: "project2",
+          depth: 1
+        }
+      }
+    ];
+
+    await executeCommandService.executeNodeChain(nodeChain, undefined);
+    expect(execSpy).toHaveBeenCalledTimes(numExecCalls);
+
+  });
 });

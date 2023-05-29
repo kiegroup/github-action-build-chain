@@ -42,12 +42,13 @@ export class GitCLIService {
    * @param branch branch which should be cloned
    */
   async clone(from: string, to: string, branch: string) {
-    if (!fs.existsSync(to)) {
-      // don't use this.git since it will configure git with local user.name and user.email which requires cwd to be a git repo
-      await simpleGit().clone(from, to, ["--quiet", "--shallow-submodules", "--no-tags", "--branch", branch]);
-    } else {
-      this.logger.warn(`Folder ${to} already exist. Won't clone`);
+    if (fs.existsSync(to)) {
+      this.logger.warn(`Folder ${to} already exist. Deleting it`);
+      fs.rmSync(to, { recursive: true, force: true });
     }
+
+    // don't use this.git since it will configure git with local user.name and user.email which requires cwd to be a git repo
+    await simpleGit().clone(from, to, ["--quiet", "--shallow-submodules", "--no-tags", "--branch", branch]);
   }
 
   /**

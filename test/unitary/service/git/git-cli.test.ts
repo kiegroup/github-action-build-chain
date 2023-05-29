@@ -92,25 +92,29 @@ test("version", async () => {
 });
 
 test.each([
-  ["succes: destination does not exist", false],
-  ["failure: destination exists", true],
-])("clone %p", async (_title: string, destExist: boolean) => {
+  ["destination does not exist", false, 0],
+  ["destination exists", true, 1],
+])("clone %p", async (_title: string, destExist: boolean, numRmCalls: number) => {
   // Setup
   const dest = path.join(__dirname, "git-clone-test");
 
-  // test for failure
   if (destExist) {
+    // create the folder before cloning the repo
     fs.mkdirSync(dest);
-    await git.clone(cwd, dest, "main");
-    const files = fs.readdirSync(dest);
-    expect(files.length).toBe(0);
   }
-  // test for success
-  else {
-    await git.clone(cwd, dest, "main");
-    expect(fs.existsSync(dest)).toBe(true);
-  }
+
+  const rmSyncSpy = jest.spyOn(fs, "rmSync");
+
+  await git.clone(cwd, dest, "main");
+
+  expect(rmSyncSpy).toBeCalledTimes(numRmCalls);
+
+  expect(fs.existsSync(dest)).toBe(true);
+  const files = fs.readdirSync(dest);
+  expect(files.length).toBeGreaterThan(0);
+
   // Clean up
+  rmSyncSpy.mockRestore();
   fs.rmSync(dest, { recursive: true });
 });
 

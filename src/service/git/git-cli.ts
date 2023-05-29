@@ -43,9 +43,8 @@ export class GitCLIService {
    */
   async clone(from: string, to: string, branch: string) {
     if (fs.existsSync(to)) {
-      this.logger.warn(`Folder ${to} already exist. Deleting and recreating it`);
+      this.logger.warn(`Folder ${to} already exist. Deleting it`);
       fs.rmSync(to, { recursive: true, force: true });
-      fs.mkdirSync(to, {recursive: true});
     }
 
     // don't use this.git since it will configure git with local user.name and user.email which requires cwd to be a git repo

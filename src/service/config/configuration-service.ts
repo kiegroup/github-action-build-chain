@@ -259,4 +259,8 @@ export class ConfigurationService {
   isToolsCommand(): boolean {
     return this.configuration.parsedInputs.CLICommand === CLIActionType.TOOLS; 
   }
+
+  failAtEnd(): boolean {
+    return this.configuration.parsedInputs.failAtEnd ?? false;
+  }
 }

@@ -51,6 +51,7 @@ export class BuildSubCommandFactory {
       .option("-t, --customCommandTreatment <exp...>", "Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want to replace with the ReplacementEx")
       .option("--skipProjectCheckout <projects...>", "A list of projects to skip checkout.")
       .option("--skipCheckout", "skip checkout for all projects. Overrides skipProjectCheckout", false)
+      .option("-fae, --fail-at-end", "Only fail the build afterwards; allow all non-impacted builds to continue", false)
       .action((options) => {
         const parsedInputs = Container.get(InputService);
         if (options.debug) options.loggerLevel = LoggerLevel.DEBUG;

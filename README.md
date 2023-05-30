@@ -613,6 +613,7 @@ Options:
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
   --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -fae, --fail-at-end                    Only fail the build afterwards; allow all non-impacted builds to continue (default: false)
   -h, --help                             display help for command
 ```
 
@@ -649,6 +650,7 @@ Options:
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
   --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -fae, --fail-at-end                    Only fail the build afterwards; allow all non-impacted builds to continue (default: false)
   -h, --help                             display help for command
 ```
 
@@ -685,6 +687,7 @@ Options:
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
   --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -fae, --fail-at-end                    Only fail the build afterwards; allow all non-impacted builds to continue (default: false)
   -h, --help                             display help for command
 ```
 
@@ -725,6 +728,7 @@ Options:
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
   --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -fae, --fail-at-end                    Only fail the build afterwards; allow all non-impacted builds to continue (default: false)
   -h, --help                             display help for command
 ```
 

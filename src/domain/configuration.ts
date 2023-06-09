@@ -1,5 +1,3 @@
-import { Endpoints } from "@octokit/types";
-
 export type GitConfiguration = {
   serverUrl?: string;
   serverUrlWithToken?: string;
@@ -19,4 +17,30 @@ export type ProjectConfiguration = {
   branch?: string;
 };
 
-export type EventData = Endpoints["GET /repos/{owner}/{repo}/pulls/{pull_number}"]["response"]["data"] | Record<string, never>;
+//export type EventData = Endpoints["GET /repos/{owner}/{repo}/pulls/{pull_number}"]["response"]["data"] | Record<string, never>;
+export type EventData = {
+  html_url: string,
+  head: {
+    user: {
+      login: string
+    },
+    ref: string,
+    repo?: {
+      full_name?: string,
+      name?: string,
+      owner?: {
+        login?: string
+      }
+    }
+  },
+  base: {
+    ref: string,
+    repo: {
+      full_name: string,
+      name: string,
+      owner: {
+        login: string
+      }
+    }
+  }
+} | Record<string, never>;

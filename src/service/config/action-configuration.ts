@@ -1,10 +1,9 @@
 import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/configuration";
-import { constants } from "@bc/domain/constants";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { logAndThrow } from "@bc/utils/log";
-import Container from "typedi";
 import { readFile } from "node:fs/promises";
 import { FlowType } from "@bc/domain/inputs";
+import { DEFAULT_GITHUB_PLATFORM } from "@kie/build-chain-configuration-reader";
 
 export class ActionConfiguration extends BaseConfiguration {
 
@@ -38,7 +37,7 @@ export class ActionConfiguration extends BaseConfiguration {
       actor: process.env.GITHUB_ACTOR,
       author: process.env.GITHUB_AUTHOR,
       serverUrl: serverUrl,
-      serverUrlWithToken: serverUrl.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
+      serverUrlWithToken: serverUrl.replace("://", `://${this.tokenService.getGithubToken(DEFAULT_GITHUB_PLATFORM.id)}@`),
       jobId: process.env.GITHUB_JOB,
       ref: process.env.GITHUB_REF,
       workflow: process.env.GITHUB_WORKFLOW,
@@ -69,8 +68,8 @@ export class ActionConfiguration extends BaseConfiguration {
    */
   loadToken(): void {
     if (process.env.GITHUB_TOKEN) {
-      Container.set(constants.GITHUB.TOKEN, process.env.GITHUB_TOKEN);
-      Container.set(constants.GITHUB.TOKEN_POOL, [process.env.GITHUB_TOKEN]);
+      this.tokenService.setGithubToken(DEFAULT_GITHUB_PLATFORM.id, process.env.GITHUB_TOKEN);
+      this.tokenService.setGithubTokenPool(DEFAULT_GITHUB_PLATFORM.id, [ process.env.GITHUB_TOKEN ]);
     } else {
       logAndThrow("A github token is needed");
     }

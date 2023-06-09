@@ -4,20 +4,23 @@ import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import { defaultInputValues, FlowType, InputValues } from "@bc/domain/inputs";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
-import { getTreeForProject, readDefinitionFile, Node, getFullDownstreamProjects, getUpstreamProjects } from "@kie/build-chain-configuration-reader";
+import { getTreeForProject, readDefinitionFile, Node, getFullDownstreamProjects, getUpstreamProjects, DEFAULT_GITHUB_PLATFORM } from "@kie/build-chain-configuration-reader";
 import fs from "fs";
 import path from "path";
 import Container from "typedi";
 import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 import { CLIActionType, ToolType } from "@bc/domain/cli";
+import { GitTokenService } from "@bc/service/git/git-token-service";
 jest.mock("@kie/build-chain-configuration-reader");
 
 // disable logs
 jest.spyOn(global.console, "log");
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
-Container.set(constants.GITHUB.TOKEN, "faketoken");
-
+Container.get(GitTokenService).setGithubToken(
+  DEFAULT_GITHUB_PLATFORM.id,
+  "faketoken"
+);
 
 class TestConfiguration extends BaseConfiguration {
   getFlowType(): FlowType {

@@ -5,7 +5,7 @@ import Container, { Service } from "typedi";
 import { copy, move } from "fs-extra";
 import path from "path";
 import { CheckedOutNode, CheckoutInfo } from "@bc/domain/checkout";
-import { GithubAPIService } from "@bc/service/git/github-api";
+import { GitAPIService } from "@bc/service/git/git-api-service";
 import { GitCLIService } from "@bc/service/git/git-cli";
 import { logAndThrow } from "@bc/utils/log";
 import { NotFoundError } from "@bc/domain/errors";
@@ -116,7 +116,7 @@ export class CheckoutService {
    * @returns checkout info
    */
   private async getCheckoutInfo(node: Node): Promise<CheckoutInfo> {
-    const githubAPIService = Container.get(GithubAPIService);
+    const gitAPIService = Container.get(GitAPIService);
     const projectTriggeringTheJob = this.config.getProjectTriggeringTheJob();
     const originalTarget = this.config.getTargetProject();
     // the current node is the current target
@@ -142,11 +142,11 @@ export class CheckoutService {
      * (where node_forked is the fork of node owned by the same author as the source's author)
      * Branch existance is automatically checked by hasPullRequest. If the branch does not exist => there is no PR
      */
-    const result = await githubAPIService
+    const result = await gitAPIService
       .getForkName(currentTarget.group, originalSource.group!, currentTarget.name)
       .then(async forkName => {
         // only check for PR if we were able to get a fork name
-        const hasPullRequestFromFork = await githubAPIService.hasPullRequest(
+        const hasPullRequestFromFork = await gitAPIService.hasPullRequest(
           currentTarget.group,
           currentTarget.name,
           `${originalSource.group}/${forkName}:${originalSource.branch}`,
@@ -179,7 +179,7 @@ export class CheckoutService {
      * Check whether PR exists from node:source_branch to node:mapped_branch
      * Branch existance is automatically checked by hasPullRequest. If the branch does not exist => there is no PR
      */
-    const hasPullRequest = await githubAPIService.hasPullRequest(
+    const hasPullRequest = await gitAPIService.hasPullRequest(
       currentTarget.group,
       currentTarget.name,
       `${currentTarget.group}:${originalSource.branch}`,

@@ -5,6 +5,7 @@ import { UploadService } from "@bc/service/artifacts/upload-service";
 import Container from "typedi";
 import { ArtifactService } from "@bc/service/artifacts/artifact-service";
 import { Node } from "@kie/build-chain-configuration-reader";
+import { defaultNodeValue } from "@bc/domain/node";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -14,10 +15,8 @@ Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
 
 const nodeChain: Node[] = [
   {
+    ...defaultNodeValue,
     project: "owner1/project1",
-    parents: [],
-    children: [],
-    depth: -1,
     archiveArtifacts: {
       name: "artifacts-project1",
       dependencies: "all",
@@ -26,10 +25,8 @@ const nodeChain: Node[] = [
     },
   },
   {
+    ...defaultNodeValue,
     project: "owner2/project2",
-    parents: [],
-    children: [],
-    depth: -1,
     archiveArtifacts: {
       name: "artifacts-project1",
       dependencies: "none",
@@ -38,10 +35,8 @@ const nodeChain: Node[] = [
     },
   },
   {
+    ...defaultNodeValue,
     project: "owner3/project3",
-    parents: [],
-    children: [],
-    depth: -1,
     archiveArtifacts: {
       name: "artifacts-project1",
       dependencies: ["owner1/project1"],

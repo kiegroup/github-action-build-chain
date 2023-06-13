@@ -1,3 +1,4 @@
+import { Pulls, Repo } from "@bc/domain/base-git-api-client";
 import { BaseGitAPIClient } from "@bc/service/git/base-git-api-client";
 import axios, { Axios } from "axios";
 
@@ -32,11 +33,7 @@ export class GitlabAPIClient extends BaseGitAPIClient {
     };
   }
 
-  private async getBranch(args: {
-    owner: string;
-    repo: string;
-    branch: string;
-  }) {
+  private async getBranch(args: Repo["getBranch"]["parameters"]) {
     const projectId = this.getProjectId(args.owner, args.repo);
     const { data, status } = await this.client.get(
       `/projects/${projectId}/repository/branches/${args.branch}`
@@ -44,13 +41,7 @@ export class GitlabAPIClient extends BaseGitAPIClient {
     return { data, status };
   }
 
-  private async listPulls(args: {
-    owner: string;
-    repo: string;
-    state?: string;
-    base?: string;
-    head?: string;
-  }) {
+  private async listPulls(args: Pulls["list"]["parameters"]) {
     const projectId = this.getProjectId(args.owner, args.repo);
     const { data, status } = await this.client.get(
       `/projects/${projectId}/merge_requests`,
@@ -65,17 +56,13 @@ export class GitlabAPIClient extends BaseGitAPIClient {
     return { data, status };
   }
 
-  private async getRepo(args: { owner: string; repo: string }) {
+  private async getRepo(args: Repo["get"]["parameters"]) {
     const projectId = this.getProjectId(args.owner, args.repo);
     const { data, status } = await this.client.get(`/projects/${projectId}`);
     return { data, status };
   }
 
-  private async getPullRequest(args: {
-    owner: string;
-    repo: string;
-    pull_number: number; // using snake_case to maintain consitency with octokit
-  }) {
+  private async getPullRequest(args: Pulls["get"]["parameters"]) {
     const projectId = this.getProjectId(args.owner, args.repo);
     const { data, status } = await this.client.get(
       `/projects/${projectId}/merge_requests/${args.pull_number}`
@@ -112,12 +99,7 @@ export class GitlabAPIClient extends BaseGitAPIClient {
     };
   }
 
-  private async listForkName(args: {
-    owner: string;
-    repo: string;
-    per_page?: number;
-    page?: number;
-  }) {
+  private async listForkName(args: Repo["listForkName"]["parameters"]) {
     const projectId = this.getProjectId(args.owner, args.repo);
     const { data, status } = await this.client.get(
       `/projects/${projectId}/forks`,
@@ -132,19 +114,16 @@ export class GitlabAPIClient extends BaseGitAPIClient {
       status,
       data: (
         data as {
-          path: string
+          path: string;
           namespace: { path: string };
         }[]
-      ).map(d => ({owner: d.namespace.path, repo: d.path})),
+      ).map(d => ({ owner: d.namespace.path, repo: d.path })),
     };
   }
 
-  private async getForkNameForTargetRepoGivenSourceOwner(args: {
-    targetOwner: string;
-    targetRepo: string;
-    sourceOwner: string;
-    per_page?: number;
-  }) {
+  private async getForkNameForTargetRepoGivenSourceOwner(
+    args: Repo["getForkNameForTargetRepoGivenSourceOwner"]["parameters"]
+  ) {
     let page = 1;
     let forks = (
       await this.listForkName({

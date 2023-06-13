@@ -14,6 +14,7 @@ import {
 import { BaseGitAPIClient } from "@bc/service/git/base-git-api-client";
 import { EventData } from "@bc/domain/configuration";
 import { HttpProxyAgent } from "http-proxy-agent";
+import { Pulls, Repo } from "@bc/domain/base-git-api-client";
 
 export class GitHubAPIClient extends BaseGitAPIClient {
   private octokit: Octokit;
@@ -178,11 +179,7 @@ export class GitHubAPIClient extends BaseGitAPIClient {
     return request(endpoint as EndpointOptions);
   }
 
-  private async getPullRequest(args: {
-    owner: string;
-    repo: string;
-    pull_number: number;
-  }) {
+  private async getPullRequest(args: Pulls["get"]["parameters"]) {
     const { data, status } = await this.octokit.pulls.get(args);
     return {
       data: {
@@ -215,13 +212,7 @@ export class GitHubAPIClient extends BaseGitAPIClient {
     };
   }
 
-  private async listPulls(args: {
-    owner: string;
-    repo: string;
-    state?: "opened" | "closed" | "merged";
-    base?: string;
-    head?: string;
-  }) {
+  private async listPulls(args: Pulls["list"]["parameters"]) {
     let state: "all" | "closed" | "open" | undefined;
     switch (args.state) {
       case "opened":
@@ -240,12 +231,7 @@ export class GitHubAPIClient extends BaseGitAPIClient {
     });
   }
 
-  private async listForkName(args: {
-    owner: string;
-    repo: string;
-    per_page?: number;
-    page?: number;
-  }) {
+  private async listForkName(args: Repo["listForkName"]["parameters"]) {
     const { status, data } = await this.octokit.rest.repos.listForks(args);
     return {
       data: data.map(n => ({ owner: n.owner.login, repo: n.name })),
@@ -253,12 +239,9 @@ export class GitHubAPIClient extends BaseGitAPIClient {
     };
   }
 
-  private async getForkNameForTargetRepoGivenSourceOwner(args: {
-    targetOwner: string;
-    targetRepo: string;
-    sourceOwner: string;
-    per_page?: number;
-  }) {
+  private async getForkNameForTargetRepoGivenSourceOwner(
+    args: Repo["getForkNameForTargetRepoGivenSourceOwner"]["parameters"]
+  ) {
     let page = 1;
     for await (const response of this.octokit.paginate.iterator(
       this.octokit.repos.listForks,

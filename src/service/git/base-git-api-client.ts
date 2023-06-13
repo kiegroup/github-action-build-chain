@@ -1,13 +1,8 @@
-import { EventData } from "@bc/domain/configuration";
+import { Pulls, Repo } from "@bc/domain/base-git-api-client";
 import { GitTokenService } from "@bc/service/git/git-token-service";
 import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import Container from "typedi";
-
-type Response<T> = {
-  status: number;
-  data: T;
-};
 
 export abstract class BaseGitAPIClient {
   protected tokenService: GitTokenService;
@@ -23,38 +18,24 @@ export abstract class BaseGitAPIClient {
   }
 
   abstract get repos(): {
-    getBranch: (args: {
-      owner: string;
-      repo: string;
-      branch: string;
-    }) => Promise<Response<unknown>>;
-    get: (args: { owner: string; repo: string }) => Promise<Response<unknown>>;
-    listForkName: (args: {
-      owner: string;
-      repo: string;
-      per_page?: number;
-      page?: number;
-    }) => Promise<Response<{owner: string, repo: string}[]>>;
-    getForkNameForTargetRepoGivenSourceOwner: (args: {
-      targetOwner: string;
-      targetRepo: string;
-      sourceOwner: string;
-      per_page?: number;
-    }) => Promise<Response<string | undefined>>;
+    getBranch: (
+      args: Repo["getBranch"]["parameters"]
+    ) => Promise<Repo["getBranch"]["response"]>;
+    get: (args: Repo["get"]["parameters"]) => Promise<Repo["get"]["response"]>;
+    listForkName: (
+      args: Repo["listForkName"]["parameters"]
+    ) => Promise<Repo["listForkName"]["response"]>;
+    getForkNameForTargetRepoGivenSourceOwner: (
+      args: Repo["getForkNameForTargetRepoGivenSourceOwner"]["parameters"]
+    ) => Promise<Repo["getForkNameForTargetRepoGivenSourceOwner"]["response"]>;
   };
 
   abstract get pulls(): {
-    list: (args: {
-      owner: string;
-      repo: string;
-      state?: "opened" | "closed" | "merged";
-      base?: string;
-      head?: string;
-    }) => Promise<Response<unknown[]>>;
-    get: (args: {
-      owner: string;
-      repo: string;
-      pull_number: number;
-    }) => Promise<Response<EventData>>;
+    list: (
+      args: Pulls["list"]["parameters"]
+    ) => Promise<Pulls["list"]["response"]>;
+    get: (
+      args: Pulls["get"]["parameters"]
+    ) => Promise<Pulls["get"]["response"]>;
   };
 }

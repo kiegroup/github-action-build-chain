@@ -17,7 +17,7 @@ jest.mock("@kie/build-chain-configuration-reader");
 jest.spyOn(global.console, "log");
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
-Container.get(GitTokenService).setGithubToken(
+Container.get(GitTokenService).setToken(
   DEFAULT_GITHUB_PLATFORM.id,
   "faketoken"
 );

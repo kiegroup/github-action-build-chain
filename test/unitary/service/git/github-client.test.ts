@@ -166,7 +166,7 @@ describe("repos", () => {
 describe("token pool auth", () => {
   test("Rotate through all tokens", async () => {
     const tokenService = Container.get(GitTokenService);
-    tokenService.setGithubToken(DEFAULT_GITHUB_PLATFORM.id, "token1");
+    tokenService.setToken(DEFAULT_GITHUB_PLATFORM.id, "token1");
     tokenService.setGithubTokenPool(DEFAULT_GITHUB_PLATFORM.id, [
       "token1",
       "token3",
@@ -258,7 +258,7 @@ describe("token pool auth", () => {
 
   test("Rotate through all tokens and reuse reset ones", async () => {
     const tokenService = Container.get(GitTokenService);
-    tokenService.setGithubToken(DEFAULT_GITHUB_PLATFORM.id, "token1");
+    tokenService.setToken(DEFAULT_GITHUB_PLATFORM.id, "token1");
     tokenService.setGithubTokenPool(DEFAULT_GITHUB_PLATFORM.id, [
       "token1",
       "token3",

@@ -21,22 +21,15 @@ export class GitAPIClient {
     const platform = this.config.getPlatform(owner, repo);
 
     if (!this.clients[platform.id]) {
+      this.gitTokenService.setTokenUsingEnv(platform.id, platform.tokenId);
       switch (platform.type) {
         case PlatformType.GITHUB:
-          this.gitTokenService.setGithubTokenUsingEnv(
-            platform.id,
-            platform.tokenId
-          );
           this.clients[platform.id] = new GitHubAPIClient(
             platform.apiUrl,
             platform.id
           );
           break;
         case PlatformType.GITLAB:
-          this.gitTokenService.setGitlabTokenUsingEnv(
-            platform.id,
-            platform.tokenId
-          );
           this.clients[platform.id] = new GitlabAPIClient(
             platform.apiUrl,
             platform.id

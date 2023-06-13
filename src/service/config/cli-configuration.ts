@@ -41,9 +41,11 @@ export class CLIConfiguration extends BaseConfiguration {
     const githubServerUrl = process.env.GITHUB_SERVER_URL ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "") : "https://github.com";
     const gitlabServerUrl = process.env.CI_SERVER_URL?.replace(/\/$/, "");
     const serverUrl = gitlabServerUrl ? gitlabServerUrl : githubServerUrl;
-    const token = gitlabServerUrl ? 
-      this.tokenService.getGitlabToken(DEFAULT_GITLAB_PLATFORM.id) :
-      this.tokenService.getGithubToken(DEFAULT_GITHUB_PLATFORM.id);
+    const token = this.tokenService.getToken(
+      gitlabServerUrl ? 
+        DEFAULT_GITLAB_PLATFORM.id : 
+        DEFAULT_GITHUB_PLATFORM.id
+    );
     let gitConfig: GitConfiguration = {
       serverUrl: serverUrl,
       serverUrlWithToken: serverUrl.replace("://", `://${token}@`),
@@ -149,11 +151,9 @@ export class CLIConfiguration extends BaseConfiguration {
     }
 
     if (platform.type === PlatformType.GITHUB) {
-      this.tokenService.setGithubToken(platform.id, token[0]);
       this.tokenService.setGithubTokenPool(platform.id, token);
-    } else {
-      this.tokenService.setGitlabToken(platform.id, token[0]);
-    }
+    } 
+    this.tokenService.setToken(platform.id, token[0]);
   }
 
   override loadParsedInput(): InputValues {

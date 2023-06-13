@@ -96,7 +96,7 @@ export class DefinitionFileReader {
         this.configuration.parsedInputs.definitionFile,
         {
           ...this.configuration.sourceProject,
-          token: this.tokenService.getGithubToken(this.defaultPlatform.id),
+          token: this.tokenService.getToken(this.defaultPlatform.id),
         }
       );
     } catch (err) {
@@ -110,7 +110,7 @@ export class DefinitionFileReader {
         this.configuration.parsedInputs.definitionFile,
         {
           ...this.configuration.targetProject,
-          token: this.tokenService.getGithubToken(this.defaultPlatform.id),
+          token: this.tokenService.getToken(this.defaultPlatform.id),
         }
       );
     } catch (err) {
@@ -122,7 +122,7 @@ export class DefinitionFileReader {
     try {
       return await readDefinitionFile(
         this.configuration.parsedInputs.definitionFile, { 
-          token: this.tokenService.getGithubToken(this.defaultPlatform.id)
+          token: this.tokenService.getToken(this.defaultPlatform.id)
         }
       );
     } catch(err) {
@@ -134,7 +134,7 @@ export class DefinitionFileReader {
     try {
       return await this.generateNodeChainWithOptions(starterProject, {
         ...this.configuration.sourceProject,
-        token: this.tokenService.getGithubToken(this.defaultPlatform.id),
+        token: this.tokenService.getToken(this.defaultPlatform.id),
       });
     } catch (err) {
       this.logger.debug(
@@ -145,7 +145,7 @@ export class DefinitionFileReader {
     try {
       return await this.generateNodeChainWithOptions(starterProject, {
         ...this.configuration.targetProject,
-        token: this.tokenService.getGithubToken(this.defaultPlatform.id),
+        token: this.tokenService.getToken(this.defaultPlatform.id),
       });
     } catch (err) {
       this.logger.debug(
@@ -155,7 +155,7 @@ export class DefinitionFileReader {
 
     try {
       return await this.generateNodeChainWithOptions(starterProject, {
-        token: this.tokenService.getGithubToken(this.defaultPlatform.id),
+        token: this.tokenService.getToken(this.defaultPlatform.id),
       });
     } catch(err) {
       logAndThrow(`Invalid definition file. ${err}`);
@@ -165,7 +165,7 @@ export class DefinitionFileReader {
   async generateNodeChainForTools(starterProject: string): Promise<Node[]> {
     switch(this.configuration.getToolType()) {
       case ToolType.PROJECT_LIST:
-        return this.getUpstreamOrFullDownstreamProjects(starterProject, {token: this.tokenService.getGithubToken(this.defaultPlatform.id)});
+        return this.getUpstreamOrFullDownstreamProjects(starterProject, {token: this.tokenService.getToken(this.defaultPlatform.id)});
       default:
         logAndThrow(`Invalid tool ${this.configuration.getToolType()}`);
     }

@@ -10,7 +10,7 @@ export class GitlabAPIClient extends BaseGitAPIClient {
     this.client = axios.create({
       baseURL: this.baseUrl,
       headers: {
-        Authorization: `Bearer ${this.tokenService.getGitlabToken(id)}`,
+        Authorization: `Bearer ${this.tokenService.getToken(id)}`,
         "User-Agent": "kiegroup/github-build-chain-action",
       },
     });

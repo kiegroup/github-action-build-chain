@@ -93,7 +93,7 @@ describe("load event data", () => {
         data: event,
       });
 
-    Container.get(GitTokenService).setGithubToken(
+    Container.get(GitTokenService).setToken(
       DEFAULT_GITHUB_PLATFORM.id,
       "faketoken"
     );
@@ -138,7 +138,7 @@ describe("load event data", () => {
       url: "https://gitlab.com/owner/project/-/merge_requests/270",
     };
 
-    Container.get(GitTokenService).setGithubToken(
+    Container.get(GitTokenService).setToken(
       DEFAULT_GITHUB_PLATFORM.id,
       "faketoken"
     );
@@ -206,7 +206,7 @@ describe("load git config branch flow", () => {
     jest
       .spyOn(cliConfig, "parsedInputs", "get")
       .mockImplementation(() => currentInput);
-    Container.get(GitTokenService).setGithubToken(
+    Container.get(GitTokenService).setToken(
       DEFAULT_GITHUB_PLATFORM.id,
       token
     );
@@ -274,11 +274,11 @@ describe("load git config no branch flow", () => {
     jest
       .spyOn(cliConfig, "parsedInputs", "get")
       .mockImplementation(() => defaultInputValues);
-    Container.get(GitTokenService).setGithubToken(
+    Container.get(GitTokenService).setToken(
       DEFAULT_GITHUB_PLATFORM.id,
       token
     );
-    Container.get(GitTokenService).setGitlabToken(
+    Container.get(GitTokenService).setToken(
       DEFAULT_GITLAB_PLATFORM.id,
       token
     );
@@ -396,7 +396,7 @@ describe("load token", () => {
     });
     cliConfig.loadToken();
     expect(
-      Container.get(GitTokenService).getGithubToken(DEFAULT_GITHUB_PLATFORM.id)
+      Container.get(GitTokenService).getToken(DEFAULT_GITHUB_PLATFORM.id)
     ).toBe(token[0]);
   });
 
@@ -409,7 +409,7 @@ describe("load token", () => {
     await mockGithub.setup();
     cliConfig.loadToken();
     expect(
-      Container.get(GitTokenService).getGithubToken(DEFAULT_GITHUB_PLATFORM.id)
+      Container.get(GitTokenService).getToken(DEFAULT_GITHUB_PLATFORM.id)
     ).toBe("token");
     await mockGithub.teardown();
   });
@@ -423,7 +423,7 @@ describe("load token", () => {
     jest.spyOn(BaseConfiguration.prototype, "getDefaultPlatformConfig").mockReturnValueOnce(DEFAULT_GITLAB_PLATFORM);
     cliConfig.loadToken();
     expect(
-      Container.get(GitTokenService).getGitlabToken(DEFAULT_GITLAB_PLATFORM.id)
+      Container.get(GitTokenService).getToken(DEFAULT_GITLAB_PLATFORM.id)
     ).toBe(token[0]);
   });
 
@@ -432,7 +432,7 @@ describe("load token", () => {
     process.env.GITLAB_TOKEN = "token";
     cliConfig.loadToken();
     expect(
-      Container.get(GitTokenService).getGitlabToken(DEFAULT_GITLAB_PLATFORM.id)
+      Container.get(GitTokenService).getToken(DEFAULT_GITLAB_PLATFORM.id)
     ).toBe("token");
   });
 

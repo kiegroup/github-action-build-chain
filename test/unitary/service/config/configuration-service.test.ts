@@ -338,10 +338,7 @@ describe("methods", () => {
   ])("get clone url", (_title, platform, token, baseUrl) => {
     jest.spyOn(config, "getPlatform").mockReturnValueOnce(platform);
     jest
-      .spyOn(GitTokenService.prototype, "getGithubToken")
-      .mockReturnValueOnce(token);
-    jest
-      .spyOn(GitTokenService.prototype, "getGitlabToken")
+      .spyOn(GitTokenService.prototype, "getToken")
       .mockReturnValueOnce(token);
     expect(config.getCloneUrl("owner", "repo")).toBe(`${baseUrl}/owner/repo`);
   });

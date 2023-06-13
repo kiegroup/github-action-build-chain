@@ -37,7 +37,7 @@ export class ActionConfiguration extends BaseConfiguration {
       actor: process.env.GITHUB_ACTOR,
       author: process.env.GITHUB_AUTHOR,
       serverUrl: serverUrl,
-      serverUrlWithToken: serverUrl.replace("://", `://${this.tokenService.getGithubToken(DEFAULT_GITHUB_PLATFORM.id)}@`),
+      serverUrlWithToken: serverUrl.replace("://", `://${this.tokenService.getToken(DEFAULT_GITHUB_PLATFORM.id)}@`),
       jobId: process.env.GITHUB_JOB,
       ref: process.env.GITHUB_REF,
       workflow: process.env.GITHUB_WORKFLOW,
@@ -68,7 +68,7 @@ export class ActionConfiguration extends BaseConfiguration {
    */
   loadToken(): void {
     if (process.env.GITHUB_TOKEN) {
-      this.tokenService.setGithubToken(DEFAULT_GITHUB_PLATFORM.id, process.env.GITHUB_TOKEN);
+      this.tokenService.setToken(DEFAULT_GITHUB_PLATFORM.id, process.env.GITHUB_TOKEN);
       this.tokenService.setGithubTokenPool(DEFAULT_GITHUB_PLATFORM.id, [ process.env.GITHUB_TOKEN ]);
     } else {
       logAndThrow("A github token is needed");

@@ -97,7 +97,7 @@ describe("load git config", () => {
 
   beforeEach(async () => {
     await mockGithub.setup();
-    Container.get(GitTokenService).setGithubToken(
+    Container.get(GitTokenService).setToken(
       DEFAULT_GITHUB_PLATFORM.id,
       token
     );
@@ -201,7 +201,7 @@ describe("load token", () => {
     });
     await mockGithub.setup();
     actionConfig.loadToken();
-    expect(Container.get(GitTokenService).getGithubToken(
+    expect(Container.get(GitTokenService).getToken(
       DEFAULT_GITHUB_PLATFORM.id
     )).toBe("token");
     await mockGithub.teardown();

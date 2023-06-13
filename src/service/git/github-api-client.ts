@@ -35,7 +35,7 @@ export class GitHubAPIClient extends BaseGitAPIClient {
      * this workaround will help with that.
      */
     const proxy = process.env["http_proxy"];
-    this.currentToken = this.tokenService.getGithubToken(id)!;
+    this.currentToken = this.tokenService.getToken(id)!;
     this.whitelist = this.tokenService.getGithubTokenPool(id);
     this.blacklist = {};
 
@@ -114,7 +114,7 @@ export class GitHubAPIClient extends BaseGitAPIClient {
       this.currentToken = this.whitelist.pop()!;
 
       // set the new token globally
-      this.tokenService.setGithubToken(this.tokenServiceId, this.currentToken);
+      this.tokenService.setToken(this.tokenServiceId, this.currentToken);
       return true;
     } else {
       this.logger.error("Request quota exhausted. No tokens available");

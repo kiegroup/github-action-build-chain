@@ -9,30 +9,43 @@ import Container from "typedi";
 export class GitAPIClient {
   private config: ConfigurationService;
   private gitTokenService: GitTokenService;
+  private clients: Record<string, BaseGitAPIClient>;
 
   constructor() {
     this.config = Container.get(ConfigurationService);
     this.gitTokenService = Container.get(GitTokenService);
+    this.clients = {};
   }
 
   rest(owner: string, repo: string): BaseGitAPIClient {
     const platform = this.config.getPlatform(owner, repo);
 
-    switch (platform.type) {
-      case PlatformType.GITHUB:
-        this.gitTokenService.setGithubTokenUsingEnv(
-          platform.id,
-          platform.tokenId
-        );
-        return new GitHubAPIClient(platform.apiUrl, platform.id);
-      case PlatformType.GITLAB:
-        this.gitTokenService.setGitlabTokenUsingEnv(
-          platform.id,
-          platform.tokenId
-        );
-        return new GitlabAPIClient(platform.apiUrl, platform.id);
-      default:
-        throw new Error(`${platform} is not supported`);
+    if (!this.clients[platform.id]) {
+      switch (platform.type) {
+        case PlatformType.GITHUB:
+          this.gitTokenService.setGithubTokenUsingEnv(
+            platform.id,
+            platform.tokenId
+          );
+          this.clients[platform.id] = new GitHubAPIClient(
+            platform.apiUrl,
+            platform.id
+          );
+          break;
+        case PlatformType.GITLAB:
+          this.gitTokenService.setGitlabTokenUsingEnv(
+            platform.id,
+            platform.tokenId
+          );
+          this.clients[platform.id] = new GitlabAPIClient(
+            platform.apiUrl,
+            platform.id
+          );
+          break;
+        default:
+          throw new Error(`${platform} is not supported`);
+      }
     }
+    return this.clients[platform.id];
   }
 }

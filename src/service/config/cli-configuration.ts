@@ -157,10 +157,11 @@ export class CLIConfiguration extends BaseConfiguration {
   }
 
   override loadParsedInput(): InputValues {
-    this._defaultPlatform = this.isGitlabUrl(this.parsedInputs.url) ? 
+    const parsedInput = super.loadParsedInput();
+    this._defaultPlatform = this.isGitlabUrl(parsedInput.url) ? 
     PlatformType.GITLAB :
     PlatformType.GITHUB;
-    return super.loadParsedInput();
+    return parsedInput;
   }
 
   /**

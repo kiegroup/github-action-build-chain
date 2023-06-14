@@ -333,7 +333,7 @@ describe("methods", () => {
 
   test.each([
     ["github", DEFAULT_GITHUB_PLATFORM, "token", "https://token@github.com"],
-    ["gitlab", DEFAULT_GITLAB_PLATFORM, "token", "https://token@gitlab.com"],
+    ["gitlab", DEFAULT_GITLAB_PLATFORM, "token", "https://oauth2:token@gitlab.com"],
     ["no token", DEFAULT_GITHUB_PLATFORM, undefined, "https://github.com"],
   ])("get clone url", (_title, platform, token, baseUrl) => {
     jest.spyOn(config, "getPlatform").mockReturnValueOnce(platform);

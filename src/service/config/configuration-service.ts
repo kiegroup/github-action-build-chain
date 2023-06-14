@@ -9,7 +9,7 @@ import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { ProjectConfiguration } from "@bc/domain/configuration";
 import { FlowType } from "@bc/domain/inputs";
-import { DefinitionFile, Post, Pre, Node, Platform, DEFAULT_GITLAB_PLATFORM, DEFAULT_GITHUB_PLATFORM } from "@kie/build-chain-configuration-reader";
+import { DefinitionFile, Post, Pre, Node, Platform, DEFAULT_GITLAB_PLATFORM, DEFAULT_GITHUB_PLATFORM, PlatformType } from "@kie/build-chain-configuration-reader";
 import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 import { CLIActionType, ToolType } from "@bc/domain/cli";
 import { GitTokenService } from "@bc/service/git/git-token-service";
@@ -234,7 +234,10 @@ export class ConfigurationService {
   getCloneUrl(group: string, repoName: string): string {
     const platform = this.getPlatform(group, repoName);
     const token = this.tokenService.getToken(platform.id, platform.tokenId);
-    const serverUrl = token ? platform.serverUrl.replace("://", `://${token}@`) : platform.serverUrl;
+    const oauth2Prefix = platform.type === PlatformType.GITLAB ? "oauth2:" : "";
+    const serverUrl = token ? 
+      platform.serverUrl.replace("://", `://${oauth2Prefix}${token}@`) : 
+      platform.serverUrl;
     return `${serverUrl}/${group}/${repoName}`;
   }
 

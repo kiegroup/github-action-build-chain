@@ -20,14 +20,14 @@ jest.spyOn(global.console, "log");
  * since all config service functions will be mocked
  */
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
-Container.set(constants.GITHUB.TOKEN, "faketoken");
-Container.set(constants.GITHUB.TOKEN_POOL, ["faketoken"]);
 
 const checkoutService = Container.get(CheckoutService);
 const moctokit = new Moctokit();
 let cloneSpy: jest.SpyInstance, mergeSpy: jest.SpyInstance, renameSpy: jest.SpyInstance;
 
 beforeEach(async () => {
+  process.env = {};
+  
   //set node chain
   jest.spyOn(ConfigurationService.prototype, "nodeChain", "get").mockImplementation(() => nodeChain);
 

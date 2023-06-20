@@ -1,5 +1,6 @@
 import { ConfigurationService } from "@bc/service/config/configuration-service";
 import { BaseGitAPIClient } from "@bc/service/git/base-git-api-client";
+import { GerritAPIClient } from "@bc/service/git/gerrit-api-client";
 import { GitTokenService } from "@bc/service/git/git-token-service";
 import { GitHubAPIClient } from "@bc/service/git/github-api-client";
 import { GitlabAPIClient } from "@bc/service/git/gitlab-api-client";
@@ -31,6 +32,12 @@ export class GitAPIClient {
           break;
         case PlatformType.GITLAB:
           this.clients[platform.id] = new GitlabAPIClient(
+            platform.apiUrl,
+            platform.id
+          );
+          break;
+        case PlatformType.GERRIT:
+          this.clients[platform.id] = new GerritAPIClient(
             platform.apiUrl,
             platform.id
           );

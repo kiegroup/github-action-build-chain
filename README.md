@@ -801,13 +801,13 @@ List of breaking changes from v2 to v3:
 
 ## Using multiple git platforms
 
-You can now define multiple git platforms to clone your projects from. Currently only GitHub and GitLab are supported. Refer to [build-chain-configuration-reader](#https://github.com/kiegroup/build-chain-configuration-reader#platforms-only-in-version-23) on how to define multiple platforms. The advanatge of having this is that you can build projects that are hosted on one platform along with projects that are hosted on another platform.
+You can now define multiple git platforms to clone your projects from. Currently only GitHub, GitLab and Gerrit are supported. Refer to [build-chain-configuration-reader](#https://github.com/kiegroup/build-chain-configuration-reader#platforms-only-in-version-23) on how to define multiple platforms. The advanatge of having this is that you can build projects that are hosted on one platform along with projects that are hosted on another platform.
 
 build-chain runs with a default platform configured. This default platform is used for projects which don't have a platform defined and for reading and loading configuration from the definition file.
 
 By default, when you run build-chain as a github action the default platform configuration used is GitHub.  
 
-When using build-chain as a CLI tool, build-chain will try to detect the default platform based on the definition file url. If it is not able to detect it from the url, it will use GitHub as the default configuration. If you want to override all of this, you will have the option to define default configuration as CLI options:
+When using build-chain as a CLI tool, build-chain will try to detect the default platform based on the definition file url. If it is not able to detect it from the url, it will use GitHub as the default configuration. If you want to override all of this, you will have the option to define default configuration as CLI options (currently only GitHub and GitLab have default options):
 
 ```shell
 -ghi, --defaultGithubId <id>                default github id

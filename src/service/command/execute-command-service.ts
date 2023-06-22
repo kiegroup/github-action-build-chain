@@ -40,16 +40,8 @@ export class ExecuteCommandService {
     const current = this.getNodeCommands(node, ExecutionPhase.CURRENT, this._configurationService.getNodeExecutionLevel(node));
     const after = this.getNodeCommands(node, ExecutionPhase.AFTER, this._configurationService.getNodeExecutionLevel(node));
     let skipExecution = this._configurationService.skipExecution(node);
-
-    if (!(await this.executeNodePhase(node, before, skipExecution, {...opts, cwd}, result))) {
-      skipExecution = true;
-    }
-
-    if (!(await this.executeNodePhase(node, current, skipExecution, {...opts, cwd}, result))) {
-      skipExecution = true;
-    }
-
-    // don't have to check if after failed since we are returning immediately anyways
+    skipExecution = !(await this.executeNodePhase(node, before, skipExecution, {...opts, cwd}, result)) || skipExecution;
+    skipExecution = !(await this.executeNodePhase(node, current, skipExecution, {...opts, cwd}, result)) || skipExecution;
     await this.executeNodePhase(node, after, skipExecution, {...opts, cwd}, result);
     return result;
   }

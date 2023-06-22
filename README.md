@@ -763,7 +763,8 @@ Options:
   -h, --help              display help for command
 
 Commands:
-  project-list [options]  Prints a ordered  by precendence list of projects
+  project-list [options]  Prints the projects that will be built given a starting project ordered by precedence
+  plan                    Execute build chain without actually cloning or executing projects (like a dry run)
   help [command]          display help for command
 ```
 

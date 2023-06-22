@@ -27,8 +27,8 @@ export class Plan extends Tools {
     Container.set(GitCLIService, git);
 
     // patch command executor to not execute a command
-    const cmdExecutor = Container.get(CommandExecutorDelegator);
-    cmdExecutor.executeCommand = async (cmd, _opts?) => {
+    const commandExecutor = Container.get(CommandExecutorDelegator);
+    commandExecutor.executeCommand = async cmd => {
       this.logger.logger.log(`Executed ${cmd}`);
       return {
         startingDate: Date.now(),
@@ -39,9 +39,9 @@ export class Plan extends Tools {
         errorMessage: "",
       };
     };
-    Container.set(CommandExecutorDelegator, cmdExecutor);
+    Container.set(CommandExecutorDelegator, commandExecutor);
 
-    // update input to make not look like this is tool execution
+    // update input to make it not look like a tool subcommand execution
     const inputService = Container.get(InputService);
     inputService.updateInputs({
       CLICommand: CLIActionType.BUILD,

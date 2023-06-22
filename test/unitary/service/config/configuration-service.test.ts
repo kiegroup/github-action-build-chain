@@ -9,9 +9,14 @@ import { NodeExecutionLevel } from "@bc/domain/node-execution";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { ToolType } from "@bc/domain/cli";
 import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
-import { Node } from "@kie/build-chain-configuration-reader";
+import {
+  DEFAULT_GITHUB_PLATFORM,
+  DEFAULT_GITLAB_PLATFORM,
+  Node,
+} from "@kie/build-chain-configuration-reader";
 import { defaultNodeValue } from "@bc/domain/node";
 import { EventData } from "@bc/domain/configuration";
+import { GitTokenService } from "@bc/service/git/git-token-service";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -21,8 +26,8 @@ describe("initialization", () => {
   beforeEach(() => {
     jest
       .spyOn(ConfigurationService.prototype, "init")
-      .mockImplementationOnce(async () => 
-        Container.get(constants.CONTAINER.ENTRY_POINT) as never
+      .mockImplementationOnce(
+        async () => Container.get(constants.CONTAINER.ENTRY_POINT) as never
       );
   });
   test("action", async () => {
@@ -300,7 +305,6 @@ describe("methods", () => {
       CLISubCommand: ToolType.PROJECT_LIST,
     };
     expect(config.getToolType()).toBe(ToolType.PROJECT_LIST);
-
   });
 
   test("get tool type: failure", () => {
@@ -327,14 +331,16 @@ describe("methods", () => {
     expect(config.getRootFolder()).toBe(process.cwd());
   });
 
-  test("get clone url", () => {
-    const gitConfig = { serverUrlWithToken: "http://github.com" };
+  test.each([
+    ["github", DEFAULT_GITHUB_PLATFORM, "token", "https://token@github.com"],
+    ["gitlab", DEFAULT_GITLAB_PLATFORM, "token", "https://oauth2:token@gitlab.com"],
+    ["no token", DEFAULT_GITHUB_PLATFORM, undefined, "https://github.com"],
+  ])("get clone url", (_title, platform, token, baseUrl) => {
+    jest.spyOn(config, "getPlatform").mockReturnValueOnce(platform);
     jest
-      .spyOn(BaseConfiguration.prototype, "gitConfiguration", "get")
-      .mockImplementation(() => gitConfig);
-    expect(config.getCloneUrl("owner", "project")).toBe(
-      `${gitConfig.serverUrlWithToken}/owner/project`
-    );
+      .spyOn(GitTokenService.prototype, "getToken")
+      .mockReturnValueOnce(token);
+    expect(config.getCloneUrl("owner", "repo")).toBe(`${baseUrl}/owner/repo`);
   });
 
   test("skipParallelCheckout", () => {
@@ -380,7 +386,7 @@ describe("methods", () => {
   test.each([
     ["branch flow", FlowType.BRANCH, ""],
     ["non branch flow", FlowType.CROSS_PULL_REQUEST, "url"],
-  ])("getEventUrl", (title: string, flowType: FlowType, expected: string) => {
+  ])("getEventUrl", (_title: string, flowType: FlowType, expected: string) => {
     currentInput = {
       ...defaultInputValues,
       CLISubCommand: flowType,
@@ -394,46 +400,115 @@ describe("methods", () => {
   test.each([
     ["branch flow", FlowType.BRANCH, "group"],
     ["non branch flow", FlowType.CROSS_PULL_REQUEST, undefined],
-  ])("getGroupName", (title: string, flowType: FlowType, group?: string) => {
+  ])("getGroupName", (_title: string, flowType: FlowType, group?: string) => {
     currentInput = {
       ...defaultInputValues,
       CLISubCommand: flowType,
-      group
+      group,
     };
     expect(config.getGroupName()).toBe(group);
   });
 
   test.each([
-    ["github env is defined", projectTriggeringTheJob, undefined, projectTriggeringTheJob],
-    ["github event is defined", undefined, projectTriggeringTheJob, projectTriggeringTheJob],
+    [
+      "github env is defined",
+      projectTriggeringTheJob,
+      undefined,
+      projectTriggeringTheJob,
+    ],
+    [
+      "github event is defined",
+      undefined,
+      projectTriggeringTheJob,
+      projectTriggeringTheJob,
+    ],
     ["neither is defined use startProject", undefined, undefined, startProject],
-  ])("getProjectTriggeringTheJobName: %p", (_title, githubEnv, githubEvent, expected) => {
-    if (githubEnv) {
-      process.env["GITHUB_REPOSITORY"] = githubEnv;
+  ])(
+    "getProjectTriggeringTheJobName: %p",
+    (_title, githubEnv, githubEvent, expected) => {
+      if (githubEnv) {
+        process.env["GITHUB_REPOSITORY"] = githubEnv;
+      }
+      jest
+        .spyOn(BaseConfiguration.prototype, "gitEventData", "get")
+        .mockImplementationOnce(
+          () => ({ base: { repo: { full_name: githubEvent } } } as never)
+        );
+      expect(config.getProjectTriggeringTheJobName()).toBe(expected);
+      delete process.env["GITHUB_REPOSITORY"];
     }
-    jest
-      .spyOn(BaseConfiguration.prototype, "gitEventData", "get")
-      .mockImplementationOnce(() => ({ base: {repo: {full_name: githubEvent}} }) as never);
-    expect(config.getProjectTriggeringTheJobName()).toBe(expected);
-    delete process.env["GITHUB_REPOSITORY"];
-  });
+  );
 
   test.each([
-    ["projectTriggeringTheJob is found", projectTriggeringTheJob, projectTriggeringTheJob],
+    [
+      "projectTriggeringTheJob is found",
+      projectTriggeringTheJob,
+      projectTriggeringTheJob,
+    ],
     ["projectTriggeringTheJob is not found", undefined, startProject],
-  ])("getProjectTriggeringTheJob: %p", (_title, getProjectTriggeringTheJobName, expectedProject) => {
-    const chain: Node[] = [
-      { ...defaultNodeValue, project: "abc" },
-      { ...defaultNodeValue, project: startProject },
-      { ...defaultNodeValue, project: projectTriggeringTheJob },
-    ];
-    const nodeFound: Node = { ...defaultNodeValue, project: expectedProject };
+  ])(
+    "getProjectTriggeringTheJob: %p",
+    (_title, getProjectTriggeringTheJobName, expectedProject) => {
+      const chain: Node[] = [
+        { ...defaultNodeValue, project: "abc" },
+        { ...defaultNodeValue, project: startProject },
+        { ...defaultNodeValue, project: projectTriggeringTheJob },
+      ];
+      const nodeFound: Node = { ...defaultNodeValue, project: expectedProject };
+      jest
+        .spyOn(ConfigurationService.prototype, "nodeChain", "get")
+        .mockImplementation(() => chain);
+      jest
+        .spyOn(ConfigurationService.prototype, "getProjectTriggeringTheJobName")
+        .mockImplementation(() => getProjectTriggeringTheJobName!);
+      expect(config.getProjectTriggeringTheJob()).toStrictEqual(nodeFound);
+    }
+  );
+
+  test.each([
+    [
+      "default github",
+      {
+        ...defaultNodeValue,
+        platformId: DEFAULT_GITHUB_PLATFORM.id,
+        project: "owner/repo",
+      },
+      DEFAULT_GITHUB_PLATFORM,
+    ],
+    [
+      "default gitlab",
+      {
+        ...defaultNodeValue,
+        platformId: DEFAULT_GITLAB_PLATFORM.id,
+        project: "owner/repo",
+      },
+      DEFAULT_GITLAB_PLATFORM,
+    ],
+    [
+      "custom platform",
+      { ...defaultNodeValue, platformId: "ghes", project: "owner/repo" },
+      { ...DEFAULT_GITHUB_PLATFORM, id: "ghes" },
+    ],
+    [
+      "undefined",
+      { ...defaultNodeValue, project: "owner/repo" },
+      DEFAULT_GITLAB_PLATFORM,
+    ],
+  ])("getPlatform", (_title, node, expected) => {
     jest
       .spyOn(ConfigurationService.prototype, "nodeChain", "get")
-      .mockImplementation(() => chain);
+      .mockReturnValueOnce([node]);
     jest
-      .spyOn(ConfigurationService.prototype, "getProjectTriggeringTheJobName")
-      .mockImplementation(() => getProjectTriggeringTheJobName!);
-    expect(config.getProjectTriggeringTheJob()).toStrictEqual(nodeFound);
+      .spyOn(ConfigurationService.prototype, "definitionFile", "get")
+      .mockReturnValueOnce({
+        version: "2.3",
+        platforms: [{ ...DEFAULT_GITHUB_PLATFORM, id: "ghes" }],
+      });
+    jest
+      .spyOn(BaseConfiguration.prototype, "getDefaultPlatformConfig")
+      .mockReturnValueOnce(DEFAULT_GITLAB_PLATFORM);
+    expect(
+      config.getPlatform(node.project.split("/")[0], node.project.split("/")[1])
+    ).toStrictEqual(expected);
   });
 });

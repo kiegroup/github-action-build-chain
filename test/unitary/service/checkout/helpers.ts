@@ -2,13 +2,12 @@ import path from "path";
 import { mkdirSync } from "fs";
 import { writeFile, readFile } from "fs/promises";
 import { Node } from "@kie/build-chain-configuration-reader";
+import { defaultNodeValue } from "@bc/domain/node";
 
 export const nodeChain: Node[] = [
   {
+    ...defaultNodeValue,
     project: "owner1/project1",
-    parents: [],
-    children: [],
-    depth: -1,
     clone: ["clone-1", "clone-2"],
     mapping: {
       dependant: {
@@ -21,10 +20,8 @@ export const nodeChain: Node[] = [
     },
   },
   {
+    ...defaultNodeValue,
     project: "owner2/project2",
-    parents: [],
-    children: [],
-    depth: -1,
     mapping: {
       exclude: [],
       dependant: {
@@ -47,10 +44,8 @@ export const nodeChain: Node[] = [
     },
   },
   {
+    ...defaultNodeValue,
     project: "owner3/project3",
-    depth: -1,
-    parents: [],
-    children: []
   },
 ];
 

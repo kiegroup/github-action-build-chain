@@ -1,7 +1,7 @@
 import { CLIActionType, ToolType } from "@bc/domain/cli";
-import { constants } from "@bc/domain/constants";
 import { FlowType } from "@bc/domain/inputs";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
+import { GitTokenService } from "@bc/service/git/git-token-service";
 import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { logAndThrow } from "@bc/utils/log";
@@ -12,17 +12,22 @@ import {
   Node,
   ReaderOpts,
   getFullDownstreamProjects,
-  getUpstreamProjects
+  getUpstreamProjects,
+  Platform
 } from "@kie/build-chain-configuration-reader";
 import Container from "typedi";
 
 export class DefinitionFileReader {
   private configuration: BaseConfiguration;
   private logger: BaseLoggerService;
+  private tokenService: GitTokenService;
+  private defaultPlatform: Platform;
 
   constructor(configuration: BaseConfiguration) {
     this.configuration = configuration;
     this.logger = Container.get(LoggerService).logger;
+    this.tokenService = Container.get(GitTokenService);
+    this.defaultPlatform = configuration.getDefaultPlatformConfig();
   }
 
   private async getUpstreamOrFullDownstreamProjects(starterProject: string, options: ReaderOpts): Promise<Node[]> {
@@ -91,7 +96,7 @@ export class DefinitionFileReader {
         this.configuration.parsedInputs.definitionFile,
         {
           ...this.configuration.sourceProject,
-          token: Container.get(constants.GITHUB.TOKEN),
+          token: this.tokenService.getToken(this.defaultPlatform.id),
         }
       );
     } catch (err) {
@@ -105,7 +110,7 @@ export class DefinitionFileReader {
         this.configuration.parsedInputs.definitionFile,
         {
           ...this.configuration.targetProject,
-          token: Container.get(constants.GITHUB.TOKEN),
+          token: this.tokenService.getToken(this.defaultPlatform.id),
         }
       );
     } catch (err) {
@@ -117,7 +122,7 @@ export class DefinitionFileReader {
     try {
       return await readDefinitionFile(
         this.configuration.parsedInputs.definitionFile, { 
-          token: Container.get(constants.GITHUB.TOKEN)
+          token: this.tokenService.getToken(this.defaultPlatform.id)
         }
       );
     } catch(err) {
@@ -129,7 +134,7 @@ export class DefinitionFileReader {
     try {
       return await this.generateNodeChainWithOptions(starterProject, {
         ...this.configuration.sourceProject,
-        token: Container.get(constants.GITHUB.TOKEN),
+        token: this.tokenService.getToken(this.defaultPlatform.id),
       });
     } catch (err) {
       this.logger.debug(
@@ -140,7 +145,7 @@ export class DefinitionFileReader {
     try {
       return await this.generateNodeChainWithOptions(starterProject, {
         ...this.configuration.targetProject,
-        token: Container.get(constants.GITHUB.TOKEN),
+        token: this.tokenService.getToken(this.defaultPlatform.id),
       });
     } catch (err) {
       this.logger.debug(
@@ -150,7 +155,7 @@ export class DefinitionFileReader {
 
     try {
       return await this.generateNodeChainWithOptions(starterProject, {
-        token: Container.get(constants.GITHUB.TOKEN),
+        token: this.tokenService.getToken(this.defaultPlatform.id),
       });
     } catch(err) {
       logAndThrow(`Invalid definition file. ${err}`);
@@ -160,9 +165,9 @@ export class DefinitionFileReader {
   async generateNodeChainForTools(starterProject: string): Promise<Node[]> {
     switch(this.configuration.getToolType()) {
       case ToolType.PROJECT_LIST:
-        return this.getUpstreamOrFullDownstreamProjects(starterProject, {token: Container.get(constants.GITHUB.TOKEN)});
+        return this.getUpstreamOrFullDownstreamProjects(starterProject, {token: this.tokenService.getToken(this.defaultPlatform.id)});
       case ToolType.PLAN:
-        return [];
+          return [];
       default:
         logAndThrow(`Invalid tool ${this.configuration.getToolType()}`);
     }

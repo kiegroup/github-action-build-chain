@@ -27,6 +27,7 @@ Table of content
 * **[Local Execution](#local-execution)**
 * **[About Commands to Execute](#about-commands-to-execute)**
 * **[v2 to v3](#v2-to-v3)**
+  * **[Using multiple git platforms](#using-multiple-git-platforms)**
   * **[Found a regression?](#found-a-regression)**
 * **[Limitations](#limitations)**
 * **[Development](#development)**
@@ -613,6 +614,7 @@ Options:
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
   --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -fae, --fail-at-end                    Only fail the build afterwards; allow all non-impacted builds to continue (default: false)
   -h, --help                             display help for command
 ```
 
@@ -649,6 +651,7 @@ Options:
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
   --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -fae, --fail-at-end                    Only fail the build afterwards; allow all non-impacted builds to continue (default: false)
   -h, --help                             display help for command
 ```
 
@@ -685,6 +688,7 @@ Options:
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
   --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -fae, --fail-at-end                    Only fail the build afterwards; allow all non-impacted builds to continue (default: false)
   -h, --help                             display help for command
 ```
 
@@ -725,6 +729,7 @@ Options:
                                          to replace with the ReplacementEx
   --skipProjectCheckout <projects...>    A list of projects to skip checkout.
   --skipCheckout                         skip checkout for all projects. Overrides skipProjectCheckout (default: false)
+  -fae, --fail-at-end                    Only fail the build afterwards; allow all non-impacted builds to continue (default: false)
   -h, --help                             display help for command
 ```
 
@@ -793,6 +798,27 @@ List of breaking changes from v2 to v3:
   - v2: `-spc` to v3: `--skipProjectCheckout`
   - v2: `-sp` to v3: `-p`
 - Project naming convention while checking out a project is now - `OWNER_PROJECT-NAME`. For example if we have `owner/some-name` the project will be checked out as `owner_some-name`. In v2 this would have been checked out as `owner_some_name`
+
+## Using multiple git platforms
+
+You can now define multiple git platforms to clone your projects from. Currently only GitHub, GitLab and Gerrit are supported. Refer to [build-chain-configuration-reader](#https://github.com/kiegroup/build-chain-configuration-reader#platforms-only-in-version-23) on how to define multiple platforms. The advanatge of having this is that you can build projects that are hosted on one platform along with projects that are hosted on another platform.
+
+build-chain runs with a default platform configured. This default platform is used for projects which don't have a platform defined and for reading and loading configuration from the definition file.
+
+By default, when you run build-chain as a github action the default platform configuration used is GitHub.  
+
+When using build-chain as a CLI tool, build-chain will try to detect the default platform based on the definition file url. If it is not able to detect it from the url, it will use GitHub as the default configuration. If you want to override all of this, you will have the option to define default configuration as CLI options (currently only GitHub and GitLab have default options):
+
+```shell
+-ghi, --defaultGithubId <id>                default github id
+-ghti, --defaultGithubTokenId <token id>    default github token id used to get token from env
+-gha, --defaultGithubApiUrl <api url>       default github api url to use
+-ghs, --defaultGithubServeUrl <server url>  default github server url to use
+-gli, --defaultGitlabId <id>                default gitlab id
+-glti, --defaultGitlabTokenId <token id>    default gitlab token id used to get token from env
+-gla, --defaultGitlabApiUrl <api url>       default gitlab api url to use
+-gls, --defaultGitlabServeUrl <server url>  default gitlab server url to use
+```
 
 ## Found a regression?  
 

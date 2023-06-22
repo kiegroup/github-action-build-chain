@@ -1,14 +1,16 @@
 import { CLIActionType, ToolType } from "@bc/domain/cli";
 import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/configuration";
-import { constants } from "@bc/domain/constants";
-import { FlowType } from "@bc/domain/inputs";
+import { FlowType, InputValues } from "@bc/domain/inputs";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
-import { GithubAPIService } from "@bc/service/git/github-api";
+import { GitAPIService } from "@bc/service/git/git-api-service";
 import { logAndThrow } from "@bc/utils/log";
+import { DEFAULT_GITHUB_PLATFORM, DEFAULT_GITLAB_PLATFORM, PlatformType } from "@kie/build-chain-configuration-reader";
 import Container from "typedi";
 
-export class CLIConfiguration extends BaseConfiguration {
-  
+const PR_URL = /^(https?:\/\/.+\/)([^/\s]+)\/([^/\s]+)\/pull\/(\d+)$/;
+const MR_URL = /^(https?:\/\/.+\/)([^/\s]+)\/([^/\s]+)\/-\/merge_requests\/(\d+)$/;
+
+export class CLIConfiguration extends BaseConfiguration { 
   override loadProject(): { source: ProjectConfiguration; target: ProjectConfiguration } {
     if (this.parsedInputs.CLICommand === CLIActionType.TOOLS) {
       return { source: {}, target: {} };
@@ -35,11 +37,20 @@ export class CLIConfiguration extends BaseConfiguration {
    * @returns
    */
   loadGitConfiguration(): GitConfiguration {
-    const serverUrl = process.env.GITHUB_SERVER_URL ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "") : "https://github.com";
+    // user have the option to set the default server url as gitlab's url by setting the CI_SERVER_URL variable
+    const githubServerUrl = process.env.GITHUB_SERVER_URL ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "") : "https://github.com";
+    const gitlabServerUrl = process.env.CI_SERVER_URL?.replace(/\/$/, "");
+    const serverUrl = gitlabServerUrl ? gitlabServerUrl : githubServerUrl;
+    const token = this.tokenService.getToken(
+      gitlabServerUrl ? 
+        DEFAULT_GITLAB_PLATFORM.id : 
+        DEFAULT_GITHUB_PLATFORM.id
+    );
     let gitConfig: GitConfiguration = {
       serverUrl: serverUrl,
-      serverUrlWithToken: serverUrl.replace("://", `://${Container.get(constants.GITHUB.TOKEN)}@`),
+      serverUrlWithToken: serverUrl.replace("://", `://${token}@`),
     };
+
     if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
       const group = this.parsedInputs.group ?? this.parsedInputs.startProject?.split("/")[0];
       if (!group) {
@@ -64,34 +75,55 @@ export class CLIConfiguration extends BaseConfiguration {
     }
 
     if (this.parsedInputs.CLISubCommand === FlowType.BRANCH) {
+      // set github env variables
       process.env["GITHUB_HEAD_REF"] = this.parsedInputs.branch;
       process.env["GITHUB_BASE_REF"] = this.parsedInputs.branch;
       process.env["GITHUB_REPOSITORY"] = this.parsedInputs.startProject;
       process.env["GITHUB_ACTOR"] = this.parsedInputs.group ?? this.parsedInputs.startProject!.split("/")[0];
+      
+      // set gitlab env variables
+      process.env["CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"] = this.parsedInputs.branch;
+      process.env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"] = this.parsedInputs.branch;
+      process.env["CI_PROJECT_ID"] = this.parsedInputs.startProject;
+      process.env["CI_PROJECT_NAMESPACE"] = this.parsedInputs.group ?? this.parsedInputs.startProject!.split("/")[0];
       return {};
     }
 
     if (!this.parsedInputs.url) {
       logAndThrow("If running from the CLI, event url needs to be defined");
     }
-    const PR_URL = /^(https?:\/\/.+\/)([^/\s]+)\/([^/\s]+)\/pull\/(\d+)$/;
-    const prCheck = this.parsedInputs.url.match(PR_URL);
-    if (prCheck) {
+
+    const urlCheck = this.isGitlabUrl(this.parsedInputs.url) ? 
+      this.parsedInputs.url.match(MR_URL) :
+      this.parsedInputs.url.match(PR_URL);
+    
+    if (urlCheck) {
       this.logger.debug("Getting pull request information");
       
-      const data = await Container.get(GithubAPIService).getPullRequest(
-        prCheck[2],
-        prCheck[3],
-        parseInt(prCheck[4]),
+
+      // cannot use the GitAPIService since it needs config service to get the
+      // platform. To get the platform i need to read the definition file. To 
+      // read the definition file I need know the source and target projects. To
+      // know the source and target projects i need to load pull request data
+      const data = await Container.get(GitAPIService).getPullRequest(
+        urlCheck[2],
+        urlCheck[3],
+        parseInt(urlCheck[4]),
       );
         
-      process.env["GITHUB_SERVER_URL"] = prCheck[1];
+      process.env["GITHUB_SERVER_URL"] = urlCheck[1];
       delete process.env["GITHUB_ACTION"]; // doing process.env["GITHUB_ACTION"] = undefined will set to the string "undefined"
       process.env["GITHUB_ACTOR"] = data.head.user.login;
       process.env["GITHUB_HEAD_REF"] = data.head.ref;
       process.env["GITHUB_BASE_REF"] = data.base.ref;
       process.env["GITHUB_REPOSITORY"] = data.base.repo.full_name;
-      process.env["GITHUB_REF"] = `refs/pull/${prCheck[4]}/merge`;
+      process.env["GITHUB_REF"] = `refs/pull/${urlCheck[4]}/merge`;
+      process.env["CI_SERVER_URL"] = urlCheck[1];
+      process.env["CI_PROJECT_NAMESPACE"] = data.head.user.login;
+      process.env["CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"] = data.head.ref;
+      process.env["CI_MERGE_REQUEST_TARGET_BRANCH_NAME"] = data.base.ref;
+      process.env["CI_PROJECT_ID"] = data.base.repo.full_name;
+      process.env["CI_MERGE_REQUEST_REF_PATH"] = `refs/merge-requests/${urlCheck[4]}/merge`;
 
       return data;
     }
@@ -103,15 +135,33 @@ export class CLIConfiguration extends BaseConfiguration {
    * @returns
    */
   loadToken(): void {
-    if (this.parsedInputs.token && this.parsedInputs.token.length > 0) {
-      Container.set(constants.GITHUB.TOKEN_POOL, this.parsedInputs.token);
-      Container.set(constants.GITHUB.TOKEN, this.parsedInputs.token[0]);
-    } else if (process.env.GITHUB_TOKEN) {
-      Container.set(constants.GITHUB.TOKEN_POOL, [process.env.GITHUB_TOKEN]);
-      Container.set(constants.GITHUB.TOKEN, process.env.GITHUB_TOKEN);
-    } else {
-      logAndThrow("A github token is needed");
+    const platform = this.getDefaultPlatformConfig();
+    let token: string[] | undefined;
+
+    if (process.env[platform.tokenId]) {
+      token = [process.env[platform.tokenId]!];
     }
+
+    if (this.parsedInputs.token && this.parsedInputs.token.length > 0) {
+      token = this.parsedInputs.token;
+    }
+
+    if (!token) {
+      logAndThrow("Either a github or gitlab token must be set");
+    }
+
+    if (platform.type === PlatformType.GITHUB) {
+      this.tokenService.setGithubTokenPool(platform.id, token);
+    } 
+    this.tokenService.setToken(platform.id, token[0]);
+  }
+
+  override loadParsedInput(): InputValues {
+    const parsedInput = super.loadParsedInput();
+    this._defaultPlatform = this.isGitlabUrl(parsedInput.url) ? 
+    PlatformType.GITLAB :
+    PlatformType.GITHUB;
+    return parsedInput;
   }
 
   /**
@@ -136,5 +186,9 @@ export class CLIConfiguration extends BaseConfiguration {
       return subcmd as ToolType;
     }
     logAndThrow("The CLI subcommand is a build command. No tools defined");
+  }
+
+  private isGitlabUrl(url?: string) {
+    return url && MR_URL.test(url);
   }
 }

@@ -9,13 +9,15 @@ import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
 import { ProjectConfiguration } from "@bc/domain/configuration";
 import { FlowType } from "@bc/domain/inputs";
-import { DefinitionFile, Post, Pre, Node } from "@kie/build-chain-configuration-reader";
+import { DefinitionFile, Post, Pre, Node, Platform, DEFAULT_GITLAB_PLATFORM, DEFAULT_GITHUB_PLATFORM, PlatformType } from "@kie/build-chain-configuration-reader";
 import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 import { CLIActionType, ToolType } from "@bc/domain/cli";
+import { GitTokenService } from "@bc/service/git/git-token-service";
 
 @Service()
 export class ConfigurationService {
   private configuration: BaseConfiguration;
+  private tokenService: GitTokenService;
   private _nodeChain: Node[];
   private _definitionFile: DefinitionFile;
 
@@ -32,6 +34,7 @@ export class ConfigurationService {
     }
     this._nodeChain = [];
     this._definitionFile = { version: "2.1" };
+    this.tokenService = Container.get(GitTokenService);
   }
 
   get nodeChain(): Node[] {
@@ -229,7 +232,13 @@ export class ConfigurationService {
    * @returns
    */
   getCloneUrl(group: string, repoName: string): string {
-    return `${this.configuration.gitConfiguration.serverUrlWithToken}/${group}/${repoName}`;
+    const platform = this.getPlatform(group, repoName);
+    const token = this.tokenService.getToken(platform.id, platform.tokenId);
+    const oauth2Prefix = platform.type === PlatformType.GITLAB ? "oauth2:" : "";
+    const serverUrl = token ? 
+      platform.serverUrl.replace("://", `://${oauth2Prefix}${token}@`) : 
+      platform.serverUrl;
+    return `${serverUrl}/${group}/${repoName}`;
   }
 
   getPre(): Pre | undefined {
@@ -258,5 +267,22 @@ export class ConfigurationService {
 
   isToolsCommand(): boolean {
     return this.configuration.parsedInputs.CLICommand === CLIActionType.TOOLS; 
+  }
+
+  failAtEnd(): boolean {
+    return this.configuration.parsedInputs.failAtEnd ?? false;
+  }
+
+  getPlatform(owner: string, repo: string): Platform {
+    const platformId = this.nodeChain.find(n => n.project === `${owner}/${repo}`)?.platformId;
+    let platform;
+    if (platformId === DEFAULT_GITHUB_PLATFORM.id) {
+      platform = DEFAULT_GITHUB_PLATFORM;
+    } else if (platformId === DEFAULT_GITLAB_PLATFORM.id) {
+      platform = DEFAULT_GITLAB_PLATFORM;
+    } else {
+      platform = this.definitionFile.platforms?.find(p => p.id === platformId);
+    }
+    return platform ?? this.configuration.getDefaultPlatformConfig();
   }
 }

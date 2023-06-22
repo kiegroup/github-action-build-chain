@@ -8,6 +8,8 @@ import { defaultInputValues, FlowType } from "@bc/domain/inputs";
 import { InputService } from "@bc/service/inputs/input-service";
 import { MockGithub } from "@kie/mock-github";
 import { EventData } from "@bc/domain/configuration";
+import { GitTokenService } from "@bc/service/git/git-token-service";
+import { DEFAULT_GITHUB_PLATFORM } from "@kie/build-chain-configuration-reader";
 jest.mock("node:fs/promises");
 jest.mock("@kie/build-chain-configuration-reader");
 
@@ -95,7 +97,10 @@ describe("load git config", () => {
 
   beforeEach(async () => {
     await mockGithub.setup();
-    Container.set(constants.GITHUB.TOKEN, token);
+    Container.get(GitTokenService).setToken(
+      DEFAULT_GITHUB_PLATFORM.id,
+      token
+    );
   });
 
   afterEach(async () => {
@@ -196,7 +201,9 @@ describe("load token", () => {
     });
     await mockGithub.setup();
     actionConfig.loadToken();
-    expect(Container.get(constants.GITHUB.TOKEN)).toBe("token");
+    expect(Container.get(GitTokenService).getToken(
+      DEFAULT_GITHUB_PLATFORM.id
+    )).toBe("token");
     await mockGithub.teardown();
   });
   test("failure", () => {

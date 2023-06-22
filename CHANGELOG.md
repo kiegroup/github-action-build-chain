@@ -1,5 +1,11 @@
 # Changelog
 
+# v3.3.0
+- Enabled support for Gerrit
+
+# v3.2.0
+- Enabled support for multiple platforms
+
 # V3.1.8
 
 ## Enhancements:

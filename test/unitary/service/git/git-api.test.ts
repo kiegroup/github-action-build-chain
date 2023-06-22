@@ -2,10 +2,10 @@ import "reflect-metadata";
 import { constants } from "@bc/domain/constants";
 import { EntryPoint } from "@bc/domain/entry-point";
 import Container from "typedi";
-import { GithubAPIService } from "@bc/service/git/github-api";
 import { Moctokit } from "@kie/mock-github";
+import { GitAPIService } from "@bc/service/git/git-api-service";
 
-let git: GithubAPIService;
+let git: GitAPIService;
 
 beforeAll(async () => {
   // disable logs
@@ -15,9 +15,7 @@ beforeAll(async () => {
 beforeEach(() => {
   // create a fresh instance of git before each test
   Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
-  Container.set(constants.GITHUB.TOKEN, "fake_token");
-  Container.set(constants.GITHUB.TOKEN_POOL, ["fake_token"]);
-  git = new GithubAPIService();
+  git = new GitAPIService();
 });
 
 test.each([
@@ -180,13 +178,13 @@ test.each([
     pull_number: 128
   }).reply({
     status: status as 200 | 404,
-    data: {title: "some_pr"}
+    data: {html_url: "some_pr", head: {user:{}}, base: {repo: {owner: {}}}}
   });
 
   if (status == 200) {
-    await expect(git.getPullRequest("owner", "repo", 128)).resolves.toStrictEqual(
+    await expect(git.getPullRequest("owner", "repo", 128)).resolves.toMatchObject(
       {
-        title: "some_pr"
+        html_url: "some_pr",
       }
     );
   } else {

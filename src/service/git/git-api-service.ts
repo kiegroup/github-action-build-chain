@@ -1,21 +1,19 @@
 import { NotFoundError } from "@bc/domain/errors";
-import { OctokitService } from "@bc/service/git/octokit";
 import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
 import { LoggerService } from "@bc/service/logger/logger-service";
 import { logAndThrow } from "@bc/utils/log";
-import { Octokit } from "@octokit/rest";
-import { Endpoints } from "@octokit/types";
 import { RequestError } from "@octokit/request-error";
 import Container, { Service } from "typedi";
+import { GitAPIClient } from "@bc/service/git/git-api-client";
 
 @Service()
-export class GithubAPIService {
+export class GitAPIService {
   private readonly logger: BaseLoggerService;
-  private readonly octokit: Octokit;
+  private readonly client: GitAPIClient;
 
   constructor() {
     this.logger = Container.get(LoggerService).logger;
-    this.octokit = Container.get(OctokitService).octokit;
+    this.client = new GitAPIClient();
   }
 
   /**
@@ -25,15 +23,23 @@ export class GithubAPIService {
    * @param branch branch that we need to check for existence
    * @returns whether branch exists or not
    */
-  async doesBranchExist(owner: string, repo: string, branch: string): Promise<boolean> {
+  async doesBranchExist(
+    owner: string,
+    repo: string,
+    branch: string
+  ): Promise<boolean> {
     try {
-      this.logger.debug(`Making a github API call to get branch ${branch} for ${owner}/${repo}`);
-      await this.octokit.repos.getBranch({ owner, repo, branch });
+      this.logger.debug(
+        `Making a github API call to get branch ${branch} for ${owner}/${repo}`
+      );
+      await this.client
+        .rest(owner, repo)
+        .repos.getBranch({ owner, repo, branch });
       return true;
     } catch (err) {
       this.logger.warn(
         this.getErrorMessage(
-          err, 
+          err,
           `project github.com/${owner}/${repo}:${branch} does not exist. It's not necessarily an error.`
         )
       );
@@ -49,10 +55,27 @@ export class GithubAPIService {
    * @param base base branch to filter PRs by
    * @returns whether there is any open pull request
    */
-  async hasPullRequest(owner: string, repo: string, head?: string, base?: string): Promise<boolean> {
-    let query: Endpoints["GET /repos/{owner}/{repo}/pulls"]["parameters"] = { owner, repo, state: "open" };
+  async hasPullRequest(
+    owner: string,
+    repo: string,
+    head?: string,
+    base?: string
+  ): Promise<boolean> {
+    let query: {
+      owner: string;
+      repo: string;
+      state?: "opened" | "closed" | "merged";
+      base?: string;
+      head?: string;
+    } = {
+      owner,
+      repo,
+      state: "opened",
+    };
     if (!base && !head) {
-      logAndThrow(`[${owner}/${repo}] Either head or base needs to be defined while requesting pull request information`);
+      logAndThrow(
+        `[${owner}/${repo}] Either head or base needs to be defined while requesting pull request information`
+      );
     }
     if (base) {
       query = { ...query, base };
@@ -64,7 +87,9 @@ export class GithubAPIService {
       this.logger.debug(
         `Making a github API call to check whether there is any open pull request from ${head} to ${base} for ${owner}/${repo}`
       );
-      const { status, data } = await this.octokit.pulls.list(query);
+      const { status, data } = await this.client
+        .rest(owner, repo)
+        .pulls.list(query);
       return status === 200 && data.length > 0;
     } catch (err) {
       let msg = `Error getting pull request list from https://api.github.com/repos/${owner}/${repo}/pulls?state=open`;
@@ -93,9 +118,12 @@ export class GithubAPIService {
    * @param repo repo name
    * @returns project name of the forked repo
    */
-  async getForkName(targetOwner: string, sourceOwner: string, repo: string): Promise<string> {
+  async getForkName(
+    targetOwner: string,
+    sourceOwner: string,
+    repo: string
+  ): Promise<string> {
     try {
-      
       // check whether there is a fork with the same name as repo name
       const repoName = await this.checkIfRepositoryExists(targetOwner, repo);
 
@@ -103,28 +131,27 @@ export class GithubAPIService {
         return repoName;
       } else if (targetOwner !== sourceOwner) {
         /**
-         * find repo from fork list. we reach this case only if we are in the edge case where the forked repo's name is different 
+         * find repo from fork list. we reach this case only if we are in the edge case where the forked repo's name is different
          * from the original one
-         */ 
-        let page = 1;
-        for await (const response of this.octokit.paginate.iterator(this.octokit.repos.listForks, {
-          owner: targetOwner,
-          repo,
-          per_page: 100
-        })) {
-          this.logger.debug(`Making a github API call to find a fork for ${targetOwner}/${repo} (page ${page})`);
-          const forkedRepo = response.data.find(project => project.owner.login === sourceOwner);
-          if (forkedRepo) {
-            return forkedRepo.name;
-          }
-          page += 1;
+         */
+        const forkName = (
+          await this.client
+            .rest(targetOwner, repo)
+            .repos.getForkNameForTargetRepoGivenSourceOwner({
+              targetOwner,
+              targetRepo: repo,
+              sourceOwner,
+            })
+        ).data;
+        if (forkName) {
+          return forkName;
         }
       }
       throw new NotFoundError();
-    } catch(err) {
+    } catch (err) {
       this.logger.error(
         this.getErrorMessage(
-          err, 
+          err,
           `Error getting fork name for ${targetOwner}/${repo} where owner is ${sourceOwner}`
         )
       );
@@ -141,14 +168,16 @@ export class GithubAPIService {
    */
   async getPullRequest(owner: string, repo: string, pullNumber: number) {
     try {
-      this.logger.debug(`Making a github API call to get pull request info for ${owner}/${repo} PR #${pullNumber}`);
-      const { data } = await this.octokit.pulls.get({
-          owner,
-          repo,
-          pull_number: pullNumber,
+      this.logger.debug(
+        `Making a github API call to get pull request info for ${owner}/${repo} PR #${pullNumber}`
+      );
+      const { data } = await this.client.rest(owner, repo).pulls.get({
+        owner,
+        repo,
+        pull_number: pullNumber,
       });
       return data;
-    } catch(err) {
+    } catch (err) {
       this.logger.error(
         this.getErrorMessage(
           err,
@@ -159,20 +188,22 @@ export class GithubAPIService {
     }
   }
 
-  private async checkIfRepositoryExists(owner: string, repo: string): Promise<string | undefined> {
+  private async checkIfRepositoryExists(
+    owner: string,
+    repo: string
+  ): Promise<string | undefined> {
     try {
-      this.logger.debug(`Making a github API call to check whether ${owner}/${repo} exists`);
-      await this.octokit.repos.get({
+      this.logger.debug(
+        `Making a github API call to check whether ${owner}/${repo} exists`
+      );
+      await this.client.rest(owner, repo).repos.get({
         owner,
         repo,
       });
       return repo;
     } catch (err) {
       this.logger.error(
-        this.getErrorMessage(
-          err,
-          `Failed to get ${owner}/${repo}.`
-        )
+        this.getErrorMessage(err, `Failed to get ${owner}/${repo}.`)
       );
       return undefined;
     }
@@ -183,13 +214,16 @@ export class GithubAPIService {
     if (err instanceof RequestError) {
       switch (err.status) {
         case 401:
-          reason = "Failed to authenticate with provided token, please use --token argument to provide a new one. You can also check your GITHUB_TOKEN environment variable and check whether the provided token is still valid.";
+          reason =
+            "Failed to authenticate with provided token, please use --token argument to provide a new one. You can also check your GITHUB_TOKEN environment variable and check whether the provided token is still valid.";
           break;
         case 404:
-          reason = "Failed to fetch GitHub resource, please check if resource you requested does exits, the URL used in -u argument is valid, and if the token you are using have permissions to access it.";
+          reason =
+            "Failed to fetch GitHub resource, please check if resource you requested does exits, the URL used in -u argument is valid, and if the token you are using have permissions to access it.";
           break;
         case 403:
-          reason = "Failed to fetch resource. Either your github token does not have access to the requested resource or you have reached your github api rate limit.";
+          reason =
+            "Failed to fetch resource. Either your github token does not have access to the requested resource or you have reached your github api rate limit.";
           break;
         default: // let reason be undefined for all other codes
       }

@@ -80,6 +80,10 @@ export class ExecuteCommandService {
     return result;
   }
 
+  private nodeExecutionFailed(result: ExecuteNodeResult[]): boolean {
+    return !!result.find(res => res.executeCommandResults.find(r => r.result === ExecutionResult.NOT_OK));
+  }
+
   private async executeNodeChainSequential(chain: NodeExecution[], printResults?: (node: ExecuteNodeResult[]) => void) {
     const result: ExecuteNodeResult[][] = [];
     for (const node of chain) {
@@ -93,6 +97,11 @@ export class ExecuteCommandService {
       }
       
       this.logger.endGroup();
+
+      if (!this._configurationService.failAtEnd() && this.nodeExecutionFailed(currentNodeResult)) {
+        this.logger.info(`${node.node.project} failed. Won't execute remaining projects`);
+        return result;
+      }
     }
     return result;
   }
@@ -158,6 +167,10 @@ export class ExecuteCommandService {
           printResults(currentResults[project]);
         }
         this.logger.endGroup();
+        if (!this._configurationService.failAtEnd() && this.nodeExecutionFailed(currentResults[project])) {
+          this.logger.info(`${project} failed. Won't execute remaining projects`);
+          return result;
+        }
       }
     }
     return result;

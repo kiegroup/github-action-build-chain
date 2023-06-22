@@ -51,6 +51,15 @@ export class BuildSubCommandFactory {
       .option("-t, --customCommandTreatment <exp...>", "Each exp must be of the form <RegEx||ReplacementEx>. Regex defines the regular expression for what you want to replace with the ReplacementEx")
       .option("--skipProjectCheckout <projects...>", "A list of projects to skip checkout.")
       .option("--skipCheckout", "skip checkout for all projects. Overrides skipProjectCheckout", false)
+      .option("-fae, --fail-at-end", "Only fail the build afterwards; allow all non-impacted builds to continue", false)
+      .option("-ghi, --defaultGithubId <id>", "default github id")
+      .option("-ghti, --defaultGithubTokenId <token id>", "default github token id used to get token from env")
+      .option("-gha, --defaultGithubApiUrl <api url>", "default github api url to use")
+      .option("-ghs, --defaultGithubServeUrl <server url>", "default github server url to use")
+      .option("-gli, --defaultGitlabId <id>", "default gitlab id")
+      .option("-glti, --defaultGitlabTokenId <token id>", "default gitlab token id used to get token from env")
+      .option("-gla, --defaultGitlabApiUrl <api url>", "default gitlab api url to use")
+      .option("-gls, --defaultGitlabServeUrl <server url>", "default gitlab server url to use")
       .action((options) => {
         const parsedInputs = Container.get(InputService);
         if (options.debug) options.loggerLevel = LoggerLevel.DEBUG;

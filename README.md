@@ -820,6 +820,60 @@ When using build-chain as a CLI tool, build-chain will try to detect the default
 -gls, --defaultGitlabServeUrl <server url>  default gitlab server url to use
 ```
 
+### Multiple git platforms example
+
+```
+version: 2.3
+
+dependencies:
+  - project: middleware/build-configurations
+    platform: rh-gitlab
+    mapping:
+      dependencies:
+        default:
+          - source: master
+            target: main
+      dependant:
+        default:
+          - source: main
+            target: master
+  - project: business-automation/eng-jenkins-scripts
+    platform: rh-gerrit
+    dependencies:
+      - project: middleware/build-configurations
+      - project: kiegroup/drools
+  
+  - project: kiegroup/drools
+    platform: github-public
+
+default:
+  build-command:
+    current: echo "default current"
+
+build:
+  - project: business-automation/eng-jenkins-scripts
+    build-command:
+      current: echo "business-automation/eng-jenkins-scripts"
+
+platforms:
+  - id: rh-gitlab
+    type: gitlab
+    tokenId: RH_GITLAB_TOKEN
+    serverUrl: https://gitlab.xxxx.com
+    apiUrl: https://gitlab.xxxx.com/api/v4
+
+  - id: rh-gerrit
+    type: gerrit
+    tokenId: RH_GERRIT_TOKEN
+    serverUrl: https://gerrit.xxxx.com
+    apiUrl: https://gerrit.xxxx.com/r/a
+```
+
+> **_Note:_** it is possible to specify as many github/gitlab/gerrit platforms as it is required
+> **_Note:_** use `github-public`, `gitlab-public` and/or `gerrit-public` identifiers for `https://github.com`, `https://gitlab.com` and/or `https://gerrit.googlesource.com` respectively, no need to define them.
+> **_Note:_** use `GITHUB_TOKEN`, `GITLAB_TOKEN` and/or `GERRIT_TOKEN` token for default github/gitlab/gerrit services.
+
+
 ## Found a regression?  
 
 We have a built a dynamic agonistic end to end regression testing suite to avoid breaking major features that were working in previous versions. Its dynamic since all the test cases are determined by a json file that anyone can update without knowing the details about the implementation. It is agnostic since it just cares about the final executable that is produced and is not implementation specific.

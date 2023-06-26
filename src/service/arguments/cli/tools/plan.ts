@@ -23,7 +23,6 @@ export class PlanCommand implements CommandConstructor {
     
     BuildSubCommandFactory.getAllCommands().forEach(cmd => program.addCommand(cmd));
     
-    // program
     return program;
   }
 }

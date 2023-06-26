@@ -16,7 +16,7 @@ export class Plan extends Tools {
     const original = console.log;
     // eslint-disable-next-line no-console
     console.log = (...args: string[]) => {
-      original("[DRY_RUN]", ...args);
+      original("[PLAN]", ...args);
     };
 
     // patch git cli service to do no cloning, merging or renaming

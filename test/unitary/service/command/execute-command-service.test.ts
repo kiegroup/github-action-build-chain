@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { ExecuteCommandService } from "@bc/service/command/execute-command-service";
 import { CommandTreatmentDelegator } from "@bc/service/command/treatment/command-treatment-delegator";
 import { CommandExecutorDelegator } from "@bc/service/command/executor/command-executor-delegator";
-import { ExecutionResult } from "@bc/domain/execute-command-result";
+import { ExecuteCommandResult, ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
 import { defaultNodeValue } from "@bc/domain/node";
 import { NodeExecution, NodeExecutionLevel } from "@bc/domain/node-execution";
@@ -312,14 +312,15 @@ describe("executeNodeChain", () => {
     
     // last call to execSpy must be for the last node
     expect(execSpy.mock.calls[3][0]).toStrictEqual(nodeChain[3]);
+    promiseSpy.mockRestore();
   });
 
   test.each([
     ["sequential: fail fast", false, false, 1],
     ["sequential: fail at end", false, true, 2],
-    ["parallel: fail fast", true, true, 2],
+    ["parallel: fail fast", true, false, 1],
     ["parallel: fail at end", true, true, 2],
-  ])("%p", async (_title, isParallel, failAtEnd, numExecCalls) => {
+  ])("node: %p", async (_title, isParallel, failAtEnd, numExecCalls) => {
     jest.spyOn(ConfigurationService.prototype, "isParallelExecutionEnabled").mockReturnValueOnce(isParallel);
     jest.spyOn(ConfigurationService.prototype, "failAtEnd").mockReturnValueOnce(failAtEnd);
     const execSpy = jest.spyOn(executeCommandService, "executeNodeCommands");
@@ -346,5 +347,49 @@ describe("executeNodeChain", () => {
     await executeCommandService.executeNodeChain(nodeChain, undefined);
     expect(execSpy).toHaveBeenCalledTimes(numExecCalls);
 
+  });
+
+  test.each([
+    [
+      "before: sequential: fail fast", 
+      false, false, ExecutionResult.NOT_OK, ExecutionResult.OK, 
+      [ExecutionResult.NOT_OK, ExecutionResult.SKIP, ExecutionResult.SKIP]
+    ],
+    [
+      "before: sequential: fail at end", 
+      false, true, ExecutionResult.NOT_OK, ExecutionResult.NOT_OK,
+      [ExecutionResult.NOT_OK, ExecutionResult.NOT_OK, ExecutionResult.OK]
+    ],
+    [
+      "current: parallel: fail fast", 
+      true, false, ExecutionResult.OK, ExecutionResult.NOT_OK,
+      [ExecutionResult.OK, ExecutionResult.NOT_OK, ExecutionResult.SKIP]
+    ],
+    [
+      "current: parallel: fail at end", 
+      true, true, ExecutionResult.OK, ExecutionResult.NOT_OK,
+      [ExecutionResult.OK, ExecutionResult.NOT_OK, ExecutionResult.OK]
+    ],
+  ])("phase: %p", async (_title, isParallel, failAtEnd, beforeResult, currentResult, expectedResult) => {
+    jest.spyOn(ConfigurationService.prototype, "isParallelExecutionEnabled").mockReturnValueOnce(isParallel);
+    jest.spyOn(ConfigurationService.prototype, "failAtEnd").mockReturnValue(failAtEnd);
+    jest.spyOn(executeCommandService, "getNodeCommands").mockReturnValue(["cmd"]);
+    const execSpy = jest.spyOn(executeCommandService, "executeCommand");
+    execSpy.mockResolvedValueOnce({result: beforeResult} as unknown as ExecuteCommandResult);
+    execSpy.mockResolvedValueOnce({result: currentResult} as unknown as ExecuteCommandResult);
+    execSpy.mockResolvedValueOnce({result: ExecutionResult.OK} as unknown as ExecuteCommandResult);
+    
+    const nodeChain: NodeExecution[] = [
+      {
+        node: {
+          ...defaultNodeValue,
+          project: "project1",
+          depth: 0
+        }
+      }
+    ];
+
+    const result = await executeCommandService.executeNodeChain(nodeChain, undefined);
+    expect(result[0].map(r => r.executeCommandResults[0].result)).toStrictEqual(expectedResult);
   });
 });

@@ -39,10 +39,10 @@ export class ExecuteCommandService {
     const before = this.getNodeCommands(node, ExecutionPhase.BEFORE, this._configurationService.getNodeExecutionLevel(node));
     const current = this.getNodeCommands(node, ExecutionPhase.CURRENT, this._configurationService.getNodeExecutionLevel(node));
     const after = this.getNodeCommands(node, ExecutionPhase.AFTER, this._configurationService.getNodeExecutionLevel(node));
-    const skipExecution = this._configurationService.skipExecution(node);
-    result.push(await this.executeCommands(node, before ?? [], skipExecution, {...opts, cwd}));
-    result.push(await this.executeCommands(node, current ?? [], skipExecution, {...opts, cwd}));
-    result.push(await this.executeCommands(node, after ?? [], skipExecution, {...opts, cwd}));
+    let skipExecution = this._configurationService.skipExecution(node);
+    skipExecution = !(await this.executeNodePhase(node, before, skipExecution, {...opts, cwd}, result)) || skipExecution;
+    skipExecution = !(await this.executeNodePhase(node, current, skipExecution, {...opts, cwd}, result)) || skipExecution;
+    await this.executeNodePhase(node, after, skipExecution, {...opts, cwd}, result);
     return result;
   }
 
@@ -80,6 +80,29 @@ export class ExecuteCommandService {
     return result;
   }
 
+  /**
+   * Executes given phase and adds the result to the result array. Returns true if the phase execution
+   * succeeded otherwise false.
+   */
+  private async executeNodePhase(
+    node: Node, 
+    commands: string[] | undefined, 
+    skipExecution: boolean, 
+    opts: ExecOptions | undefined, 
+    result: ExecuteNodeResult[]
+  ) {
+    const phaseResult = await this.executeCommands(node, commands ?? [], skipExecution, opts);
+    result.push(phaseResult);
+    if (
+      !this._configurationService.failAtEnd() && 
+      phaseResult.executeCommandResults.find(r => r.result === ExecutionResult.NOT_OK)
+    ) {
+      this.logger.info(`${node.project} failed. Won't execute remaining commands and projects`);
+      return false;
+    }
+    return true;
+  }
+
   private nodeExecutionFailed(result: ExecuteNodeResult[]): boolean {
     return !!result.find(res => res.executeCommandResults.find(r => r.result === ExecutionResult.NOT_OK));
   }
@@ -99,7 +122,6 @@ export class ExecuteCommandService {
       this.logger.endGroup();
 
       if (!this._configurationService.failAtEnd() && this.nodeExecutionFailed(currentNodeResult)) {
-        this.logger.info(`${node.node.project} failed. Won't execute remaining projects`);
         return result;
       }
     }
@@ -168,7 +190,6 @@ export class ExecuteCommandService {
         }
         this.logger.endGroup();
         if (!this._configurationService.failAtEnd() && this.nodeExecutionFailed(currentResults[project])) {
-          this.logger.info(`${project} failed. Won't execute remaining projects`);
           return result;
         }
       }

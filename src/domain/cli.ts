@@ -7,4 +7,5 @@ export enum CLIActionType {
 /** Defines all the types of tools available */
 export enum ToolType {
   PROJECT_LIST = "project-list",
+  PLAN = "plan"
 }

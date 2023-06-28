@@ -64,7 +64,6 @@ export class GerritAPIClient extends BaseGitAPIClient {
   }
 
   private async listPulls(args: Pulls["list"]["parameters"]) {
-    const projectId = this.getProjectId(args.owner, args.repo);
     let state;
     switch (args.state) {
       case "opened":
@@ -76,14 +75,14 @@ export class GerritAPIClient extends BaseGitAPIClient {
     }
 
     // looks like gerrit does not have any query for head branch
-    let query = `project:${projectId}`;
+    let query = `project:${args.owner}/${args.repo}`;
     if (state) {
       query += `+status:${state}`;
     }
     if (args.base) {
       query += `+branch:${args.base}`;
     }
-    const { data, status } = await this.client.get("/changes", {
+    const { data, status } = await this.client.get("/changes/", {
       params: {
         q: query,
       },

@@ -153,9 +153,9 @@ describe("pulls", () => {
         state: state as unknown as "opened" | "closed" | "merged",
       })
     ).resolves.toStrictEqual({ data: ["data"], status: 200 });
-    expect(getSpy).toHaveBeenCalledWith("/changes", {
+    expect(getSpy).toHaveBeenCalledWith("/changes/", {
       params: {
-        q: `project:${encodeURIComponent(`${owner}/${repo}`)}+${expectedQuery}`,
+        q: `project:${owner}/${repo}+${expectedQuery}`,
       },
     });
   });

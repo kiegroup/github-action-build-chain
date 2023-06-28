@@ -12,6 +12,9 @@ export class ProjectListCommand implements CommandConstructor {
     program
       .description("Prints the projects that will be built given a starting project ordered by precedence")
       .requiredOption("-p, --startProject <project>", "The project to start the build from")
+      .requiredOption("-f, --definitionFile <path_or_url>", "The definition file, either a path to the filesystem or a URL to it")
+      .option("-t, --token <token>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
+      .option("-d, --debug", "Set debugging mode to true", false)
       .option("--fullProjectDependencyTree", "Checks out and execute the whole tree instead of the upstream build", false);
 
     return program;

@@ -763,8 +763,25 @@ Options:
   -h, --help              display help for command
 
 Commands:
-  project-list [options]  Prints a ordered  by precendence list of projects
+  project-list [options]  Prints the projects that will be built given a starting project ordered by precedence
+  plan                    Execute build chain without actually cloning or executing projects (like a dry run)
   help [command]          display help for command
+```  
+
+#### tool command: plan
+
+The `plan` command lets you execute build-chain without actually cloning or executing projects, like a dry run. This lets you verify whether build-chain will clone the correct projects, will checkout the correct branch, will merge the correct PRs and will execute the correct commands for each project. To use this command you simply have to pass the arguments that come after `build-chain build` command to `build-chain tools plan` command. For example:
+
+If you want to see the dry run for the following `build` command:
+
+```shell
+$ build-chain build cross_pr -f definition_file -u event_url
+```
+
+then, you have to run the following `plan` command:
+
+```shell
+$ build-chain tools plan cross_pr -f definition_file -u event_url
 ```
 
 ## About Commands to Execute

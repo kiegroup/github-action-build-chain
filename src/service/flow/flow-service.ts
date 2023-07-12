@@ -2,8 +2,9 @@ import { CheckedOutNode } from "@bc/domain/checkout";
 import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
-import { FlowResult } from "@bc/domain/flow";
+import { FlowResult, SerializedFlowService } from "@bc/domain/flow";
 import { NodeExecution } from "@bc/domain/node-execution";
+import { Serializable } from "@bc/domain/serializable";
 import { ArtifactService } from "@bc/service/artifacts/artifact-service";
 import { CheckoutService } from "@bc/service/checkout/checkout-service";
 import { ExecuteCommandService } from "@bc/service/command/execute-command-service";
@@ -13,12 +14,14 @@ import { LoggerService } from "@bc/service/logger/logger-service";
 import Container, { Service } from "typedi";
 
 @Service()
-export class FlowService {
+export class FlowService implements Serializable<SerializedFlowService ,FlowService> {
   private configService: ConfigurationService;
   private checkoutService: CheckoutService;
   private executor: ExecuteCommandService;
   private logger: BaseLoggerService;
   private artifactService: ArtifactService;
+  private savedExecutionResult: SerializedFlowService;
+  private currentExecutionResult: SerializedFlowService;
 
   constructor() {
     this.configService = Container.get(ConfigurationService);
@@ -26,6 +29,8 @@ export class FlowService {
     this.executor = Container.get(ExecuteCommandService);
     this.artifactService = Container.get(ArtifactService);
     this.logger = Container.get(LoggerService).logger;
+    this.savedExecutionResult = [];
+    this.currentExecutionResult = [];
   }
 
   async run(): Promise<FlowResult> {
@@ -41,24 +46,55 @@ export class FlowService {
     this.logger.startGroup("Checkout summary");
     this.printCheckoutSummary(checkoutInfo);
     this.logger.endGroup();
+    
+    const index = this.savedExecutionResult.findIndex(
+      res => !!res.find(
+        r => !!r.executeCommandResults.find(c => c.result === ExecutionResult.NOT_OK)
+      )
+    );
+    const firstNodeThatFailedExecution = index === -1 ? this.savedExecutionResult.length : index;
 
     /**
      * Cannot directly map checkoutInfo into NodeExecution array since the order of nodes might change when parallely checking
      * out the node chain
      */
-    const nodeChainForExecution: NodeExecution[] = this.configService.nodeChain.map(node => ({
-      node,
-      // nodeCheckoutInfo will never be undefined since checkoutInfo is constructed from node chain and so node project will exist
-      cwd: checkoutInfo.find(info => info.node.project === node.project)!.checkoutInfo?.repoDir,
-    }));
-
+    const nodeChainForExecution: NodeExecution[] = this.configService.nodeChain
+      .slice(firstNodeThatFailedExecution)
+      .map(node => ({
+        node,
+        // nodeCheckoutInfo will never be undefined since checkoutInfo is constructed from node chain and so node project will exist
+        cwd: checkoutInfo.find(info => info.node.project === node.project)!.checkoutInfo?.repoDir,
+      }));
+    
+    // print any saved results
+    const savedResults = this.savedExecutionResult.slice(0, firstNodeThatFailedExecution);
+    savedResults.forEach(s => {
+      this.logger.startGroup(`Already executed ${s[0].node.project} successfully in the previous run. Printing summary`);
+      this.printExecutionSummary(s);
+      this.logger.endGroup();
+    });
+    
     const executionResult = await this.executor.executeNodeChain(nodeChainForExecution, this.printExecutionSummary.bind(this));
+    this.currentExecutionResult = savedResults.concat(executionResult);
+
     // archive artifacts
     this.logger.startGroup("Uploading artifacts");
     const artifactUploadResults = await this.artifactService.uploadNodes(this.configService.nodeChain, this.configService.getStarterNode());
     this.logger.endGroup();
 
-    return { checkoutInfo, artifactUploadResults, executionResult };
+    return { checkoutInfo, artifactUploadResults, executionResult: this.currentExecutionResult };
+  }
+
+  toJSON(): SerializedFlowService {
+    return this.currentExecutionResult;
+  }
+
+  fromJSON(_json: SerializedFlowService): FlowService {
+    throw new Error("Use static method");
+  }
+
+  static fromJSON(json: SerializedFlowService): FlowService {
+    return Object.assign(new FlowService(), { savedExecutionResult: json });
   }
 
   /**

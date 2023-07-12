@@ -4,21 +4,26 @@ import { getMappedTarget, Node } from "@kie/build-chain-configuration-reader";
 import Container, { Service } from "typedi";
 import { copy, move } from "fs-extra";
 import path from "path";
-import { CheckedOutNode, CheckoutInfo } from "@bc/domain/checkout";
+import { CheckedOutNode, CheckoutInfo, SerializedCheckoutService } from "@bc/domain/checkout";
 import { GitAPIService } from "@bc/service/git/git-api-service";
 import { GitCLIService } from "@bc/service/git/git-cli";
 import { logAndThrow } from "@bc/utils/log";
 import { NotFoundError } from "@bc/domain/errors";
 import { BaseLoggerService } from "@bc/service/logger/base-logger-service";
+import { Serializable } from "@bc/domain/serializable";
 
 @Service()
-export class CheckoutService {
+export class CheckoutService implements Serializable<SerializedCheckoutService, CheckoutService> {
   private readonly config: ConfigurationService;
   private readonly logger: BaseLoggerService;
+  private savedCheckedOutState: SerializedCheckoutService;
+  private currentCheckedOutState: SerializedCheckoutService;
 
   constructor() {
     this.config = Container.get(ConfigurationService);
     this.logger = Container.get(LoggerService).logger;
+    this.savedCheckedOutState = [];
+    this.currentCheckedOutState = [];
   }
   /**
    * A node is cloned into a directory which is named as following:
@@ -71,7 +76,16 @@ export class CheckoutService {
       return undefined;
     }
 
-    const checkoutInfo = await this.getCheckoutInfo(node);
+    const savedCheckoutInfo = this.savedCheckedOutState.find(n => n.node.project === node.project);
+
+    if (savedCheckoutInfo?.checkedOut) {
+      this.logger.info(`${node.project} already checked out. Continuing...`);
+      savedCheckoutInfo.checkoutInfo.repoDir = this.getProjectDir(node);
+      this.currentCheckedOutState.push(savedCheckoutInfo);
+      return savedCheckoutInfo.checkoutInfo;
+    }
+
+    const checkoutInfo = savedCheckoutInfo?.checkoutInfo ?? await this.getCheckoutInfo(node);
     this.logger.debug(`[${node.project}] CheckoutInfo - ${JSON.stringify(checkoutInfo)}`);
     const gitCLIService = Container.get(GitCLIService);
 
@@ -80,6 +94,7 @@ export class CheckoutService {
 
     // clone the repository and switch to target branch (for branch flow target and source branch are the same)
     await gitCLIService.clone(targetCloneUrl, checkoutInfo.repoDir, checkoutInfo.targetBranch).catch(err => {
+      this.currentCheckedOutState.push({node, checkoutInfo, checkedOut: false});
       this.logger.debug(JSON.stringify(err));
       logAndThrow(
         `[${node.project}] Error cloning ${checkoutInfo.targetGroup}/${checkoutInfo.targetName} and switching to target branch ${checkoutInfo.targetBranch}`
@@ -96,6 +111,7 @@ export class CheckoutService {
         .merge(checkoutInfo.repoDir, sourceCloneUrl, checkoutInfo.sourceBranch)
         .then(async () => gitCLIService.rename(checkoutInfo.repoDir, checkoutInfo.sourceBranch)) // need to rename target to source so that sonar cloud can run PR analysis on source
         .catch(err => {
+          this.currentCheckedOutState.push({node, checkoutInfo, checkedOut: false});
           this.logger.debug(JSON.stringify(err));
           logAndThrow(`[${node.project}] Error merging ${checkoutInfo.sourceGroup}/${checkoutInfo.sourceName}:${checkoutInfo.sourceBranch}
                       into ${checkoutInfo.targetGroup}/${checkoutInfo.targetName}:${checkoutInfo.targetBranch}`);
@@ -105,6 +121,7 @@ export class CheckoutService {
     await this.cloneNode(node);
 
     this.logger.info(`${node.project} checked out`);
+    this.currentCheckedOutState.push({node, checkoutInfo, checkedOut: true});
 
     return checkoutInfo;
   }
@@ -264,5 +281,17 @@ export class CheckoutService {
     return this.config.skipParallelCheckout() ? 
             this.checkoutDefinitionTreeSequential() : 
             this.checkoutDefinitionTreeParallel();
+  }
+
+  toJSON(): SerializedCheckoutService {
+    return this.currentCheckedOutState;
+  }
+
+  fromJSON(_json: SerializedCheckoutService): CheckoutService {
+    throw new Error("Use the static method");
+  }
+
+  static fromJSON(json: SerializedCheckoutService): CheckoutService {
+    return Object.assign(new CheckoutService(), { savedCheckedOutState: json });
   }
 }

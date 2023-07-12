@@ -13,3 +13,5 @@ export const defaultFlowResult: FlowResult = {
   artifactUploadResults: [],
   executionResult: [[], [], []]
 }; 
+
+export type SerializedFlowService = ExecuteNodeResult[][]

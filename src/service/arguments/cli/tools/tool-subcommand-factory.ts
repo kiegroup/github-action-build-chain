@@ -6,6 +6,7 @@ import { InputService } from "@bc/service/inputs/input-service";
 import Container from "typedi";
 import { LoggerLevel } from "@bc/domain/inputs";
 import { PlanCommand  } from "@bc/service/arguments/cli/tools/plan";
+import { ResumeCommand } from "@bc/service/arguments/cli/tools/resume";
 
 /**
  * A factory to construct command line parsers for all the different kind of tools
@@ -24,6 +25,9 @@ export class ToolSubCommandFactory {
         break;
       case ToolType.PLAN:
         commandFactory = new PlanCommand();
+        break;
+      case ToolType.RESUME:
+        commandFactory = new ResumeCommand();
         break;
       default:
         throw new Error(`No command constructor specified for ${toolType}`);

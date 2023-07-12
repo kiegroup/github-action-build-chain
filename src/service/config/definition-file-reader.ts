@@ -90,7 +90,7 @@ export class DefinitionFileReader {
     return nodeChain;
   }
 
-  async getDefinitionFile(): Promise<DefinitionFile> {
+  async getDefinitionFileForBuild(): Promise<DefinitionFile> {
     try {
       return await readDefinitionFile(
         this.configuration.parsedInputs.definitionFile,
@@ -130,6 +130,18 @@ export class DefinitionFileReader {
     }
   }
 
+  async getDefinitionFileForTools(): Promise<DefinitionFile> {
+    switch(this.configuration.getToolType()) {
+      case ToolType.PROJECT_LIST:
+        return this.getDefinitionFileForBuild();
+      case ToolType.PLAN:
+      case ToolType.RESUME:
+            return { version: "2.1" };
+      default:
+        logAndThrow(`Invalid tool ${this.configuration.getToolType()}`);
+    }
+  }
+
   async generateNodeChainForBuild(starterProject: string): Promise<Node[]> {
     try {
       return await this.generateNodeChainWithOptions(starterProject, {
@@ -162,22 +174,39 @@ export class DefinitionFileReader {
     }
   }
 
-  async generateNodeChainForTools(starterProject: string): Promise<Node[]> {
+  async generateNodeChainForTools(starterProject?: string): Promise<Node[]> {
     switch(this.configuration.getToolType()) {
       case ToolType.PROJECT_LIST:
-        return this.getUpstreamOrFullDownstreamProjects(starterProject, {token: this.tokenService.getToken(this.defaultPlatform.id)});
+        if (starterProject) {
+          return this.getUpstreamOrFullDownstreamProjects(
+            starterProject, {token: this.tokenService.getToken(this.defaultPlatform.id)}
+          );
+        }
+        throw logAndThrow("Start project needs to be defined or build chain must be run in a Github environment");
       case ToolType.PLAN:
-          return [];
+      case ToolType.RESUME:
+            return [];
       default:
         logAndThrow(`Invalid tool ${this.configuration.getToolType()}`);
     }
   }
 
-  async generateNodeChain(starterProject: string): Promise<Node[]> {
+  async generateNodeChain(starterProject?: string): Promise<Node[]> {
     if (this.configuration.parsedInputs.CLICommand === CLIActionType.TOOLS) {
       return this.generateNodeChainForTools(starterProject);
     } else {
-      return this.generateNodeChainForBuild(starterProject);
+      if (starterProject) {
+        return this.generateNodeChainForBuild(starterProject);
+      }
+      throw logAndThrow("Start project needs to be defined or build chain must be run in a Github environment");
+    }
+  }
+
+  async getDefinitionFile(): Promise<DefinitionFile> {
+    if (this.configuration.parsedInputs.CLICommand === CLIActionType.TOOLS) {
+      return this.getDefinitionFileForTools();
+    } else {
+      return this.getDefinitionFileForBuild();
     }
   }
 }

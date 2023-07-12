@@ -1,6 +1,7 @@
 import { CLIActionType, ToolType } from "@bc/domain/cli";
-import { EventData, GitConfiguration, ProjectConfiguration } from "@bc/domain/configuration";
+import { EventData, GitConfiguration, ProjectConfiguration, SerializedConfiguration } from "@bc/domain/configuration";
 import { FlowType, InputValues } from "@bc/domain/inputs";
+import { Serializable } from "@bc/domain/serializable";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { GitAPIService } from "@bc/service/git/git-api-service";
 import { logAndThrow } from "@bc/utils/log";
@@ -10,7 +11,10 @@ import Container from "typedi";
 const PR_URL = /^(https?:\/\/.+\/)([^/\s]+)\/([^/\s]+)\/pull\/(\d+)$/;
 const MR_URL = /^(https?:\/\/.+\/)([^/\s]+)\/([^/\s]+)\/-\/merge_requests\/(\d+)$/;
 
-export class CLIConfiguration extends BaseConfiguration { 
+export class CLIConfiguration 
+  extends BaseConfiguration
+  implements Serializable<SerializedConfiguration, CLIConfiguration>
+{ 
   override loadProject(): { source: ProjectConfiguration; target: ProjectConfiguration } {
     if (this.parsedInputs.CLICommand === CLIActionType.TOOLS) {
       return { source: {}, target: {} };
@@ -41,11 +45,7 @@ export class CLIConfiguration extends BaseConfiguration {
     const githubServerUrl = process.env.GITHUB_SERVER_URL ? process.env.GITHUB_SERVER_URL.replace(/\/$/, "") : "https://github.com";
     const gitlabServerUrl = process.env.CI_SERVER_URL?.replace(/\/$/, "");
     const serverUrl = gitlabServerUrl ? gitlabServerUrl : githubServerUrl;
-    const token = this.tokenService.getToken(
-      gitlabServerUrl ? 
-        DEFAULT_GITLAB_PLATFORM.id : 
-        DEFAULT_GITHUB_PLATFORM.id
-    );
+    const token = this.getDefaultToken(serverUrl);
     let gitConfig: GitConfiguration = {
       serverUrl: serverUrl,
       serverUrlWithToken: serverUrl.replace("://", `://${token}@`),
@@ -188,7 +188,49 @@ export class CLIConfiguration extends BaseConfiguration {
     logAndThrow("The CLI subcommand is a build command. No tools defined");
   }
 
+  setServerUrlWithToken() {
+    const token = this.getDefaultToken(this.gitConfiguration.serverUrl);
+    this._gitConfiguration = {
+      ...this.gitConfiguration,
+      serverUrlWithToken: this.gitConfiguration.serverUrl?.replace("://", `://${token}@`)
+    };
+  }
+
+
+  fromJSON(_json: SerializedConfiguration): CLIConfiguration {
+    throw new Error("Use the static method");
+  }
+
+  toJSON(): SerializedConfiguration {
+    return {
+      _gitConfiguration: {
+        ...this._gitConfiguration,
+        serverUrlWithToken: "" // remove serverUrlWithToken to avoid leaking token
+      },
+      _gitEventData: this._gitEventData,
+      _defaultPlatform: this._defaultPlatform,
+      _parsedInputs: this._parsedInputs,
+      _sourceProject: this._sourceProject,
+      _targetProject: this._targetProject
+    };
+  }
+
+  static fromJSON(json: SerializedConfiguration): CLIConfiguration {
+    const config: CLIConfiguration = Object.assign(new CLIConfiguration(), json);
+    config.loadToken();
+    config.setServerUrlWithToken();
+    return config;
+  }
+
   private isGitlabUrl(url?: string) {
     return url && MR_URL.test(url);
+  }
+
+  private getDefaultToken(serverUrl?: string) {
+    return this.tokenService.getToken(
+      this.isGitlabUrl(serverUrl) ? 
+        DEFAULT_GITLAB_PLATFORM.id : 
+        DEFAULT_GITHUB_PLATFORM.id
+    );
   }
 }

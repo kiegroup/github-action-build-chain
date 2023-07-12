@@ -7,15 +7,18 @@ import { ActionConfiguration } from "@bc/service/config/action-configuration";
 import { logAndThrow } from "@bc/utils/log";
 import { BaseConfiguration } from "@bc/service/config/base-configuration";
 import { TreatmentOptions } from "@bc/domain/treatment-options";
-import { ProjectConfiguration } from "@bc/domain/configuration";
+import { ProjectConfiguration, SerializedConfigurationService } from "@bc/domain/configuration";
 import { FlowType } from "@bc/domain/inputs";
 import { DefinitionFile, Post, Pre, Node, Platform, DEFAULT_GITLAB_PLATFORM, DEFAULT_GITHUB_PLATFORM, PlatformType } from "@kie/build-chain-configuration-reader";
 import { DefinitionFileReader } from "@bc/service/config/definition-file-reader";
 import { CLIActionType, ToolType } from "@bc/domain/cli";
 import { GitTokenService } from "@bc/service/git/git-token-service";
+import { Serializable } from "@bc/domain/serializable";
 
 @Service()
-export class ConfigurationService {
+export class ConfigurationService 
+  implements Serializable<SerializedConfigurationService, ConfigurationService> 
+{
   private configuration: BaseConfiguration;
   private tokenService: GitTokenService;
   private _nodeChain: Node[];
@@ -59,15 +62,10 @@ export class ConfigurationService {
    * Get the name of the start project which produces node chain for build-chain
    * @returns {string}
    */
-  getStarterProjectName(): string {
-    const startProject =
-      this.configuration.parsedInputs.startProject ??
+  getStarterProjectName(): string | undefined {
+    return this.configuration.parsedInputs.startProject ??
       process.env.GITHUB_REPOSITORY ??
-      this.configuration.gitEventData.base.repo.full_name;
-    if (!startProject) {
-      logAndThrow("Start project needs to be defined or build chain must be run in a Github environment");
-    }
-    return startProject;
+      this.configuration.gitEventData.base?.repo.full_name;
   }
 
   /**
@@ -281,8 +279,34 @@ export class ConfigurationService {
     } else if (platformId === DEFAULT_GITLAB_PLATFORM.id) {
       platform = DEFAULT_GITLAB_PLATFORM;
     } else {
-      platform = this.definitionFile.platforms?.find(p => p.id === platformId);
+      platform = this.getPlatformById(platformId);
     }
     return platform ?? this.configuration.getDefaultPlatformConfig();
+  }
+
+  getPlatformById(id?: string) {
+    return this.definitionFile.platforms?.find(p => p.id === id);
+  }
+
+  toJSON(): SerializedConfigurationService {
+    if (this.configuration instanceof CLIConfiguration) {
+      return {
+        configuration: this.configuration.toJSON(),
+        _definitionFile: this._definitionFile,
+        _nodeChain: this._nodeChain
+      };
+    }
+    throw new Error("Serialization is enabled only for CLI");
+  }
+
+  fromJSON(_json: SerializedConfigurationService): ConfigurationService {
+    throw new Error("Use static method");
+  }
+
+  static fromJSON(json: SerializedConfigurationService): ConfigurationService {
+    return Object.assign(new ConfigurationService(), {
+      ...json,
+      configuration: CLIConfiguration.fromJSON(json.configuration)
+    });
   }
 }

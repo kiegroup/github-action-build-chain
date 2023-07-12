@@ -100,7 +100,7 @@ describe("methods", () => {
   test("getStarterProjectName: failure", () => {
     delete process.env["GITHUB_REPOSITORY"];
     delete currentInput["startProject"];
-    expect(() => config.getStarterProjectName()).toThrowError();
+    expect(config.getStarterProjectName()).toBe(undefined);
   });
 
   test.each([

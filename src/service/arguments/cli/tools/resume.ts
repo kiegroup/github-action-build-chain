@@ -14,6 +14,7 @@ export class ResumeCommand implements CommandConstructor {
     program
       .description("Resume execution from first point of failure")
       .option("-w, --workspace <workspace>", "The workspace in which build-chain was executed and the one you want to resume execution in")
+      .option("-t, --token <token>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
       .hook("postAction", () => {
         const parsedInputs = Container.get(InputService);
         parsedInputs.updateInputs({ outputFolder: parsedInputs.inputs.workspace });

@@ -787,7 +787,7 @@ $ build-chain tools plan cross_pr -f definition_file -u event_url
 
 ### tool command: resume
 
-The `resume` command lets you continue your build from the last point of failure. When running any `build-chain build` commands, it will produce a state file in the current working directory which will store all the data related to its execution. If you run `build-chain tools resume` in the same working directory, then `build-chain` will pick up that state file, reconstruct `build-chain build`'s previous state and continue execution from the first point of failure.
+The `resume` command lets you continue your build from the last point of failure. When running any `build-chain build` commands, it will produce a state file in the current working directory which will store all the data related to its execution. If you run `build-chain tools resume` in the same working directory, then `build-chain` will pick up that state file, reconstruct `build-chain build`'s previous state and continue execution from the first point of failure. Note that the tokens are not stored in the state file, so you have to pass them again to the `resume` command using the `--token` option or setting them as env variables.
 
 To run from the current working directory
 

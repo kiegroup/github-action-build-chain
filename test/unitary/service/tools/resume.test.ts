@@ -105,6 +105,8 @@ test("execute", async () => {
     .spyOn(CLIRunner.prototype, "execute")
     .mockImplementation(async () => undefined);
 
+  delete process.env["GITHUB_REPOSITORY"];
+
   await resume.execute();
 
   expect(cliSpy).toHaveBeenCalledTimes(1);

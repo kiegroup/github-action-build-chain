@@ -12,9 +12,8 @@ export class ResumeCommand implements CommandConstructor {
   createCommand(): Command {
     const program = new Command(ToolType.RESUME);
     program
-      .description("Resume execution from last point of failure")
+      .description("Resume execution from first point of failure")
       .option("-w, --workspace <workspace>", "The workspace in which build-chain was executed and the one you want to resume execution in")
-      .option("-p, --startProject <project>", "The project to start the build from")
       .hook("postAction", () => {
         const parsedInputs = Container.get(InputService);
         parsedInputs.updateInputs({ outputFolder: parsedInputs.inputs.workspace });

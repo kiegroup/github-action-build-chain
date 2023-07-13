@@ -765,10 +765,11 @@ Options:
 Commands:
   project-list [options]  Prints the projects that will be built given a starting project ordered by precedence
   plan                    Execute build chain without actually cloning or executing projects (like a dry run)
+  resume [options]        Resume execution from first point of failure
   help [command]          display help for command
 ```  
 
-#### tool command: plan
+### tool command: plan
 
 The `plan` command lets you execute build-chain without actually cloning or executing projects, like a dry run. This lets you verify whether build-chain will clone the correct projects, will checkout the correct branch, will merge the correct PRs and will execute the correct commands for each project. To use this command you simply have to pass the arguments that come after `build-chain build` command to `build-chain tools plan` command. For example:
 
@@ -782,6 +783,22 @@ then, you have to run the following `plan` command:
 
 ```shell
 $ build-chain tools plan cross_pr -f definition_file -u event_url
+```
+
+### tool command: resume
+
+The `resume` command lets you continue your build from the last point of failure. When running any `build-chain build` commands, it will produce a state file in the current working directory which will store all the data related to its execution. If you run `build-chain tools resume` in the same working directory, then `build-chain` will pick up that state file, reconstruct `build-chain build`'s previous state and continue execution from the first point of failure.
+
+To run from the current working directory
+
+```shell
+$ build-chain tools resume
+```
+
+To run from a specific workspace
+
+```shell
+$ build-chain tools resume -w bc
 ```
 
 ## About Commands to Execute

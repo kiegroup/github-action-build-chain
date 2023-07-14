@@ -28,11 +28,10 @@ export class CLIRunner extends Runner {
       if (configService.isToolsCommand()) {
         return await this.executeTools();
       } else {
-        return await this.executeBuild()
-          .catch(err => {
-            this.saveState();
-            throw err;
-          }); 
+        // handle signals only once configuration has been initialized. without it saving the state won't mean anything
+        // handling exit will automatically run save state when executeBuild finishes
+        ["exit", "SIGINT", "SIGQUIT", "SIGTERM"].forEach( e  =>  process.on(e, this.saveState));
+        return await this.executeBuild();
       }      
     } catch (err) {
       await this.safeAsyncExit(1);
@@ -59,7 +58,6 @@ export class CLIRunner extends Runner {
       this.printExecutionFailure(postResult.output);
       exitCode = 1;
     }
-    this.saveState();
     return this.safeAsyncExit(exitCode);
   }
 

@@ -34,8 +34,17 @@ export class FlowService implements Serializable<SerializedFlowService ,FlowServ
   }
 
   async run(): Promise<FlowResult> {
+    let firstNodeThatFailedExecution = this.savedExecutionResult.findIndex(
+      res => !!res.find(
+        r => !!r.executeCommandResults.find(c => c.result === ExecutionResult.NOT_OK)
+      )
+    );
+
     this.logger.startGroup("Execution Plan");
     this.printExecutionPlan();
+    if (firstNodeThatFailedExecution !== -1) {
+      this.logger.info(`Continuing execution from ${this.configService.nodeChain[firstNodeThatFailedExecution]}`);
+    }
     this.logger.endGroup();
 
     this.logger.startGroup(
@@ -47,13 +56,9 @@ export class FlowService implements Serializable<SerializedFlowService ,FlowServ
     this.printCheckoutSummary(checkoutInfo);
     this.logger.endGroup();
     
-    const index = this.savedExecutionResult.findIndex(
-      res => !!res.find(
-        r => !!r.executeCommandResults.find(c => c.result === ExecutionResult.NOT_OK)
-      )
-    );
-    const firstNodeThatFailedExecution = index === -1 ? this.savedExecutionResult.length : index;
-
+    // update it to end of list if there were no nodes
+    firstNodeThatFailedExecution = firstNodeThatFailedExecution === -1 ? this.savedExecutionResult.length : firstNodeThatFailedExecution;
+    
     /**
      * Cannot directly map checkoutInfo into NodeExecution array since the order of nodes might change when parallely checking
      * out the node chain

@@ -739,6 +739,22 @@ Example:
 $ build-chain build branch -f https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/main/.ci/pull-request-config.yaml -p=kiegroup/lienzo-tests -b=main
 ```
 
+### build command: resume
+
+The `resume` command lets you continue your build from the last point of failure. When running any other `build-chain build` commands, it will produce a state file in the current working directory which will store all the data related to its execution. If you run `build-chain build resume` in the same working directory, then `build-chain` will pick up that state file, reconstruct `build-chain build`'s previous state and continue execution from the first point of failure. Note that the tokens are not stored in the state file, so you have to pass them again to the `resume` command using the `--token` option or setting them as env variables.
+
+To run from the current working directory
+
+```shell
+$ build-chain build resume
+```
+
+To run from a specific workspace
+
+```shell
+$ build-chain build resume -w bc
+```
+
 #### Custom Command Replacement
 
 It is possible to define custom expression to replace commands. The expression structure is `RegEx||ReplacementEx` where:
@@ -783,22 +799,6 @@ then, you have to run the following `plan` command:
 
 ```shell
 $ build-chain tools plan cross_pr -f definition_file -u event_url
-```
-
-### tool command: resume
-
-The `resume` command lets you continue your build from the last point of failure. When running any `build-chain build` commands, it will produce a state file in the current working directory which will store all the data related to its execution. If you run `build-chain tools resume` in the same working directory, then `build-chain` will pick up that state file, reconstruct `build-chain build`'s previous state and continue execution from the first point of failure. Note that the tokens are not stored in the state file, so you have to pass them again to the `resume` command using the `--token` option or setting them as env variables.
-
-To run from the current working directory
-
-```shell
-$ build-chain tools resume
-```
-
-To run from a specific workspace
-
-```shell
-$ build-chain tools resume -w bc
 ```
 
 ## About Commands to Execute

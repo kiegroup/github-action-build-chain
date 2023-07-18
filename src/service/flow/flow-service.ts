@@ -43,7 +43,7 @@ export class FlowService implements Serializable<SerializedFlowService ,FlowServ
     this.logger.startGroup("Execution Plan");
     this.printExecutionPlan();
     if (firstNodeThatFailedExecution !== -1) {
-      this.logger.info(`Continuing execution from ${this.configService.nodeChain[firstNodeThatFailedExecution]}`);
+      this.logger.info(`Continuing execution from ${this.configService.nodeChain[firstNodeThatFailedExecution].project}`);
     }
     this.logger.endGroup();
 

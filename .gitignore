@@ -8,6 +8,6 @@ coverage/
 test-report.xml
 .idea/
 .vscode/
-build/
+/build
 *.log
 dist-e2e/

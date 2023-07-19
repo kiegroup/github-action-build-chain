@@ -1,4 +1,4 @@
-import { CLIActionType } from "@bc/domain/cli";
+import { CLIActionType, ToolType } from "@bc/domain/cli";
 import { Command } from "commander";
 import { CommandConstructor } from "@bc/service/arguments/cli/command-constructor";
 import { BranchCommand } from "@bc/service/arguments/cli/build/branch-command";
@@ -9,6 +9,7 @@ import { formatDate } from "@bc/utils/date";
 import { InputService } from "@bc/service/inputs/input-service";
 import Container from "typedi";
 import { FlowType, LoggerLevel } from "@bc/domain/inputs";
+import { ResumeCommand } from "@bc/service/arguments/cli/build/resume";
 
 /**
  * A factory to construct command line parsers for all the different kind of build flows
@@ -19,7 +20,7 @@ export class BuildSubCommandFactory {
    * @param buildType Type of command for which the parser has to be constructed
    * @returns {Command} Returns command parser object or throws an error if the cmd is not defined
    */
-  static getCommand(buildType: FlowType): Command {
+  static getCommand(buildType: FlowType | ToolType.RESUME): Command {
     let commandFactory: CommandConstructor;
     switch (buildType) {
       case FlowType.CROSS_PULL_REQUEST:
@@ -34,6 +35,8 @@ export class BuildSubCommandFactory {
       case FlowType.BRANCH:
         commandFactory = new BranchCommand();
         break;
+      case ToolType.RESUME:
+        return new ResumeCommand().createCommand();
       default:
         throw new Error(`No command constructor specified for ${buildType}`);
     }
@@ -73,6 +76,8 @@ export class BuildSubCommandFactory {
    * @returns {Command[]} Array of objects of command line parsers
    */
   static getAllCommands(): Command[] {
-    return Object.keys(FlowType).map((buildType) => this.getCommand(FlowType[buildType as keyof typeof FlowType]));
+    const cmd = Object.keys(FlowType).map((buildType) => this.getCommand(FlowType[buildType as keyof typeof FlowType]));
+    cmd.push(this.getCommand(ToolType.RESUME))
+    return cmd
   }
 }

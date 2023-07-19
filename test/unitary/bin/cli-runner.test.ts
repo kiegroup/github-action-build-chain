@@ -15,6 +15,7 @@ import { defaultNodeValue } from "@bc/domain/node";
 import { Command } from "commander";
 import { ProjectList } from "@bc/service/tools/project-list";
 import { ToolType } from "@bc/domain/cli";
+import fs from "fs-extra";
 
 // disable logs
 jest.spyOn(global.console, "log");
@@ -78,6 +79,7 @@ describe("execute:build", () => {
     cliRunner = new CLIRunner();
     jest.spyOn(Command.prototype, "parse").mockImplementation(() => undefined!);
     jest.spyOn(ConfigurationService.prototype, "isToolsCommand").mockImplementation(() => false);
+    jest.spyOn(fs, "writeFileSync").mockImplementation(() => undefined);
   });
 
   test("success", async () => {

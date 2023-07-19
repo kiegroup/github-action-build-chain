@@ -1,3 +1,6 @@
+import { InputValues } from "@bc/domain/inputs";
+import { DefinitionFile, Node, PlatformType } from "@kie/build-chain-configuration-reader";
+
 export type GitConfiguration = {
   serverUrl?: string;
   serverUrlWithToken?: string;
@@ -43,3 +46,18 @@ export type EventData = {
     }
   }
 } | Record<string, never>;
+
+export interface SerializedConfiguration {
+  _gitEventData: EventData;
+  _gitConfiguration: GitConfiguration;
+  _sourceProject: ProjectConfiguration;
+  _targetProject: ProjectConfiguration;
+  _parsedInputs: InputValues;
+  _defaultPlatform: PlatformType;
+}
+
+export interface SerializedConfigurationService {
+  configuration: SerializedConfiguration,
+  _nodeChain: Node[],
+  _definitionFile: DefinitionFile
+}

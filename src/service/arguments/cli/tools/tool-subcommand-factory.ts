@@ -46,6 +46,10 @@ export class ToolSubCommandFactory {
    * @returns {Command[]} Array of objects of command line parsers
    */
   static getAllCommands(): Command[] {
-    return Object.keys(ToolType).map(toolType => this.getCommand(ToolType[toolType as keyof typeof ToolType]));
+    return Object.keys(ToolType)
+      .filter(toolType => toolType !== "RESUME")
+      .map(toolType =>
+        this.getCommand(ToolType[toolType as keyof typeof ToolType])
+      );
   }
 }

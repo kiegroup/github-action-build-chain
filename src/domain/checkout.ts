@@ -15,3 +15,11 @@ export type CheckedOutNode = {
   node: Node;
   checkoutInfo?: CheckoutInfo
 }
+
+export interface SerializedCheckoutNode {
+  node: Node;
+  checkoutInfo: CheckoutInfo,
+  checkedOut: boolean
+}
+
+export type SerializedCheckoutService = SerializedCheckoutNode[]

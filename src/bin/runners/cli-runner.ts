@@ -4,6 +4,12 @@ import { EntryPoint } from "@bc/domain/entry-point";
 import Container from "typedi";
 import { CLIArguments } from "@bc/service/arguments/cli/cli-arguments";
 import { ToolService } from "@bc/service/tools/tools-service";
+import { DEFAULT_STATE_FILENAME, ResumeState } from "@bc/domain/resume";
+import { ConfigurationService } from "@bc/service/config/configuration-service";
+import { FlowService } from "@bc/service/flow/flow-service";
+import { CheckoutService } from "@bc/service/checkout/checkout-service";
+import { writeFileSync } from "fs-extra";
+import path from "path";
 
 export class CLIRunner extends Runner {
   constructor() {
@@ -22,7 +28,10 @@ export class CLIRunner extends Runner {
       if (configService.isToolsCommand()) {
         return await this.executeTools();
       } else {
-        return await this.executeBuild(); 
+        // handle signals only once configuration has been initialized. without it saving the state won't mean anything
+        // handling exit will automatically run save state when executeBuild finishes
+        ["exit", "SIGINT", "SIGQUIT", "SIGTERM"].forEach( e  =>  process.on(e, this.saveState));
+        return await this.executeBuild();
       }      
     } catch (err) {
       await this.safeAsyncExit(1);
@@ -54,5 +63,15 @@ export class CLIRunner extends Runner {
 
   private async executeTools() {
     return Container.get(ToolService).execute();
+  }
+
+  private saveState() {
+    const configService = Container.get(ConfigurationService);
+    const state: ResumeState = {
+      configurationService: Container.get(ConfigurationService).toJSON(),
+      flowService: Container.get(FlowService).toJSON(),
+      checkoutService: Container.get(CheckoutService).toJSON()
+    };
+    writeFileSync(path.join(configService.getRootFolder(), DEFAULT_STATE_FILENAME), JSON.stringify(state));
   }
 }

@@ -1,6 +1,6 @@
 import Container, { Service } from "typedi";
 import { Tools } from "@bc/service/tools/abstract-tools";
-import { readFileSync } from "fs-extra";
+import { existsSync, readFileSync } from "fs-extra";
 import path from "path";
 import { DEFAULT_STATE_FILENAME, ResumeState } from "@bc/domain/resume";
 import { ConfigurationService } from "@bc/service/config/configuration-service";
@@ -9,6 +9,8 @@ import { FlowService } from "@bc/service/flow/flow-service";
 import { CLIArguments } from "@bc/service/arguments/cli/cli-arguments";
 import { Command } from "commander";
 import { CLIRunner } from "@bc/bin/runners/cli-runner";
+import { SerializedCheckoutService } from "@bc/domain/checkout";
+import { GitCLIService } from "@bc/service/git/git-cli";
 
 @Service()
 export class Resume extends Tools {
@@ -25,12 +27,15 @@ export class Resume extends Tools {
       outputFolder: workspace
     };
 
+    // verify checkout state
+    const verifiedCheckoutState = await this.verifyCheckout(state.checkoutService);
+
     // reconstruct services
     const configService = ConfigurationService.fromJSON(state.configurationService);
     // patch init to avoid config service initialization
     configService.init = async () => undefined;
     Container.set(ConfigurationService, configService);  
-    const checkoutService = CheckoutService.fromJSON(state.checkoutService);
+    const checkoutService = CheckoutService.fromJSON(verifiedCheckoutState);
     Container.set(CheckoutService, checkoutService);
     const flowService = FlowService.fromJSON(state.flowService);
     Container.set(FlowService, flowService);
@@ -43,5 +48,39 @@ export class Resume extends Tools {
     // re-run cli runner
     return new CLIRunner().execute();
   }
-  
+
+  private async verifyCheckout(
+    serializedCheckoutInfo: SerializedCheckoutService
+  ): Promise<SerializedCheckoutService> {
+    return Promise.all(
+      serializedCheckoutInfo.map(checkout => {
+        if (checkout.checkedOut && existsSync(checkout.checkoutInfo.repoDir)) {
+          return Container.get(GitCLIService)
+            .branch(checkout.checkoutInfo.repoDir)
+            .then(branchSummary => {
+              if (
+                branchSummary.current === checkout.checkoutInfo.sourceBranch
+              ) {
+                return checkout;
+              } else {
+                this.logger.warn(
+                  `Workspace does not match expected state. Will re-checkout project ${checkout.node.project}`
+                );
+                return {
+                  ...checkout,
+                  checkedOut: false,
+                };
+              }
+            });
+        }
+        this.logger.warn(
+          `Workspace does not match expected state. Will re-checkout project ${checkout.node.project}`
+        );
+        return {
+          ...checkout,
+          checkedOut: false
+        };
+      })
+    );
+  }
 }

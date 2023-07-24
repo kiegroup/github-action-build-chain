@@ -163,4 +163,8 @@ export class GitCLIService {
     }
     await this.git(cwd).push("origin", branch, options);
   }
+
+  async branch(cwd: string) {
+    return this.git(cwd).branch();
+  }
 }

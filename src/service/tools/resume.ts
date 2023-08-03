@@ -11,6 +11,9 @@ import { Command } from "commander";
 import { CLIRunner } from "@bc/bin/runners/cli-runner";
 import { SerializedCheckoutService } from "@bc/domain/checkout";
 import { GitCLIService } from "@bc/service/git/git-cli";
+import { SerializedFlowService } from "@bc/domain/flow";
+import { Node } from "@kie/build-chain-configuration-reader";
+import { logAndThrow } from "@bc/utils/log";
 
 @Service()
 export class Resume extends Tools {
@@ -29,6 +32,11 @@ export class Resume extends Tools {
 
     // verify checkout state
     const verifiedCheckoutState = await this.verifyCheckout(state.checkoutService);
+    const updatedFlowServiceState = this.updateResumeFrom(
+      state.flowService, 
+      state.configurationService._nodeChain,
+      state.configurationService.configuration._parsedInputs.failAtEnd
+    );
 
     // reconstruct services
     const configService = ConfigurationService.fromJSON(state.configurationService);
@@ -37,7 +45,7 @@ export class Resume extends Tools {
     Container.set(ConfigurationService, configService);  
     const checkoutService = CheckoutService.fromJSON(verifiedCheckoutState);
     Container.set(CheckoutService, checkoutService);
-    const flowService = FlowService.fromJSON(state.flowService);
+    const flowService = FlowService.fromJSON(updatedFlowServiceState);
     Container.set(FlowService, flowService);
 
     // patch cli argument service to prevent argument parsing again
@@ -82,5 +90,55 @@ export class Resume extends Tools {
         };
       })
     );
+  }
+
+  private updateResumeFrom(flowService: SerializedFlowService, nodeChain: Node[], failAtEnd = false) {
+    const startProject = this.configService.getStarterProjectNameFromInput();
+    if (!startProject) {
+      if (failAtEnd) {
+        this.logger.warn(
+          "The build we are resuming had enabled fail at end. Will resume building after the last project that had failed"
+        );
+        return {
+          ...flowService,
+          resumeFrom: flowService.executionResult.length
+        };
+      }
+      return flowService;
+    }
+
+    // check if start project even exists
+    if (!nodeChain.find(n => n.project === startProject)) {
+      logAndThrow(`Given starting project ${startProject} does not exist`);
+    }
+
+    const startProjectIndex = flowService.executionResult.findIndex(
+      res => !!res.find(r => r.node.project === startProject)
+    );
+
+    if (startProjectIndex === -1) {
+      if (failAtEnd) {
+        this.logger.warn(
+          `The start project ${startProject} you wanted to resume from has un-built dependencies
+          and the previous build has fail at end enabled.
+          Will resume building after the last project that had failed.`
+        );
+        return {
+          ...flowService,
+          resumeFrom: flowService.executionResult.length
+        };
+      } else {
+        this.logger.warn(
+          `The start project ${startProject} you wanted to resume from has un-built dependencies.
+          Will resume building from the first point of failure.`
+        );
+        return flowService;
+      }
+    } else {
+      return {
+        ...flowService,
+        resumeFrom: startProjectIndex
+      };
+    }
   }
 }

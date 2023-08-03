@@ -14,4 +14,12 @@ export const defaultFlowResult: FlowResult = {
   executionResult: [[], [], []]
 }; 
 
-export type SerializedFlowService = ExecuteNodeResult[][]
+export type SerializedFlowService = {
+  executionResult: ExecuteNodeResult[][],
+  resumeFrom: number,
+}
+
+export const defaultSerializedFlowService: SerializedFlowService = {
+  executionResult: [],
+  resumeFrom: -1
+};

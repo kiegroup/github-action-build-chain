@@ -63,9 +63,18 @@ export class ConfigurationService
    * @returns {string}
    */
   getStarterProjectName(): string | undefined {
-    return this.configuration.parsedInputs.startProject ??
+    return this.getStarterProjectNameFromInput() ??
       process.env.GITHUB_REPOSITORY ??
       this.configuration.gitEventData.base?.repo.full_name;
+  }
+
+
+  /**
+   * Get the name of the start project which produces node chain for build-chain
+   * @returns {string}
+   */
+  getStarterProjectNameFromInput(): string | undefined {
+    return this.configuration.parsedInputs.startProject;
   }
 
   /**

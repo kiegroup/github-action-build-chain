@@ -17,6 +17,7 @@ import path from "path";
 import { MockGithub } from "@kie/mock-github";
 import { GitCLIService } from "@bc/service/git/git-cli";
 import { BranchSummary } from "simple-git";
+import { defaultSerializedFlowService } from "@bc/domain/flow";
 
 Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
 
@@ -67,46 +68,49 @@ describe("execute", () => {
             checkedOut: true,
           },
         ],
-        flowService: [
-          [
-            {
-              node: {
-                project: "test",
-              },
-              executeCommandResults: [
-                {
-                  command: "false",
-                  result: ExecutionResult.OK,
-                  errorMessage: "",
+        flowService: {
+          resumeFrom: -1,
+          executionResult: [
+            [
+              {
+                node: {
+                  project: "test",
                 },
-              ],
-            },
-            {
-              node: {
-                project: "test",
+                executeCommandResults: [
+                  {
+                    command: "false",
+                    result: ExecutionResult.OK,
+                    errorMessage: "",
+                  },
+                ],
               },
-              executeCommandResults: [
-                {
-                  command: "false",
-                  result: ExecutionResult.OK,
-                  errorMessage: "",
+              {
+                node: {
+                  project: "test",
                 },
-              ],
-            },
-            {
-              node: {
-                project: "test",
+                executeCommandResults: [
+                  {
+                    command: "false",
+                    result: ExecutionResult.OK,
+                    errorMessage: "",
+                  },
+                ],
               },
-              executeCommandResults: [
-                {
-                  command: "false",
-                  result: ExecutionResult.OK,
-                  errorMessage: "",
+              {
+                node: {
+                  project: "test",
                 },
-              ],
-            },
+                executeCommandResults: [
+                  {
+                    command: "false",
+                    result: ExecutionResult.OK,
+                    errorMessage: "",
+                  },
+                ],
+              },
+            ],
           ],
-        ],
+        },
       })
     );
     cliSpy = jest
@@ -291,7 +295,7 @@ describe("verify", () => {
             checkedOut: true,
           },
         ],
-        flowService: [],
+        flowService: defaultSerializedFlowService,
       })
     );
 
@@ -341,5 +345,227 @@ describe("verify", () => {
         checkedOut: false,
       },
     ]);
+  });
+});
+
+describe("update resume from", () => {
+  const checkoutServiceSerialized = [
+    {
+      node: { project: "test1" },
+      checkoutInfo: { merge: false, repoDir: "dir" },
+      checkedOut: true,
+    },
+    {
+      node: { project: "test2" },
+      checkoutInfo: { merge: false, repoDir: "dir" },
+      checkedOut: true,
+    },
+  ];
+
+  const configurationServiceSerialized = {
+    configuration: {
+      _gitEventData: {
+        base: {
+          repo: {
+            full_name: "test",
+          },
+        },
+      },
+      _gitConfiguration: {},
+      _sourceProject: {},
+      _targetProject: {},
+      _parsedInputs: {
+        CLISubCommand: FlowType.BRANCH,
+      },
+      _defaultPlatform: PlatformType.GITLAB,
+    },
+    _nodeChain: [{ project: "test1" }, { project: "test2" }],
+    _definitionFile: {
+      version: 2.3,
+      build: [],
+    },
+  };
+
+  const flowServiceSerialized = {
+    executionResult: [
+      [
+        {
+          node: {
+            project: "test1",
+          },
+          executeCommandResults: [
+            {
+              command: "false",
+              result: ExecutionResult.OK,
+              errorMessage: "",
+            },
+          ],
+        },
+        {
+          node: {
+            project: "test1",
+          },
+          executeCommandResults: [
+            {
+              command: "false",
+              result: ExecutionResult.OK,
+              errorMessage: "",
+            },
+          ],
+        },
+        {
+          node: {
+            project: "test1",
+          },
+          executeCommandResults: [
+            {
+              command: "false",
+              result: ExecutionResult.NOT_OK,
+              errorMessage: "",
+            },
+          ],
+        },
+      ],
+    ],
+    resumeFrom: 0,
+  };
+
+  let flowFromJSONSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    jest.spyOn(fs, "existsSync").mockReturnValue(true);
+    jest
+      .spyOn(CLIRunner.prototype, "execute")
+      .mockImplementation(async () => undefined);
+    jest
+      .spyOn(GitCLIService.prototype, "branch")
+      .mockResolvedValue({} as BranchSummary);
+    flowFromJSONSpy = jest.spyOn(FlowService, "fromJSON");
+  });
+
+  test.each([
+    ["start project is undefined: fail at end", true, 1, undefined],
+    ["start project is undefined: don't fail at end", false, 0, undefined],
+    [
+      "starting project is defined and exists in node chain but isn't found in already executed nodes: fail at end",
+      true,
+      1,
+      "test2",
+    ],
+    [
+      "starting project is defined and exists in node chain but isn't found in already executed nodes: don't fail at end",
+      false,
+      0,
+      "test2",
+    ],
+  ])("%p", async (_title, failAtEnd, resumeFrom, startProject) => {
+    jest.spyOn(fs, "readFileSync").mockReturnValue(
+      JSON.stringify({
+        configurationService: {
+          ...configurationServiceSerialized,
+          configuration: {
+            ...configurationServiceSerialized.configuration,
+            _parsedInputs: {
+              ...configurationServiceSerialized.configuration._parsedInputs,
+              failAtEnd,
+            },
+          },
+        },
+        checkoutService: checkoutServiceSerialized,
+        flowService: flowServiceSerialized,
+      })
+    );
+    jest
+      .spyOn(ConfigurationService.prototype, "getStarterProjectNameFromInput")
+      .mockReturnValueOnce(startProject);
+
+    await resume.execute();
+
+    expect(flowFromJSONSpy).toHaveBeenCalledWith({
+      ...flowServiceSerialized,
+      resumeFrom,
+    });
+  });
+
+  test("starting project is defined but does not exist in node chain", async () => {
+    jest.spyOn(fs, "readFileSync").mockReturnValue(
+      JSON.stringify({
+        configurationService: configurationServiceSerialized,
+        checkoutService: checkoutServiceSerialized,
+        flowService: defaultSerializedFlowService,
+      })
+    );
+
+    jest
+      .spyOn(ConfigurationService.prototype, "getStarterProjectNameFromInput")
+      .mockReturnValueOnce("test3");
+
+    await expect(resume.execute()).rejects.toThrowError();
+  });
+
+  test("starting project is defined, exists in node chain and is in already executed nodes", async () => {
+    const updatedFlowServiceSerialized = {
+      executionResult: [
+        ...flowServiceSerialized.executionResult,
+        [
+          {
+            node: {
+              project: "test2",
+            },
+            executeCommandResults: [
+              {
+                command: "false",
+                result: ExecutionResult.OK,
+                errorMessage: "",
+              },
+            ],
+          },
+          {
+            node: {
+              project: "test2",
+            },
+            executeCommandResults: [
+              {
+                command: "false",
+                result: ExecutionResult.OK,
+                errorMessage: "",
+              },
+            ],
+          },
+          {
+            node: {
+              project: "test2",
+            },
+            executeCommandResults: [
+              {
+                command: "false",
+                result: ExecutionResult.NOT_OK,
+                errorMessage: "",
+              },
+            ],
+          },
+        ],
+      ],
+      resumeFrom: 1,
+    };
+
+    jest.spyOn(fs, "readFileSync").mockReturnValue(
+      JSON.stringify({
+        configurationService: configurationServiceSerialized,
+        checkoutService: checkoutServiceSerialized,
+        flowService: updatedFlowServiceSerialized,
+      })
+    );
+
+    jest
+      .spyOn(ConfigurationService.prototype, "getStarterProjectNameFromInput")
+      .mockReturnValueOnce("test1");
+
+    await resume.execute();
+
+    expect(flowFromJSONSpy).toHaveBeenCalledWith({
+      ...updatedFlowServiceSerialized,
+      resumeFrom: 0,
+    });
   });
 });

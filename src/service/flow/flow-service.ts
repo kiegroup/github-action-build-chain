@@ -2,7 +2,7 @@ import { CheckedOutNode } from "@bc/domain/checkout";
 import { ExecutionResult } from "@bc/domain/execute-command-result";
 import { ExecuteNodeResult } from "@bc/domain/execute-node-result";
 import { ExecutionPhase } from "@bc/domain/execution-phase";
-import { FlowResult, SerializedFlowService } from "@bc/domain/flow";
+import { FlowResult, SerializedFlowService, defaultSerializedFlowService } from "@bc/domain/flow";
 import { NodeExecution } from "@bc/domain/node-execution";
 import { Serializable } from "@bc/domain/serializable";
 import { ArtifactService } from "@bc/service/artifacts/artifact-service";
@@ -29,21 +29,17 @@ export class FlowService implements Serializable<SerializedFlowService ,FlowServ
     this.executor = Container.get(ExecuteCommandService);
     this.artifactService = Container.get(ArtifactService);
     this.logger = Container.get(LoggerService).logger;
-    this.savedExecutionResult = [];
-    this.currentExecutionResult = [];
+    this.savedExecutionResult = defaultSerializedFlowService;
+    this.currentExecutionResult = defaultSerializedFlowService;
   }
 
   async run(): Promise<FlowResult> {
-    let firstNodeThatFailedExecution = this.savedExecutionResult.findIndex(
-      res => !!res.find(
-        r => !!r.executeCommandResults.find(c => c.result === ExecutionResult.NOT_OK)
-      )
-    );
-
     this.logger.startGroup("Execution Plan");
     this.printExecutionPlan();
-    if (firstNodeThatFailedExecution !== -1) {
-      this.logger.info(`Continuing execution from ${this.configService.nodeChain[firstNodeThatFailedExecution].project}`);
+    if (this.savedExecutionResult.resumeFrom !== -1) {
+      this.logger.info(
+        `Continuing execution from ${this.configService.nodeChain[this.savedExecutionResult.resumeFrom].project}`
+      );
     }
     this.logger.endGroup();
 
@@ -57,14 +53,17 @@ export class FlowService implements Serializable<SerializedFlowService ,FlowServ
     this.logger.endGroup();
     
     // update it to end of list if there were no nodes
-    firstNodeThatFailedExecution = firstNodeThatFailedExecution === -1 ? this.savedExecutionResult.length : firstNodeThatFailedExecution;
-    
+    const resumeFrom =
+    this.savedExecutionResult.resumeFrom === -1
+      ? this.savedExecutionResult.executionResult.length
+      : this.savedExecutionResult.resumeFrom;
+
     /**
      * Cannot directly map checkoutInfo into NodeExecution array since the order of nodes might change when parallely checking
      * out the node chain
      */
     const nodeChainForExecution: NodeExecution[] = this.configService.nodeChain
-      .slice(firstNodeThatFailedExecution)
+      .slice(resumeFrom)
       .map(node => ({
         node,
         // nodeCheckoutInfo will never be undefined since checkoutInfo is constructed from node chain and so node project will exist
@@ -72,7 +71,7 @@ export class FlowService implements Serializable<SerializedFlowService ,FlowServ
       }));
     
     // print any saved results
-    const savedResults = this.savedExecutionResult.slice(0, firstNodeThatFailedExecution);
+    const savedResults = this.savedExecutionResult.executionResult.slice(0, resumeFrom);
     savedResults.forEach(s => {
       this.logger.startGroup(`Already executed ${s[0].node.project} successfully in the previous run. Printing summary`);
       this.printExecutionSummary(s);
@@ -80,18 +79,30 @@ export class FlowService implements Serializable<SerializedFlowService ,FlowServ
     });
     
     const executionResult = await this.executor.executeNodeChain(nodeChainForExecution, this.printExecutionSummary.bind(this));
-    this.currentExecutionResult = savedResults.concat(executionResult);
+    this.currentExecutionResult = {
+      ...this.currentExecutionResult,
+      executionResult: savedResults.concat(executionResult)
+    };
 
     // archive artifacts
     this.logger.startGroup("Uploading artifacts");
     const artifactUploadResults = await this.artifactService.uploadNodes(this.configService.nodeChain, this.configService.getStarterNode());
     this.logger.endGroup();
 
-    return { checkoutInfo, artifactUploadResults, executionResult: this.currentExecutionResult };
+    return { checkoutInfo, artifactUploadResults, executionResult: this.currentExecutionResult.executionResult };
   }
 
   toJSON(): SerializedFlowService {
-    return this.currentExecutionResult;
+    const firstNodeThatFailedExecution = this.currentExecutionResult.executionResult.findIndex(
+      res => !!res.find(
+        r => !!r.executeCommandResults.find(c => c.result === ExecutionResult.NOT_OK)
+      )
+    );
+
+    return {
+      ...this.currentExecutionResult,
+      resumeFrom: firstNodeThatFailedExecution
+    };
   }
 
   fromJSON(_json: SerializedFlowService): FlowService {

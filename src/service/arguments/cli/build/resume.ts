@@ -25,6 +25,7 @@ export class ResumeCommand implements CommandConstructor {
       .option("-t, --token <token>", "The GITHUB_TOKEN. It can be set as an environment variable instead")
       .option("-d, --debug", "Set debugging mode to true", false)
       .option("-p, --startProject <project>", "Start from the given project instead of the first point of failure", false)
+      .option("-c, --recheckout <projects...>", "List of projects to re-checkout and re-build", false)
       .action(options => {
         const parsedInputs = Container.get(InputService);
         if (options.debug) {

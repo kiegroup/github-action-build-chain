@@ -42,6 +42,7 @@ export interface InputValues extends OptionValues {
   branch?: string;
   group?: string;
   failAtEnd?: boolean;
+  recheckout?: string[]
 }
 
 /**

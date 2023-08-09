@@ -17,9 +17,9 @@ import { logAndThrow } from "@bc/utils/log";
 
 @Service()
 export class Resume extends Tools {
-  async execute(): Promise<void> {   
+  async execute(): Promise<void> {
     // detect state file
-    const workspace = Container.get(ConfigurationService).getRootFolder();
+    const workspace = this.configService.getRootFolder();
     const state = JSON.parse(
       readFileSync(path.join(workspace, DEFAULT_STATE_FILENAME), "utf8")
     ) as ResumeState;
@@ -27,23 +27,32 @@ export class Resume extends Tools {
     // update output folder
     state.configurationService.configuration._parsedInputs = {
       ...state.configurationService.configuration._parsedInputs,
-      outputFolder: workspace
+      outputFolder: workspace,
     };
 
     // verify checkout state
-    const verifiedCheckoutState = await this.verifyCheckout(state.checkoutService);
+    const verifiedCheckoutState = await this.verifyCheckout(
+      state.checkoutService
+    );
+    const { updatedCheckoutService, updatedFlowService } = this.updateCheckout(
+      verifiedCheckoutState,
+      state.flowService,
+      this.configService.getProjectsToRecheckout()
+    );
     const updatedFlowServiceState = this.updateResumeFrom(
-      state.flowService, 
+      updatedFlowService,
       state.configurationService._nodeChain,
       state.configurationService.configuration._parsedInputs.failAtEnd
     );
 
     // reconstruct services
-    const configService = ConfigurationService.fromJSON(state.configurationService);
+    const configService = ConfigurationService.fromJSON(
+      state.configurationService
+    );
     // patch init to avoid config service initialization
     configService.init = async () => undefined;
-    Container.set(ConfigurationService, configService);  
-    const checkoutService = CheckoutService.fromJSON(verifiedCheckoutState);
+    Container.set(ConfigurationService, configService);
+    const checkoutService = CheckoutService.fromJSON(updatedCheckoutService);
     Container.set(CheckoutService, checkoutService);
     const flowService = FlowService.fromJSON(updatedFlowServiceState);
     Container.set(FlowService, flowService);
@@ -52,7 +61,7 @@ export class Resume extends Tools {
     const args = Container.get(CLIArguments);
     args.getCommand = () => ({ parse: () => undefined! } as unknown as Command);
     Container.set(CLIArguments, args);
-    
+
     // re-run cli runner
     return new CLIRunner().execute();
   }
@@ -86,13 +95,17 @@ export class Resume extends Tools {
         );
         return {
           ...checkout,
-          checkedOut: false
+          checkedOut: false,
         };
       })
     );
   }
 
-  private updateResumeFrom(flowService: SerializedFlowService, nodeChain: Node[], failAtEnd = false) {
+  private updateResumeFrom(
+    flowService: SerializedFlowService,
+    nodeChain: Node[],
+    failAtEnd = false
+  ) {
     const startProject = this.configService.getStarterProjectNameFromInput();
     if (!startProject) {
       if (failAtEnd) {
@@ -101,7 +114,7 @@ export class Resume extends Tools {
         );
         return {
           ...flowService,
-          resumeFrom: flowService.executionResult.length
+          resumeFrom: flowService.executionResult.length,
         };
       }
       return flowService;
@@ -125,7 +138,7 @@ export class Resume extends Tools {
         );
         return {
           ...flowService,
-          resumeFrom: flowService.executionResult.length
+          resumeFrom: flowService.executionResult.length,
         };
       } else {
         this.logger.warn(
@@ -137,8 +150,33 @@ export class Resume extends Tools {
     } else {
       return {
         ...flowService,
-        resumeFrom: startProjectIndex
+        resumeFrom: startProjectIndex,
       };
     }
+  }
+
+  private updateCheckout(
+    serializedCheckoutInfo: SerializedCheckoutService,
+    serializedFlowService: SerializedFlowService,
+    recheckout: string[]
+  ) {
+    let resumeFromIndex: number | undefined;
+
+    const checkoutService = serializedCheckoutInfo.map((c, index) => {
+      if (recheckout.includes(c.node.project)) {
+        if (!resumeFromIndex) {
+          resumeFromIndex = index;
+        }
+        return { ...c, checkedOut: false };
+      }
+      return c;
+    });
+    return {
+      updatedCheckoutService: checkoutService,
+      updatedFlowService: {
+        ...serializedFlowService,
+        resumeFrom: resumeFromIndex ?? serializedFlowService.resumeFrom,
+      } as SerializedFlowService,
+    };
   }
 }

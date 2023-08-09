@@ -569,3 +569,131 @@ describe("update resume from", () => {
     });
   });
 });
+
+describe.only("recheckout projects", () => {
+  const checkoutServiceSerialized = [
+    {
+      node: { project: "test1" },
+      checkoutInfo: { merge: false, repoDir: "dir" },
+      checkedOut: true,
+    },
+    {
+      node: { project: "test2" },
+      checkoutInfo: { merge: false, repoDir: "dir" },
+      checkedOut: true,
+    },
+  ];
+
+  const configurationServiceSerialized = {
+    configuration: {
+      _gitEventData: {
+        base: {
+          repo: {
+            full_name: "test",
+          },
+        },
+      },
+      _gitConfiguration: {},
+      _sourceProject: {},
+      _targetProject: {},
+      _parsedInputs: {
+        CLISubCommand: FlowType.BRANCH,
+      },
+      _defaultPlatform: PlatformType.GITLAB,
+    },
+    _nodeChain: [{ project: "test1" }, { project: "test2" }],
+    _definitionFile: {
+      version: 2.3,
+      build: [],
+    },
+  };
+
+  const flowServiceSerialized = {
+    executionResult: [
+      [
+        {
+          node: {
+            project: "test1",
+          },
+          executeCommandResults: [
+            {
+              command: "false",
+              result: ExecutionResult.OK,
+              errorMessage: "",
+            },
+          ],
+        },
+        {
+          node: {
+            project: "test1",
+          },
+          executeCommandResults: [
+            {
+              command: "false",
+              result: ExecutionResult.OK,
+              errorMessage: "",
+            },
+          ],
+        },
+        {
+          node: {
+            project: "test1",
+          },
+          executeCommandResults: [
+            {
+              command: "false",
+              result: ExecutionResult.OK,
+              errorMessage: "",
+            },
+          ],
+        },
+      ],
+    ],
+    resumeFrom: -1,
+  };
+
+  let flowFromJSONSpy: jest.SpyInstance;
+  let checkoutFromJSONSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    jest.spyOn(fs, "existsSync").mockReturnValue(true);
+    jest
+      .spyOn(CLIRunner.prototype, "execute")
+      .mockImplementation(async () => undefined);
+    jest
+      .spyOn(GitCLIService.prototype, "branch")
+      .mockResolvedValue({} as BranchSummary);
+    flowFromJSONSpy = jest.spyOn(FlowService, "fromJSON");
+    checkoutFromJSONSpy = jest.spyOn(CheckoutService, "fromJSON");
+  });
+
+  test("starting project is defined, exists in node chain and is in already executed nodes", async () => {
+
+    jest.spyOn(fs, "readFileSync").mockReturnValue(
+      JSON.stringify({
+        configurationService: configurationServiceSerialized,
+        checkoutService: checkoutServiceSerialized,
+        flowService: flowServiceSerialized,
+      })
+    );
+
+    jest
+      .spyOn(ConfigurationService.prototype, "getProjectsToRecheckout")
+      .mockReturnValueOnce(["test1"]);
+
+    await resume.execute();
+
+    expect(checkoutFromJSONSpy).toHaveBeenCalledWith([
+      {
+        ...checkoutServiceSerialized[0],
+        checkedOut: false
+      },
+      checkoutServiceSerialized[1]
+    ]);
+
+    expect(flowFromJSONSpy).toHaveBeenCalledWith({
+      ...flowServiceSerialized,
+      resumeFrom: 0,
+    });
+  });
+});

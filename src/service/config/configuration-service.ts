@@ -297,6 +297,11 @@ export class ConfigurationService
     return this.definitionFile.platforms?.find(p => p.id === id);
   }
 
+
+  getProjectsToRecheckout() {
+    return this.configuration.parsedInputs?.recheckout ?? [];
+  }
+
   toJSON(): SerializedConfigurationService {
     if (this.configuration instanceof CLIConfiguration) {
       return {

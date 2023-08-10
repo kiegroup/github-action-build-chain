@@ -754,6 +754,7 @@ Options:
   -t, --token <token>           The GITHUB_TOKEN. It can be set as an environment variable instead
   -d, --debug                   Set debugging mode to true (default: false)
   -p, --startProject <project>  Start from the given project instead of the first point of failure (default: false)
+  -c, --recheckout <projects...>  List of projects to re-checkout and re-build (default: false)
   -h, --help                    display help for command
 ```
 

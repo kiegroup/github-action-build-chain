@@ -13,7 +13,8 @@ export type CheckoutInfo = {
 
 export type CheckedOutNode = {
   node: Node;
-  checkoutInfo?: CheckoutInfo
+  checkoutInfo?: CheckoutInfo,
+  branchHead?: string
 }
 
 export interface SerializedCheckoutNode {

@@ -23,7 +23,7 @@ Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.GITHUB_EVENT);
 
 const checkoutService = Container.get(CheckoutService);
 const moctokit = new Moctokit();
-let cloneSpy: jest.SpyInstance, mergeSpy: jest.SpyInstance, renameSpy: jest.SpyInstance;
+let cloneSpy: jest.SpyInstance, mergeSpy: jest.SpyInstance, renameSpy: jest.SpyInstance, headSpy: jest.SpyInstance;
 
 beforeEach(async () => {
   process.env = {};
@@ -50,6 +50,7 @@ beforeEach(async () => {
     .mockImplementationOnce(async () => undefined);
   mergeSpy = jest.spyOn(GitCLIService.prototype, "merge").mockImplementation(async () => undefined);
   renameSpy = jest.spyOn(GitCLIService.prototype, "rename").mockImplementation(async () => undefined);
+  headSpy = jest.spyOn(GitCLIService.prototype, "head").mockImplementation(async () => "");
 });
 
 
@@ -113,6 +114,10 @@ describe.each([
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "sbranch2");
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2");
 
+    expect(headSpy).toHaveBeenCalledTimes(2);
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"));
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"));
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -130,6 +135,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -143,10 +149,12 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
       checkoutInfo: undefined,
+      branchHead: ""
     });
   });
 
@@ -180,6 +188,10 @@ describe.each([
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "sbranch2");
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2");
 
+    expect(headSpy).toHaveBeenCalledTimes(2);
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"));
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"));
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -197,6 +209,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -210,10 +223,12 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
       checkoutInfo: undefined,
+      branchHead: ""
     });
   });
 
@@ -244,6 +259,10 @@ describe.each([
     expect(renameSpy).toHaveBeenCalledTimes(1);
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2");
 
+    expect(headSpy).toHaveBeenCalledTimes(2);
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"));
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"));
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -261,6 +280,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: false,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -274,10 +294,12 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
       checkoutInfo: undefined,
+      branchHead: ""
     });
   });
 });
@@ -341,6 +363,10 @@ describe.each([
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "sbranch2-forked");
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2-forked");
 
+    expect(headSpy).toHaveBeenCalledTimes(2);
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"));
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"));
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -358,6 +384,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -371,10 +398,12 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
       checkoutInfo: undefined,
+      branchHead: ""
     });
   });
 
@@ -406,6 +435,10 @@ describe.each([
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "sbranch2-forked");
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2-forked");
 
+    expect(headSpy).toHaveBeenCalledTimes(2);
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"));
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"));
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -423,6 +456,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -436,10 +470,12 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
       checkoutInfo: undefined,
+      branchHead: ""
     });
   });
 
@@ -470,6 +506,10 @@ describe.each([
     expect(renameSpy).toHaveBeenCalledTimes(1);
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"), "sbranch2-forked");
 
+    expect(headSpy).toHaveBeenCalledTimes(2);
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"));
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"));
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -487,6 +527,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: false,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -500,10 +541,12 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
       checkoutInfo: undefined,
+      branchHead: ""
     });
   });
 });
@@ -566,6 +609,10 @@ describe.each([
     expect(renameSpy).toHaveBeenCalledTimes(1);
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "tbranch2");
 
+    expect(headSpy).toHaveBeenCalledTimes(2);
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"));
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"));
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -583,6 +630,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -596,10 +644,12 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: false,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
       checkoutInfo: undefined,
+      branchHead: ""
     });
   });
 
@@ -630,6 +680,10 @@ describe.each([
     expect(renameSpy).toHaveBeenCalledTimes(1);
     expect(renameSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"), "tbranch2");
 
+    expect(headSpy).toHaveBeenCalledTimes(2);
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"));
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"));
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -647,6 +701,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -660,10 +715,12 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: false,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
       checkoutInfo: undefined,
+      branchHead: ""
     });
   });
 
@@ -692,6 +749,10 @@ describe.each([
     expect(mergeSpy).toHaveBeenCalledTimes(0);
     expect(renameSpy).toHaveBeenCalledTimes(0);
 
+    expect(headSpy).toHaveBeenCalledTimes(2);
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner1_project1"));
+    expect(headSpy).toHaveBeenCalledWith(path.join(rootFolder, "owner2_project2"));
+
     // checking copying node (i.e. cloneNode) correctness
     await checkClone(rootFolder);
 
@@ -709,6 +770,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: false,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -722,10 +784,12 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: false,
       },
+      branchHead: ""
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
       checkoutInfo: undefined,
+      branchHead: ""
     });
   });
 });

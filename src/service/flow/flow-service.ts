@@ -183,7 +183,7 @@ export class FlowService implements Serializable<SerializedFlowService ,FlowServ
     checkoutInfo.forEach(info => {
       this.logger.info(`[${info.node.project}]`);
       if (info.checkoutInfo) {
-        this.logger.info(`\t Project taken from ${info.checkoutInfo.targetGroup}/${info.checkoutInfo.targetName}:${info.checkoutInfo.targetBranch}`);
+        this.logger.info(`\t Project taken from ${info.checkoutInfo.targetGroup}/${info.checkoutInfo.targetName}:${info.checkoutInfo.targetBranch} (Branch HEAD ${info.branchHead?.trim()})`);
         if (info.checkoutInfo.merge) {
           this.logger.info(
             `\t Merged ${info.checkoutInfo.sourceGroup}/${info.checkoutInfo.sourceName}:${info.checkoutInfo.sourceBranch} into branch ${info.checkoutInfo.targetBranch}`

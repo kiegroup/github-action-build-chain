@@ -50,7 +50,7 @@ beforeEach(async () => {
     .mockImplementationOnce(async () => undefined);
   mergeSpy = jest.spyOn(GitCLIService.prototype, "merge").mockImplementation(async () => undefined);
   renameSpy = jest.spyOn(GitCLIService.prototype, "rename").mockImplementation(async () => undefined);
-  headSpy = jest.spyOn(GitCLIService.prototype, "head").mockImplementation(async () => "");
+  headSpy = jest.spyOn(GitCLIService.prototype, "head").mockImplementation(async () => "abc");
 });
 
 
@@ -135,7 +135,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -149,7 +149,7 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
@@ -209,7 +209,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -223,7 +223,7 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
@@ -280,7 +280,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: false,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -294,7 +294,7 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
@@ -384,7 +384,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -398,7 +398,7 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
@@ -456,7 +456,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -470,7 +470,7 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
@@ -527,7 +527,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: false,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -541,7 +541,7 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
@@ -630,7 +630,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -644,7 +644,7 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: false,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
@@ -701,7 +701,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: true,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -715,7 +715,7 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: false,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],
@@ -770,7 +770,7 @@ describe.each([
         repoDir: `${rootFolder}/owner1_project1`,
         merge: false,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[1]).toStrictEqual({
       node: nodeChain[1],
@@ -784,7 +784,7 @@ describe.each([
         repoDir: `${rootFolder}/owner2_project2`,
         merge: false,
       },
-      branchHead: ""
+      branchHead: "abc"
     });
     expect(checkedOutNodeInfo[2]).toStrictEqual({
       node: nodeChain[2],

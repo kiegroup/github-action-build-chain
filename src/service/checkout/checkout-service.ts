@@ -282,8 +282,7 @@ export class CheckoutService implements Serializable<SerializedCheckoutService, 
    * @returns branch head commit hash
    */
   private async getBranchHead(checkoutInfo: CheckoutInfo | undefined) {
-    const gitCLIService = Container.get(GitCLIService);
-    return !checkoutInfo ? "" : await gitCLIService.head(checkoutInfo.repoDir);
+    return !checkoutInfo ? "" : await Container.get(GitCLIService).head(checkoutInfo.repoDir);
   }
 
   /**

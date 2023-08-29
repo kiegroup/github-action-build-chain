@@ -283,7 +283,7 @@ export class CheckoutService implements Serializable<SerializedCheckoutService, 
    */
   private async getBranchHead(checkoutInfo: CheckoutInfo | undefined) {
     const gitCLIService = Container.get(GitCLIService);
-    return checkoutInfo == undefined ? "" : await gitCLIService.head(checkoutInfo.repoDir);
+    return !checkoutInfo ? "" : await gitCLIService.head(checkoutInfo.repoDir);
   }
 
   /**

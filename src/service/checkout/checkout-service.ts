@@ -242,9 +242,11 @@ export class CheckoutService implements Serializable<SerializedCheckoutService, 
     const result: CheckedOutNode[] = [];
     for (const node of this.config.nodeChain) {
       const checkoutInfo = await this.checkoutNode(node);
+      const branchHead = await this.getBranchHead(checkoutInfo);
       result.push({
         node,
         checkoutInfo,
+        branchHead
       });
     }
     return result;
@@ -262,14 +264,25 @@ export class CheckoutService implements Serializable<SerializedCheckoutService, 
   private async checkoutDefinitionTreeParallel(): Promise<CheckedOutNode[]> {
     return Promise.all(
       this.config.nodeChain.map(async node => 
-        this.checkoutNode(node).then(checkoutInfo => {
+        this.checkoutNode(node).then(async checkoutInfo => {
+        const branchHead = await this.getBranchHead(checkoutInfo);
           return {
             node,
             checkoutInfo,
+            branchHead
           };
         })
       )
     );
+  }
+
+  /**
+   * Return the branch head hash based on the checkout information
+   * @param checkout information
+   * @returns branch head commit hash
+   */
+  private async getBranchHead(checkoutInfo: CheckoutInfo | undefined) {
+    return !checkoutInfo ? "" : await Container.get(GitCLIService).head(checkoutInfo.repoDir);
   }
 
   /**

@@ -1,6 +1,6 @@
 {
   "name": "@kie/build-chain-action",
-  "version": "3.5.3",
+  "version": "3.5.4",
   "description": "Library to execute commands based on github projects dependencies.",
   "main": "dist/index.js",
   "author": "",

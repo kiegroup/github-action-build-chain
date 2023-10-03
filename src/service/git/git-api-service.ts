@@ -125,15 +125,18 @@ export class GitAPIService {
   ): Promise<string> {
     try {
       // check whether there is a fork with the same name as repo name
-      const repoName = await this.checkIfRepositoryExists(targetOwner, repo);
+      this.logger.info(`Checking if ${targetOwner}/${repo} is forked to ${sourceOwner}/${repo}`);
+      const repoName = await this.checkIfRepositoryExists(sourceOwner, repo);
 
       if (repoName) {
+        this.logger.info(`Found fork in ${sourceOwner}/${repo}`);
         return repoName;
       } else if (targetOwner !== sourceOwner) {
         /**
          * find repo from fork list. we reach this case only if we are in the edge case where the forked repo's name is different
          * from the original one
          */
+        this.logger.info(`Fork ${sourceOwner}/${repo} does not exist. Trying to find a fork with a different name in ${sourceOwner}`);
         const forkName = (
           await this.client
             .rest(targetOwner, repo)
@@ -144,17 +147,13 @@ export class GitAPIService {
             })
         ).data;
         if (forkName) {
+          this.logger.info(`Found ${sourceOwner}/${forkName} repository as a fork of ${targetOwner}/${repo}`);
           return forkName;
         }
       }
       throw new NotFoundError();
     } catch (err) {
-      this.logger.error(
-        this.getErrorMessage(
-          err,
-          `Error getting fork name for ${targetOwner}/${repo} where owner is ${sourceOwner}`
-        )
-      );
+      this.logger.info(`Could not find a fork name for ${targetOwner}/${repo} where owner is ${sourceOwner}`);
       throw err;
     }
   }
@@ -202,9 +201,7 @@ export class GitAPIService {
       });
       return repo;
     } catch (err) {
-      this.logger.error(
-        this.getErrorMessage(err, `Failed to get ${owner}/${repo}.`)
-      );
+      this.logger.debug(`Failed to get ${owner}/${repo}`);
       return undefined;
     }
   }

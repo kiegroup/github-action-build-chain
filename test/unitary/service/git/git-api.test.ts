@@ -119,22 +119,32 @@ test.each([
   [
     "success: same source and target owner",
     true,
-    ["target1", "target1", "repoA"],
+    ["target1", "repoA", "target1", "repoA"],
   ],
   [
     "failure: same source and target owner",
     false,
-    ["target2", "target2", "repoA"],
+    ["target2", "repoA", "target2", "repoA"],
   ],
   [
     "success: different source and target owner",
     true,
-    ["target3", "source", "repoA"],
+    ["target3", "repoA", "source", "repoA"],
   ],
   [
     "failure: different source and target owner",
     false,
-    ["target4", "source", "repoA"],
+    ["target4", "repoA", "source", "repoA"],
+  ],
+  [
+    "success: different source and target owner / different repo name",
+    true,
+    ["target5", "repoA", "source", "repoA_fork"],
+  ],
+  [
+    "failure: different source and target owner / different repo name",
+    false,
+    ["target6", "repoA", "source", "no_fork"],
   ],
 ])(
   "getForkName %p",
@@ -142,26 +152,29 @@ test.each([
     const moctokit = new Moctokit();
     if (testForSuccess) {
       moctokit.rest.repos
-        .get({ owner: args[1], repo: args[2] })
+        .get({ owner: args[0], repo: args[1] })
         .reply({ status: 200, data: {} });
-      moctokit.rest.repos.listForks({ owner: args[0], repo: args[2] }).reply({
+      moctokit.rest.repos
+        .get({ owner: args[2], repo: args[3] })
+        .reply({ status: 200, data: {} });
+      moctokit.rest.repos.listForks({ owner: args[0], repo: args[1] }).reply({
         status: 200,
-        data: [{ name: args[2], owner: { login: args[1] } }],
+        data: [{ name: args[3], owner: { login: args[2] } }],
       });
 
-      await expect(git.getForkName(args[0], args[1], args[2])).resolves.toBe(
-        args[2]
+      await expect(git.getForkName(args[0], args[2], args[1])).resolves.toBe(
+        args[3]
       );
     } else {
       moctokit.rest.repos
-        .get({ owner: args[1], repo: args[2] })
+        .get({ owner: args[0], repo: args[1] })
         .reply({ status: 404, data: {} });
       moctokit.rest.repos
-        .listForks({ owner: args[0], repo: args[2] })
+        .listForks({ owner: args[2], repo: args[3] })
         .reply({ status: 200, data: [] });
 
       await expect(
-        git.getForkName(args[0], args[1], args[2])
+        git.getForkName(args[0], args[2], args[1])
       ).rejects.toThrowError();
     }
   }

@@ -262,7 +262,7 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
       mockApi: [
         moctokit.rest.repos
           .get({
-            owner: "owner1",
+            owner: "owner2",
             repo: "project3",
           })
           .setResponse({
@@ -270,7 +270,7 @@ test("PR from owner2/target:branchA to owner1/target:branchB", async () => {
             data: {
               name: "project3",
               owner: {
-                login: "owner1",
+                login: "owner2",
               },
             },
           }),
@@ -391,7 +391,7 @@ test("PR from owner2/target:branchA to owner1/target-different-name:branchB", as
       mockApi: [
         moctokit.rest.repos
           .get({
-            owner: "owner1",
+            owner: "owner2",
             repo: "project1",
           })
           .setResponse({

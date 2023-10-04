@@ -187,13 +187,22 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
       mockApi: [
         moctokit.rest.repos
           .get({
-            owner: "owner1",
-            repo: /project(1|2|3|4)/,
+            owner: "owner2",
+            repo: "project2",
           })
           .setResponse({
             status: 404,
             data: {},
-            repeat: 4
+          }),
+          moctokit.rest.repos
+          .get({
+            owner: "owner2",
+            repo: /project(1|3|4)/,
+          })
+          .setResponse({
+            status: 200,
+            data: {},
+            repeat: 3
           }),
         moctokit.rest.repos
           .listForks({
@@ -313,7 +322,7 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
   );
   expect(group4.output).toEqual(
     expect.stringContaining(
-      "Merged owner1/project4:branchA into branch 8.x"
+      "Merged owner2/project4:branchA into branch 8.x"
     )
   );
 

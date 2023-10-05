@@ -129,7 +129,7 @@ export class GitAPIService {
       const repoName = await this.checkIfRepositoryExists(sourceOwner, repo);
 
       if (repoName) {
-        this.logger.info(`Found fork in ${sourceOwner}/${repo}`);
+        this.logger.info(`Fork ${sourceOwner}/${repo} found.`);
         return repoName;
       } else if (targetOwner !== sourceOwner) {
         /**
@@ -147,13 +147,13 @@ export class GitAPIService {
             })
         ).data;
         if (forkName) {
-          this.logger.info(`Found ${sourceOwner}/${forkName} repository as a fork of ${targetOwner}/${repo}`);
+          this.logger.info(`Fork ${sourceOwner}/${forkName} found from ${targetOwner}/${repo}`);
           return forkName;
         }
       }
       throw new NotFoundError();
     } catch (err) {
-      this.logger.info(`Could not find a fork name for ${targetOwner}/${repo} where owner is ${sourceOwner}`);
+      this.logger.info(`Fork for ${targetOwner}/${repo} not found where owner is ${sourceOwner}`);
       throw err;
     }
   }
@@ -201,7 +201,7 @@ export class GitAPIService {
       });
       return repo;
     } catch (err) {
-      this.logger.debug(`Failed to get ${owner}/${repo}`);
+      this.logger.debug(`Failed to get ${owner}/${repo}, it is not necessarily and error`);
       return undefined;
     }
   }

@@ -201,7 +201,7 @@ export class GitAPIService {
       });
       return repo;
     } catch (err) {
-      this.logger.debug(`Failed to get ${owner}/${repo}, it is not necessarily and error`);
+      this.logger.debug(`Failed to get ${owner}/${repo}, it is not necessarily an error`);
       return undefined;
     }
   }

@@ -3,18 +3,18 @@
     "name": "issue-372",
     "definition-file": "https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/${BRANCH:main}/.ci/compilation-config.yaml",
     "flow-type": "cross_pr",
-    "starting-project": "kiegroup/drools",
+    "starting-project": "kiegroup/appformer",
     "skip-execution": "true",
-    "event": "https://github.com/kiegroup/drools/pull/4978",
+    "event": "https://github.com/kiegroup/appformer/pull/1394",
     "description": "To test that definition file url placeholders fallback to using default value. Checking whether build succeeded is enough"
   },
   {
     "name": "issue-401",
-    "definition-file": "https://raw.githubusercontent.com/kiegroup/kogito-pipelines/%{process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)}/.ci/pull-request-config.yaml",
+    "definition-file": "https://raw.githubusercontent.com/apache/incubator-kie-kogito-pipelines/%{process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)}/.ci/pull-request-config.yaml",
     "starting-project": "kiegroup/optaplanner",
     "flow-type": "cross_pr",
     "skip-execution": "true",
-    "event": "https://github.com/kiegroup/optaplanner/pull/2634",
+    "event": "https://github.com/apache/incubator-kie-optaplanner/pull/2634",
     "description": "To test that definition file url placeholders as well as expressions work when defined together. Checking whether build succeeded is enough"
   },
   {

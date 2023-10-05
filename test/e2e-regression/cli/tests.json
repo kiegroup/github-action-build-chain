@@ -1,17 +1,17 @@
 [
   {
     "name": "issue-372",
-    "cmd": "build-chain build cross_pr -f 'https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/${BRANCH:main}/.ci/compilation-config.yaml' -o bc -u https://github.com/kiegroup/drools/pull/4978 --skipExecution",
+    "cmd": "build-chain build cross_pr -f 'https://raw.githubusercontent.com/kiegroup/droolsjbpm-build-bootstrap/${BRANCH:main}/.ci/compilation-config.yaml' -o bc -u https://github.com/kiegroup/appformer/pull/1394 --skipExecution",
     "description": "To test that definition file url placeholders fallback to using default value. Checking whether build succeeded is enough"
   },
   {
     "name": "issue-401",
-    "cmd": "build-chain build cross_pr -f 'https://raw.githubusercontent.com/kiegroup/kogito-pipelines/%{process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)}/.ci/pull-request-config.yaml' -o bc -u https://github.com/kiegroup/optaplanner/pull/2634 -p kiegroup/optaplanner --skipExecution",
+    "cmd": "build-chain build cross_pr -f 'https://raw.githubusercontent.com/apache/incubator-kie-kogito-pipelines/%{process.env.GITHUB_BASE_REF.replace(/(\\d*)\\.(.*)\\.(.*)/g, (m, n1, n2, n3) => `${+n1-7}.${n2}.${n3}`)}/.ci/pull-request-config.yaml' -o bc -u https://github.com/apache/incubator-kie-optaplanner/pull/2634 -p kiegroup/optaplanner --skipExecution",
     "description": "To test that definition file url placeholders as well as expressions work when defined together. Checking whether build succeeded is enough"
   },
   {
     "name": "issue-386",
-    "cmd": "build-chain build cross_pr -f 'https://raw.githubusercontent.com/kiegroup/kogito-pipelines/1.34.x/.ci/pull-request-config.yaml' -o bc -u https://github.com/kiegroup/kogito-examples/pull/1570 -p kiegroup/kogito-examples --skipExecution",
+    "cmd": "build-chain build cross_pr -f 'https://raw.githubusercontent.com/apache/incubator-kie-kogito-pipelines/1.34.x/.ci/pull-request-config.yaml' -o bc -u https://github.com/apache/incubator-kie-kogito-examples/pull/1570 -p kiegroup/kogito-examples --skipExecution",
     "description": "To test if GITHUB_BASE_REF is set during CLI execution. Checking if 8.34.x is checked out of drools should verify this",
     "matchOutput": [
       "Project taken from kiegroup/drools:8.34.x",

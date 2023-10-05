@@ -198,7 +198,7 @@ test("PR from owner1/target:branchA to owner2/target:branchB while using mapping
           })
           .setResponse({
             status: 200,
-            data: { name: "project3", owner: { login: "owner1" } },
+            data: { name: "project3", owner: { login: "owner2" } },
           }),
         moctokit.rest.repos
           .listForks({

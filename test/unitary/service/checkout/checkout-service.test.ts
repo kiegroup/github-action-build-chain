@@ -95,8 +95,8 @@ describe.each([
       repo: "project2"
     }).reply({status: 200, data: {}});
 
-    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner2/project1-forked:sbranch2", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
-    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:sbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner2:sbranch2", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:sbranch2", base: "tbranch2"}).reply({status: 200, data: []});
     moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:sbranch2", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
 
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
@@ -170,7 +170,7 @@ describe.each([
     }).reply({status: 200, data: {}});
 
     moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:sbranch2", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
-    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:sbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:sbranch2", base: "tbranch2"}).reply({status: 200, data: []});
     moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:sbranch2", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
 
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
@@ -243,7 +243,7 @@ describe.each([
     }).reply({status: 200, data: {}});
 
     moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:sbranch2", base: "tbranch1"}).reply({status: 200, data: []});
-    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:sbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:sbranch2", base: "tbranch2"}).reply({status: 200, data: []});
     moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:sbranch2", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
 
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
@@ -344,8 +344,8 @@ describe.each([
       repo: "project2"
     }).reply({status: 200, data: [{name: "project2-forked", owner: {login: "owner4"}}]});
 
-    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner4/project1-forked:sbranch2-forked", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
-    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner4/project2-forked:sbranch2-forked", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner4:sbranch2-forked", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner4:sbranch2-forked", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
 
     
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
@@ -418,7 +418,7 @@ describe.each([
     }).reply({status: 200, data: [{name: "project2-forked", owner: {login: "owner4"}}]});
 
     moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:sbranch2-forked", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
-    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner4/project2-forked:sbranch2-forked", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner4:sbranch2-forked", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
 
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
 
@@ -490,7 +490,7 @@ describe.each([
     }).reply({status: 200, data: [{name: "project2-forked", owner: {login: "owner4"}}]});
 
     moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:sbranch2-forked", base: "tbranch1"}).reply({status: 200, data: []});
-    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner4/project2-forked:sbranch2-forked", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner4:sbranch2-forked", base: "tbranch2"}).reply({status: 200, data: [{title: "pr"}]});
 
     
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
@@ -592,8 +592,8 @@ describe.each([
       repo: "project2"
     }).reply({status: 200, data: {}});
 
-    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner2/project1-forked:tbranch2", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
-    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner2:tbranch2", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
     moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
  
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
@@ -664,7 +664,7 @@ describe.each([
     }).reply({status: 200, data: {}});
 
     moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:tbranch2", base: "tbranch1"}).reply({status: 200, data: [{title: "pr"}]});
-    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
     moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
  
     const checkedOutNodeInfo = await checkoutService.checkoutDefinitionTree();
@@ -735,7 +735,7 @@ describe.each([
     }).reply({status: 200, data: {}});
 
     moctokit.rest.pulls.list({owner: "owner1", repo: "project1", state: "open", head: "owner1:tbranch2", base: "tbranch1"}).reply({status: 200, data: []});
-    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2/project2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
+    moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
     moctokit.rest.pulls.list({owner: "owner2", repo: "project2", state: "open", head: "owner2:tbranch2", base: "tbranch2"}).reply({status: 200, data: []});
  
     

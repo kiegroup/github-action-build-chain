@@ -166,7 +166,7 @@ export class CheckoutService implements Serializable<SerializedCheckoutService, 
         const hasPullRequestFromFork = await gitAPIService.hasPullRequest(
           currentTarget.group,
           currentTarget.name,
-          `${originalSource.group}/${forkName}:${originalSource.branch}`,
+          `${originalSource.group}:${originalSource.branch}`,
           currentTarget.mappedBranch
         );
         return { forkName, hasPullRequest: hasPullRequestFromFork };

@@ -22,23 +22,23 @@
   },
   {
     "name": "pr-388,build-chain-config-reader-issue-91",
-    "cmd": "build-chain build branch -f 'https://raw.githubusercontent.com/${GROUP:kiegroup}/optaplanner/main/.ci/nightly-build-config.yaml' -b main -o bc -p kiegroup/optaplanner --fullProjectDependencyTree --skipParallelCheckout --skipExecution --skipProjectCheckout 'jboss-integration/rhbop-optaplanner'",
+    "cmd": "build-chain build branch -f 'https://raw.githubusercontent.com/${GROUP:kiegroup}/optaplanner/8.38.x-prod/.ci/nightly-build-config.yaml' -b main -o bc -p kiegroup/optaplanner --fullProjectDependencyTree --skipParallelCheckout --skipExecution --skipProjectCheckout 'jboss-integration/rhbop-optaplanner'",
     "description": "There needs to be a clear difference between project triggering the job and starting project. Checking which branch is checked out should verify this since if there was no distinction then we would have incorrect mapping",
     "matchOutput": [
-      "Project taken from kiegroup/drools:main-integration-quarkus-lts",
+      "Project taken from kiegroup/drools:main",
       "Project taken from kiegroup/optaplanner:main",
       "Project taken from kiegroup/optaplanner-quickstarts:8.x"
     ]
   },
   {
     "name": "issue-378",
-    "cmd": "build-chain build branch -f https://raw.githubusercontent.com/radtriste/kogito-pipelines/main/.ci/pull-request-config.yaml -o bc -p kiegroup/drools -b quarkus_3 -g radtriste --skipExecution",
-    "description": "To ensure that branch flow uses the user input. Checking if radtriste/drools is checked out instead of kiegroup/drools should be enough",
+    "cmd": "build-chain build branch -f https://raw.githubusercontent.com/rgdoliveira/kogito-pipelines/main/.ci/pull-request-config.yaml -o bc -p kiegroup/drools -b main -g rgdoliveira --skipExecution",
+    "description": "To ensure that branch flow uses the user input. Checking if rgdoliveira/drools is checked out instead of kiegroup/drools should be enough",
     "matchOutput": [
-      "Project taken from radtriste/drools:quarkus_3"
+      "Project taken from rgdoliveira/drools:main"
     ],
     "dontMatchOutput": [
-      "Project taken from kiegroup/drools:quarkus_3"
+      "Project taken from kiegroup/drools:main"
     ]
   },
   {

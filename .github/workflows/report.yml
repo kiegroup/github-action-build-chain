@@ -15,7 +15,7 @@ jobs:
       - name: Setup sonarqube
         uses: warchant/setup-sonar-scanner@v8
       - name: coverage report
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: 20
       - run: npm ci

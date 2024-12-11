@@ -27,8 +27,8 @@ Container.set(constants.CONTAINER.ENTRY_POINT, EntryPoint.CLI);
 describe("ExecuteCommandService", () => {
   test("executeCommand without cwd", async () => {
     // Arrange
-    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, true);
-    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, true);
+    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, {shallow:true});
+    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, {shallow:true});
     const configurationService = new ConfigurationService();
 
     (ConfigurationService.prototype.getTreatmentOptions as jest.Mocked<jest.Mock>).mockReturnValueOnce("treatmentOptions");
@@ -50,8 +50,8 @@ describe("ExecuteCommandService", () => {
 
   test("executeCommand with cwd", async () => {
     // Arrange
-    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, true);
-    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, true);
+    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, {shallow:true});
+    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, {shallow:true});
     const configurationService = new ConfigurationService();
 
     (ConfigurationService.prototype.getTreatmentOptions as jest.Mocked<jest.Mock>).mockReturnValueOnce("treatmentOptions");
@@ -75,8 +75,8 @@ describe("ExecuteCommandService", () => {
 describe("executeNodeCommands", () => {
   test("empty nodes", async () => {
     // Arrange
-    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, true);
-    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, true);
+    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, {shallow:true});
+    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, {shallow:true});
     const configurationService = new ConfigurationService();
 
     const executeCommandService = new ExecuteCommandService(commandTreatmentDelegator, commandExecutorDelegator, configurationService);
@@ -119,9 +119,9 @@ describe("executeNodeCommands", () => {
       },
     };
   
-    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, true);
-    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, true);
-    const configurationService = jest.mocked<ConfigurationService>(ConfigurationService.prototype, true);
+    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, {shallow:true});
+    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, {shallow:true});
+    const configurationService = jest.mocked<ConfigurationService>(ConfigurationService.prototype, {shallow:true});
     (CommandExecutorDelegator.prototype.executeCommand as jest.Mocked<jest.Mock>).mockResolvedValue({
       startingDate: 1,
       endingDate: 2,
@@ -161,9 +161,9 @@ describe("getNodeCommands", () => {
   let executeCommandService: ExecuteCommandService;
 
   beforeEach(() => {
-    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, true);
-    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, true);
-    const configurationService = jest.mocked<ConfigurationService>(ConfigurationService.prototype, true);
+    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, {shallow:true});
+    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, {shallow:true});
+    const configurationService = jest.mocked<ConfigurationService>(ConfigurationService.prototype, {shallow:true});
     executeCommandService = new ExecuteCommandService(commandTreatmentDelegator, commandExecutorDelegator, configurationService);
   });
 
@@ -217,8 +217,8 @@ describe("getNodeCommands", () => {
 describe("executeNodeChain", () => {
   let executeCommandService: ExecuteCommandService;
   beforeEach(() => {
-    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, true);
-    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, true);
+    const commandTreatmentDelegator = jest.mocked<CommandTreatmentDelegator>(CommandTreatmentDelegator.prototype, {shallow:true});
+    const commandExecutorDelegator = jest.mocked<CommandExecutorDelegator>(CommandExecutorDelegator.prototype, {shallow:true});
     const configurationService = new ConfigurationService();
     jest.spyOn(BaseLoggerService.prototype, "logger", "get").mockImplementation(() => ({log: () => undefined, emptyLine: () => undefined}) as Logger);
 

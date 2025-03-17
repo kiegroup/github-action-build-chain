@@ -11,14 +11,13 @@ jobs:
     name: Publish coverage report
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup sonarqube
-        uses: warchant/setup-sonar-scanner@v3
+        uses: warchant/setup-sonar-scanner@v8
       - name: coverage report
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
-          # node 12 support is deprecated in sonar
-          node-version: 14
+          node-version: 20
       - run: npm ci
       - run: npm run test:report
       - run: sonar-scanner

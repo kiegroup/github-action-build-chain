@@ -17,8 +17,8 @@ describe("constructor", () => {
   
   test("ok", () => {
     // Arrange
-    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, true);
-    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, true);
+    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype,{shallow:true});
+    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, {shallow:true});
 
     // Act
     const commandExecutorDelegator = new CommandExecutorDelegator(bashExecutor, exportExecutor);
@@ -34,12 +34,12 @@ describe("isExport", () => {
     // Arrange
     const command = "export VARIABLE=VALUE";
 
-    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, true);
-    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, true);
+    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, {shallow:true});
+    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, {shallow:true});
     const commandExecutorDelegator = new CommandExecutorDelegator(bashExecutor, exportExecutor);
 
-    jest.spyOn(bashExecutor, "execute").mockResolvedValueOnce();
-    jest.spyOn(exportExecutor, "execute").mockResolvedValueOnce();
+    jest.spyOn(bashExecutor, "execute").mockResolvedValueOnce(1);
+    jest.spyOn(exportExecutor, "execute").mockResolvedValueOnce(1);
 
     (hrtimeToMs as jest.Mocked<jest.Mock>).mockReturnValue(1000);
 
@@ -65,12 +65,12 @@ describe("isExport", () => {
     const command = "export VARIABLE=VALUE";
     const cwd = "path";
 
-    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, true);
-    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, true);
+    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, {shallow:true});
+    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, {shallow:true});
     const commandExecutorDelegator = new CommandExecutorDelegator(bashExecutor, exportExecutor);
 
-    jest.spyOn(bashExecutor, "execute").mockResolvedValueOnce();
-    jest.spyOn(exportExecutor, "execute").mockResolvedValueOnce();
+    jest.spyOn(bashExecutor, "execute").mockResolvedValueOnce(2);
+    jest.spyOn(exportExecutor, "execute").mockResolvedValueOnce(2);
 
     (hrtimeToMs as jest.Mocked<jest.Mock>).mockReturnValue(2000);
 
@@ -95,11 +95,11 @@ describe("isExport", () => {
     // Arrange
     const command = "export VARIABLE=VALUE";
     const errorMessage = "whatever the error message";
-    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, true);
+    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, {shallow:true});
 
-    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, true);
+    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, {shallow:true});
     const commandExecutorDelegator = new CommandExecutorDelegator(bashExecutor, exportExecutor);
-    jest.spyOn(bashExecutor, "execute").mockResolvedValueOnce();
+    jest.spyOn(bashExecutor, "execute").mockResolvedValueOnce(2);
     jest.spyOn(exportExecutor, "execute").mockRejectedValue(new Error(errorMessage));
 
     (hrtimeToMs as jest.Mocked<jest.Mock>).mockReturnValue(1000);
@@ -127,12 +127,12 @@ describe("not export command", () => {
     // Arrange
     const command = "whatever the command";
 
-    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, true);
-    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, true);
+    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, {shallow:true});
+    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, {shallow:true});
     const commandExecutorDelegator = new CommandExecutorDelegator(bashExecutor, exportExecutor);
 
-    jest.spyOn(bashExecutor, "execute").mockResolvedValueOnce();
-    jest.spyOn(exportExecutor, "execute").mockResolvedValueOnce();
+    jest.spyOn(bashExecutor, "execute").mockResolvedValueOnce(1);
+    jest.spyOn(exportExecutor, "execute").mockResolvedValueOnce(1);
 
     (hrtimeToMs as jest.Mocked<jest.Mock>).mockReturnValue(1000);
 
@@ -158,12 +158,12 @@ describe("not export command", () => {
     const command = "whatever the command";
     const cwd = "path";
 
-    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, true);
-    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, true);
+    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, {shallow:true});
+    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, {shallow:true});
     const commandExecutorDelegator = new CommandExecutorDelegator(bashExecutor, exportExecutor);
 
-    jest.spyOn(bashExecutor, "execute").mockResolvedValueOnce();
-    jest.spyOn(exportExecutor, "execute").mockResolvedValueOnce();
+    jest.spyOn(bashExecutor, "execute").mockResolvedValueOnce(1);
+    jest.spyOn(exportExecutor, "execute").mockResolvedValueOnce(1);
 
     (hrtimeToMs as jest.Mocked<jest.Mock>).mockReturnValue(1000);
 
@@ -188,12 +188,12 @@ describe("not export command", () => {
     // Arrange
     const command = "whatever the command";
     const errorMessage = "whatever the error message";
-    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, true);
+    const bashExecutor = jest.mocked<BashExecutor>(BashExecutor.prototype, {shallow:true});
 
-    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, true);
+    const exportExecutor = jest.mocked<ExportExecutor>(ExportExecutor.prototype, {shallow:true});
     const commandExecutorDelegator = new CommandExecutorDelegator(bashExecutor, exportExecutor);
     jest.spyOn(bashExecutor, "execute").mockRejectedValue(new Error(errorMessage));
-    jest.spyOn(exportExecutor, "execute").mockResolvedValueOnce();
+    jest.spyOn(exportExecutor, "execute").mockResolvedValueOnce(1);
 
     (hrtimeToMs as jest.Mocked<jest.Mock>).mockReturnValue(1000);
 

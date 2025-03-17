@@ -50,7 +50,7 @@ jobs:
       - run: ACT_LOG=true npm run test:e2e
       - name: Upload raw e2e output
         if: ${{ always() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: e2e-logs-${{ matrix.node-version }}.zip
           path: '*.log'

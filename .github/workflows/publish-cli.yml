@@ -1,4 +1,4 @@
-name: Publish CLI
+name: Publish Build Chain CLI
 
 on:
   push:

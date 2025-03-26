@@ -7,7 +7,7 @@
   "license": "ISC",
   "private": false,
   "bin": {
-    "build-chain": "./build/index.js"
+    "build-chain": "build/index.js"
   },
   "scripts": {
     "build": "run-p build:*",

@@ -18,15 +18,15 @@ jobs:
   unit:
     strategy:
       matrix:
-        node-version: [16.x, 20.x]
+        node-version: [20.x, 22.x, 24.x]
         os: [ubuntu-latest]
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
@@ -35,15 +35,15 @@ jobs:
   e2e:
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x, 22.x, 24.x]
         os: [ubuntu-latest]
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
@@ -59,22 +59,22 @@ jobs:
   e2e-regression-cli:
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x, 22.x, 24.x]
         os: [ubuntu-latest]
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
       - run: ACT_LOG=true npm run test:e2e-regression-cli
       - name: Upload raw e2e regression output
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-regression-cli-logs-${{ matrix.node-version }}
           path: '*.log'
@@ -85,13 +85,13 @@ jobs:
   e2e-regression-action:
     strategy:
       matrix:
-        node-version: [18.x, 20.x]
+        node-version: [20.x, 22.x, 24.x]
         os: [ubuntu-latest]
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
@@ -100,7 +100,7 @@ jobs:
       - run: ACT_LOG=true npm run test:e2e-regression-action
       - name: Upload raw e2e regression output
         if: ${{ always() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-regression-action-logs-${{ matrix.node-version }}
           path: '*.log'
@@ -111,10 +111,10 @@ jobs:
   package-lock-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
       - run: npm install
       - name: Check if package-lock.json was updated
         # Check that Git working tree is clean after running `npm install` 

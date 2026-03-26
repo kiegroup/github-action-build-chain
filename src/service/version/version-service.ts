@@ -1,7 +1,7 @@
 import Container, { Service } from "typedi";
 import { BaseLoggerService } from "../logger/base-logger-service";
 import { LoggerService } from "../logger/logger-service";
-import * as fs from "fs";
+import * as fs from "node:fs";
 
 
 @Service()

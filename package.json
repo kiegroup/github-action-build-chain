@@ -67,7 +67,7 @@
     "@octokit/request-error": "2.1.0",
     "@octokit/rest": "18.12.0",
     "@octokit/types": "6.41.0",
-    "axios": "1.4.0",
+    "axios": "1.13.5",
     "commander": "9.3.0",
     "fs-extra": "10.1.0",
     "http-proxy-agent": "7.0.0",
@@ -78,5 +78,8 @@
   },
   "engines": {
     "node": ">= 14.19.3"
+  },
+  "overrides": {
+    "axios": "1.13.5"
   }
 }

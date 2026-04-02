@@ -81,6 +81,7 @@
   },
   "overrides": {
     "axios": "1.13.5",
-    "path-to-regexp": "0.1.13"
+    "path-to-regexp": "0.1.13",
+    "qs": "6.14.2"
   }
 }

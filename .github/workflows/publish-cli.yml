@@ -6,6 +6,12 @@ on:
       - main
     paths:
       - "package.json"
+  workflow_dispatch:
+
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
 
 jobs:
   build:
@@ -33,8 +39,6 @@ jobs:
       
       - run: npm publish --access public
         if: steps.version-check.outputs.changed == 'true'
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
       - run: echo "No change detected in package.json. Won't publish"
         if: steps.version-check.outputs.changed == 'false'

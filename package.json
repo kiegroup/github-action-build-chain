@@ -73,7 +73,7 @@
     "http-proxy-agent": "7.0.0",
     "ms-typescript": "2.0.0",
     "reflect-metadata": "0.1.13",
-    "simple-git": "3.33.0",
+    "simple-git": "3.7.1",
     "typedi": "0.10.0"
   },
   "engines": {

@@ -116,7 +116,7 @@ jobs:
         with:
           node-version: 24
       - run: npm install
-      - name: Check if package-lock.json was updated
+      - name: Check if npm-shrinkwrap.json was updated
         # Check that Git working tree is clean after running `npm install` 
         # The `git` command exits with 1 and fails the build if there are any uncommitted changes.
         run: git diff HEAD --exit-code
